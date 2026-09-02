@@ -33,3 +33,16 @@ node_modules/
 .DS_Store
 .next/
 .vercel/
+
+# --- Next.js / toolchain ---
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+.pnp
+.pnp.*
+*.pem
+npm-debug.log*
+.vercel

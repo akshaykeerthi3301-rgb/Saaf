@@ -1,0 +1,50 @@
+.row {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+/* The single tinted surface in the system, so a stretch role can never be
+   mistaken for a cleared one at a glance — without resorting to colour coding. */
+.rowStretch {
+  padding: var(--space-md);
+  background: var(--color-surface-container-high);
+  margin: var(--space-sm) 0;
+}
+.title, .titleWithheld {
+  display: block;
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-lh);
+  margin-bottom: var(--space-xs);
+}
+.title { color: var(--color-on-surface); }
+.titleWithheld {
+  color: var(--color-on-surface-variant);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.reason {
+  display: block;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  color: var(--color-on-surface-variant);
+}
+.tag {
+  display: block;
+  font-size: var(--type-label-sm-size);
+  font-weight: var(--type-label-sm-weight);
+  letter-spacing: var(--type-label-sm-ls);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin-bottom: var(--space-xs);
+}
+.report {
+  display: inline-block;
+  margin-top: var(--space-xs);
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-sans);
+  font-size: var(--type-body-sm-size);
+  color: var(--color-on-surface-variant);
+  text-decoration: underline;
+  cursor: pointer;
+}

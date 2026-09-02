@@ -833,13 +833,15 @@ Supabase Dashboard → Authentication:
 
 ### Protected Routes
 
-Middleware at `src/middleware.ts` refreshing the session on every request and guarding `/today`, `/profile` and `/start/*`. Unauthenticated requests to a protected route redirect to `/signin`.
+`src/proxy.ts` refreshes the session on every request and guards `/today`, `/profile` and `/start/*`. Unauthenticated requests to a protected route redirect to `/signin`.
 
-**Middleware is UX, not security.** The actual control is RLS: even if middleware were bypassed entirely, a request could not read another user's `gate_results`, because every policy filters on `auth.uid()`. Route guarding exists so users see a sign-in page instead of an empty list.
+> **Next.js 16 convention.** The `middleware.ts` file convention is **deprecated and renamed to `proxy.ts`**, with the exported function renamed `middleware` → `proxy`. Functionality is identical. Verified against `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md` in the installed Next 16.3.4. Most training data and most tutorials still show `middleware.ts` — do not follow them.
+
+**This is UX, not security.** The actual control is RLS: even if the proxy were bypassed entirely, a request could not read another user's `gate_results`, because every policy filters on `auth.uid()`. Route guarding exists so users see a sign-in page instead of an empty list.
 
 ```ts
-// src/middleware.ts
-export async function middleware(request: NextRequest) {
+// src/proxy.ts
+export async function proxy(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request)
   const { data: { user } } = await supabase.auth.getUser()   // getUser, not getSession
   const path = request.nextUrl.pathname
