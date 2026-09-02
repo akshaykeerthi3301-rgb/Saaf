@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-03 · **Phase:** Design (6 of 7 steps done) · Define 4 of 5, Mini-Launch deliberately deferred · **Code written:** none
+**Last updated:** 2026-09-03 · **Phase:** Develop (PRD + Roadmap done, build starting) · Design 6 of 7, Define 4 of 5 — both remaining steps are launches, deliberately deferred · **Code written:** none yet; 54 tasks planned
 
 Read this first. It carries decisions and verified facts from the originating session so they don't get re-derived or accidentally reversed.
 
@@ -97,6 +97,8 @@ productos/design/          (ProductOS material ignored; the work products below 
   landing-page-wireframe.html ✅ scrollable, 11 sections, scroll-driven annotations
 docs/
   PRODUCT.md              ✅ ~3,600 words · eight sections, synthesised 2026-09-02
+  PRD.md                  ✅ 14 sections · 17 FRs, 7 tables, stack fixed, ₹0 run cost
+  ROADMAP.md              ✅ 54 tasks across 6 phases · magic moment at Phase 2
   DESIGN.md               ✅ 30 colour tokens (light+dark), 9 type levels, 10 components · WCAG AA verified
   DESIGN.html             ✅ live mirror of DESIGN.md · light/dark toggle, all tokens rendered
   PROJECT-STATE.md        ✅ this file
