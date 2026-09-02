@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-03 · **Phase:** Design (2 of 7 steps done) · Define 4 of 5, Mini-Launch deliberately deferred · **Code written:** none
+**Last updated:** 2026-09-03 · **Phase:** Design (6 of 7 steps done) · Define 4 of 5, Mini-Launch deliberately deferred · **Code written:** none
 
 Read this first. It carries decisions and verified facts from the originating session so they don't get re-derived or accidentally reversed.
 
@@ -87,8 +87,14 @@ productos/define/
   2b-Persona-Set.md       ✅ 169 lines · five functions, ranked by design priority
   3-Pricing-Strategy.md   ⏭️ deliberately skipped — ₹0, decisions recorded in-file
   4-Mini-Launch.md        ⬜ template
-productos/design/
+productos/design/          ⚠️ gitignored — none of this is version-controlled or backed up
   1-Product-Identity.md   ✅ Brand Card + five elements · name, worldview, belief, tone, visual lane
+  Design-Prompts.md       ✅ 3 paste-ready AI-design-tool prompts · system + 2 priority screens
+  2-Magic-Moment.md       ✅ primary + 2 alternates · the recognised refusal, <90s, two-sided metric
+  3-Onboarding-Flow.md    ✅ Switcher Funnel, 7 screens, magic moment at 6 (~63s)
+  onboarding-wireframe.html  ✅ clickable, 7 screens, annotations per screen
+  4a-Landing-Page.md      ✅ Product-Visual Hero, 11 sections, 3 substituted
+  landing-page-wireframe.html ✅ scrollable, 11 sections, scroll-driven annotations
 docs/
   PRODUCT.md              ✅ ~3,600 words · eight sections, synthesised 2026-09-02
   DESIGN.md               ✅ 30 colour tokens (light+dark), 9 type levels, 10 components · WCAG AA verified
@@ -116,9 +122,17 @@ Meera ranks 4th but is **strategically the most valuable beta user** — an ATS 
 
 ## Next step
 
-Run **`studio-design-prompt-generator`** (Design Step 3) → produces `productos/design/Design-Prompts.md`, embedding the DESIGN.md tokens and the identity's words into paste-ready prompts for AI design tools. Then Step 4 Magic Moment, Step 5 Onboarding Flow, Step 6 Landing Page, Step 7 relaunch (`productos/design/DESIGN-CHECKLIST.md`).
+Design Steps 1–6 are done. **Step 7 (`studio-launch`, the "here's what it looks like" relaunch) is the only one left in the phase** — but it depends on the deferred Mini-Launch, so there is no believers list to invite yet. Its win condition is one *"can I try it?"*.
 
-Design Steps 1 and 2 are done: the identity is locked (`productos/design/1-Product-Identity.md`) and the design system is written as the mirrored pair `docs/DESIGN.md` + `docs/DESIGN.html`.
+After that: the Develop phase (`productos/develop/DEVELOP-CHECKLIST.md`), starting with `studio-develop-prd-roadmap` → `docs/PRD.md` + `docs/ROADMAP.md`.
+
+**Decisions made across Design that a fresh session must not reverse:**
+
+- **Three landing-page sections are substituted, not missing.** Logo bar → gate-audit strip; case studies → the public gate audit; pricing tiers → one line at ₹0. Saaf has zero users; the reference doc's own anti-pattern rule ("either show the logos or remove the section") drove this. Do not "fill in" testimonials or logos later — publishing self-audit instead is the position.
+- **No compliance badges anywhere.** SOC 2 and GDPR marks would be fabrication.
+- **A tier table would breach Vercel Hobby's non-commercial terms**, not merely be unnecessary.
+- **The onboarding is 7 screens, not the reference's 15–25.** That number exists to manufacture sunk cost before a paywall; there is no paywall here.
+- **Loading and empty states never use borrowed authority** — no rotating testimonials, no user counts. Real telemetry only.
 
 `docs/PRODUCT.md` is done and is the input every downstream Design and Develop skill reads. Two things to know before building on it:
 
