@@ -28,8 +28,9 @@ productos/design/*
 *.local.md
 
 node_modules/
+# All env variants, not just the two we happen to use today.
 .env
-.env.local
+.env*
 .DS_Store
 .next/
 .vercel/
