@@ -1,6 +1,6 @@
 # jobmatch — Project State
 
-**Last updated:** 2026-09-02 · **Phase:** Define (3 of 5 steps done) · **Code written:** none
+**Last updated:** 2026-09-02 · **Phase:** Define (4 of 5 — only the Mini-Launch remains, deliberately deferred) · **Code written:** none
 
 Read this first. It carries decisions and verified facts from the originating session so they don't get re-derived or accidentally reversed.
 
@@ -86,10 +86,11 @@ productos/define/
   3-Pricing-Strategy.md   ⏭️ deliberately skipped — ₹0, decisions recorded in-file
   4-Mini-Launch.md        ⬜ template
 docs/
-  PRODUCT.md              ⬜ NEXT — gates the entire Design and Develop chain
+  PRODUCT.md              ✅ ~3,600 words · eight sections, synthesised 2026-09-02
+  PROJECT-STATE.md        ✅ this file
 ```
 
-`productos/` is gitignored (licensed to the member, not the public). `docs/`, `CLAUDE.md`, `AGENTS.md` are tracked. **Nothing has been committed yet.**
+`productos/` is gitignored (licensed to the member, not the public). `docs/`, `CLAUDE.md`, `AGENTS.md` are tracked. `docs/PRODUCT.md` links back to the four source docs, but those links resolve locally only — they point into the gitignored folder.
 
 ---
 
@@ -109,9 +110,14 @@ Meera ranks 4th but is **strategically the most valuable beta user** — an ATS 
 
 ## Next step
 
-Run **`studio-define-product`** → produces `docs/PRODUCT.md`, the plain-English roll-up every downstream Design and Develop skill reads. Nothing else in the chain runs until it exists. Business-model section will be thin given the pricing skip — fill from the ₹0 decisions above rather than leaving blank.
+Run **`studio-design-identity-creator`** → the Design phase opens with naming and brand identity, reading `docs/PRODUCT.md`. Then design system, then PRD + roadmap (`productos/design/DESIGN-CHECKLIST.md`).
 
-Then: Design phase (`productos/design/DESIGN-CHECKLIST.md`) — identity/naming, then design system, then PRD + roadmap.
+`docs/PRODUCT.md` is done and is the input every downstream Design and Develop skill reads. Two things to know before building on it:
+
+- **It runs ~15 minutes, not the 4–6 the synthesis skill targets.** Deliberate. The Customer section alone is 793 words because all five personas carry real texture — a one-persona summary would have quietly re-narrowed this to an engineering tool. If a short version is ever needed, add a summary block on top rather than cutting sections; the detail is consumed downstream (personas by the onboarding-flow skill, cost structure by the PRD/roadmap skill).
+- **Proof is honestly empty.** The section says so in as many words: no code, no users, no launch, no first-party signal. Do not let a downstream skill dress this up into present-tense evidence.
+
+**Still open from Define:** the Mini-Launch (`4-Mini-Launch.md`). Run `studio-launch` once a refusal screenshot exists — see Open Questions 1 and 5.
 
 ---
 
