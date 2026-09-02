@@ -2,7 +2,7 @@
 
 ## ⚡ Start here: read `docs/PROJECT-STATE.md` first
 
-This is **jobmatch** — a free, ₹0, India-first job-matching product. Portfolio artifact built like a real product. No auto-apply.
+This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio artifact built like a real product. No auto-apply. (The repo directory is still `jobmatch`; that's a path, not the brand.)
 
 `docs/PROJECT-STATE.md` carries the locked decisions, the live-probed technical facts, and the current phase. Read it before proposing anything — several decisions in it were made deliberately and against the obvious default (no LinkedIn/Naukri sourcing; never gate users out; gates typed per function rather than years-only; the founder's personal job tracker is never publishable). Re-deriving or reversing them silently is the main failure mode for a fresh session here.
 

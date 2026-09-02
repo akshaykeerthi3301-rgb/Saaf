@@ -1,6 +1,6 @@
-# jobmatch — Project State
+# Saaf — Project State
 
-**Last updated:** 2026-09-02 · **Phase:** Define (4 of 5 — only the Mini-Launch remains, deliberately deferred) · **Code written:** none
+**Last updated:** 2026-09-03 · **Phase:** Design (2 of 7 steps done) · Define 4 of 5, Mini-Launch deliberately deferred · **Code written:** none
 
 Read this first. It carries decisions and verified facts from the originating session so they don't get re-derived or accidentally reversed.
 
@@ -14,7 +14,7 @@ A free job-matching product for Indian candidates. It sources roles from company
 
 **Frame:** portfolio artifact first, built like a real product. ₹0 forever, no ads, no paid tier.
 
-`jobmatch` is a working directory name, not a decided brand. Naming happens in Design (`studio-design-identity-creator`).
+Named **Saaf** on 2026-09-02 (Design Step 1) — from *saaf saaf batao*, "tell it to me straight." The repo directory is still `jobmatch`; that is a path, not the brand, and renaming it is an open decision.
 
 ---
 
@@ -45,6 +45,8 @@ The personal automation in `derivatives-bot` **continues running unchanged**. It
 | **Open-source the gate, keep the registry private** | Gate code is portfolio proof; the registry is the moat. |
 | **₹0, no paid tier** | Beta at ₹0. Vercel Hobby is non-commercial only — *advertising* a paid product counts as commercial, so even announcing a tier breaks it. |
 | **⛔ Founder's personal job tracker is NOT publishable** | It informed the design (origin of the precision thesis) but is personal data. Must never appear in a landing page, launch post, case study or any public artifact. Flagged in `1-Product-Offer.md` Evidence Sources. |
+| **Name is Saaf** | Decided 2026-09-02. `jobmatch` was killed: Job Match Pro (`jobmatchpro.in`) is an Indian product in the identical wedge. Also killed — Winnow (Winnow Career Concierge sells an "Interview Probability Score"), Yogya (Yogya.ai, Bengaluru), Sirf (active Indian e-commerce app). ⚠️ Registrar/handle availability for Saaf is **unverified** — search presence only. |
+| **Design system is monochrome, flat, square-cornered** | Anchored on live computed styles from `zerodha.tech`: zero shadows, one radius, `#F0F0F0` paper ground. The named anti-reference is `resumly.ai` (196 shadows, 8 radii, 4 gradients, 2 banned fonts). Error red is for system errors only — **never** for a gate outcome. |
 
 ---
 
@@ -85,8 +87,12 @@ productos/define/
   2b-Persona-Set.md       ✅ 169 lines · five functions, ranked by design priority
   3-Pricing-Strategy.md   ⏭️ deliberately skipped — ₹0, decisions recorded in-file
   4-Mini-Launch.md        ⬜ template
+productos/design/
+  1-Product-Identity.md   ✅ Brand Card + five elements · name, worldview, belief, tone, visual lane
 docs/
   PRODUCT.md              ✅ ~3,600 words · eight sections, synthesised 2026-09-02
+  DESIGN.md               ✅ 30 colour tokens (light+dark), 9 type levels, 10 components · WCAG AA verified
+  DESIGN.html             ✅ live mirror of DESIGN.md · light/dark toggle, all tokens rendered
   PROJECT-STATE.md        ✅ this file
 ```
 
@@ -110,7 +116,9 @@ Meera ranks 4th but is **strategically the most valuable beta user** — an ATS 
 
 ## Next step
 
-Run **`studio-design-identity-creator`** → the Design phase opens with naming and brand identity, reading `docs/PRODUCT.md`. Then design system, then PRD + roadmap (`productos/design/DESIGN-CHECKLIST.md`).
+Run **`studio-design-prompt-generator`** (Design Step 3) → produces `productos/design/Design-Prompts.md`, embedding the DESIGN.md tokens and the identity's words into paste-ready prompts for AI design tools. Then Step 4 Magic Moment, Step 5 Onboarding Flow, Step 6 Landing Page, Step 7 relaunch (`productos/design/DESIGN-CHECKLIST.md`).
+
+Design Steps 1 and 2 are done: the identity is locked (`productos/design/1-Product-Identity.md`) and the design system is written as the mirrored pair `docs/DESIGN.md` + `docs/DESIGN.html`.
 
 `docs/PRODUCT.md` is done and is the input every downstream Design and Develop skill reads. Two things to know before building on it:
 
@@ -118,6 +126,11 @@ Run **`studio-design-identity-creator`** → the Design phase opens with naming 
 - **Proof is honestly empty.** The section says so in as many words: no code, no users, no launch, no first-party signal. Do not let a downstream skill dress this up into present-tense evidence.
 
 **Still open from Define:** the Mini-Launch (`4-Mini-Launch.md`). Run `studio-launch` once a refusal screenshot exists — see Open Questions 1 and 5.
+
+**Two open decisions carried from Design:**
+
+1. **Registrar check for Saaf.** Category and search presence were checked; actual domain and social-handle availability were never queried. Do this before the name goes anywhere public.
+2. **Repo directory rename.** The folder is still `~/Desktop/projects/jobmatch`. Cheap to change now, annoying later — but it breaks any saved path. Deliberately not done.
 
 ---
 

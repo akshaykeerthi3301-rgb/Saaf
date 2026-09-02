@@ -1,16 +1,16 @@
-# jobmatch
+# Saaf
 
 *A daily shortlist of roles you can actually get, ranked by honest odds.*
 
 **Last updated:** September 2026
 
-> `jobmatch` is the working directory name, not a decided brand. Naming happens in the Design phase (`studio-design-identity-creator`).
+> Named **Saaf** in the Design phase, September 2026 — from *saaf saaf batao*, "tell it to me straight." The repository directory is still `jobmatch`; that's a path, not the brand. Full rationale in `productos/design/1-Product-Identity.md`.
 
 ---
 
 ## Summary
 
-**jobmatch** is a free daily job shortlist for Indian professionals in their first five years of work — the ones applying to 30–50 roles a quarter and hearing nothing back. It pulls openings from a curated registry of Indian companies' own hiring boards, and before anything gets scored it removes every role the candidate is structurally disqualified from: the posting that wants fifteen years of experience when they have two, the one that requires a chartered accountancy qualification they don't hold, the one that asks for a paid-media budget they've never been given. What survives is ranked by honest odds, and every role arrives with the single line explaining the number — *"72% — go-to-market and stakeholder management match; the job description's three-year floor is your one gap."* When a role is worth the forty minutes, jobmatch will draft a résumé and cover letter tailored to that specific posting — but only when asked, and only by reordering, trimming and re-wording facts already in the profile the candidate confirmed; a fabrication guard blocks any generated document that makes a claim the profile doesn't support, and the remedy is to add the fact, never to let the model assert it. It stops there: this is a pre-application tool, not an auto-apply bot, and it answers one question — *which of these deserves my next forty minutes?* It is free permanently, with no card, no ads and no paid tier, and it is built as a portfolio artifact held to the standards of a real product.
+**Saaf** is a free daily job shortlist for Indian professionals in their first five years of work — the ones applying to 30–50 roles a quarter and hearing nothing back. It pulls openings from a curated registry of Indian companies' own hiring boards, and before anything gets scored it removes every role the candidate is structurally disqualified from: the posting that wants fifteen years of experience when they have two, the one that requires a chartered accountancy qualification they don't hold, the one that asks for a paid-media budget they've never been given. What survives is ranked by honest odds, and every role arrives with the single line explaining the number — *"72% — go-to-market and stakeholder management match; the job description's three-year floor is your one gap."* When a role is worth the forty minutes, Saaf will draft a résumé and cover letter tailored to that specific posting — but only when asked, and only by reordering, trimming and re-wording facts already in the profile the candidate confirmed; a fabrication guard blocks any generated document that makes a claim the profile doesn't support, and the remedy is to add the fact, never to let the model assert it. It stops there: this is a pre-application tool, not an auto-apply bot, and it answers one question — *which of these deserves my next forty minutes?* It is free permanently, with no card, no ads and no paid tier, and it is built as a portfolio artifact held to the standards of a real product.
 
 ---
 
