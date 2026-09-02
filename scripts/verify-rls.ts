@@ -5,17 +5,17 @@
  * rows — so this seeds a row with the service role first, then compares what
  * anon can see. Re-run after any migration that touches policies.
  */
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const BASE = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 const svc = (p: string, init: RequestInit = {}) =>
-  fetch(`${URL}/rest/v1/${p}`, {
+  fetch(`${BASE}/rest/v1/${p}`, {
     ...init,
     headers: { apikey: SVC, Authorization: `Bearer ${SVC}`, 'Content-Type': 'application/json', ...init.headers },
   })
 const anon = (p: string, init: RequestInit = {}) =>
-  fetch(`${URL}/rest/v1/${p}`, {
+  fetch(`${BASE}/rest/v1/${p}`, {
     ...init,
     headers: { apikey: ANON, 'Content-Type': 'application/json', ...init.headers },
   })

@@ -12,7 +12,11 @@
     "test:watch": "vitest",
     "verify:rls": "tsx --env-file=.env.local scripts/verify-rls.ts",
     "seed:fixture": "tsx scripts/seed-fixture.ts",
-    "gates:demo": "tsx scripts/evaluate-fixture.ts"
+    "gates:demo": "tsx scripts/evaluate-fixture.ts",
+    "db:load-fixture": "tsx --env-file=.env.local scripts/load-fixture-to-db.ts",
+    "db:seed-test-user": "tsx --env-file=.env.local scripts/seed-test-user.ts",
+    "dev:signin": "tsx --env-file=.env.local scripts/dev-signin-link.ts",
+    "dev:cookie": "tsx --env-file=.env.local scripts/dev-session-cookie.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
