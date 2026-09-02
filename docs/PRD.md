@@ -166,7 +166,9 @@ saaf/
 
 ### Infrastructure & Deployment
 
-Vercel Hobby, connected to the GitHub repository, deploying `main` on push. Preview deployments on branches. The production URL is a `*.vercel.app` subdomain — no custom domain, per the confirmed hosting intent.
+Vercel Hobby, deployed with the **Vercel CLI** rather than the GitHub integration: this GitHub account cannot authorise third-party OAuth applications, so Vercel cannot be linked to the repository. `npx vercel` creates the project, `npx vercel --prod` ships it. Pushes to GitHub still work and still serve as the code backup — they simply do not trigger a deploy. The production URL is a `*.vercel.app` subdomain — no custom domain, per the confirmed hosting intent.
+
+**GitHub Actions is unaffected.** It is first-party to GitHub and needs no OAuth linking — the ingest workflow authenticates outbound to Supabase with a repository secret. The scheduler stays on Actions as specified in §6 FR-002.
 
 The ingest job is **not** on Vercel. It runs as a GitHub Actions workflow on a cron, using the Supabase service-role key from Actions secrets. This keeps it clear of Hobby's two-job cron cap and means a Vercel outage does not stop the registry compounding.
 

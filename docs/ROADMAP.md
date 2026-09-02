@@ -65,9 +65,9 @@
   Files: `src/lib/analytics.ts`, `src/instrumentation.ts`, `sentry.client.config.ts`, `sentry.server.config.ts`
   Notes: PostHog browser + node. Define the six events from FR-016 as typed constants so they cannot drift: `onboarding_started`, `resume_uploaded`, `profile_confirmed`, `shortlist_viewed`, `withheld_section_engaged`, `refusal_reported`. Sentry across client and server with source-map upload. Verify: a test event appears in PostHog and a thrown error appears in Sentry.
 
-- [ ] **TASK-010** — Deploy to Vercel and confirm the full auth loop in production
-  Files: `.github/workflows/` (none yet), `vercel.json` if needed
-  Notes: Connect the repo, set every environment variable from PRD § Stack Integration Guide. `SUPABASE_SERVICE_ROLE_KEY` goes in **GitHub Actions secrets only** — never in Vercel's environment. Verify: sign in on the deployed `*.vercel.app` URL from a phone.
+- [ ] **TASK-010** — Deploy to Vercel via the CLI and confirm the full auth loop in production
+  Files: `vercel.json` if needed
+  Notes: **Deploy with the Vercel CLI, not the GitHub integration** — this account cannot authorise third-party OAuth apps, so Vercel cannot be linked to the repo. Run `npx vercel` once to create the project, then `npx vercel --prod` to ship; pushes to GitHub still work and still back the code up, they just do not trigger a deploy. Set every environment variable from PRD § Stack Integration Guide with `npx vercel env add`. `SUPABASE_SERVICE_ROLE_KEY` goes in **GitHub Actions secrets only** — never in Vercel's environment. Verify: sign in on the deployed `*.vercel.app` URL from a phone.
 
 ---
 
