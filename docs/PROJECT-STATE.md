@@ -87,7 +87,7 @@ productos/define/
   2b-Persona-Set.md       ✅ 169 lines · five functions, ranked by design priority
   3-Pricing-Strategy.md   ⏭️ deliberately skipped — ₹0, decisions recorded in-file
   4-Mini-Launch.md        ⬜ template
-productos/design/          ⚠️ gitignored — none of this is version-controlled or backed up
+productos/design/          (ProductOS material ignored; the work products below are tracked)
   1-Product-Identity.md   ✅ Brand Card + five elements · name, worldview, belief, tone, visual lane
   Design-Prompts.md       ✅ 3 paste-ready AI-design-tool prompts · system + 2 priority screens
   2-Magic-Moment.md       ✅ primary + 2 alternates · the recognised refusal, <90s, two-sided metric
@@ -102,7 +102,9 @@ docs/
   PROJECT-STATE.md        ✅ this file
 ```
 
-`productos/` is gitignored (licensed to the member, not the public). `docs/`, `CLAUDE.md`, `AGENTS.md` are tracked. `docs/PRODUCT.md` links back to the four source docs, but those links resolve locally only — they point into the gitignored folder.
+**Gitignore is selective, not wholesale — changed 2026-09-03.** ProductOS's own material (templates, checklists, BONUS best-practice docs, skills, onboarding references) stays untracked: it is licensed to the member, not the public. The founder's own filled-in work products **are** tracked, because the alternative was keeping the entire Define and Design output on one disk with no version control. Tracked from `productos/`: the four Define work products and the seven Design ones. Everything else there is ignored. `docs/`, `CLAUDE.md` and `AGENTS.md` remain tracked as before, and the cross-links in `docs/PRODUCT.md` now resolve for anyone with the repo.
+
+⚠️ **Before ever making this repo public:** the tracked work products embed ProductOS template scaffolding — section headers, the italic prompts, the `> Good: / Bad:` guidance lines, the imagery-lane table — because the skills preserve that structure when they fill a file in. That is ProductOS's licensed content sitting inside the founder's files. It is not a problem for a private repo; it is a licensing question the moment one is published.
 
 ---
 

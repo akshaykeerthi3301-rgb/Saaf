@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Wireframe — Saaf</title>
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --panel: #ffffff;
+    --border: #d6d3d1;
+    --ink: #1c1917;
+    --muted: #78716c;
+    --accent: #44403c;
+    --device-bg: #fafaf9;
+    --wire-fill: #e7e5e4;
+    --wire-line: #a8a29e;
+    --wire-text: #57534e;
+    --note-bg: #fef3c7;
+    --note-border: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .app-header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .app-header h1 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+  .app-header p { margin: 0; color: var(--muted); font-size: 13px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    min-height: calc(100vh - 56px);
+  }
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .sidebar h2, .annotation h2 {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .screen-list { list-style: none; padding: 0; margin: 0; }
+  .screen-list li {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .screen-list li:hover { background: var(--bg); }
+  .screen-list li.active { background: var(--bg); border-color: var(--border); font-weight: 500; }
+  .screen-list .num {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    background: var(--border);
+    color: var(--ink);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .screen-list li.active .num { background: var(--ink); color: white; }
+  .canvas { padding: 40px; display: flex; align-items: flex-start; justify-content: center; overflow: auto; }
+
+  /* === DEVICE FRAMES — swap the class on .device to match the product's primary surface. === */
+  .device {
+    background: var(--device-bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  }
+  .screen { display: none; position: absolute; overflow-y: auto; }
+  .screen.active { display: block; }
+
+  /* Mobile phone — 320×640. iOS-style phone with notch. For consumer mobile AI apps. */
+  .device-mobile {
+    border: 8px solid var(--accent);
+    border-radius: 36px;
+    width: 320px;
+    height: 640px;
+  }
+  .device-mobile .notch {
+    width: 60px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin: 8px auto 0;
+  }
+  .device-mobile .screen { inset: 24px 16px 16px; padding: 16px 0; }
+
+  /* Tablet — 480×680. Portrait tablet with thicker bezel. For iPad-first products. */
+  .device-tablet {
+    border: 12px solid var(--accent);
+    border-radius: 28px;
+    width: 480px;
+    height: 680px;
+  }
+  .device-tablet .screen { inset: 20px 24px 24px; padding: 16px 8px; }
+
+  /* Browser / web app — 800×500. Web chrome with traffic lights and URL bar. For B2B SaaS, marketplaces, creator economy, vertical SaaS, API/dev tool dashboards, productized service client portals. */
+  .device-browser {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 800px;
+    height: 500px;
+  }
+  .device-browser .browser-chrome {
+    height: 36px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .device-browser .traffic-lights,
+  .device-desktop .traffic-lights { display: flex; gap: 6px; flex-shrink: 0; }
+  .device-browser .traffic-lights span,
+  .device-desktop .traffic-lights span { width: 10px; height: 10px; background: var(--wire-line); border-radius: 50%; display: block; }
+  .device-browser .url-bar {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    height: 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+  .device-browser .screen { inset: 36px 0 0 0; padding: 24px 40px; }
+
+  /* Desktop native app window — 720×480. macOS-style chrome with title bar. For Granola, Raycast, Superhuman, Linear Desktop. */
+  .device-desktop {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 720px;
+    height: 480px;
+  }
+  .device-desktop .title-bar {
+    height: 28px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .device-desktop .title-text { flex: 1; text-align: center; font-size: 11px; color: var(--muted); }
+  .device-desktop .screen { inset: 28px 0 0 0; padding: 24px 32px; }
+
+  /* Browser extension popup — 360×500. Small popover with a tab/arrow indicating it pops from the toolbar. For Grammarly, Honey, Loom, AI-extension products. */
+  .device-extension {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 360px;
+    height: 500px;
+    margin-top: 24px;
+  }
+  .device-extension .ext-arrow {
+    position: absolute;
+    top: -8px;
+    right: 32px;
+    width: 14px;
+    height: 14px;
+    background: var(--device-bg);
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    transform: rotate(45deg);
+  }
+  .device-extension .screen { inset: 16px 16px 16px; padding: 8px 0; }
+  .wire-progress { display: flex; gap: 4px; margin-bottom: 24px; }
+  .wire-progress span { flex: 1; height: 3px; background: var(--wire-fill); border-radius: 2px; }
+  .wire-progress span.done { background: var(--wire-line); }
+  .wire-progress span.current { background: var(--ink); }
+  .wire-headline { font-size: 18px; font-weight: 600; color: var(--ink); margin: 0 0 8px; line-height: 1.3; }
+  .wire-sub { color: var(--wire-text); font-size: 13px; margin: 0 0 16px; }
+  .wire-box {
+    background: var(--wire-fill);
+    border: 1px dashed var(--wire-line);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    color: var(--wire-text);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .wire-option {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    cursor: default;
+  }
+  .wire-cta {
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    font-family: inherit;
+  }
+  .wire-cta:hover { opacity: 0.9; }
+  .wire-back {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    font-family: inherit;
+  }
+  .wire-loading { text-align: center; padding: 24px 0; }
+  .wire-loading-bar {
+    height: 4px;
+    background: var(--wire-fill);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 24px 0 16px;
+  }
+  .wire-loading-bar div {
+    height: 100%;
+    background: var(--ink);
+    width: 100%;
+    animation: load 2.5s ease-out infinite;
+    transform-origin: left;
+  }
+  @keyframes load {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+  }
+  .wire-testimonial {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--wire-text);
+    margin: 12px 0;
+    font-style: italic;
+  }
+  .annotation {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .annotation .ann-screen-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .annotation dl { margin: 0; }
+  .annotation dt {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+  .annotation dt:first-child { margin-top: 0; }
+  .annotation dd { margin: 4px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink); }
+  .annotation .ref {
+    background: var(--note-bg);
+    border-left: 3px solid var(--note-border);
+    padding: 10px 12px;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--wire-text);
+    border-radius: 4px;
+  }
+
+  /* === Saaf-specific primitives — the role-row states are the product === */
+  .wire-arith {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    color: var(--wire-text);
+    padding: 6px 0 10px;
+    border-bottom: 1px solid var(--wire-line);
+    margin-bottom: 4px;
+  }
+  .wire-row {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--wire-line);
+    font-size: 11px;
+    color: var(--wire-text);
+  }
+  .wire-row .t { color: var(--ink); display: block; margin-bottom: 2px; }
+  .wire-row .why { font-size: 9px; color: var(--muted); display: block; }
+  .wire-row-withheld .t { text-decoration: line-through; color: var(--muted); }
+  .wire-row-stretch {
+    background: var(--wire-fill);
+    padding: 8px;
+    border-bottom: none;
+    margin: 4px 0;
+  }
+  .wire-row-stretch .tag {
+    font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); display: block; margin-bottom: 3px;
+  }
+  .wire-row-stretch .t { display: block; color: var(--ink); margin-bottom: 2px; }
+  .wire-row-stretch .why { display: block; font-size: 9px; color: var(--muted); }
+  .wire-section-head {
+    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 12px 0 4px;
+  }
+  .wire-status {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px; color: var(--wire-text);
+    padding: 3px 0;
+  }
+  .wire-note { font-size: 9px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Onboarding Wireframe — Saaf</h1>
+  <p>Switcher Funnel, 7 screens, magic moment at screen 6 (~63s). Click the primary CTA to advance; the sidebar jumps anywhere; the right panel explains what each screen tests. Lo-fi on purpose — this is for critiquing flow, not visuals.</p>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <h2>Screens</h2>
+    <ol class="screen-list" id="screen-list">
+      <li class="active" data-jump="1"><span class="num">1</span> Where you apply now</li>
+      <li data-jump="2"><span class="num">2</span> Upload résumé</li>
+      <li data-jump="3"><span class="num">3</span> Reading résumé</li>
+      <li data-jump="4"><span class="num">4</span> Confirm what we read</li>
+      <li data-jump="5"><span class="num">5</span> Your gate</li>
+      <li data-jump="6"><span class="num">6</span> First shortlist ★</li>
+      <li data-jump="7"><span class="num">7</span> Tomorrow's list</li>
+    </ol>
+  </aside>
+
+  <main class="canvas">
+    <!--
+      DEVICE FRAME — pick the class on .device that matches the product's primary surface.
+      Five frames are defined in the CSS above; their dimensions are sized to fit the canvas.
+
+      device-mobile     (320×640)  Consumer mobile AI apps. Cal AI / Noom / Rizz shape.
+                        Chrome: <div class="notch"></div>
+
+      device-tablet     (480×680)  iPad-first or large-tablet products.
+                        Chrome: none.
+
+      device-browser    (800×500)  B2B AI SaaS, marketplaces, creator economy, vertical SaaS,
+                                   API/dev tool dashboards, productized service client portals.
+                        Chrome: <div class="browser-chrome">
+                                  <div class="traffic-lights"><span></span><span></span><span></span></div>
+                                  <div class="url-bar">app.yourproduct.com</div>
+                                </div>
+
+      device-desktop    (720×480)  Native desktop apps. Granola / Raycast / Superhuman shape.
+                        Chrome: <div class="title-bar">
+                                  <div class="traffic-lights"><span></span><span></span><span></span></div>
+                                  <div class="title-text">Product Name</div>
+                                </div>
+
+      device-extension  (360×500)  Browser extension popups. Grammarly / Honey / Loom shape.
+                        Chrome: <div class="ext-arrow"></div>
+
+      Replace `device-mobile` and the `<div class="notch"></div>` below with the right pair
+      for the user's product. All .screen content sizing adapts automatically.
+    -->
+    <div class="device device-mobile">
+      <div class="notch"></div>
+
+      <section class="screen active" data-screen="1">
+        <div class="wire-progress"><div style="width:10%"></div></div>
+        <h1 class="wire-headline">Where are you applying now?</h1>
+        <p class="wire-sub">So we know what you're comparing us against.</p>
+        <div class="wire-option">Naukri</div>
+        <div class="wire-option">LinkedIn</div>
+        <div class="wire-option">Instahyre</div>
+        <div class="wire-option">Cutshort</div>
+        <div class="wire-option">Referrals only</div>
+        <button class="wire-cta" data-next="2">Continue</button>
+      </section>
+
+      <section class="screen" data-screen="2">
+        <div class="wire-progress"><div style="width:25%"></div></div>
+        <button class="wire-back" data-next="1">← Back</button>
+        <h1 class="wire-headline">Upload your résumé</h1>
+        <div class="wire-box" style="height:120px">[ DROP FILE / TAP TO CHOOSE ]</div>
+        <p class="wire-sub">We read it once to fill in your profile, then delete the file. Only the fields you confirm are stored.</p>
+        <button class="wire-cta" data-next="3">Choose file</button>
+        <div class="wire-note" style="text-align:center">Type it in instead</div>
+      </section>
+
+      <section class="screen" data-screen="3">
+        <div class="wire-progress"><div style="width:40%"></div></div>
+        <div class="wire-loading">
+          <h1 class="wire-headline">Reading your résumé</h1>
+          <div class="wire-loading-bar"><div></div></div>
+          <div class="wire-status">Found 4 roles and 2 employers.</div>
+          <div class="wire-status">Matching your skills to the ESCO occupation vocabulary.</div>
+          <div class="wire-status">Your file is deleted. Only the parsed fields remain.</div>
+        </div>
+        <button class="wire-cta" data-next="4">[ auto-advances ~8s ]</button>
+      </section>
+
+      <section class="screen" data-screen="4">
+        <div class="wire-progress"><div style="width:60%"></div></div>
+        <button class="wire-back" data-next="3">← Back</button>
+        <h1 class="wire-headline">Confirm what we read from your résumé</h1>
+        <p class="wire-sub">Nothing runs until you've checked every field.</p>
+        <div class="wire-box">CURRENT TITLE · read from your résumé</div>
+        <div class="wire-box">EMPLOYER · read from your résumé</div>
+        <div class="wire-box">YEARS OF EXPERIENCE · read from your résumé</div>
+        <div class="wire-box">FUNCTION · read from your résumé</div>
+        <div class="wire-box">CITY · read from your résumé</div>
+        <div class="wire-box">WORK AUTHORISATION · read from your résumé</div>
+        <button class="wire-cta" data-next="5">Looks right</button>
+      </section>
+
+      <section class="screen" data-screen="5">
+        <div class="wire-progress"><div style="width:80%"></div></div>
+        <button class="wire-back" data-next="4">← Back</button>
+        <h1 class="wire-headline">Which credential do you hold?</h1>
+        <div class="wire-option">CA</div>
+        <div class="wire-option">CFA</div>
+        <div class="wire-option">CS</div>
+        <div class="wire-option">None of these</div>
+        <p class="wire-sub">Finance gates on a credential, not on years. We check the one that actually applies to you.</p>
+        <button class="wire-cta" data-next="6">Continue</button>
+      </section>
+
+      <section class="screen" data-screen="6">
+        <h1 class="wire-headline">3 roles cleared your experience band</h1>
+        <div class="wire-arith">3,200 indexed &middot; 47 in your function &middot; 3 cleared</div>
+        <div class="wire-row"><span class="t">Associate Product Manager &middot; Razorpay</span><span class="why">72% — GTM and stakeholder match; the 3-year floor is your one gap.</span></div>
+        <div class="wire-row"><span class="t">Business Operations Analyst &middot; Groww</span><span class="why">68% — analytics and stakeholder work match; no gaps.</span></div>
+        <div class="wire-row-stretch"><span class="tag">Stretch &middot; 1 year gap</span><span class="t">Growth Marketing Lead &middot; slice</span><span class="why">64% — channel mix matches; 3-year floor is one year above you.</span></div>
+        <div class="wire-section-head">44 roles withheld today</div>
+        <div class="wire-row wire-row-withheld"><span class="t">Manager, Financial Planning &middot; Meesho</span><span class="why">Withheld — asks for a chartered accountant; your profile doesn't carry one.</span></div>
+        <div class="wire-row wire-row-withheld"><span class="t">Principal Engineer &middot; Postman</span><span class="why">Withheld — asks for 15 years; you have 2.</span></div>
+        <div class="wire-note">This shouldn't be here</div>
+        <button class="wire-cta" data-next="7">[ scrolls · then digest prompt ]</button>
+      </section>
+
+      <section class="screen" data-screen="7">
+        <div class="wire-note">— shortlist visible behind this sheet —</div>
+        <div class="wire-box" style="height:200px;display:flex;flex-direction:column;justify-content:center;padding:16px">
+          <h1 class="wire-headline" style="margin-top:0">Want tomorrow's list?</h1>
+          <p class="wire-sub">One email a day, only when something new clears your gates. Some days it'll be empty and we'll say so.</p>
+        </div>
+        <button class="wire-cta" data-next="1">Send me the daily list</button>
+        <div class="wire-note" style="text-align:center">No, I'll check myself &nbsp;·&nbsp; [End of flow — loops to 1]</div>
+      </section>
+    </div>
+  </main>
+
+  <aside class="annotation">
+    <h2>Screen notes</h2>
+    <div id="ann-content"></div>
+  </aside>
+
+</div>
+
+<script>
+const annotations = {
+  "1": {
+    title: "1. Where are you applying now?",
+    goal: "Open with a question that names the incumbent the user is leaving, establishing the comparison this product wins on.",
+    action: "Multi-select one to four portals, tap Continue. ~5 seconds.",
+    proves: "This product knows what you already use, and is about to be measured against it.",
+    risk: "Reads as data collection with no benefit stated. The sub-line has to carry the purpose in seven words.",
+    ref: "Mobile Onboarding Tactic #1 (Open With a Question, Not a Logo) + Decision Tree #4 (Switcher Funnel)."
+  },
+  "2": {
+    title: "2. Upload your résumé",
+    goal: "Collect the single input the product runs on, and make the deletion promise at the moment of the ask.",
+    action: "Tap to select a file, or fall back to manual entry. ~15 seconds.",
+    proves: "The confidentiality guarantee is a mechanism, not a policy page.",
+    risk: "HIGHEST-DROP SCREEN. Handing a résumé to an unknown product is the largest ask here — Meera, the most exposed persona, plausibly stops. Mitigated by stating deletion AT the ask and offering manual entry as a real alternative.",
+    ref: "Mobile Onboarding Principle #7. Avoids the Email Wall anti-pattern — no account required to reach this point."
+  },
+  "3": {
+    title: "3. Reading your résumé",
+    goal: "Cover parse latency without manufacturing false authority.",
+    action: "Wait ~8 seconds while three status lines report real work.",
+    proves: "The product did something specific, and the file is already gone.",
+    risk: "Eight seconds with nothing visible reads as broken. Status lines must report real work, not fill time.",
+    ref: "Mobile Onboarding Tactic #7 — ADAPTED. The doc prescribes rotating testimonials and a user count; this product has zero users and the identity forbids unshowable claims. Replaced with genuine parse telemetry."
+  },
+  "4": {
+    title: "4. Confirm what we read",
+    goal: "Get every field confirmed, because the gates are only as honest as the profile they run against.",
+    action: "Scan six pre-filled fields, correct any, tap Looks right. ~30 seconds.",
+    proves: "Nothing was assumed about you. The profile is yours, not inferred.",
+    risk: "Longest screen in the flow and the only one demanding real reading. Pre-fill makes it a scan, not a form — no field is ever empty.",
+    ref: "Mobile Onboarding Tactic #5 (Multiple-Choice Only). Pre-filling converts typing into confirmation."
+  },
+  "5": {
+    title: "5. The gate that applies to you",
+    goal: "Ask the one function-typed question that determines this candidate's real disqualifier, and make the branch visible.",
+    action: "One tap. ~5 seconds. Headline branches on the function confirmed at screen 4.",
+    proves: "This product knows that finance gates on a credential and marketing gates on budget scale — the portals do not.",
+    risk: "'None of these' can feel like self-elimination. The sub must explain that naming the gate prevents wasted applications; nobody is turned away.",
+    ref: "Mobile Onboarding Tactic #6 (Branch Visibly). The doc calls branching 'the illusion of intelligence' — here the typed gate IS the engine, not an illusion."
+  },
+  "6": {
+    title: "6. Your first shortlist ★ MAGIC MOMENT",
+    goal: "Deliver the recognised refusal — software saying no, with a reason the candidate knows is correct.",
+    action: "Read. Scroll into the withheld section. Target: reached ~63s from screen 1, against a 90s target.",
+    proves: "The short list is trustworthy precisely because you can see what was taken out of it and why.",
+    risk: "The user never scrolls to the withheld section and the aha silently fails to fire — mitigated by the withheld count sitting in the arithmetic line above the fold and the section being open by default. Second risk: a WRONG refusal, which inverts the aha into the exact injury this product exists to fix.",
+    ref: "Mobile Onboarding Tactic #8 (Personalized Plan Reveal) — INVERTED. The doc's reveal shows what you unlock; this shows what was taken away."
+  },
+  "7": {
+    title: "7. Tomorrow's list",
+    goal: "Convert one session into a habit, asked only after the value has landed.",
+    action: "Allow or skip. One tap. [End of flow — CTA loops back to screen 1.]",
+    proves: "The product will tell you when there is nothing worth telling you.",
+    risk: "Permission fatigue — mitigated by arriving after the aha, and by promising empty days up front, which no competitor does.",
+    ref: "Mobile Onboarding Principle #7. Avoids the Permission Walls on Screen 2 anti-pattern."
+  }
+};
+
+const screens = document.querySelectorAll(".screen");
+const listItems = document.querySelectorAll("#screen-list li");
+const annContent = document.getElementById("ann-content");
+
+function go(n) {
+  const target = String(n);
+  screens.forEach(s => s.classList.toggle("active", s.dataset.screen === target));
+  listItems.forEach(li => li.classList.toggle("active", li.dataset.jump === target));
+  renderAnnotation(target);
+}
+
+function renderAnnotation(n) {
+  const a = annotations[n];
+  if (!a) { annContent.innerHTML = ""; return; }
+  annContent.innerHTML = `
+    <div class="ann-screen-title">${a.title}</div>
+    <dl>
+      <dt>Goal of this screen</dt><dd>${a.goal}</dd>
+      <dt>User action expected</dt><dd>${a.action}</dd>
+      <dt>What this proves</dt><dd>${a.proves}</dd>
+      <dt>Drop-off risk</dt><dd>${a.risk}</dd>
+    </dl>
+    <div class="ref">${a.ref}</div>
+  `;
+}
+
+document.querySelectorAll("[data-next]").forEach(el => {
+  el.addEventListener("click", e => go(e.currentTarget.dataset.next));
+});
+listItems.forEach(li => {
+  li.addEventListener("click", () => go(li.dataset.jump));
+});
+
+renderAnnotation("1");
+</script>
+
+</body>
+</html>

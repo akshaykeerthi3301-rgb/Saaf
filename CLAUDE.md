@@ -10,6 +10,7 @@ This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio a
 ## This repo runs on ProductOS
 
 - The product strategy system lives in `productos/` — checklists, templates, and skills. The strategy docs are the source of intent; don't guess at product decisions the docs already answer.
+- **`productos/` is selectively gitignored.** ProductOS's own material (templates, checklists, BONUS docs, skills) is untracked — it's licensed, not public. The founder's filled-in work products in `productos/define/` and `productos/design/` **are** tracked. Adding a new work product there means adding a `!` line to `.gitignore`, or it silently won't be versioned.
 - The programme plan is `docs/PLAN.md`, when present (adopted at setup by `studio-setup`) — consult it before starting any phase work.
 - The canonical product documents live in `docs/` at the repo root (`PRODUCT.md`, `DESIGN.md`, `PRD.md`, `ROADMAP.md`, `LAUNCHES.md`, `SECURITY-AUDIT.md`, …). ProductOS skills write them; they may sit alongside the repo's own docs.
 - Build-loop plan files are `docs/ROADMAP.md` and `docs/REFACTOR.md` — never `docs/PLAN.md` (the programme plan, no checkboxes) and never `productos/*-CHECKLIST.md`.

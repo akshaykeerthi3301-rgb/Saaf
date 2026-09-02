@@ -1,4 +1,32 @@
-productos/
+# ProductOS is licensed to the member, not the public — its own material
+# (templates, checklists, BONUS best-practice docs, skills, onboarding
+# references) stays untracked. The founder's own filled-in work products are
+# tracked, because losing that folder would otherwise lose the entire Define
+# and Design phases.
+productos/*
+!productos/define/
+!productos/design/
+productos/define/*
+productos/design/*
+
+# Define-phase work products
+!productos/define/1-Product-Offer.md
+!productos/define/2-Customer-Persona.md
+!productos/define/2b-Persona-Set.md
+!productos/define/3-Pricing-Strategy.md
+
+# Design-phase work products
+!productos/design/1-Product-Identity.md
+!productos/design/2-Magic-Moment.md
+!productos/design/3-Onboarding-Flow.md
+!productos/design/4a-Landing-Page.md
+!productos/design/Design-Prompts.md
+!productos/design/onboarding-wireframe.html
+!productos/design/landing-page-wireframe.html
+
+# Local-only private notes — never tracked, at any path
+*.local.md
+
 node_modules/
 .env
 .env.local

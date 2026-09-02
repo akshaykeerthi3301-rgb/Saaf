@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing Page Wireframe — Saaf</title>
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --panel: #ffffff;
+    --border: #d6d3d1;
+    --ink: #1c1917;
+    --muted: #78716c;
+    --accent: #44403c;
+    --device-bg: #fafaf9;
+    --wire-fill: #e7e5e4;
+    --wire-line: #a8a29e;
+    --wire-text: #57534e;
+    --note-bg: #fef3c7;
+    --note-border: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .app-header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+  .app-header p { margin: 0; color: var(--muted); font-size: 13px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    min-height: calc(100vh - 56px);
+  }
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar h2, .annotation h2 {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .section-list { list-style: none; padding: 0; margin: 0; }
+  .section-list li {
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .section-list li:hover { background: var(--bg); }
+  .section-list li.active { background: var(--bg); border-color: var(--border); font-weight: 500; }
+  .section-list .num {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    background: var(--border);
+    color: var(--ink);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .section-list li.active .num { background: var(--ink); color: white; }
+
+  /* Browser-frame canvas */
+  .canvas {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+  }
+  .browser-frame {
+    width: 100%;
+    max-width: 1080px;
+    background: var(--device-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  }
+  .browser-chrome {
+    height: 36px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .traffic-lights { display: flex; gap: 6px; flex-shrink: 0; }
+  .traffic-lights span {
+    width: 10px;
+    height: 10px;
+    background: var(--wire-line);
+    border-radius: 50%;
+    display: block;
+  }
+  .url-bar {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    height: 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+
+  /* Page sections */
+  .page-content { background: var(--panel); }
+  .page-section {
+    padding: 60px 40px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 60px;
+  }
+  .page-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .page-section.section-header {
+    padding: 16px 40px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Nav */
+  .wire-nav { display: flex; align-items: center; gap: 24px; }
+  .wire-logo {
+    background: var(--wire-fill);
+    border: 1px dashed var(--wire-line);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--wire-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .wire-nav-links {
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    color: var(--wire-text);
+    font-size: 13px;
+  }
+  .wire-cta-small {
+    background: var(--ink);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Hero */
+  .wire-hero { text-align: center; padding: 40px 0 20px; }
+  .wire-headline-xl {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 16px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .wire-sub-lg {
+    font-size: 18px;
+    color: var(--wire-text);
+    margin: 0 auto 24px;
+    max-width: 600px;
+  }
+  .wire-cta-lg {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 32px;
+  }
+  .wire-hero-visual {
+    background: var(--wire-fill);
+    border: 1px dashed var(--wire-line);
+    border-radius: 8px;
+    padding: 60px;
+    color: var(--wire-text);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .wire-hero-testimonial {
+    margin: 16px auto 0;
+    max-width: 500px;
+    font-size: 13px;
+    color: var(--wire-text);
+    font-style: italic;
+  }
+
+  /* Logo bar */
+  .wire-logos {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .wire-logo-box {
+    background: var(--wire-fill);
+    border: 1px dashed var(--wire-line);
+    border-radius: 4px;
+    padding: 14px;
+    text-align: center;
+    color: var(--wire-text);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Section headings */
+  .wire-eyebrow {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .wire-h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 12px;
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+  .wire-section-sub {
+    font-size: 16px;
+    color: var(--wire-text);
+    margin: 0 auto 32px;
+    text-align: center;
+    max-width: 600px;
+  }
+
+  /* Steps */
+  .wire-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .wire-step { background: var(--bg); border-radius: 8px; padding: 20px; }
+  .wire-step-num {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    background: var(--ink);
+    color: white;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .wire-step-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .wire-step-desc { font-size: 13px; color: var(--wire-text); }
+
+  /* Features grid */
+  .wire-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .wire-feature { padding: 20px; border: 1px solid var(--border); border-radius: 8px; }
+  .wire-feature-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--wire-fill);
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  .wire-feature-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .wire-feature-desc { font-size: 13px; color: var(--wire-text); }
+
+  /* Testimonials */
+  .wire-testimonials {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .wire-testimonial-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .wire-testimonial-quote { font-size: 14px; color: var(--ink); margin-bottom: 12px; font-style: italic; }
+  .wire-testimonial-author { font-size: 12px; color: var(--wire-text); }
+  .wire-rating { text-align: center; margin-top: 24px; font-size: 14px; color: var(--ink); font-weight: 600; }
+
+  /* Pricing */
+  .wire-pricing {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .wire-pricing-tier {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    position: relative;
+  }
+  .wire-pricing-tier.popular { border: 2px solid var(--ink); }
+  .wire-popular-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .wire-pricing-name {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .wire-pricing-amount { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .wire-pricing-period { font-size: 12px; color: var(--wire-text); margin-bottom: 16px; }
+  .wire-pricing-features { list-style: none; padding: 0; margin: 0 0 16px; }
+  .wire-pricing-features li { font-size: 13px; color: var(--wire-text); padding: 4px 0; }
+  .wire-pricing-cta {
+    width: 100%;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .wire-pricing-tier:not(.popular) .wire-pricing-cta {
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+
+  /* FAQ */
+  .wire-faq { max-width: 700px; margin: 0 auto; }
+  .wire-faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  .wire-faq-q { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .wire-faq-a { font-size: 13px; color: var(--wire-text); }
+
+  /* Final CTA */
+  .wire-final-cta {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--bg);
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .wire-secondary-link { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+  /* Footer */
+  .wire-footer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 0 20px 20px;
+  }
+  .wire-footer-col h4 {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 10px;
+  }
+  .wire-footer-col ul { list-style: none; padding: 0; margin: 0; }
+  .wire-footer-col li { font-size: 12px; color: var(--wire-text); padding: 3px 0; }
+  .wire-footer-bottom {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .wire-compliance-badges { display: flex; gap: 8px; }
+  .wire-compliance-badges span {
+    background: var(--wire-fill);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--wire-text);
+  }
+
+  /* Annotation panel */
+  .annotation {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 24px;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .ann-screen-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .annotation dl { margin: 0; }
+  .annotation dt {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+  .annotation dt:first-child { margin-top: 0; }
+  .annotation dd { margin: 4px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink); }
+  .annotation .ref {
+    background: var(--note-bg);
+    border-left: 3px solid var(--note-border);
+    padding: 10px 12px;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--wire-text);
+    border-radius: 4px;
+  }
+
+  /* === Saaf-specific primitives === */
+  .wire-split { display: grid; grid-template-columns: 1fr 1fr; border: 1px dashed var(--wire-line); margin: 16px 0; }
+  .wire-split > div { padding: 14px; font-size: 11px; color: var(--wire-text); }
+  .wire-split > div:first-child { border-right: 1px solid var(--wire-line); }
+  .wire-split .lbl { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display:block; margin-bottom: 6px; }
+  .wire-split .struck { text-decoration: line-through; color: var(--muted); }
+  .wire-strip { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--wire-text);
+    border-top: 1px solid var(--wire-line); border-bottom: 1px solid var(--wire-line); padding: 12px 0; text-align: center; margin: 8px 0; }
+  .wire-audit { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
+  .wire-audit td { padding: 6px 0; border-bottom: 1px solid var(--wire-line); color: var(--wire-text); }
+  .wire-audit td:last-child { text-align: right; font-family: ui-monospace, Menlo, monospace; }
+  .wire-quote { border-left: 2px solid var(--wire-line); padding: 8px 0 8px 14px; font-size: 12px; color: var(--wire-text); margin: 14px 0; }
+  .wire-quote cite { display:block; font-size: 10px; color: var(--muted); font-style: normal; margin-top: 6px; }
+  .wire-price { font-size: 13px; color: var(--wire-text); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Landing Page Wireframe — Saaf</h1>
+  <p>Product-Visual Hero, 11 sections, one CTA repeated three times. Three sections are substituted — logo bar, case studies and pricing tiers become published self-audit and a single price. Scroll to feel the flow; the right panel explains each section. Lo-fi on purpose.</p>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <h2>Sections</h2>
+    <ol class="section-list" id="section-list">
+      <li class="active" data-section="header"><span class="num">1</span> Header</li>
+      <li data-section="hero"><span class="num">2</span> Hero</li>
+      <li data-section="gate-strip"><span class="num">3</span> Gate-audit strip</li>
+      <li data-section="problem"><span class="num">4</span> Problem</li>
+      <li data-section="solution"><span class="num">5</span> How it works</li>
+      <li data-section="features"><span class="num">6</span> Benefits</li>
+      <li data-section="gate-audit"><span class="num">7</span> Public gate audit</li>
+      <li data-section="cost"><span class="num">8</span> What it costs</li>
+      <li data-section="faq"><span class="num">9</span> FAQ</li>
+      <li data-section="final-cta"><span class="num">10</span> Final CTA</li>
+      <li data-section="footer"><span class="num">11</span> Footer</li>
+    </ol>
+  </aside>
+
+  <main class="canvas">
+    <div class="browser-frame">
+      <div class="browser-chrome">
+        <div class="traffic-lights"><span></span><span></span><span></span></div>
+        <div class="url-bar">saaf.vercel.app</div>
+      </div>
+      <div class="page-content">
+
+        <section class="page-section section-header" data-section="header">
+          <div class="wire-nav">
+            <div class="wire-logo">Saaf</div>
+            <div class="wire-nav-links"><span>How it works</span><span>Gate audit</span><span>FAQ</span><span>Log in</span></div>
+            <div class="wire-cta-small">Show me what's withheld</div>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="hero">
+          <div class="wire-hero">
+            <h1 class="wire-headline-xl">Nothing in your list is a job you can't get.</h1>
+            <p class="wire-sub-lg">A free daily shortlist for Indian professionals in their first five years. We publish what we withheld, and why.</p>
+            <button class="wire-cta-lg">Show me what's withheld</button>
+            <div class="wire-split">
+              <div><span class="lbl">A job portal</span>Senior Principal Engineer &middot; 15+ years required<br><br><strong>&#9733; TOP APPLICANT</strong></div>
+              <div><span class="lbl">Saaf</span><span class="struck">Senior Principal Engineer</span><br><br>Withheld — asks for 15 years; you have 2.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="gate-strip">
+          <div class="wire-strip">3,214 indexed today &nbsp;&middot;&nbsp; 1,902 withheld &nbsp;&middot;&nbsp; 47 boards &nbsp;&middot;&nbsp; 100% of refusals published</div>
+        </section>
+
+        <section class="page-section" data-section="problem">
+          <h2 class="wire-h2">The match wasn't missing. It was wrong.</h2>
+          <p class="wire-section-sub">A portal called you a Top Applicant for a role asking fifteen years. You have two. You spent the forty minutes anyway, and heard nothing — same as the last thirty applications. Eight months in, you still don't know whether it was the résumé, the fit, or the timing.</p>
+          <div class="wire-quote">"not even one call."<cite>Blind — Bangalore, 13+ years, 50+ applications across LinkedIn, Naukri and Instahyre</cite></div>
+        </section>
+
+        <section class="page-section" data-section="solution">
+          <h2 class="wire-h2">How it works</h2>
+          <div class="wire-steps">
+            <div class="wire-step"><div class="wire-step-num">1</div><div class="wire-step-title">We read your résumé once</div><div class="wire-step-desc">Parsed to fill your profile, then deleted. You confirm every field before anything runs.</div></div>
+            <div class="wire-step"><div class="wire-step-num">2</div><div class="wire-step-title">We remove what you can't get</div><div class="wire-step-desc">Each function's real disqualifier — a credential, an experience band, a budget scale — applied as a hard filter, in plain code.</div></div>
+            <div class="wire-step"><div class="wire-step-num">3</div><div class="wire-step-title">We show you both lists</div><div class="wire-step-desc">What cleared, ranked with reasons. And what we withheld, with the reason for each.</div></div>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="features">
+          <h2 class="wire-h2">What you get</h2>
+          <div class="wire-features">
+            <div class="wire-feature"><div class="wire-feature-icon"></div><div class="wire-feature-title">A credential can't be stretched</div><div class="wire-feature-desc">Finance gates on CA, CFA or CS. Marketing gates on budget scale. We check the one that applies to you, not years for everyone.</div></div>
+            <div class="wire-feature"><div class="wire-feature-icon"></div><div class="wire-feature-title">Every score carries its reason</div><div class="wire-feature-desc">72% — GTM and stakeholder management match; the three-year floor is your one gap. No number arrives without its working.</div></div>
+            <div class="wire-feature"><div class="wire-feature-icon"></div><div class="wire-feature-title">Nothing invented in your documents</div><div class="wire-feature-desc">Drafts only reorder facts you confirmed. If a claim isn't in your profile, the document is blocked, not flagged.</div></div>
+            <div class="wire-feature"><div class="wire-feature-icon"></div><div class="wire-feature-title">Nobody can find you here</div><div class="wire-feature-desc">Your file is deleted after parsing. No employer is contacted. Delete your account in one click, no email required.</div></div>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="gate-audit">
+          <h2 class="wire-h2">We publish what we refused.</h2>
+          <p class="wire-section-sub">Today: 3,214 indexed &middot; 1,902 withheld. Updated daily.</p>
+          <table class="wire-audit">
+            <tr><td>Experience band</td><td>1,204</td></tr>
+            <tr><td>Credential</td><td>431</td></tr>
+            <tr><td>Location</td><td>198</td></tr>
+            <tr><td>Channel scale</td><td>69</td></tr>
+          </table>
+          <p class="wire-section-sub" style="margin-top:12px">The gating code is open source. Read the exact rules that decide what you don't see.</p>
+        </section>
+
+        <section class="page-section" data-section="cost">
+          <h2 class="wire-h2">Free. Not free-for-now.</h2>
+          <p class="wire-price">No card, no ads, and no paid tier hiding behind a feature you already use. Saaf is a portfolio project built to real-product standards, and it stays at &#8377;0.</p>
+        </section>
+
+        <section class="page-section" data-section="faq">
+          <h2 class="wire-h2">Questions</h2>
+          <div class="wire-faq">
+            <div class="wire-faq-item"><div class="wire-faq-q">Naukri already says it matches me. Why is this different?</div><div class="wire-faq-a">Because we'll show you the roles we refused, and why. Open your own profile and check the first one against the job description. It takes thirty seconds.</div></div>
+            <div class="wire-faq-item"><div class="wire-faq-q">Can my employer find out I'm looking?</div><div class="wire-faq-a">No. No employer is ever contacted, nothing here is public or sold, and no recruiter can search this. Delete your account in one click, no email required.</div></div>
+            <div class="wire-faq-item"><div class="wire-faq-q">What happens to my résumé?</div><div class="wire-faq-a">It's parsed once to fill your profile, then the file is deleted. Only the fields you confirm are stored.</div></div>
+            <div class="wire-faq-item"><div class="wire-faq-q">Why isn't LinkedIn or Naukri in here?</div><div class="wire-faq-a">Their terms don't allow it. We pull from company hiring boards directly — which is why some roles you see elsewhere won't appear here, and why we tell you how many we indexed.</div></div>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="final-cta">
+          <div class="wire-final-cta">
+            <h2 class="wire-h2">See what we won't show you.</h2>
+            <button class="wire-cta-lg">Show me what's withheld</button>
+            <a class="wire-secondary-link">Read the gating code</a>
+          </div>
+        </section>
+
+        <section class="page-section" data-section="footer">
+          <div class="wire-footer">
+            <div class="wire-footer-col">Gating code on GitHub</div>
+            <div class="wire-footer-col">Gate audit, updated daily</div>
+            <div class="wire-footer-col">How we handle your data</div>
+            <div class="wire-footer-col">Delete your account</div>
+          </div>
+          <div class="wire-footer-bottom">No compliance badges — SOC 2 and GDPR marks would be fabrication. Consent at upload, stated retention, deletion path; source file destroyed after parsing (DPDP).</div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <aside class="annotation">
+    <h2>Section notes</h2>
+    <div id="ann-content"></div>
+  </aside>
+
+</div>
+
+<script>
+const annotations = {
+  "header": { title: "1. Header", goal: "Persistent nav plus the sticky CTA, using identical copy to the hero CTA.", proves: "Self-serve is available and the product takes itself seriously.", risk: "More than five nav items dilutes intent. No Pricing link — the price is a section, not a page.", ref: "Tactics #1-2 (Sticky Header). Principle #4 (Sticky CTA Beats Hero CTA Alone)." },
+  "hero": { title: "2. Hero", goal: "Make one promise above the fold and prove it in the same viewport, so the visitor sees the product refusing something before they scroll.", proves: "This product removes jobs you cannot get — demonstrated, not asserted.", risk: "The split visual must read instantly. If the portal side isn't recognisable as a portal, the contradiction is lost.", ref: "Tactics #3-4 (Value-Prop Headline, Specific Sub-Headline). Principles #2 and #8 (Show Don't Describe; Demonstrate on the Page)." },
+  "gate-strip": { title: "3. Gate-audit strip — SUBSTITUTED", goal: "Deliver above-the-fold proof without borrowing anyone else's credibility.", proves: "The refusals are real, counted, and published today.", risk: "Numbers must be live. A static figure that goes stale is worse than no figure.", ref: "Tactic #7 (Logo Bar) SUBSTITUTED per the doc's own anti-pattern rule: 'either show the logos or remove the section.' Saaf has zero users; inventing logos would violate the identity." },
+  "problem": { title: "4. Problem", goal: "Name the pain in the customer's own language before offering anything.", proves: "We know exactly what the last eight months felt like.", risk: "Reads as a generic job-hunt complaint if the fifteen-years detail is softened.", ref: "Tactic #9 (The Problem Statement). The quote is external evidence about the category, not a testimonial about Saaf." },
+  "solution": { title: "5. How it works", goal: "Show the mechanism in three steps so the refusal reads as engineering rather than opinion.", proves: "The gate is deterministic code, not a model's opinion.", risk: "Step 2 is the whole argument. If it reads as 'we filter', the differentiation is gone.", ref: "Tactic #10 (The Three-Step How-It-Works)." },
+  "features": { title: "6. Benefits", goal: "Convert four mechanism details into things the candidate gets.", proves: "Each guarantee is a mechanism, not a promise.", risk: "Slipping into capability language turns this into the Feature List anti-pattern.", ref: "Tactic #11 (Features as Benefits). Avoids the Feature List anti-pattern." },
+  "gate-audit": { title: "7. Public gate audit — SUBSTITUTED", goal: "Replace borrowed credibility with published self-audit — the only proof available to a product with no users, and the more durable kind.", proves: "The refusals are real and checkable, broken down by reason.", risk: "If the numbers aren't genuinely live and the code genuinely open, this is worse than saying nothing.", ref: "Tactics #12-13 (Deep Social Proof) SUBSTITUTED. No competitor publishes this, and none can without contradicting their own conversion numbers." },
+  "cost": { title: "8. What it costs — SUBSTITUTED", goal: "State the price plainly and close the 'what's the catch' objection before the FAQ has to.", proves: "There is no catch and no tier waiting behind a feature.", risk: "Any tier language here would breach the Vercel Hobby non-commercial terms this product is hosted under.", ref: "Tactic #14 (Pricing on the Page) adapted to a single price. Avoids the Hidden Pricing anti-pattern by disclosing fully." },
+  "faq": { title: "9. FAQ", goal: "Defuse the four objections that actually kill the deal.", proves: "Every hard question has a plain answer.", risk: "Q1 is the deal-killer from the persona research. Answering it with a claim instead of a demonstration loses the visitor.", ref: "Tactic #15 (The FAQ Defuses Objections, Doesn't List Features)." },
+  "final-cta": { title: "10. Final CTA", goal: "Close with the same CTA, plus one low-friction alternative for the sceptic.", proves: "Nothing is hidden — you can read the code instead of trusting us.", risk: "A second competing CTA here would break the one-CTA rule.", ref: "Tactic #16 (The Final CTA). Principle #3 (Same CTA Everywhere)." },
+  "footer": { title: "11. Footer", goal: "Carry the trust load with things that are true rather than badges we do not hold.", proves: "Data handling is stated, and the gate is auditable.", risk: "Displaying SOC 2 or GDPR marks would be fabrication — the 'Trusted By With No Logos' anti-pattern in a different hat.", ref: "Tactic #17 (Footer as Trust Surface), adapted. Open-sourced gate and live audit replace compliance badges." }
+};
+
+const sections = document.querySelectorAll(".page-section");
+const listItems = document.querySelectorAll("#section-list li");
+const annContent = document.getElementById("ann-content");
+
+function renderAnnotation(sectionName) {
+  const a = annotations[sectionName];
+  if (!a) return;
+  annContent.innerHTML = `
+    <div class="ann-screen-title">${a.title}</div>
+    <dl>
+      <dt>Goal of this section</dt><dd>${a.goal}</dd>
+      <dt>What this proves</dt><dd>${a.proves}</dd>
+      <dt>Drop-off risk</dt><dd>${a.risk}</dd>
+    </dl>
+    <div class="ref">${a.ref}</div>
+  `;
+  listItems.forEach(li => li.classList.toggle("active", li.dataset.section === sectionName));
+}
+
+let jumpLock = null;
+
+listItems.forEach(li => {
+  li.addEventListener("click", () => {
+    const key = li.dataset.section;
+    const target = document.querySelector(`.page-section[data-section="${key}"]`);
+    if (!target) return;
+    // An explicit jump renders its own annotation immediately. The observer's
+    // rootMargin band can never select the first or last section (they are too
+    // short and sit outside it), so relying on scroll alone leaves Header and
+    // Footer permanently unreachable in the panel.
+    jumpLock = key;
+    renderAnnotation(key);
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    clearTimeout(li._t);
+    li._t = setTimeout(() => { if (jumpLock === key) jumpLock = null; }, 900);
+  });
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !jumpLock) {
+      renderAnnotation(entry.target.dataset.section);
+    }
+  });
+}, {
+  rootMargin: "-30% 0px -55% 0px",
+  threshold: 0
+});
+
+sections.forEach(s => observer.observe(s));
+
+renderAnnotation("header");
+</script>
+
+</body>
+</html>
