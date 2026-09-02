@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:rls": "tsx --env-file=.env.local scripts/verify-rls.ts",
+    "seed:fixture": "tsx scripts/seed-fixture.ts",
+    "gates:demo": "tsx scripts/evaluate-fixture.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

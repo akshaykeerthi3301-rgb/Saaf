@@ -39,7 +39,7 @@
 
 - [x] **TASK-003** — Add RLS policies and indexes in the same migration series
   Files: `supabase/migrations/0002_rls_and_indexes.sql`
-  Notes: Every policy from PRD § 9. Role-Based Access, plus all six indexes from § 3. Indexes. `boards` gets **no** user-facing policy — service role only. `audit_daily` is readable by `anon`. A table without RLS enabled is a defect, not a TODO. Verify: query `pg_policies` and confirm every table except `boards` has at least one policy, and `boards` has RLS enabled with none.
+  Notes: Every policy from PRD § 9. Role-Based Access, plus all six indexes from § 3. Indexes. `boards` gets **no** user-facing policy — service role only. `audit_daily` is readable by `anon`. A table without RLS enabled is a defect, not a TODO. Verify: `npm run verify:rls`. It seeds a row with the service role first, because an empty table returns `[]` whether RLS denied the read or there were simply no rows — the two are indistinguishable without a seeded row, so a passing check on an empty schema proves nothing.
 
 - [x] **TASK-004** — Build the three Supabase client factories
   Files: `src/lib/supabase/browser.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/service.ts`, `.env.local.example`
