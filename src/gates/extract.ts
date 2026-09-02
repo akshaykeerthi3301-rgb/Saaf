@@ -1,4 +1,5 @@
 import type { Credential, TypedRequirement } from './types'
+import { extractTitleSeniority } from './title'
 
 /**
  * Requirement extraction from free-text job descriptions.
@@ -56,10 +57,16 @@ function confidenceFor(sentence: string): number {
 
 export function extractExperienceYears(description: string): TypedRequirement[] {
   const out: TypedRequirement[] = []
+  // Plural only. Real requirements say "5+ years" / "6-8+ years"; the singular
+  // hyphenated form is almost always a noun phrase — the fixture contains
+  // "Meesho's most visible 2-year bets", which is not a requirement and which
+  // previously produced a 2-year minimum that suppressed a correct title gate.
   const re = new RegExp(
-    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*\\+?\\s*(?:years?|yrs?)`,
+    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*\\+?\\s*(?:years|yrs)\\b`,
     'gi'
   )
+  /** "a 2-year bet", "the 3-year plan" — adjectival, never a requirement. */
+  const ADJECTIVAL = new RegExp(`\\d{1,2}${DASH}year\\b`, 'i')
 
   for (const s of sentences(description)) {
     if (!/\b(?:years?|yrs?)\b/i.test(s)) continue
@@ -69,6 +76,7 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
     for (const m of s.matchAll(re)) {
       const lo = Number(m[1])
       if (!Number.isFinite(lo) || lo < 0 || lo > 40) continue
+      if (ADJECTIVAL.test(m[0])) continue
       // "1-2 years" → the floor is what gates. "5+ years" → 5.
       out.push({
         kind: 'experience_years',
@@ -124,10 +132,15 @@ export function extractLocation(locationRaw: string): TypedRequirement {
   }
 }
 
-export function extractAll(description: string, locationRaw: string): TypedRequirement[] {
+export function extractAll(
+  description: string,
+  locationRaw: string,
+  title = ''
+): TypedRequirement[] {
   return [
     ...extractExperienceYears(description),
     ...extractCredential(description),
+    ...extractTitleSeniority(title),
     extractLocation(locationRaw),
   ]
 }

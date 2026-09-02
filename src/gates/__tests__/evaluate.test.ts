@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { evaluate } from '../evaluate'
 import { extractExperienceYears, extractCredential, resolveInIndia } from '../extract'
+import { extractTitleSeniority } from '../title'
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '../types'
 
 /**
@@ -132,5 +133,93 @@ describe('India resolution — ATS boards are global', () => {
     ['Pristina', false], ['Skopje', false],
   ])('%s → in India: %s', (loc, expected) => {
     expect(resolveInIndia(loc)).toBe(expected)
+  })
+})
+
+describe('title seniority gate', () => {
+  const t = (title: string) => extractTitleSeniority(title)
+
+  it.each([
+    ['Staff Engineer – Observability Platform', 8],
+    ['Principal Product Manager', 10],
+    ['Senior Engineer, IAM', 5],
+    ['Director of Engineering', 10],
+    ['Head of Meesho Foundation', 10],
+    ['VP, Finance', 15],
+  ])('%s → band %i years', (title, years) => {
+    expect(t(title)[0]?.minYears).toBe(years)
+  })
+
+  it.each([
+    'Assistant Manager - Ops',
+    'Assistant Manager Finance – Logistics Intelligence',
+    'Associate - Content (Digest)',
+    'Software Engineer',
+    'Business Analyst',
+  ])('does not gate on %s — Indian junior titles', (title) => {
+    expect(t(title)).toHaveLength(0)
+  })
+
+  it('discounts Associate Director rather than treating it as Director', () => {
+    // Director is 10; the associate qualifier pulls it to 6. Treating it as a
+    // full Director role would be a false refusal on a reachable job.
+    expect(t('Associate Director - Business Finance')[0]?.minYears).toBe(6)
+  })
+
+  it('withholds a senior title with a reason that quotes the title', () => {
+    const r = evaluate(rohan, t('Staff Engineer – Observability Platform'))
+    expect(r.outcome).toBe('withheld')
+    expect(r.refusedOn).toBe('title_seniority')
+    expect(r.reason).toContain('Staff Engineer')
+    // It must never invent a years figure the posting did not state.
+    expect(r.reason).not.toMatch(/asks for \d+ years/)
+    expect(r.reason).toMatch(/doesn't state a year count/)
+  })
+
+  it('lets an explicit statement in the description override the title band', () => {
+    // "Senior Engineer" implies 5, but the posting says 3+. Believe the posting.
+    const reqs = [...t('Senior Engineer'), req({ minYears: 3, confidence: 0.95 })]
+    const r = evaluate(rohan, reqs)
+    expect(r.outcome).toBe('stretch')
+    expect(r.gapYears).toBe(1)
+  })
+})
+
+describe('regressions found by running against real postings', () => {
+  it('does not read a requirement out of an adjectival year phrase', () => {
+    // Verbatim from the fixture. This produced a 2-year minimum, which then
+    // suppressed a correct Senior Manager title gate and cleared the role for a
+    // two-year candidate — two bugs compounding into a false clearance.
+    const found = extractExperienceYears(
+      "It also gives you a seat at the table with senior leadership on one of Meesho's most visible 2-year bets."
+    )
+    expect(found).toHaveLength(0)
+  })
+
+  it('still reads a requirement that omits the word "experience"', () => {
+    // The fix above must not throw out legitimate requirements: 29 of 107 in
+    // the fixture are phrased without it.
+    const [r] = extractExperienceYears(
+      'About You You need 6-8+ years in a technical customer-facing role.'
+    )
+    expect(r?.minYears).toBe(6)
+  })
+
+  it('an unframed mention cannot suppress a correct title gate', () => {
+    const reqs = [
+      ...extractTitleSeniority('Senior Manager - User Experience'),
+      req({ minYears: 2, confidence: 0.75 }), // unframed
+    ]
+    expect(evaluate(rohan, reqs).outcome).toBe('withheld')
+  })
+
+  it('a framed statement still overrides the title band', () => {
+    const reqs = [
+      ...extractTitleSeniority('Senior Engineer'),
+      req({ minYears: 3, confidence: 0.95 }), // "must have 3+ years"
+    ]
+    const r = evaluate(rohan, reqs)
+    expect(r.outcome).toBe('stretch')
+    expect(r.gapYears).toBe(1)
   })
 })

@@ -14,6 +14,7 @@ export type RequirementKind =
   | 'channel_budget'
   | 'institute_tier'
   | 'hr_track'
+  | 'title_seniority'
 
 export type Credential = 'CA' | 'CFA' | 'CS' | 'none'
 

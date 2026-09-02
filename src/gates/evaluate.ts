@@ -53,7 +53,25 @@ export function evaluate(
   }
 
   // --- Experience: the only gate that can be stretched. --------------------
-  const yearReqs = confident.filter((r) => r.kind === 'experience_years' && r.minYears !== undefined)
+  // An explicit statement in the description beats the title band. The
+  // description is more specific, and a posting that says "3+ years" on a
+  // Senior Engineer role means it.
+  const statedYears = confident.filter((r) => r.kind === 'experience_years' && r.minYears !== undefined)
+  const titleYears = confident.filter((r) => r.kind === 'title_seniority' && r.minYears !== undefined)
+
+  // Only a CONFIDENTLY FRAMED statement ("must have 3+ years") may override the
+  // title band. An unframed mention must not be able to suppress a correct
+  // title gate — that composition let a marketing sentence about "2-year bets"
+  // clear a Senior Manager role for a two-year candidate.
+  const framed = statedYears.filter((r) => r.confidence >= 0.9)
+  const yearReqs =
+    framed.length > 0 ? framed
+    : [...statedYears, ...titleYears]
+  const fromTitle =
+    yearReqs.length > 0 &&
+    Math.max(...yearReqs.map((r) => r.minYears!)) ===
+      Math.max(0, ...titleYears.map((r) => r.minYears!)) &&
+    titleYears.length > 0
   if (yearReqs.length > 0) {
     // A single description can state several minimums ("10+ years ... with 5+
     // years leading"). Gate on the strictest reading — refusing on the higher
@@ -72,8 +90,13 @@ export function evaluate(
       }
       return {
         outcome: 'withheld',
-        refusedOn: 'experience_years',
-        reason: refusalReason('experience_years', { requiredYears: required, heldYears: held }),
+        refusedOn: fromTitle ? 'title_seniority' : 'experience_years',
+        reason: fromTitle
+          ? refusalReason('title_seniority', {
+              titleLabel: yearReqs.find((r) => r.minYears === required)?.valueText,
+              titleText: yearReqs.find((r) => r.minYears === required)?.sourceQuote,
+            })
+          : refusalReason('experience_years', { requiredYears: required, heldYears: held }),
       }
     }
   }

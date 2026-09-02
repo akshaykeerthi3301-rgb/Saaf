@@ -36,7 +36,7 @@ for (const { name, note, profile } of PROFILES) {
   const inIndia = roles.filter((r) => resolveInIndia(r.locationRaw))
   const results: { role: RawRole; result: GateResult }[] = inIndia.map((role) => ({
     role,
-    result: evaluate(profile, extractAll(role.description, role.locationRaw)),
+    result: evaluate(profile, extractAll(role.description, role.locationRaw, role.title)),
   }))
 
   const cleared = results.filter((r) => r.result.outcome === 'cleared')

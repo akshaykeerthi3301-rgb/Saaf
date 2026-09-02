@@ -45,7 +45,7 @@ create table role_requirements (
   role_id      uuid not null references roles(id) on delete cascade,
   kind         text not null check (kind in
                  ('experience_years','credential','location','work_authorisation',
-                  'channel_budget','institute_tier','hr_track')),
+                  'channel_budget','institute_tier','hr_track','title_seniority')),
   min_years    numeric(4,1),
   credential   text check (credential in ('CA','CFA','CS','none')),
   value_text   text,
@@ -85,7 +85,7 @@ create table gate_results (
   outcome     text not null check (outcome in ('cleared','withheld','stretch')),
   refused_on  text check (refused_on in
                 ('experience_years','credential','location','work_authorisation',
-                 'channel_budget','institute_tier','hr_track')),
+                 'channel_budget','institute_tier','hr_track','title_seniority')),
   reason      text not null,
   score       numeric(4,1),
   gap_years   numeric(4,1) check (gap_years is null or gap_years <= 2.0),

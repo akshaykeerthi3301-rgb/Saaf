@@ -251,7 +251,7 @@ CREATE TABLE role_requirements (
   role_id       UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
   kind          TEXT NOT NULL CHECK (kind IN
                   ('experience_years','credential','location','work_authorisation',
-                   'channel_budget','institute_tier','hr_track')),
+                   'channel_budget','institute_tier','hr_track','title_seniority')),
   -- exactly one of these carries the value, depending on kind
   min_years     NUMERIC(4,1),               -- kind = experience_years
   credential    TEXT CHECK (credential IN ('CA','CFA','CS','none')),
@@ -520,11 +520,14 @@ Related Stories: US-004, US-005
 
 **FR-003: Typed requirement extraction**
 Priority: P0
-Description: Extract typed requirements from role descriptions into `role_requirements`, with the source sentence and a confidence score. MVP extracts `experience_years`, `credential`, `location`, and `work_authorisation`.
+Description: Extract typed requirements from role descriptions into `role_requirements`, with the source sentence and a confidence score. MVP extracts `experience_years`, `credential`, `location`, `work_authorisation`, and `title_seniority`.
 Acceptance Criteria:
-- Every extracted requirement stores the sentence it came from
-- Confidence below the threshold (default 0.7) means the requirement is **not** used to gate
-- No requirement is inferred where the description is silent
+- Every extracted requirement stores the text it came from
+- Confidence below the threshold (0.7) means the requirement is **not** used to gate
+- Nothing is inferred from the *description* where the description is silent
+- **`title_seniority` is read from the role title, which is stated text in the posting.** Its reason quotes the title and explicitly says the posting states no year count — it must never present a years figure the posting did not state
+- Indian title conventions are honoured: "Assistant Manager" and "Senior Associate" are junior roles and are not gated; "Associate Director" is discounted rather than treated as a Director role
+- Only a confidently framed statement (≥0.9, e.g. "must have 3+ years") may override a title band. An unframed mention must not suppress it
 Related Stories: US-005
 
 ### The gate engine

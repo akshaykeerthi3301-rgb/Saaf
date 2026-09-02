@@ -11,13 +11,20 @@ import type { RequirementKind } from './types'
 
 export function refusalReason(
   kind: RequirementKind,
-  opts: { requiredYears?: number; heldYears?: number; credential?: string; location?: string }
+  opts: {
+    requiredYears?: number; heldYears?: number; credential?: string
+    location?: string; titleLabel?: string; titleText?: string
+  }
 ): string {
   switch (kind) {
     case 'credential':
       return `Withheld — asks for a ${credentialName(opts.credential)}; your profile doesn't carry one. A credential can't be stretched.`
     case 'experience_years':
       return `Withheld — asks for ${fmtYears(opts.requiredYears)}; you have ${fmtYears(opts.heldYears)}.`
+    case 'title_seniority':
+      // Never claims a years figure the posting did not state. It reports the
+      // title — which the candidate can check at a glance — and our reading.
+      return `Withheld — "${opts.titleText ?? 'this posting'}" is ${opts.titleLabel ?? 'above your experience band'}, above the band your profile sits in. The posting doesn't state a year count.`
     case 'location':
       return `Withheld — this role is in ${opts.location ?? 'another location'}, outside the cities you work in.`
     case 'work_authorisation':
