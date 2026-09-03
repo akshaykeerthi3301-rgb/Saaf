@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { RoleRow } from '@/components/ui/row'
+import { RoleRow, type EvidenceItem } from '@/components/ui/row'
 import { Arithmetic } from '@/components/ui/arithmetic'
 import { WithheldSection, type WithheldRow } from '@/components/features/withheld-section'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
@@ -8,13 +8,35 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 /** The withheld list is capped so a thin day does not read as a wall of rejection. */
 const WITHHELD_CAP = 50
 
+// Badges "seen in the last 7 days" rather than tracking each user's actual
+// last-visit timestamp — simpler, no write-on-every-page-load, and answers
+// "what's new" just as well for this product's weekly-ish cadence.
+const NEW_WITHIN_DAYS = 7
+
+type RoleRequirement = {
+  kind: string
+  min_years: number | null
+  credential: string | null
+  value_text: string | null
+  source_quote: string
+  confidence: number
+}
+
 type GateRow = {
   id: string
   outcome: 'cleared' | 'withheld' | 'stretch'
+  refused_on: string | null
   reason: string
   score: number | null
   gap_years: number | null
-  roles: { title: string; city: string | null; apply_url: string; company_name: string | null } | null
+  first_shown_at: string
+  roles: {
+    title: string
+    city: string | null
+    apply_url: string
+    company_name: string | null
+    role_requirements: RoleRequirement[] | null
+  } | null
 }
 
 export default async function TodayPage() {
@@ -24,7 +46,7 @@ export default async function TodayPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('function, confirmed_at')
+    .select('function, confirmed_at, city')
     .eq('id', user.id)
     .single()
 
@@ -35,7 +57,11 @@ export default async function TodayPage() {
 
   const { data, error } = await supabase
     .from('gate_results')
-    .select('id, outcome, reason, score, gap_years, roles(title, city, apply_url, company_name)')
+    .select(`
+      id, outcome, refused_on, reason, score, gap_years, first_shown_at,
+      roles(title, city, apply_url, company_name,
+        role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
+    `)
     .eq('user_id', user.id)
     .order('score', { ascending: false, nullsFirst: false })
 
@@ -48,6 +74,22 @@ export default async function TodayPage() {
     .from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)
 
   const company = (r: GateRow) => r.roles?.company_name ?? ''
+
+  const newCutoff = new Date().getTime() - NEW_WITHIN_DAYS * 86400_000
+  const isNew = (r: GateRow) => new Date(r.first_shown_at).getTime() >= newCutoff
+
+  // Every requirement extracted for the role, gated or not — a wrong verdict
+  // is debugged by seeing what was read, not just what fired.
+  const evidence = (r: GateRow): EvidenceItem[] =>
+    (r.roles?.role_requirements ?? []).map((q) => ({
+      kind: q.kind,
+      minYears: q.min_years ?? undefined,
+      credential: q.credential ?? undefined,
+      valueText: q.value_text ?? undefined,
+      sourceQuote: q.source_quote,
+      confidence: Number(q.confidence),
+    }))
+
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
@@ -108,6 +150,10 @@ export default async function TodayPage() {
           score={r.score ?? undefined}
           reason={r.reason}
           applyUrl={r.roles?.apply_url}
+          isNew={isNew(r)}
+          requirements={evidence(r)}
+          refusedOn={r.refused_on}
+          profileCity={profile.city ?? undefined}
         />
       ))}
 
@@ -122,6 +168,10 @@ export default async function TodayPage() {
           gapYears={r.gap_years ?? undefined}
           reason={r.reason}
           applyUrl={r.roles?.apply_url}
+          isNew={isNew(r)}
+          requirements={evidence(r)}
+          refusedOn={r.refused_on}
+          profileCity={profile.city ?? undefined}
         />
       ))}
 
@@ -133,6 +183,10 @@ export default async function TodayPage() {
           company: company(r),
           city: r.roles?.city ?? undefined,
           reason: r.reason,
+          isNew: isNew(r),
+          requirements: evidence(r),
+          refusedOn: r.refused_on,
+          profileCity: profile.city ?? undefined,
         }))}
       />
     </main>

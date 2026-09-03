@@ -20,9 +20,13 @@ export async function sendDigests(): Promise<void> {
   )
   const resend = new Resend(apiKey)
 
+  // email_verified excludes instant sign-in (src/lib/instant-signin.ts) — it
+  // never confirms the candidate owns the address they typed, so mailing it
+  // daily would mean mailing a stranger who never asked for it.
   const { data: profiles } = await db
-    .from('profiles').select('id, city, function').not('confirmed_at', 'is', null)
-  if (!profiles?.length) { console.log('  digest: no confirmed profiles'); return }
+    .from('profiles').select('id, city, function')
+    .not('confirmed_at', 'is', null).eq('email_verified', true)
+  if (!profiles?.length) { console.log('  digest: no verified confirmed profiles'); return }
 
   const { data: audit } = await db
     .from('audit_daily').select('roles_indexed').order('day', { ascending: false }).limit(1).maybeSingle()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { RoleRow } from '@/components/ui/row'
+import { RoleRow, type EvidenceItem } from '@/components/ui/row'
 import { reportRefusal } from '@/app/actions/report-refusal'
 import { track } from '@/lib/analytics'
 
@@ -11,6 +11,10 @@ export type WithheldRow = {
   company: string
   city?: string
   reason: string
+  isNew?: boolean
+  requirements?: EvidenceItem[]
+  refusedOn?: string | null
+  profileCity?: string
 }
 
 /**
@@ -76,6 +80,10 @@ export function WithheldSection({ rows, total }: { rows: WithheldRow[]; total: n
             city={r.city}
             reason={r.reason}
             onReport={reported[r.id] ? undefined : () => onReport(r.id)}
+            isNew={r.isNew}
+            requirements={r.requirements}
+            refusedOn={r.refusedOn}
+            profileCity={r.profileCity}
           />
           {reported[r.id] ? (
             <p style={{ fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)', margin: '4px 0 0' }}>

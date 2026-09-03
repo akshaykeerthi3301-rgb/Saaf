@@ -1,6 +1,18 @@
 import styles from './row.module.css'
+import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 
 type Outcome = 'cleared' | 'withheld' | 'stretch'
+
+export type EvidenceItem = {
+  kind: string
+  minYears?: number
+  credential?: string
+  valueText?: string
+  /** The literal sentence from the posting. Rendered as plain text — never
+   *  dangerouslySetInnerHTML — since it's untrusted third-party content. */
+  sourceQuote: string
+  confidence: number
+}
 
 type Props = {
   outcome: Outcome
@@ -13,6 +25,15 @@ type Props = {
   gapYears?: number
   applyUrl?: string
   onReport?: () => void
+  isNew?: boolean
+  /** Every requirement extracted for this role, gated or not — a founder or
+   *  candidate debugging a wrong verdict needs to see what was read, not just
+   *  what fired. */
+  requirements?: EvidenceItem[]
+  refusedOn?: string | null
+  /** The candidate's own city on file, shown next to a location requirement
+   *  so a mismatch is checkable at a glance. */
+  profileCity?: string
 }
 
 /**
@@ -25,6 +46,7 @@ type Props = {
  */
 export function RoleRow({
   outcome, title, company, city, reason, score, gapYears, applyUrl, onReport,
+  isNew, requirements, refusedOn, profileCity,
 }: Props) {
   const heading = (
     <span className={outcome === 'withheld' ? styles.titleWithheld : styles.title}>
@@ -35,6 +57,7 @@ export function RoleRow({
 
   return (
     <div className={outcome === 'stretch' ? styles.rowStretch : styles.row}>
+      {isNew ? <span className={styles.tag}>New</span> : null}
       {outcome === 'stretch' && gapYears !== undefined ? (
         <span className={styles.tag}>
           Stretch · {gapYears} year{gapYears === 1 ? '' : 's'} gap
@@ -51,6 +74,25 @@ export function RoleRow({
         {score !== undefined ? `${score}% — ` : ''}
         {reason}
       </span>
+
+      {requirements && requirements.length > 0 ? (
+        <details className={styles.evidence}>
+          <summary className={styles.evidenceToggle}>Evidence ({requirements.length})</summary>
+          {requirements.map((r, i) => (
+            <div key={i} className={styles.evidenceItem}>
+              <span className={styles.evidenceKind}>
+                {r.kind}
+                {r.kind === refusedOn ? ' — this is why' : ''}
+                {r.confidence < CONFIDENCE_THRESHOLD ? ' · below the gating threshold, ignored' : ''}
+              </span>
+              {r.kind === 'location' && profileCity ? (
+                <span className={styles.evidenceCompare}>Your city on file: {profileCity}</span>
+              ) : null}
+              <blockquote className={styles.evidenceQuote}>{r.sourceQuote}</blockquote>
+            </div>
+          ))}
+        </details>
+      ) : null}
 
       {outcome === 'withheld' && onReport ? (
         <button type="button" className={styles.report} onClick={onReport}>

@@ -45,6 +45,11 @@ export async function confirmProfile(input: ConfirmInput) {
     work_authorisation: v.workAuthorisation ?? null,
     credential: v.credential,
     portals_used: v.portals ?? null,
+    // True only for a sign-in method that actually confirmed the address —
+    // Google today. Instant sign-in (src/lib/instant-signin.ts) never sets
+    // this, which is what keeps an unverified address out of the daily
+    // digest — see ingest/digest.ts.
+    email_verified: user.app_metadata?.provider === 'google',
     confirmed_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   })

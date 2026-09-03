@@ -169,8 +169,9 @@ export default function Landing() {
           fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
         }}>
           <Link href="/audit">Gate audit, updated daily</Link>
-          <span>How we handle your data</span>
-          <span>Delete your account</span>
+          <Link href="/privacy">How we handle your data</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/profile">Delete your account</Link>
         </div>
         <div className="measure" style={{
           paddingBottom: 'var(--space-lg)', fontSize: 'var(--type-body-sm-size)',
