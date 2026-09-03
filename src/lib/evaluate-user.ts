@@ -89,6 +89,11 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // gate_results rows being deleted and recreated by the sweep below, unlike
   // gate_results.first_shown_at itself, whose freeze trigger only covers
   // UPDATE. See supabase/migrations/0007_role_first_shown.sql.
+  //
+  // Never throws: this only powers a "New" badge, and a candidate getting
+  // their shortlist must never depend on this secondary bookkeeping table
+  // succeeding — including the real window between this code deploying and
+  // that migration actually being run.
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await db
       .from('role_first_shown')
@@ -96,7 +101,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
         rows.slice(i, i + 500).map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
         { onConflict: 'user_id,role_id', ignoreDuplicates: true }
       )
-    if (error) throw error
+    if (error) console.error('role_first_shown upsert failed (non-fatal):', error.message)
   }
 
   // Sweep results this pass did not rewrite.
