@@ -39,15 +39,23 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     credential: profile.credential ?? 'none',
   }
 
-  // Roles in the candidate's own function, plus 'other' — a role the classifier
-  // could not type should still be judged rather than silently dropped.
+  // The candidate's own function only.
+  //
+  // 'other' used to be included on the reasoning that a role the classifier
+  // could not type should still be judged rather than dropped. In practice that
+  // put voice-artist and delivery gigs on an engineer's list, because roughly
+  // 60% of ingested roles landed in 'other'. PRODUCT.md is explicit that no
+  // volume is promised and a short honest list beats a padded one — so an
+  // unclassified role is a registry-quality problem to fix at ingest, not
+  // something to show everyone and let them sort out.
   const { data: roles, error: rErr } = await db
     .from('roles')
     .select('id, function, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
-    .in('function', [profile.function, 'other'])
+    .eq('function', profile.function)
   if (rErr) throw rErr
 
+  const computedAt = new Date().toISOString()
   const rows = (roles ?? []).map((role) => {
     const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
       kind: q.kind,
@@ -66,7 +74,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
       reason: result.reason,
       score: result.score ?? null,
       gap_years: result.gapYears ?? null,
-      computed_at: new Date().toISOString(),
+      computed_at: computedAt,
     }
   })
 
@@ -76,6 +84,20 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
       .upsert(rows.slice(i, i + 500), { onConflict: 'user_id,role_id' })
     if (error) throw error
   }
+
+  // Sweep results this pass did not rewrite.
+  //
+  // Upsert alone leaves orphans behind: a role that leaves the candidate's
+  // function — or leaves the index entirely — keeps its old verdict forever.
+  // That is how an HR candidate ended up being shown finance roles. Deleting
+  // after the upsert rather than before means the list is never momentarily
+  // empty for someone loading the page mid-recompute.
+  const { error: sweepErr } = await db
+    .from('gate_results')
+    .delete()
+    .eq('user_id', userId)
+    .lt('computed_at', computedAt)
+  if (sweepErr) throw sweepErr
 
   return { written: rows.length }
 }

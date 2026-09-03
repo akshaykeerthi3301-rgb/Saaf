@@ -81,7 +81,7 @@ export const ADAPTERS: Adapter[] = [
   {
     provider: 'smartrecruiters',
     url: (t) => `https://api.smartrecruiters.com/v1/companies/${t}/postings?limit=100`,
-    parse: (raw) =>
+    parse: (raw, token) =>
       arr(rec(raw).content).map<NormalisedRole>((j) => ({
         externalId: str(j.id),
         title: str(j.name),
@@ -89,7 +89,11 @@ export const ADAPTERS: Adapter[] = [
           .filter(Boolean).map(String).join(', '),
         // The list endpoint omits the body; ingest fetches detail separately.
         description: '',
-        applyUrl: str(rec(j.ref).jobAd ?? `https://jobs.smartrecruiters.com/${str(j.id)}`),
+        // The public posting URL is /{company identifier}/{id}. An ID alone
+        // resolves to a generic landing page rather than the job — `ref` is an
+        // API URL, not a jobAd object, so the old fallback silently produced
+        // links that opened the wrong page.
+        applyUrl: `https://jobs.smartrecruiters.com/${str(rec(j.company).identifier) || token}/${str(j.id)}`,
         postedAt: (j.releasedDate as string) ?? null,
       })),
   },

@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { ADAPTERS, USER_AGENT, type NormalisedRole } from './providers'
 import { extractAll, resolveInIndia } from '../src/gates/extract'
+import { classifyFunction, isCorporateRole } from './classify'
 
 const PRUNE_DAYS = 30
 const BATCH = 500
@@ -25,14 +26,6 @@ const db = createClient(
 
 type Board = { provider: string; token: string; company_name: string }
 
-const FN: { fn: string; re: RegExp }[] = [
-  { fn: 'engineering', re: /\b(engineer|developer|sde|backend|frontend|full.?stack|devops|architect|infrastructure|platform|data scientist|\bml\b|qa|sdet)\b/i },
-  { fn: 'finance',     re: /\b(finance|financial|account|audit|controller|fp&a|treasury|\btax\b|equity research)\b/i },
-  { fn: 'marketing',   re: /\b(marketing|growth|brand|\bseo\b|content|communications|social media)\b/i },
-  { fn: 'consulting',  re: /\b(consultant|strategy|business analyst|program manager|chief of staff|operations manager)\b/i },
-  { fn: 'hr',          re: /\b(recruit|talent|people|human resources|hrbp)\b/i },
-]
-const fnFor = (title: string) => FN.find((f) => f.re.test(title))?.fn ?? 'other'
 const cityFrom = (loc: string) => loc.split(',')[0]?.trim() || null
 
 async function syncRegistry(): Promise<void> {
@@ -77,11 +70,13 @@ export async function runIngest() {
       // ON CONFLICT batch that touches the same row twice, and at least one
       // board (apna) publishes the same shortcode more than once — which
       // failed the whole board rather than one role.
-      const india = [
-        ...new Map(
-          roles.filter((r) => resolveInIndia(r.locationRaw)).map((r) => [r.externalId, r])
-        ).values(),
-      ]
+      // Two filters, both at ingest. India, because ATS boards are global. And
+      // corporate, because gig and field work is a different labour market with
+      // different gates — putting it on the same list is exactly the noise the
+      // candidate came here to escape.
+      const kept = roles.filter((r) => resolveInIndia(r.locationRaw) && isCorporateRole(r.title))
+      const droppedGig = roles.filter((r) => resolveInIndia(r.locationRaw)).length - kept.length
+      const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
 
       if (india.length) {
         const { data: up, error } = await db.from('roles').upsert(
@@ -92,7 +87,7 @@ export async function runIngest() {
             location_raw: r.locationRaw,
             in_india: true,
             city: cityFrom(r.locationRaw),
-            function: fnFor(r.title),
+            function: classifyFunction(r.title),
             description: r.description,
             apply_url: r.applyUrl,
             posted_at: r.postedAt,
@@ -136,7 +131,7 @@ export async function runIngest() {
         active: india.length > 0,
       }).eq('id', b.id)
       ok++
-      console.log(`  ✓ ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} India / ${roles.length}`)
+      console.log(`  ✓ ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} non-corporate dropped)` : ''}`)
     } catch (e) {
       // One board failing must never halt the run — the registry compounding is
       // the moat, and a provider outage is not a reason to lose a day.

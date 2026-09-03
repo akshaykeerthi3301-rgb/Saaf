@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
+import { restartOnboarding } from '@/app/actions/restart-onboarding'
 
 type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
 type Initial = {
@@ -64,6 +65,19 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       {msg ? <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>{msg}</p> : null}
 
       <Button onClick={save} disabled={busy}>{busy ? 'Rebuilding your list…' : 'Save'}</Button>
+
+      <hr className="rule" style={{ margin: 'var(--space-xl) 0 var(--space-md)' }} />
+
+      <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 500, margin: '0 0 8px' }}>
+        Start again with a different résumé
+      </h2>
+      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', marginTop: 0 }}>
+        Runs onboarding from the top. Your current list stays up until the new
+        profile is confirmed, so you are never left staring at nothing.
+      </p>
+      <form action={restartOnboarding}>
+        <Button type="submit" variant="ghost">Upload a different résumé</Button>
+      </form>
 
       <hr className="rule" style={{ margin: 'var(--space-xl) 0 var(--space-md)' }} />
 

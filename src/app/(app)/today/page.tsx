@@ -54,9 +54,15 @@ export default async function TodayPage() {
     <main className="measure" style={{ paddingTop: 32, paddingBottom: 64 }}>
       <ShortlistViewed cleared={cleared.length} withheld={withheld.length} />
 
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-        {today}
-      </h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+        <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
+          {today}
+        </h1>
+        <nav style={{ display: 'flex', gap: 'var(--space-md)', fontSize: 'var(--type-label-md-size)' }}>
+          <a href="/audit">Gate audit</a>
+          <a href="/profile">Profile</a>
+        </nav>
+      </div>
 
       <Arithmetic
         indexed={indexed ?? 0}

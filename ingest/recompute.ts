@@ -25,7 +25,7 @@ export async function recomputeAll(): Promise<void> {
       .from('roles')
       .select('id, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
       .eq('in_india', true)
-      .in('function', [p.function, 'other'])
+      .eq('function', p.function)  // own function only — see src/lib/evaluate-user.ts
     if (error) throw error
 
     const candidate: CandidateProfile = {
@@ -35,6 +35,7 @@ export async function recomputeAll(): Promise<void> {
       credential: p.credential ?? 'none',
     }
 
+    const computedAt = new Date().toISOString()
     const rows = (roles ?? []).map((role) => {
       const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
         kind: q.kind,
@@ -49,7 +50,7 @@ export async function recomputeAll(): Promise<void> {
         user_id: p.id, role_id: role.id, outcome: r.outcome,
         refused_on: r.refusedOn ?? null, reason: r.reason,
         score: r.score ?? null, gap_years: r.gapYears ?? null,
-        computed_at: new Date().toISOString(),
+        computed_at: computedAt,
       }
     })
 
@@ -58,6 +59,12 @@ export async function recomputeAll(): Promise<void> {
         .upsert(rows.slice(i, i + 500), { onConflict: 'user_id,role_id' })
       if (uErr) throw uErr
     }
+
+    // Same sweep as src/lib/evaluate-user.ts — upsert leaves orphans when a
+    // role leaves the candidate's function or leaves the index.
+    const { error: sErr } = await db.from('gate_results')
+      .delete().eq('user_id', p.id).lt('computed_at', computedAt)
+    if (sErr) throw sErr
     console.log(`  recomputed ${rows.length} results for one profile`)
   }
 }
