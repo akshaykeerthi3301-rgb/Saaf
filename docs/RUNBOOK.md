@@ -1,0 +1,109 @@
+# Runbook — settings that live outside version control
+
+*Dashboard configuration a coding agent cannot apply. Keep this current: these
+settings are invisible to the repo and will otherwise be rediscovered the hard
+way.*
+
+---
+
+## Supabase — Authentication
+
+**Project:** `adofdvkhdgifvmbuolcj` · dashboard → Project Settings → Authentication
+
+| Setting | Value | Why |
+|---|---|---|
+| Email provider | **Enabled** | Magic link is the only sign-in method |
+| Confirm email | **Disabled** | The magic link *is* the confirmation; a second step is friction with no gain |
+| OTP expiry | **3600s** | One hour, per PRD §9 |
+| OTP single-use | **On** (default) | Must not be relaxed |
+| Site URL | production `*.vercel.app` origin | |
+| Redirect URLs | add `http://localhost:3000/**` | Local development |
+
+### SMTP — Resend
+
+Supabase's built-in mailer is rate-limited to a handful of emails per hour and
+will not survive a launch day.
+
+| Field | Value |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | your Resend API key (`re_…`) |
+| Sender email | `onboarding@resend.dev` until a domain is verified |
+| Sender name | `Saaf` |
+
+> **Delivery limitation.** Resend only delivers to the address on your own
+> Resend account until a domain is verified. Sign-in therefore works for you and
+> nobody else. A domain is needed before any real beta user can receive a link —
+> see `docs/HANDOFF.md` D4.
+
+**Status:** ⚠️ *Unverified.* The API key is in `.env.local`, but magic links are
+sent by Supabase, not by the app, so the SMTP panel above is what actually
+matters. Confirm by requesting a link at `/signin` with your own email.
+
+---
+
+## Vercel
+
+Deployed with the **CLI**, not the GitHub integration — this GitHub account
+cannot authorise third-party OAuth apps.
+
+```bash
+npx vercel login          # browser auth, one time
+npx vercel                # first run creates the project
+npx vercel --prod         # ship
+```
+
+**Environment variables** (`npx vercel env add <NAME> production`):
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_POSTHOG_KEY
+NEXT_PUBLIC_POSTHOG_HOST
+NEXT_PUBLIC_SENTRY_DSN
+SENTRY_DSN
+RESEND_API_KEY
+```
+
+**⛔ `SUPABASE_SERVICE_ROLE_KEY` is deliberately absent.** It bypasses RLS
+entirely and belongs only in GitHub Actions secrets, where the ingest job runs.
+Nothing served to a browser should be able to reach it.
+
+After the first deploy, set the Supabase **Site URL** to the deployed origin and
+add `https://<project>.vercel.app/**` to Redirect URLs, or the magic link will
+bounce back to localhost.
+
+---
+
+## GitHub
+
+Push and Actions both work; only third-party OAuth is blocked.
+
+- **Actions secret:** `SUPABASE_SERVICE_ROLE_KEY` — repo → Settings → Secrets and
+  variables → Actions. Required by TASK-037's daily ingest.
+- Actions is first-party, so no OAuth grant is involved.
+
+---
+
+## PostHog
+
+Project token (`phc_…`) in `NEXT_PUBLIC_POSTHOG_KEY`, host
+`https://us.i.posthog.com`. Verified accepting events on 2026-09-03.
+
+A personal API key (`phx_…`) is a different thing entirely — it reads data out,
+it is a real secret, and it must never appear in a `NEXT_PUBLIC_*` variable.
+
+---
+
+## Sentry
+
+DSN in both `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`. A DSN is public by design
+— it can only write. Verified accepting events on 2026-09-03.
+
+**Session replay is deliberately disabled.** The third guarantee is that nothing
+about a candidate's search is shared; replaying their screen while they read a
+shortlist of employers would contradict it. Request bodies are stripped in
+`beforeSend` on both client and server so résumé text cannot reach an error
+report.

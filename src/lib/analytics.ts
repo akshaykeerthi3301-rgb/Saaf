@@ -24,6 +24,16 @@ export function initAnalytics() {
   ready = true
 }
 
+/**
+ * Attach the signed-in user to subsequent events, so the activation funnel can
+ * be measured per person. Only the auth id — never an email, and never anything
+ * derived from a résumé.
+ */
+export function identify(userId: string) {
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || typeof window === 'undefined') return
+  posthog.identify(userId)
+}
+
 /** No-ops without a key, so local development works with none configured. */
 export function track(event: SaafEvent, props?: Record<string, unknown>) {
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || typeof window === 'undefined') return

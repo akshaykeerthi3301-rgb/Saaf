@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Public_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { AnalyticsProvider } from '@/components/features/analytics-provider'
 
 /**
  * Self-hosted at build time by next/font — no request reaches Google from a
@@ -30,7 +31,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${publicSans.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AnalyticsProvider />
+        {children}
+      </body>
     </html>
   )
 }
