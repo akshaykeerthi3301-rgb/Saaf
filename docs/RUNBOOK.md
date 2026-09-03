@@ -38,9 +38,15 @@ will not survive a launch day.
 > nobody else. A domain is needed before any real beta user can receive a link —
 > see `docs/HANDOFF.md` D4.
 
-**Status:** ⚠️ *Unverified.* The API key is in `.env.local`, but magic links are
-sent by Supabase, not by the app, so the SMTP panel above is what actually
-matters. Confirm by requesting a link at `/signin` with your own email.
+**Status:** ✅ *Verified 2026-09-03.* A real magic link was delivered and
+exchanged: `/auth/callback?code=…` → `/start`. Mail lands in spam until a domain
+is verified (D4) — expected for a shared sender with no SPF or DKIM for your
+domain, and cosmetic while you are the only recipient.
+
+**Redirect URLs matter as much as SMTP.** `http://localhost:3000/**` must be in
+Authentication → URL Configuration → Redirect URLs. Without the `/**` wildcard
+Supabase trusts only the bare Site URL, silently drops the session, and bounces
+to `/` — which looks like the app is broken rather than misconfigured.
 
 ---
 
