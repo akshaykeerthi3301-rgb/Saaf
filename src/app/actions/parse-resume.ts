@@ -58,9 +58,20 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
     }
 
     return { ok: true, ...extractFields(text) }
-  } catch {
-    // Deliberately does not include the exception: it can contain fragments of
-    // the résumé, and nothing from that file should reach a log or a client.
+  } catch (e) {
+    // TEMPORARY: this failed on Vercel while the exact same file parsed
+    // cleanly in a local test, so something about the deployed environment
+    // differs. Logs name/code and call-site frames only — never .message or
+    // .stack's first line, since those can embed a fragment of the file's
+    // own content (e.g. a malformed-token error echoing what it saw).
+    // Revert once the cause is found; nothing from the file itself should
+    // reach a log long-term.
+    const err = e as { name?: string; code?: string; stack?: string }
+    console.error(
+      '[parse-resume]', kind, file.size,
+      err.name, err.code,
+      (err.stack ?? '').split('\n').slice(1, 5).join(' | ')
+    )
     return {
       ok: false,
       error: "We couldn't read that file. You can type your details in instead.",
