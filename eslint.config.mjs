@@ -38,7 +38,9 @@ const eslintConfig = defineConfig([
     },
   },
 
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // .vercel/output is Vercel's generated build artifact — machine-written CJS
+  // launchers that fail every rule and are not ours to fix.
+  globalIgnores([".next/**", ".vercel/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

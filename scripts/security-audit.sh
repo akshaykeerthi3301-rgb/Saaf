@@ -13,7 +13,9 @@ code(){ find "$@" -name '*.ts' -o -name '*.tsx' 2>/dev/null | xargs cat 2>/dev/n
 
 echo "=== secrets ==="
 git ls-files | grep -q "^\.env\.local$" && fail ".env.local is tracked" || pass ".env.local not tracked"
-git grep -qE "eyJhbGciOi|re_[A-Za-z0-9]{20}|sb_secret_" -- . 2>/dev/null && fail "key material in tracked files" || pass "no key material in tracked files"
+# `:(exclude)` keeps this script's own pattern from matching itself — an audit
+# that flags itself is the same cry-wolf failure as one that flags comments.
+git grep -qE "eyJhbGciOi|re_[A-Za-z0-9]{20}|sb_secret_" -- . ':(exclude)scripts/security-audit.sh' 2>/dev/null && fail "key material in tracked files" || pass "no key material in tracked files"
 code src | grep -qE "NEXT_PUBLIC_[A-Z_]*(SERVICE_ROLE|SECRET|RESEND)[A-Z_]*\s*=" && fail "secret behind a public prefix" || pass "no secret behind NEXT_PUBLIC_"
 
 echo "=== service-role reachability ==="

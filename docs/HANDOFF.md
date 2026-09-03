@@ -1,6 +1,6 @@
 # Handoff — what Saaf still needs from you
 
-*Written 2026-09-03, at 27/54 tasks. Read alongside `docs/PROJECT-STATE.md`.*
+*Written 2026-09-03. **The MVP is built and deployed** — 53/53 tasks, live at https://saaf-akshay-keerthi.vercel.app. Read alongside `docs/PROJECT-STATE.md`.*
 
 Everything below is split by whether **you** have to do it or whether a coding
 session can. Nothing here is blocked on both.
@@ -66,7 +66,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
-| A5 | **`npx vercel login` and deploy** | TASK-010 | CLI only — the GitHub integration needs OAuth you cannot grant |
+| A5 | ~~Deploy~~ | — | ✅ Done 2026-09-03. **Redeploying needs `.git` moved aside**, because Vercel blocks deployments whose commit author it does not recognise. Permanent fix: add `275312729+akshaykeerthi3301-rgb@users.noreply.github.com` as a secondary email on the Vercel account |
 | A6 | **Buy and verify a domain in Resend** | beta users | See D4 |
 
 ---

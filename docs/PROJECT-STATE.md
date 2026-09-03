@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-03 · **Phase:** Develop — **built. 52 of 53 tasks; only the Vercel deploy remains.** Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deliberately deferred, and **nothing has ever shipped to a real person.**
+**Last updated:** 2026-09-03 · **Phase:** Develop — **complete. 53 of 53 tasks. Live at https://saaf-akshay-keerthi.vercel.app**.** Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the four decisions only the founder can make, the six actions needing their accounts, and the seven invariants a fresh session must not undo.
 
@@ -128,10 +128,11 @@ the daily ingest at 20 boards / 964 roles / 34s, the shortlist rendering real
 refusals, magic-link sign-in end to end, the daily digest actually sending, and a
 public audit page at `/audit`.
 
-**Not done:** `npx vercel deploy --prebuilt --prod` — the build succeeds
-(`vercel build` returns ok) but uploads failed from the agent's sandbox with
-`fetch failed`. Run it from a normal terminal, then update Supabase's Site URL
-and add `https://<domain>/**` to Redirect URLs, or sign-in breaks in production.
+**Deployed 2026-09-03** to https://saaf-akshay-keerthi.vercel.app, region `bom1`.
+Verified live: the landing page serving real audit figures, the public gate audit,
+`/api/audit/today` at 935 indexed / 497 withheld, all four security headers, route
+protection returning 307 for an unauthenticated `/today`, and both localhost and
+production callbacks allowlisted in Supabase.
 
 
 ## The five personas, ranked
