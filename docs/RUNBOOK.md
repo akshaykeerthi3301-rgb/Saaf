@@ -73,9 +73,13 @@ SENTRY_DSN
 RESEND_API_KEY
 ```
 
-**⛔ `SUPABASE_SERVICE_ROLE_KEY` is deliberately absent.** It bypasses RLS
-entirely and belongs only in GitHub Actions secrets, where the ingest job runs.
-Nothing served to a browser should be able to reach it.
+**⚠️ `SUPABASE_SERVICE_ROLE_KEY` is set for PRODUCTION ONLY.** This changed on
+2026-09-03. It was excluded while GitHub Actions ran the ingest; Actions turned
+out to be disabled on this account, so Vercel Cron runs it instead and the key
+has to be reachable there. It is never set for preview or development, has no
+`NEXT_PUBLIC_` prefix so it cannot reach a browser bundle, and ESLint blocks
+`src/app` and `src/components` from importing the client that uses it. Migrating
+the scheduler to a Supabase Edge Function would remove it from Vercel entirely.
 
 After the first deploy, set the Supabase **Site URL** to the deployed origin and
 add `https://<project>.vercel.app/**` to Redirect URLs, or the magic link will

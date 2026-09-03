@@ -30,7 +30,18 @@ Phase 3 needs 30–40 Indian company ATS boards. A session can seed plausible on
 from public sources, but you may have opinions about which employers your
 candidates actually want. **Blocks:** TASK-031 quality, not its existence.
 
-**D5 · The ingest scheduler has a 60-second ceiling.**
+**D5 · The ingest scheduler has a 60-second ceiling — and now holds the service key.**
+Moving the scheduler to Vercel had a second consequence beyond the timeout. The
+ingest writes roles, requirements and gate results, all of which RLS blocks for
+ordinary clients, so `SUPABASE_SERVICE_ROLE_KEY` now lives in the Vercel
+production environment. Earlier design notes said it never should — that was
+written when GitHub Actions was the runner. It is set for **production only**,
+never preview or development, and it remains a server-only variable that cannot
+reach a browser bundle, with ESLint blocking app code from importing the client
+and the cron route requiring a bearer token. **Migrating to a Supabase Edge
+Function removes the key from Vercel entirely**, which is a second reason to do
+it beyond the timeout.
+
 Vercel Hobby caps a function at 60s and fires cron once daily, so the work cannot
 be split across invocations. The run takes ~34s at 20 boards. **It will time out
 past roughly 30 boards** — and growing the registry is the moat, so this is a
