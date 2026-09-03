@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleRow } from '@/components/ui/row'
 import { Arithmetic } from '@/components/ui/arithmetic'
+import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
 
 /**
  * Placeholder home page — a smoke test for the design primitives while the
@@ -10,6 +11,7 @@ import { Arithmetic } from '@/components/ui/arithmetic'
 export default function Home() {
   return (
     <main className="measure" style={{ paddingTop: 48, paddingBottom: 64 }}>
+      <AuthFragmentNotice />
       <p style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>
         Design system smoke test
       </p>
