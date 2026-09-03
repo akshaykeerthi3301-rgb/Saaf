@@ -1,0 +1,41 @@
+name: Daily ingest
+
+# 03:00 IST. GitHub Actions runs in UTC, so that is 21:30 the previous day —
+# getting this wrong sends the digest at breakfast in the wrong timezone.
+on:
+  schedule:
+    - cron: '30 21 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run ingest
+        env:
+          # The service-role key bypasses RLS. It lives ONLY here — never in
+          # Vercel, never in a NEXT_PUBLIC_ variable.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: npx tsx ingest/run.ts
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::Daily ingest failed. Two consecutive failures is a P0 incident —"
+          echo "::error::the registry compounding is the moat."

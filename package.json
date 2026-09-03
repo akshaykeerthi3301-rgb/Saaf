@@ -13,8 +13,9 @@
     "verify:rls": "tsx --env-file=.env.local scripts/verify-rls.ts",
     "seed:fixture": "tsx scripts/seed-fixture.ts",
     "gates:demo": "tsx scripts/evaluate-fixture.ts",
-    "db:load-fixture": "tsx --env-file=.env.local scripts/load-fixture-to-db.ts",
-    "db:seed-test-user": "tsx --env-file=.env.local scripts/seed-test-user.ts"
+    "db:seed-test-user": "tsx --env-file=.env.local scripts/seed-test-user.ts",
+    "registry:discover": "tsx scripts/discover-boards.ts",
+    "ingest": "tsx --env-file=.env.local ingest/run.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
