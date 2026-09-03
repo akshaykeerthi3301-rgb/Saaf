@@ -75,7 +75,7 @@ A **#3 Product-Visual Hero** page in **11 sections**, promising the magic moment
 - **Goal:** Convert four mechanism details into things the candidate gets.
 - **Benefit 1:** "A credential can't be stretched" + "Finance gates on CA, CFA or CS. Marketing gates on budget scale. We check the one that applies to you, not years for everyone."
 - **Benefit 2:** "Every score carries its reason" + "*72% — GTM and stakeholder management match; the three-year floor is your one gap.* No number arrives without its working."
-- **Benefit 3:** "Nothing invented in your documents" + "Drafts only reorder facts you confirmed. If a claim isn't in your profile, the document is blocked, not flagged."
+- ~~**Benefit 3:** "Nothing invented in your documents"~~ — **CUT 2026-09-03 (Open Question Q1).** Document generation and the fabrication guard are P2, so the page must not promise them. Restore this benefit only when the feature ships. The page now runs three benefits, not four.
 - **Benefit 4:** "Nobody can find you here" + "Your file is deleted after parsing. No employer is contacted. Delete your account in one click, no email required."
 - **Reference:** Tactic #11 (Features as Benefits, Not Feature Lists). Avoids the *Feature List* anti-pattern.
 

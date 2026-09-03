@@ -73,6 +73,25 @@ export default async function TodayPage() {
         </p>
       ) : null}
 
+      {/* Marketing, consulting and HR have no typed gate yet. Saying so is the
+          whole point: silently applying the years gate to everyone is the bug
+          this product exists to fix. */}
+      {['marketing', 'consulting', 'hr'].includes(profile.function ?? '') ? (
+        <p style={{
+          border: '1px solid var(--color-outline-variant)', padding: 'var(--space-md)',
+          fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
+          margin: '0 0 var(--space-md)',
+        }}>
+          Your function&apos;s own gate isn&apos;t live yet — {profile.function === 'marketing'
+            ? 'marketing usually gates on channel ownership and budget scale'
+            : profile.function === 'consulting'
+              ? 'consulting often gates on institute tier'
+              : 'HR often gates on a recruitment-versus-generalist split'}, and we
+          don&apos;t have that working reliably. Only location, work authorisation and stated
+          seniority applied to this list. We&apos;d rather tell you than quietly use the wrong gate.
+        </p>
+      ) : null}
+
       {cleared.map((r) => (
         <RoleRow
           key={r.id}

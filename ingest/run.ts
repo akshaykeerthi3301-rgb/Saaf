@@ -163,4 +163,6 @@ main().then(async ({ indexed }) => {
   await recomputeAll()
   const { writeAudit } = await import('./audit')
   await writeAudit(indexed)
+  const { sendDigests } = await import('./digest')
+  await sendDigests()
 }).catch((e) => { console.error(e); process.exit(1) })
