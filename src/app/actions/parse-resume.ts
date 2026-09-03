@@ -4,8 +4,7 @@ import { z } from 'zod'
 import { pdfToText } from '@/lib/parse/pdf'
 import { docxToText } from '@/lib/parse/docx'
 import { extractFields, type ParseResult } from '@/lib/parse/extract'
-
-export const MAX_RESUME_BYTES = 5 * 1024 * 1024 // 5 MB
+import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
 
 const ACCEPTED = {
   'application/pdf': 'pdf',
