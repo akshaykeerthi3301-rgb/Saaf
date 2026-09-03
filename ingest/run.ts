@@ -57,7 +57,7 @@ async function fetchBoard(b: { id: string; provider: string; token: string }): P
   return a.parse(await res.json(), b.token)
 }
 
-async function main() {
+export async function runIngest() {
   const started = Date.now()
   await syncRegistry()
 
@@ -158,11 +158,18 @@ async function main() {
   return { indexed }
 }
 
-main().then(async ({ indexed }) => {
+export async function runAll() {
+  const { indexed } = await runIngest()
   const { recomputeAll } = await import('./recompute')
   await recomputeAll()
   const { writeAudit } = await import('./audit')
   await writeAudit(indexed)
   const { sendDigests } = await import('./digest')
   await sendDigests()
-}).catch((e) => { console.error(e); process.exit(1) })
+  return { indexed }
+}
+
+// CLI entry point: `npm run ingest`. Skipped when imported by the cron route.
+if (process.argv[1]?.includes('ingest/run')) {
+  runAll().catch((e) => { console.error(e); process.exit(1) })
+}

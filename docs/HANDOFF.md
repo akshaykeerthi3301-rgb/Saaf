@@ -30,6 +30,14 @@ Phase 3 needs 30–40 Indian company ATS boards. A session can seed plausible on
 from public sources, but you may have opinions about which employers your
 candidates actually want. **Blocks:** TASK-031 quality, not its existence.
 
+**D5 · The ingest scheduler has a 60-second ceiling.**
+Vercel Hobby caps a function at 60s and fires cron once daily, so the work cannot
+be split across invocations. The run takes ~34s at 20 boards. **It will time out
+past roughly 30 boards** — and growing the registry is the moat, so this is a
+*when*. Migrate to a Supabase Edge Function on `pg_cron` (150s) before then.
+*Recommendation: do it at 28 boards, not at 31.*
+**Blocks:** nothing today. Everything, quietly, the day the registry outgrows it.
+
 **D4 · A domain, before beta.**
 Resend will only deliver to your own account email until a domain is verified,
 so magic links cannot reach real beta users yet. A `.in` costs a few hundred
@@ -45,8 +53,8 @@ A session cannot do these — they need your accounts, your browser, or your car
 |---|---|---|---|
 | A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. Migrations `0001`–`0003` are already applied |
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
-| A3 | **Create the GitHub repo and push** | backup + Actions | Your account can push; only third-party OAuth is blocked |
-| A4 | **Add `SUPABASE_SERVICE_ROLE_KEY` as a GitHub Actions secret** | TASK-037 daily ingest | Repo → Settings → Secrets → Actions. **Never** put this in Vercel |
+| A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
+| A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
 | A5 | **`npx vercel login` and deploy** | TASK-010 | CLI only — the GitHub integration needs OAuth you cannot grant |
 | A6 | **Buy and verify a domain in Resend** | beta users | See D4 |
 

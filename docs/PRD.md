@@ -168,7 +168,9 @@ saaf/
 
 Vercel Hobby, deployed with the **Vercel CLI** rather than the GitHub integration: this GitHub account cannot authorise third-party OAuth applications, so Vercel cannot be linked to the repository. `npx vercel` creates the project, `npx vercel --prod` ships it. Pushes to GitHub still work and still serve as the code backup — they simply do not trigger a deploy. The production URL is a `*.vercel.app` subdomain — no custom domain, per the confirmed hosting intent.
 
-**GitHub Actions is unaffected.** It is first-party to GitHub and needs no OAuth linking — the ingest workflow authenticates outbound to Supabase with a repository secret. The scheduler stays on Actions as specified in §6 FR-002.
+**The scheduler is Vercel Cron, not GitHub Actions — corrected 2026-09-03.** The earlier reasoning here was that Actions is first-party and therefore unaffected by the OAuth restriction. That was an untested inference and it was wrong: `workflow_dispatch` returns `HTTP 422: Actions has been disabled for this user`. Push and repository access work; only Actions are blocked. The ingest code did not move — only its trigger, to `src/app/api/cron/ingest/route.ts` scheduled from `vercel.json`.
+
+⚠️ **This carries a ceiling.** Vercel Hobby caps a function at 60 seconds, and Hobby cron fires once daily so the work cannot be chunked across invocations. The run takes ~34s at 20 boards — roughly 1.7s per board — so **it will time out somewhere past 30 boards.** Since the registry compounding is the moat, that is a *when*, not an *if*. Migrate to a Supabase Edge Function on `pg_cron` (150s, no Vercel ceiling) before the registry passes 30 boards. The adapters and gate code are runtime-agnostic; only the trigger and the Supabase client import change.
 
 The ingest job is **not** on Vercel. It runs as a GitHub Actions workflow on a cron, using the Supabase service-role key from Actions secrets. This keeps it clear of Hobby's two-job cron cap and means a Vercel outage does not stop the registry compounding.
 
