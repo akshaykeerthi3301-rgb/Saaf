@@ -1,6 +1,8 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-03 · **Phase:** Develop (PRD + Roadmap done, build starting) · Design 6 of 7, Define 4 of 5 — both remaining steps are launches, deliberately deferred · **Code written:** none yet; 54 tasks planned
+**Last updated:** 2026-09-03 · **Phase:** Develop — building. **27 of 54 tasks done; Phases 1 and 2 complete.** Design 6 of 7, Define 4 of 5 — both remaining steps are launches, deliberately deferred.
+
+> **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the four decisions only the founder can make, the six actions needing their accounts, and the seven invariants a fresh session must not undo.
 
 Read this first. It carries decisions and verified facts from the originating session so they don't get re-derived or accidentally reversed.
 
