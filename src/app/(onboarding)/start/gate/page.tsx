@@ -8,8 +8,7 @@ import { readDraft, clearDraft } from '@/lib/onboarding-store'
 import { useDraft } from '@/lib/use-draft'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { track } from '@/lib/analytics'
-
-type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
+import { QUESTIONS, ASSESSMENT_ONLY_FUNCTIONS, type Fn } from '@/lib/gate-questions'
 
 /**
  * Screen 5 — the function-typed gate, and the user's first sight of the engine.
@@ -18,35 +17,10 @@ type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
  * gates on a credential; engineering on an experience band. A years-only gate
  * applied to everyone is the bug this product exists to fix, so the branch is
  * shown rather than hidden.
+ *
+ * The question set itself lives in src/lib/gate-questions.ts, shared with the
+ * profile edit form — the same answer needs to be editable after onboarding.
  */
-const QUESTIONS: Record<Fn, { q: string; note: string; options: string[] }> = {
-  finance: {
-    q: 'Which credential do you hold?',
-    note: 'Finance gates on a credential, not on years. We check the one that actually applies to you.',
-    options: ['CA', 'CFA', 'CS', 'None of these'],
-  },
-  engineering: {
-    q: 'Confirm your experience band',
-    note: 'Engineering gates on an experience band. A role asking for more than you have is withheld, with the number stated.',
-    options: ['That looks right'],
-  },
-  marketing: {
-    q: 'Confirm your experience band',
-    note: 'Marketing usually gates on channel ownership and budget scale rather than years. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
-    options: ['Understood'],
-  },
-  consulting: {
-    q: 'Confirm your experience band',
-    note: 'Consulting often gates on institute tier. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
-    options: ['Understood'],
-  },
-  hr: {
-    q: 'Confirm your experience band',
-    note: 'HR often gates on a recruitment-versus-generalist split. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
-    options: ['Understood'],
-  },
-}
-
 export default function GatePage() {
   const router = useRouter()
   const draft = useDraft()
@@ -68,6 +42,9 @@ export default function GatePage() {
       fn,
       city: f.city ?? '',
       credential: (choice && ['CA', 'CFA', 'CS'].includes(choice) ? choice : 'none') as 'CA' | 'CFA' | 'CS' | 'none',
+      // Stored, not gated on — see confirm-profile.ts for which column this
+      // lands in per function.
+      assessmentAnswer: ASSESSMENT_ONLY_FUNCTIONS.includes(fn) ? choice : undefined,
       portals: d.portals,
     })
     setBusy(false)

@@ -9,11 +9,20 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('current_title, employer, years_experience, function, city, credential')
+    .select('current_title, employer, years_experience, function, city, credential, channel_budget, institute_tier, hr_track')
     .eq('id', user.id)
     .single()
 
   if (!profile) redirect('/start')
+
+  // Whichever of the three columns matches this profile's own function —
+  // they're mutually exclusive by construction, same as the write side in
+  // confirm-profile.ts.
+  const assessmentAnswer = {
+    marketing: profile.channel_budget,
+    consulting: profile.institute_tier,
+    hr: profile.hr_track,
+  }[profile.function as 'marketing' | 'consulting' | 'hr'] ?? ''
 
   return (
     <main className="measure" style={{ paddingTop: 32, paddingBottom: 64, maxWidth: 560 }}>
@@ -30,6 +39,7 @@ export default async function ProfilePage() {
         fn: profile.function ?? 'engineering',
         city: profile.city ?? '',
         credential: profile.credential ?? 'none',
+        assessmentAnswer,
       }} />
     </main>
   )

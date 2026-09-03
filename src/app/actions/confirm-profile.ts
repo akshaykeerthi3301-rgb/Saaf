@@ -12,6 +12,11 @@ const schema = z.object({
   city: z.string().min(1, 'We need this to run the location gate.'),
   workAuthorisation: z.string().optional(),
   credential: z.enum(['CA', 'CFA', 'CS', 'none']).default('none'),
+  // One field, not three — channel_budget/institute_tier/hr_track are
+  // mutually exclusive by construction (a candidate only ever answers their
+  // own function's question), so which column this lands in is decided by
+  // `fn` below rather than threading three near-identical optional fields.
+  assessmentAnswer: z.string().optional(),
   portals: z.array(z.string()).optional(),
 })
 
@@ -44,6 +49,11 @@ export async function confirmProfile(input: ConfirmInput) {
     city: v.city,
     work_authorisation: v.workAuthorisation ?? null,
     credential: v.credential,
+    // Collected, not gated on — see docs/PRD.md §13 and
+    // supabase/migrations/0008_profile_assessment_answers.sql.
+    channel_budget: v.fn === 'marketing' ? v.assessmentAnswer ?? null : null,
+    institute_tier: v.fn === 'consulting' ? v.assessmentAnswer ?? null : null,
+    hr_track: v.fn === 'hr' ? v.assessmentAnswer ?? null : null,
     portals_used: v.portals ?? null,
     // True only for a sign-in method that actually confirmed the address —
     // Google today. Instant sign-in (src/lib/instant-signin.ts) never sets

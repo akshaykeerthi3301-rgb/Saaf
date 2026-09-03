@@ -6,11 +6,11 @@ import { Input } from '@/components/ui/input'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
+import { QUESTIONS, ASSESSMENT_ONLY_FUNCTIONS, type Fn } from '@/lib/gate-questions'
 
-type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
-  fn: string; city: string; credential: string
+  fn: string; city: string; credential: string; assessmentAnswer: string
 }
 
 export function ProfileForm({ initial }: { initial: Initial }) {
@@ -27,6 +27,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       yearsExperience: Number(f.yearsExperience),
       fn: f.fn as Fn, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
+      assessmentAnswer: ASSESSMENT_ONLY_FUNCTIONS.includes(f.fn as Fn) ? f.assessmentAnswer : undefined,
     })
     setBusy(false)
     if (!res.ok) setError(res.error)
@@ -60,6 +61,29 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           <option value="CS">CS</option>
         </select>
       </div>
+
+      {ASSESSMENT_ONLY_FUNCTIONS.includes(f.fn as Fn) ? (
+        <div style={{ marginBottom: 'var(--space-md)' }}>
+          <label htmlFor="assessment" style={{
+            display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
+            letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
+            color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
+          }}>{QUESTIONS[f.fn as Fn].q}</label>
+          <select id="assessment" value={f.assessmentAnswer}
+            onChange={(e) => setF({ ...f, assessmentAnswer: e.target.value })}
+            style={{
+              width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
+              background: 'var(--color-surface)', color: 'var(--color-on-surface)',
+              font: 'inherit', fontSize: 'var(--type-body-md-size)',
+              border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
+            }}>
+            <option value="">Not answered</option>
+            {QUESTIONS[f.fn as Fn].options.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </div>
+      ) : null}
 
       {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
       {msg ? <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>{msg}</p> : null}
