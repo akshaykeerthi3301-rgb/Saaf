@@ -19,6 +19,24 @@ const MAX_PAGES = 15
 export async function pdfToText(buffer: Buffer): Promise<string> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
+  // On Node, pdfjs-dist always disables the real Worker and instead boots a
+  // "fake worker" by dynamically importing GlobalWorkerOptions.workerSrc — a
+  // runtime STRING VARIABLE it defaults to the relative path
+  // "./pdf.worker.mjs". Next's file tracer can't see a dynamic import whose
+  // specifier is a variable, so that file never made it into the deployed
+  // Vercel function; every résumé upload failed with "Setting up fake
+  // worker failed" (confirmed via Vercel's own function logs, not assumed —
+  // this is a different bug than it first looked like: @napi-rs/canvas's
+  // own missing-binary warning is real but harmless, since getTextContent()
+  // never touches DOMMatrix/Path2D; this worker bootstrap was the actual
+  // crash). Importing the worker module here uses a literal specifier in
+  // OUR source, which the tracer can see and bundle correctly, then handing
+  // it to pdfjs-dist directly short-circuits its own untraceable import.
+  const { WorkerMessageHandler } = await import('pdfjs-dist/legacy/build/pdf.worker.mjs')
+  ;(globalThis as typeof globalThis & { pdfjsWorker?: { WorkerMessageHandler: unknown } }).pdfjsWorker = {
+    WorkerMessageHandler,
+  }
+
   const task = pdfjs.getDocument({
     data: new Uint8Array(buffer),
     useSystemFonts: true,
