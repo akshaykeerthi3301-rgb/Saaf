@@ -15,7 +15,8 @@
     "gates:demo": "tsx scripts/evaluate-fixture.ts",
     "db:seed-test-user": "tsx --env-file=.env.local scripts/seed-test-user.ts",
     "registry:discover": "tsx scripts/discover-boards.ts",
-    "ingest": "tsx --env-file=.env.local ingest/run.ts"
+    "ingest": "tsx --env-file=.env.local ingest/run.ts",
+    "audit:security": "bash scripts/security-audit.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
