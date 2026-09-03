@@ -37,6 +37,10 @@ type GateRow = {
     location_raw: string | null
     apply_url: string
     company_name: string | null
+    // Ingest's own internal classification — never a candidate-facing bucket
+    // any more (matching is now free text, see evaluate-user.ts), but still
+    // used here to say which roles don't have a real gate live yet.
+    function: string | null
     role_requirements: RoleRequirement[] | null
   } | null
 }
@@ -48,7 +52,7 @@ export default async function TodayPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('function, confirmed_at, city, work_mode_preference')
+    .select('preferred_role, confirmed_at, city, work_mode_preference')
     .eq('id', user.id)
     .single()
 
@@ -61,7 +65,7 @@ export default async function TodayPage() {
     .from('gate_results')
     .select(`
       id, role_id, outcome, refused_on, reason, score, gap_years,
-      roles(title, city, location_raw, apply_url, company_name,
+      roles(title, city, location_raw, apply_url, company_name, function,
         role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
     `)
     .eq('user_id', user.id)
@@ -146,6 +150,7 @@ export default async function TodayPage() {
         inFunction={rows.length}
         cleared={cleared.length}
         withheld={withheld.length}
+        searchTerm={profile.preferred_role ?? undefined}
       />
 
       {/* A backend failure must never render as a verdict. If the read failed we
@@ -156,24 +161,34 @@ export default async function TodayPage() {
         </p>
       ) : null}
 
-      {/* Marketing, consulting and HR have no typed gate yet. Saying so is the
-          whole point: silently applying the years gate to everyone is the bug
-          this product exists to fix. */}
-      {['marketing', 'consulting', 'hr'].includes(profile.function ?? '') ? (
-        <p style={{
-          border: '1px solid var(--color-outline-variant)', padding: 'var(--space-md)',
-          fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
-          margin: '0 0 var(--space-md)',
-        }}>
-          Your function&apos;s own gate isn&apos;t live yet — {profile.function === 'marketing'
-            ? 'marketing usually gates on channel ownership and budget scale'
-            : profile.function === 'consulting'
-              ? 'consulting often gates on institute tier'
-              : 'HR often gates on a recruitment-versus-generalist split'}, and we
-          don&apos;t have that working reliably. Only location and stated seniority applied to
-          this list. We&apos;d rather tell you than quietly use the wrong gate.
-        </p>
-      ) : null}
+      {/* Marketing, consulting and HR postings have no typed gate yet. Saying so
+          is the whole point: silently applying the years gate to everyone is
+          the bug this product exists to fix. Computed per matched role, not
+          per candidate — matching is free text now, so a single search can
+          return roles ingest classified into several different functions. */}
+      {(() => {
+        const UNGATED_FUNCTIONS = new Set(['marketing', 'consulting', 'hr'])
+        const ungated = new Set(
+          rows
+            .map((r) => r.roles?.function)
+            .filter((fn): fn is string => !!fn && UNGATED_FUNCTIONS.has(fn))
+        )
+        if (ungated.size === 0) return null
+        return (
+          <p style={{
+            border: '1px solid var(--color-outline-variant)', padding: 'var(--space-md)',
+            fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
+            margin: '0 0 var(--space-md)',
+          }}>
+            Some of the roles below don&apos;t have a dedicated gate yet — marketing,
+            consulting and HR roles usually gate on channel/budget, institute tier, or a
+            recruitment-versus-generalist split, and we don&apos;t have that working
+            reliably. Only location and stated seniority applied to those. Everything
+            else below uses the credential or experience gate. We&apos;d rather tell you
+            than quietly use the wrong gate.
+          </p>
+        )
+      })()}
 
       {cleared.map((r) => (
         <RoleRow

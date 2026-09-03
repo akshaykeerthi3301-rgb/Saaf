@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
-import { QUESTIONS, ASSESSMENT_ONLY_FUNCTIONS, type Fn } from '@/lib/gate-questions'
 
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
-  fn: string; city: string; credential: string; assessmentAnswer: string
+  preferredRole: string; city: string; credential: string
   workModePreference: string; salaryExpectation: string
 }
 
@@ -33,9 +32,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     const res = await confirmProfile({
       currentTitle: f.currentTitle, employer: f.employer,
       yearsExperience: Number(f.yearsExperience),
-      fn: f.fn as Fn, city: f.city,
+      preferredRole: f.preferredRole, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
-      assessmentAnswer: ASSESSMENT_ONLY_FUNCTIONS.includes(f.fn as Fn) ? f.assessmentAnswer : undefined,
       // Always sent from this screen (unlike onboarding, which never asks) —
       // an explicit "no preference" is a real answer here, not an omission.
       workModePreference: f.workModePreference as 'remote' | 'hybrid' | 'onsite' | 'no_preference',
@@ -53,6 +51,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <Input label="Years of experience" type="number" min={0} max={50} step={0.5}
         value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
       <Input label="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
+      <Input label="Preferred job role" value={f.preferredRole}
+        onChange={(e) => setF({ ...f, preferredRole: e.target.value })}
+        helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'." />
 
       <div style={{ marginBottom: 'var(--space-md)' }}>
         <label htmlFor="cred" style={{
@@ -73,29 +74,6 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           <option value="CS">CS</option>
         </select>
       </div>
-
-      {ASSESSMENT_ONLY_FUNCTIONS.includes(f.fn as Fn) ? (
-        <div style={{ marginBottom: 'var(--space-md)' }}>
-          <label htmlFor="assessment" style={{
-            display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-            letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-            color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
-          }}>{QUESTIONS[f.fn as Fn].q}</label>
-          <select id="assessment" value={f.assessmentAnswer}
-            onChange={(e) => setF({ ...f, assessmentAnswer: e.target.value })}
-            style={{
-              width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
-              background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-              font: 'inherit', fontSize: 'var(--type-body-md-size)',
-              border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
-            }}>
-            <option value="">Not answered</option>
-            {QUESTIONS[f.fn as Fn].options.map((o) => (
-              <option key={o} value={o}>{o}</option>
-            ))}
-          </select>
-        </div>
-      ) : null}
 
       <div style={{ marginBottom: 'var(--space-md)' }}>
         <label htmlFor="workMode" style={{

@@ -18,8 +18,6 @@ export type RequirementKind =
 
 export type Credential = 'CA' | 'CFA' | 'CS' | 'none'
 
-export type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
-
 /** A hard requirement extracted from a job description. */
 export type TypedRequirement = {
   kind: RequirementKind
@@ -36,7 +34,6 @@ export type TypedRequirement = {
 
 export type CandidateProfile = {
   yearsExperience: number
-  fn: Fn
   city?: string
   credential?: Credential
   workAuthorisation?: string

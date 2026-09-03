@@ -8,8 +8,6 @@ import { Progress } from '@/components/features/progress'
 import { writeDraft } from '@/lib/onboarding-store'
 import { useDraft } from '@/lib/use-draft'
 
-const FUNCTIONS = ['engineering', 'finance', 'marketing', 'consulting', 'hr'] as const
-
 /**
  * Screen 4 — confirm every parsed field. Gates are only as honest as the
  * profile they run against, so nothing is stored and nothing runs until this
@@ -31,7 +29,11 @@ export default function ConfirmPage() {
     currentTitle: edits.currentTitle ?? fields.currentTitle ?? '',
     employer: edits.employer ?? fields.employer ?? '',
     yearsExperience: edits.yearsExperience ?? fields.yearsExperience?.toString() ?? '',
-    fn: (edits.fn ?? fields.fn ?? 'engineering') as (typeof FUNCTIONS)[number],
+    // Not parsed — there is no reliable way to guess a candidate's target role
+    // from their résumé text (that guess is exactly what used to misroute
+    // candidates). Suggested from their current title instead, and always
+    // editable, since "what you do now" and "what you want next" often differ.
+    preferredRole: edits.preferredRole ?? fields.currentTitle ?? '',
     city: edits.city ?? fields.city ?? '',
   }
   const setF = (patch: Partial<typeof f>) =>
@@ -39,14 +41,13 @@ export default function ConfirmPage() {
 
   const fromResume: Record<string, boolean> = {
     currentTitle: !!fields.currentTitle, employer: !!fields.employer,
-    yearsExperience: fields.yearsExperience !== undefined,
-    fn: !!fields.fn, city: !!fields.city,
+    yearsExperience: fields.yearsExperience !== undefined, city: !!fields.city,
   }
 
   const prov = (k: string) => (fromResume[k] ? 'read from your résumé' : undefined)
 
   function next() {
-    if (!f.currentTitle || !f.employer || !f.city || f.yearsExperience === '') {
+    if (!f.currentTitle || !f.employer || !f.city || f.yearsExperience === '' || !f.preferredRole) {
       setError('We need this to run the experience gate.')
       return
     }
@@ -80,26 +81,13 @@ export default function ConfirmPage() {
         value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
       <Input label="City" provenance={prov('city')} value={f.city}
         onChange={(e) => setF({ ...f, city: e.target.value })} />
-
-      <div style={{ marginBottom: 'var(--space-md)' }}>
-        <label htmlFor="fn" style={{
-          display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-          letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-          color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
-        }}>
-          Function{fromResume.fn ? <span style={{ textTransform: 'none', letterSpacing: 'normal', fontWeight: 400, marginLeft: 8 }}>read from your résumé</span> : null}
-        </label>
-        <select id="fn" value={f.fn}
-          onChange={(e) => setF({ ...f, fn: e.target.value as (typeof FUNCTIONS)[number] })}
-          style={{
-            width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
-            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-            font: 'inherit', fontSize: 'var(--type-body-md-size)',
-            border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
-          }}>
-          {FUNCTIONS.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-      </div>
+      <Input
+        label="What job role are you looking for?"
+        provenance={fields.currentTitle ? "based on your current title — edit if you're looking for something different" : undefined}
+        helper="e.g. 'Product Manager', not just 'Manager' — the more specific this is, the better your matches"
+        value={f.preferredRole}
+        onChange={(e) => setF({ ...f, preferredRole: e.target.value })}
+      />
 
       {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
       <Button onClick={next}>Looks right</Button>

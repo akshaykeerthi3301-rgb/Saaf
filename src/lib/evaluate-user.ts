@@ -34,25 +34,32 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
 
   const candidate: CandidateProfile = {
     yearsExperience: Number(profile.years_experience ?? 0),
-    fn: profile.function,
     city: profile.city ?? undefined,
     credential: profile.credential ?? 'none',
   }
 
-  // The candidate's own function only.
+  // Matching used to be an exact equality against the candidate's own guessed
+  // function bucket. That bucket was itself guessed from the résumé by a
+  // whole-document keyword scan, which reliably misrouted candidates whose
+  // résumé used a different function's incidental vocabulary before it ever
+  // reached the right one — see src/lib/parse/extract.ts's deleted FN_HINTS.
+  // The fix: stop guessing. Ask the candidate directly what role they want
+  // (profiles.preferred_role) and match that free text against a role's own
+  // title via Postgres full-text search — title-only, mirroring
+  // ingest/classify.ts's own title-only reasoning, since role descriptions are
+  // untrusted third-party text and a free-text query is more exposed to
+  // incidental description-word collisions than a fixed taxonomy ever was.
   //
-  // 'other' used to be included on the reasoning that a role the classifier
-  // could not type should still be judged rather than dropped. In practice that
-  // put voice-artist and delivery gigs on an engineer's list, because roughly
-  // 60% of ingested roles landed in 'other'. PRODUCT.md is explicit that no
-  // volume is promised and a short honest list beats a padded one — so an
-  // unclassified role is a registry-quality problem to fix at ingest, not
-  // something to show everyone and let them sort out.
+  // No preferred role yet (shouldn't happen post-confirm, but a candidate
+  // profile edited mid-migration could transiently lack one) means nothing to
+  // match against — return rather than run an unfiltered/all-roles query.
+  if (!profile.preferred_role?.trim()) return { written: 0 }
+
   const { data: roles, error: rErr } = await db
     .from('roles')
     .select('id, function, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
-    .eq('function', profile.function)
+    .textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
   if (rErr) throw rErr
 
   const computedAt = new Date().toISOString()

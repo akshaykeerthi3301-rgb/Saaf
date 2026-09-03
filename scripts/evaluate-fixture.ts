@@ -21,12 +21,12 @@ const PROFILES: { name: string; note: string; profile: CandidateProfile }[] = [
   {
     name: 'Rohan',
     note: 'engineering · 2 years · Bengaluru · no credential',
-    profile: { yearsExperience: 2, fn: 'engineering', city: 'Bengaluru', credential: 'none' },
+    profile: { yearsExperience: 2, city: 'Bengaluru', credential: 'none' },
   },
   {
     name: 'Arjun',
     note: 'finance · 2 years post-qualification · Mumbai · no credential recorded',
-    profile: { yearsExperience: 2, fn: 'finance', city: 'Mumbai', credential: 'none' },
+    profile: { yearsExperience: 2, city: 'Mumbai', credential: 'none' },
   },
 ]
 

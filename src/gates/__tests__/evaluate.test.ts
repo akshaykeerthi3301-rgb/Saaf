@@ -12,8 +12,8 @@ import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } fr
  * not just the happy path.
  */
 
-const rohan: CandidateProfile = { yearsExperience: 2, fn: 'engineering', city: 'Bengaluru', credential: 'none' }
-const arjun: CandidateProfile = { yearsExperience: 2, fn: 'finance', city: 'Mumbai', credential: 'none' }
+const rohan: CandidateProfile = { yearsExperience: 2, city: 'Bengaluru', credential: 'none' }
+const arjun: CandidateProfile = { yearsExperience: 2, city: 'Mumbai', credential: 'none' }
 const arjunCA: CandidateProfile = { ...arjun, credential: 'CA' }
 
 const req = (p: Partial<TypedRequirement>): TypedRequirement => ({

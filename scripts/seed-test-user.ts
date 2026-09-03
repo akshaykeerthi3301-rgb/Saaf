@@ -32,7 +32,7 @@ async function main() {
     current_title: 'Systems Engineer',
     employer: 'Infosys',
     years_experience: 2,
-    function: 'engineering',
+    preferred_role: 'Systems Engineer',
     city: 'Bengaluru',
     work_authorisation: 'Indian citizen',
     credential: 'none',

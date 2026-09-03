@@ -15,9 +15,13 @@ export type ParsedFields = {
   currentTitle?: string
   employer?: string
   yearsExperience?: number
-  fn?: 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr'
   city?: string
   credential?: 'CA' | 'CFA' | 'CS'
+  /** Never parsed — the candidate types this on the confirm screen, suggested
+   *  from currentTitle. Lives here anyway because this type doubles as the
+   *  shape of the onboarding draft's confirmed fields, not just what the
+   *  parser itself can produce. */
+  preferredRole?: string
 }
 
 export type ParseResult = {
@@ -31,29 +35,57 @@ const CITIES = [
   'Noida', 'Hyderabad', 'Pune', 'Chennai', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Kochi',
 ]
 
-const FN_HINTS: { fn: NonNullable<ParsedFields['fn']>; re: RegExp }[] = [
-  { fn: 'engineering', re: /\b(software|engineer|developer|sde|backend|frontend|full[- ]?stack|devops|programmer|architect)\b/i },
-  { fn: 'finance',     re: /\b(finance|financial|accountant|audit|controller|fp&a|treasury|taxation)\b/i },
-  { fn: 'marketing',   re: /\b(marketing|growth|performance marketing|seo|brand|demand gen)\b/i },
-  { fn: 'consulting',  re: /\b(consultant|consulting|strategy|business analyst|associate consultant)\b/i },
-  { fn: 'hr',          re: /\b(human resources|\bhr\b|talent acquisition|recruit|hrbp|people ops)\b/i },
-]
-
 const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 const DASH = '[-‐‑‒–—]'
+const DATE_RANGE_RE = new RegExp(
+  `(?:${MONTH}\\s*)?((?:19|20)\\d{2})\\s*${DASH}\\s*(?:(?:${MONTH}\\s*)?((?:19|20)\\d{2})|present|current|now)`,
+  'gi'
+)
+
+// Section headers that are never employment — a date range under one of these
+// (e.g. a graduation year) must not be read as a career-start date. Deliberately
+// an exclude-list rather than requiring a positive "Experience" header: résumés
+// commonly open straight into the current role with no header at all, and
+// requiring one would misread every one of those as having zero sections.
+const NON_EMPLOYMENT_SECTION_RE =
+  /^(education|academics?|certifications?|courses?|publications?|awards?|honou?rs?|extracurriculars?)\b/i
+
+/** Line ranges [start, end) that sit under a non-employment section header. */
+function nonEmploymentLineRanges(lines: string[]): [number, number][] {
+  const ranges: [number, number][] = []
+  for (let i = 0; i < lines.length; i++) {
+    if (!NON_EMPLOYMENT_SECTION_RE.test(lines[i])) continue
+    // The section ends at the next line that itself looks like a section
+    // header — short and Title Case, the same shape as this one.
+    let end = lines.length
+    for (let j = i + 1; j < lines.length; j++) {
+      if (lines[j].length < 40 && /^[A-Z][A-Za-z &/]+$/.test(lines[j])) { end = j; break }
+    }
+    ranges.push([i, end])
+  }
+  return ranges
+}
 
 /** Years of experience, preferring an explicit statement over inferred dates. */
-function readYears(text: string): { years?: number; inferred: boolean } {
-  const stated = text.match(/(\d{1,2}(?:\.\d)?)\s*\+?\s*(?:years|yrs)\b[^.]{0,30}\bexperience\b/i)
+function readYears(lines: string[], clean: string): { years?: number; inferred: boolean } {
+  const stated = clean.match(/(\d{1,2}(?:\.\d)?)\s*\+?\s*(?:years|yrs)\b[^.]{0,30}\bexperience\b/i)
   if (stated) return { years: Number(stated[1]), inferred: false }
 
-  // Otherwise infer from the earliest employment year to now.
-  const ranges = [...text.matchAll(
-    new RegExp(`(?:${MONTH}\\s*)?((?:19|20)\\d{2})\\s*${DASH}\\s*(?:(?:${MONTH}\\s*)?((?:19|20)\\d{2})|present|current|now)`, 'gi')
-  )]
-  if (ranges.length === 0) return { inferred: false }
+  // Otherwise infer from the earliest EMPLOYMENT year to now. Scanned line by
+  // line (not the whole flattened document) so a date range under an
+  // Education/Certifications header can be excluded — the flattened text has
+  // already lost every section boundary by the time it would reach this scan.
+  const excluded = nonEmploymentLineRanges(lines)
+  const isExcluded = (i: number) => excluded.some(([s, e]) => i >= s && i < e)
 
-  const starts = ranges.map((m) => Number(m[1])).filter((y) => y >= 1980 && y <= new Date().getFullYear())
+  const starts: number[] = []
+  lines.forEach((line, i) => {
+    if (isExcluded(i)) return
+    for (const m of line.matchAll(DATE_RANGE_RE)) {
+      const y = Number(m[1])
+      if (y >= 1980 && y <= new Date().getFullYear()) starts.push(y)
+    }
+  })
   if (starts.length === 0) return { inferred: false }
 
   const years = new Date().getFullYear() - Math.min(...starts)
@@ -77,18 +109,13 @@ export function extractFields(text: string): ParseResult {
   if (city) fields.city = city
   else warnings.push('We could not find a city — please add it.')
 
-  for (const { fn, re } of FN_HINTS) {
-    if (re.test(clean)) { fields.fn = fn; break }
-  }
-  if (!fields.fn) warnings.push('We could not tell which function you work in.')
-
   const cred = clean.match(/\b(chartered accountant|CFA|company secretary)\b/i)
   if (cred) {
     const c = cred[1].toLowerCase()
     fields.credential = c.startsWith('chartered a') ? 'CA' : c === 'cfa' ? 'CFA' : 'CS'
   }
 
-  const { years, inferred } = readYears(clean)
+  const { years, inferred } = readYears(lines, clean)
   if (years !== undefined) {
     fields.yearsExperience = years
     if (inferred) {

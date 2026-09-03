@@ -24,12 +24,9 @@ export default function ReadingPage() {
     fields.employer
       ? `Found ${fields.employer}${fields.currentTitle ? ` — ${fields.currentTitle}` : ''}.`
       : 'Read the document.',
-    fields.fn
-      ? `Matched your work to ${fields.fn}.`
-      : 'Could not tell which function you work in — you can set it next.',
     'Your file is deleted. Only the parsed fields remain, and only in this browser.',
     ...(warnings.length ? [`${warnings.length} field${warnings.length === 1 ? '' : 's'} to check.`] : []),
-  ], [fields.employer, fields.currentTitle, fields.fn, warnings.length])
+  ], [fields.employer, fields.currentTitle, warnings.length])
 
   useEffect(() => {
     const timers = lines.map((_, i) => setTimeout(() => setStep(i + 1), 600 * (i + 1)))
