@@ -4,6 +4,7 @@ import { RoleRow, type EvidenceItem } from '@/components/ui/row'
 import { Arithmetic } from '@/components/ui/arithmetic'
 import { WithheldSection, type WithheldRow } from '@/components/features/withheld-section'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
+import { isRemoteLocation, isHybridLocation } from '@/gates/extract'
 
 /** The withheld list is capped so a thin day does not read as a wall of rejection. */
 const WITHHELD_CAP = 50
@@ -33,6 +34,7 @@ type GateRow = {
   roles: {
     title: string
     city: string | null
+    location_raw: string | null
     apply_url: string
     company_name: string | null
     role_requirements: RoleRequirement[] | null
@@ -46,7 +48,7 @@ export default async function TodayPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('function, confirmed_at, city')
+    .select('function, confirmed_at, city, work_mode_preference')
     .eq('id', user.id)
     .single()
 
@@ -59,15 +61,35 @@ export default async function TodayPage() {
     .from('gate_results')
     .select(`
       id, role_id, outcome, refused_on, reason, score, gap_years,
-      roles(title, city, apply_url, company_name,
+      roles(title, city, location_raw, apply_url, company_name,
         role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
     `)
     .eq('user_id', user.id)
     .order('score', { ascending: false, nullsFirst: false })
 
   const rows = (data ?? []) as unknown as GateRow[]
-  const cleared = rows.filter((r) => r.outcome === 'cleared')
-  const stretch = rows.filter((r) => r.outcome === 'stretch')
+
+  // Work-mode preference reorders within a section; it never withholds a
+  // role — a stretch or cleared role stays exactly that regardless of
+  // whether it matches. "onsite" boosts a plain city posting (neither
+  // remote nor hybrid); "no_preference" leaves the existing score order
+  // alone. See supabase/migrations/0009_preferences.sql.
+  const workModePreference = profile.work_mode_preference
+  const matchesWorkMode = (r: GateRow): boolean => {
+    const loc = r.roles?.location_raw ?? ''
+    if (workModePreference === 'remote') return isRemoteLocation(loc)
+    if (workModePreference === 'hybrid') return isHybridLocation(loc)
+    if (workModePreference === 'onsite') return !isRemoteLocation(loc) && !isHybridLocation(loc)
+    return false
+  }
+  const byWorkMode = (list: GateRow[]): GateRow[] =>
+    !workModePreference || workModePreference === 'no_preference'
+      ? list
+      // Stable sort: preserves each group's existing score-descending order.
+      : [...list].sort((a, b) => Number(matchesWorkMode(b)) - Number(matchesWorkMode(a)))
+
+  const cleared = byWorkMode(rows.filter((r) => r.outcome === 'cleared'))
+  const stretch = byWorkMode(rows.filter((r) => r.outcome === 'stretch'))
   const withheld = rows.filter((r) => r.outcome === 'withheld')
 
   const { count: indexed } = await supabase

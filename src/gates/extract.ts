@@ -143,6 +143,19 @@ export function resolveInIndia(locationRaw: string): boolean {
   return INDIA_TOKENS.some((t) => l.includes(t))
 }
 
+/** Shared with src/gates/evaluate.ts's location gate, and with the work-mode
+ *  preference sort on /today — one definition so the two can't drift apart. */
+export function isRemoteLocation(locationRaw: string): boolean {
+  return /remote|anywhere|work from home/i.test(locationRaw)
+}
+
+/** Real Indian postings say this in the location field itself, not just the
+ *  description — e.g. "Hybrid in Bangalore". Used only for the work-mode
+ *  preference sort; never a gate. */
+export function isHybridLocation(locationRaw: string): boolean {
+  return /hybrid/i.test(locationRaw)
+}
+
 export function extractLocation(locationRaw: string): TypedRequirement {
   return {
     kind: 'location',

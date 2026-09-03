@@ -23,13 +23,23 @@ export default function UploadPage() {
     }
     setBusy(true)
     track('resume_uploaded', { bytes: file.size, type: file.type })
-    const fd = new FormData()
-    fd.set('file', file)
-    const res = await parseResume(fd)
-    setBusy(false)
-    if (!res.ok) { setError(res.error); return }
-    writeDraft({ fields: res.fields, warnings: res.warnings })
-    router.push('/start/reading')
+    // parseResume() can reject outside its own internal try/catch — a
+    // network failure or a platform-level timeout — and without this,
+    // busy never clears: the button is stuck on "Reading…" forever with
+    // no error shown. That silent-hang shape is exactly what got reported
+    // live, distinct from the 12 error messages parseResume itself returns.
+    try {
+      const fd = new FormData()
+      fd.set('file', file)
+      const res = await parseResume(fd)
+      if (!res.ok) { setError(res.error); return }
+      writeDraft({ fields: res.fields, warnings: res.warnings })
+      router.push('/start/reading')
+    } catch {
+      setError('Something went wrong reading that file. You can type your details in instead.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (

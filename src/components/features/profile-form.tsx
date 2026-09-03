@@ -11,7 +11,15 @@ import { QUESTIONS, ASSESSMENT_ONLY_FUNCTIONS, type Fn } from '@/lib/gate-questi
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
   fn: string; city: string; credential: string; assessmentAnswer: string
+  workModePreference: string; salaryExpectation: string
 }
+
+const WORK_MODE_OPTIONS = [
+  ['no_preference', 'No preference'],
+  ['remote', 'Remote'],
+  ['hybrid', 'Hybrid'],
+  ['onsite', 'Onsite'],
+] as const
 
 export function ProfileForm({ initial }: { initial: Initial }) {
   const [f, setF] = useState(initial)
@@ -28,6 +36,10 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       fn: f.fn as Fn, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
       assessmentAnswer: ASSESSMENT_ONLY_FUNCTIONS.includes(f.fn as Fn) ? f.assessmentAnswer : undefined,
+      // Always sent from this screen (unlike onboarding, which never asks) —
+      // an explicit "no preference" is a real answer here, not an omission.
+      workModePreference: f.workModePreference as 'remote' | 'hybrid' | 'onsite' | 'no_preference',
+      salaryExpectation: f.salaryExpectation,
     })
     setBusy(false)
     if (!res.ok) setError(res.error)
@@ -84,6 +96,33 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           </select>
         </div>
       ) : null}
+
+      <div style={{ marginBottom: 'var(--space-md)' }}>
+        <label htmlFor="workMode" style={{
+          display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
+          letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
+          color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
+        }}>Work mode</label>
+        <select id="workMode" value={f.workModePreference}
+          onChange={(e) => setF({ ...f, workModePreference: e.target.value })}
+          style={{
+            width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
+            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
+            font: 'inherit', fontSize: 'var(--type-body-md-size)',
+            border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
+          }}>
+          {WORK_MODE_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+        <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)', margin: 'var(--space-xs) 0 0' }}>
+          Never withholds a role — only moves a better-matching one higher on your list.
+        </p>
+      </div>
+
+      <Input label="Salary expectation" value={f.salaryExpectation}
+        onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}
+        helper="No role we index states a salary, so this can't filter your list yet — it's here so it's ready if that changes." />
 
       {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
       {msg ? <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>{msg}</p> : null}

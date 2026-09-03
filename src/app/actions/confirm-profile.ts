@@ -17,6 +17,12 @@ const schema = z.object({
   // own function's question), so which column this lands in is decided by
   // `fn` below rather than threading three near-identical optional fields.
   assessmentAnswer: z.string().optional(),
+  // Preference fields, only ever sent from the /profile edit form — the
+  // onboarding gate screen never asks. Genuinely optional (not defaulted),
+  // so the upsert below can distinguish "not part of this call" (leave
+  // whatever's already stored alone) from "explicitly cleared."
+  workModePreference: z.enum(['remote', 'hybrid', 'onsite', 'no_preference']).optional(),
+  salaryExpectation: z.string().optional(),
   portals: z.array(z.string()).optional(),
 })
 
@@ -54,6 +60,12 @@ export async function confirmProfile(input: ConfirmInput) {
     channel_budget: v.fn === 'marketing' ? v.assessmentAnswer ?? null : null,
     institute_tier: v.fn === 'consulting' ? v.assessmentAnswer ?? null : null,
     hr_track: v.fn === 'hr' ? v.assessmentAnswer ?? null : null,
+    // Only included when this call actually carries them — the onboarding
+    // gate screen never sends these keys at all, so restarting onboarding
+    // (restart-onboarding.ts) can't silently wipe a preference set earlier
+    // on /profile. See supabase/migrations/0009_preferences.sql.
+    ...(v.workModePreference !== undefined ? { work_mode_preference: v.workModePreference } : {}),
+    ...(v.salaryExpectation !== undefined ? { salary_expectation: v.salaryExpectation || null } : {}),
     portals_used: v.portals ?? null,
     // True only for a sign-in method that actually confirmed the address —
     // Google today. Instant sign-in (src/lib/instant-signin.ts) never sets

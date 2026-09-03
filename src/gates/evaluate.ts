@@ -6,6 +6,7 @@ import {
   type TypedRequirement,
 } from './types'
 import { refusalReason, stretchReason, clearedReason } from './reasons'
+import { isRemoteLocation } from './extract'
 
 /**
  * The gate engine. A pure function: same inputs, same output, no I/O.
@@ -40,7 +41,7 @@ export function evaluate(
   const locReq = confident.find((r) => r.kind === 'location')
   if (locReq?.valueText && profile.city) {
     const loc = locReq.valueText.toLowerCase()
-    const remote = /remote|anywhere|work from home/i.test(loc)
+    const remote = isRemoteLocation(loc)
     const matchesCity = loc.includes(profile.city.toLowerCase())
     const india = /india|bengaluru|bangalore|mumbai|delhi|gurgaon|gurugram|noida|hyderabad|pune|chennai|kolkata/i.test(loc)
     if (!remote && !matchesCity && !india) {

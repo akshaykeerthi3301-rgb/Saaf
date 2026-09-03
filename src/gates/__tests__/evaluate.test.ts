@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { evaluate } from '../evaluate'
-import { extractExperienceYears, extractCredential, resolveInIndia } from '../extract'
+import { extractExperienceYears, extractCredential, resolveInIndia, isRemoteLocation, isHybridLocation } from '../extract'
 import { extractTitleSeniority } from '../title'
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '../types'
 
@@ -262,5 +262,20 @@ describe('bug-and-fix campaign regressions (2026-09-03)', () => {
   it('a singular "1 year" minimum is extracted, not just plural phrasing', () => {
     const [r] = extractExperienceYears('You must have at least 1 year of relevant experience.')
     expect(r?.minYears).toBe(1)
+  })
+})
+
+describe('work-mode preference helpers', () => {
+  // Shared with the location gate (evaluate.ts) and the /today work-mode
+  // preference sort — one definition, tested once.
+  it('detects remote from the same signals the location gate already uses', () => {
+    expect(isRemoteLocation('Remote - India')).toBe(true)
+    expect(isRemoteLocation('Work from home')).toBe(true)
+    expect(isRemoteLocation('Bengaluru, Karnataka')).toBe(false)
+  })
+
+  it('detects hybrid, as written in real Indian postings\' location field', () => {
+    expect(isHybridLocation('Hybrid in Bangalore')).toBe(true)
+    expect(isHybridLocation('Bengaluru, Karnataka')).toBe(false)
   })
 })

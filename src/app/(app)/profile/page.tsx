@@ -9,7 +9,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('current_title, employer, years_experience, function, city, credential, channel_budget, institute_tier, hr_track')
+    .select('current_title, employer, years_experience, function, city, credential, channel_budget, institute_tier, hr_track, work_mode_preference, salary_expectation')
     .eq('id', user.id)
     .single()
 
@@ -40,6 +40,8 @@ export default async function ProfilePage() {
         city: profile.city ?? '',
         credential: profile.credential ?? 'none',
         assessmentAnswer,
+        workModePreference: profile.work_mode_preference ?? 'no_preference',
+        salaryExpectation: profile.salary_expectation ?? '',
       }} />
     </main>
   )

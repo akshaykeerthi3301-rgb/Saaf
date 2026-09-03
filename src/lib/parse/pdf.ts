@@ -9,6 +9,13 @@
  * throws. Since this runs inside a server action on every résumé upload,
  * failing to release the task would leak per request.
  */
+// No résumé is legitimately longer than this. Bounds worst-case parse time
+// under disableWorker's single-threaded, synchronous-per-page loop — a
+// pathological PDF (many pages, heavy fonts/images) near the 5MB cap could
+// otherwise run long enough to hit the platform's function timeout with no
+// clean error surfaced to the client at all.
+const MAX_PAGES = 15
+
 export async function pdfToText(buffer: Buffer): Promise<string> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
@@ -22,7 +29,7 @@ export async function pdfToText(buffer: Buffer): Promise<string> {
   try {
     const doc = await task.promise
     const pages: string[] = []
-    for (let i = 1; i <= doc.numPages; i++) {
+    for (let i = 1; i <= Math.min(doc.numPages, MAX_PAGES); i++) {
       const page = await doc.getPage(i)
       const content = await page.getTextContent()
       // pdfjs emits a separate item per glyph run, so a naive join yields
