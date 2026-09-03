@@ -1,70 +1,33 @@
-import { createClient } from '@supabase/supabase-js'
-import { evaluate } from '../src/gates/evaluate'
-import type { CandidateProfile, TypedRequirement } from '../src/gates/types'
+import { createServiceClient } from '@/lib/supabase/service'
+import { evaluateUser } from '@/lib/evaluate-user'
 
 /**
  * Re-evaluate every confirmed profile against the current role set.
  *
- * O(users × roles), which is fine at MVP scale. Beyond roughly 5,000 users this
- * becomes incremental recompute against roles changed since the last run.
+ * Delegates to evaluateUser() per profile rather than re-implementing its
+ * pipeline — that used to be hand-duplicated here, which was two problems at
+ * once: a fix applied to one copy silently didn't reach the other (it
+ * happened once, commit 0c07f5c), and evaluateUser() fetches the profile
+ * fresh at the moment it actually runs, which this loop's own upfront batch
+ * fetch didn't. Under the old duplication, a user who edited and confirmed
+ * their profile mid-run could have that edit's gate_results silently
+ * reverted by this loop reaching them later with stale profile data and a
+ * newer computed_at, sweeping the fresher, correct rows away.
+ *
+ * O(users × roles) inside evaluateUser, which is fine at MVP scale. Beyond
+ * roughly 5,000 users this becomes incremental recompute against roles
+ * changed since the last run.
  */
 export async function recomputeAll(): Promise<void> {
-  const db = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  )
+  const db = createServiceClient()
 
   const { data: profiles, error: pErr } = await db
-    .from('profiles').select('*').not('confirmed_at', 'is', null)
+    .from('profiles').select('id').not('confirmed_at', 'is', null)
   if (pErr) throw pErr
   if (!profiles?.length) { console.log('  recompute: no confirmed profiles'); return }
 
   for (const p of profiles) {
-    const { data: roles, error } = await db
-      .from('roles')
-      .select('id, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
-      .eq('in_india', true)
-      .eq('function', p.function)  // own function only — see src/lib/evaluate-user.ts
-    if (error) throw error
-
-    const candidate: CandidateProfile = {
-      yearsExperience: Number(p.years_experience ?? 0),
-      fn: p.function,
-      city: p.city ?? undefined,
-      credential: p.credential ?? 'none',
-    }
-
-    const computedAt = new Date().toISOString()
-    const rows = (roles ?? []).map((role) => {
-      const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
-        kind: q.kind,
-        minYears: q.min_years ?? undefined,
-        credential: q.credential ?? undefined,
-        valueText: q.value_text ?? undefined,
-        sourceQuote: q.source_quote,
-        confidence: Number(q.confidence),
-      }))
-      const r = evaluate(candidate, reqs)
-      return {
-        user_id: p.id, role_id: role.id, outcome: r.outcome,
-        refused_on: r.refusedOn ?? null, reason: r.reason,
-        score: r.score ?? null, gap_years: r.gapYears ?? null,
-        computed_at: computedAt,
-      }
-    })
-
-    for (let i = 0; i < rows.length; i += 500) {
-      const { error: uErr } = await db.from('gate_results')
-        .upsert(rows.slice(i, i + 500), { onConflict: 'user_id,role_id' })
-      if (uErr) throw uErr
-    }
-
-    // Same sweep as src/lib/evaluate-user.ts — upsert leaves orphans when a
-    // role leaves the candidate's function or leaves the index.
-    const { error: sErr } = await db.from('gate_results')
-      .delete().eq('user_id', p.id).lt('computed_at', computedAt)
-    if (sErr) throw sErr
-    console.log(`  recomputed ${rows.length} results for one profile`)
+    const { written } = await evaluateUser(p.id)
+    console.log(`  recomputed ${written} results for one profile`)
   }
 }

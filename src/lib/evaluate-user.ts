@@ -85,6 +85,20 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     if (error) throw error
   }
 
+  // Insert-once record of when this candidate first saw each role — survives
+  // gate_results rows being deleted and recreated by the sweep below, unlike
+  // gate_results.first_shown_at itself, whose freeze trigger only covers
+  // UPDATE. See supabase/migrations/0007_role_first_shown.sql.
+  for (let i = 0; i < rows.length; i += 500) {
+    const { error } = await db
+      .from('role_first_shown')
+      .upsert(
+        rows.slice(i, i + 500).map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
+        { onConflict: 'user_id,role_id', ignoreDuplicates: true }
+      )
+    if (error) throw error
+  }
+
   // Sweep results this pass did not rewrite.
   //
   // Upsert alone leaves orphans behind: a role that leaves the candidate's

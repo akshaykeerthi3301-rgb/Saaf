@@ -74,8 +74,12 @@ export async function runIngest() {
       // corporate, because gig and field work is a different labour market with
       // different gates — putting it on the same list is exactly the noise the
       // candidate came here to escape.
-      const kept = roles.filter((r) => resolveInIndia(r.locationRaw) && isCorporateRole(r.title))
-      const droppedGig = roles.filter((r) => resolveInIndia(r.locationRaw)).length - kept.length
+      // indiaRaw feeds the board-health check below — a board that's the
+      // right company but only posted gig work today is not "the wrong
+      // company" and must not be deactivated over it.
+      const indiaRaw = roles.filter((r) => resolveInIndia(r.locationRaw))
+      const kept = indiaRaw.filter((r) => isCorporateRole(r.title))
+      const droppedGig = indiaRaw.length - kept.length
       const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
 
       if (india.length) {
@@ -125,10 +129,13 @@ export async function runIngest() {
       await db.from('boards').update({
         last_ingested_at: new Date().toISOString(),
         last_error: null,
-        // A board with no India roles is the wrong company. `slice` on
+        // A board with no India roles at all is the wrong company. `slice` on
         // Greenhouse is a North Macedonian firm, not the Indian fintech —
         // guessing slugs finds the wrong employer, so stop fetching it daily.
-        active: india.length > 0,
+        // Checked against indiaRaw, not the corporate-filtered `india` — a
+        // board that's the right company but only posted gig work on a given
+        // day was being permanently deactivated by this check before the fix.
+        active: indiaRaw.length > 0,
       }).eq('id', b.id)
       ok++
       console.log(`  ✓ ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} non-corporate dropped)` : ''}`)

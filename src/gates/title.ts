@@ -27,7 +27,11 @@ type Band = { re: RegExp; years: number; label: string }
 /** Ordered most senior first — the first match wins. */
 const BANDS: Band[] = [
   { re: /\b(chief|c[teofm]o|vp|vice president|svp|evp)\b/i, years: 15, label: 'an executive role' },
-  { re: /\b(head of|head,|director)\b/i,                    years: 10, label: 'a director-level role' },
+  // "head," has no trailing \b of its own — a comma is a non-word character,
+  // so \b never holds between it and the space that normally follows ("Head,
+  // Growth"), and the alternation's shared trailing \b silently killed this
+  // branch for every comma-style title.
+  { re: /\bhead of\b|\bhead,|\bdirector\b/i,                 years: 10, label: 'a director-level role' },
   { re: /\bprincipal\b/i,                                   years: 10, label: 'a principal role' },
   { re: /\bstaff\b/i,                                       years:  8, label: 'a staff-level role' },
   { re: /\bsenior manager\b/i,                              years:  8, label: 'a senior manager role' },

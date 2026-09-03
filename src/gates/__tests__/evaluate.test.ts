@@ -223,3 +223,44 @@ describe('regressions found by running against real postings', () => {
     expect(r.gapYears).toBe(1)
   })
 })
+
+describe('bug-and-fix campaign regressions (2026-09-03)', () => {
+  it('"CS" as Computer Science is never read as Company Secretary', () => {
+    const found = extractCredential("Bachelor's in CS or related field is required.")
+    expect(found).toHaveLength(0)
+  })
+
+  it('"CS" for Computer Science background does not gate on Company Secretary', () => {
+    const found = extractCredential('We are looking for candidates from a CS background.')
+    expect(found).toHaveLength(0)
+  })
+
+  it('the spelled-out credential still gates', () => {
+    const [r] = extractCredential('You must be a qualified Company Secretary.')
+    expect(r?.credential).toBe('CS')
+    expect(r?.confidence).toBeGreaterThanOrEqual(CONFIDENCE_THRESHOLD)
+  })
+
+  it('a preference clause does not suppress a requirement stated elsewhere in the same sentence', () => {
+    const [r] = extractExperienceYears(
+      'CFA is preferred, but you must have 5+ years of experience in equity research.'
+    )
+    expect(r?.minYears).toBe(5)
+    expect(r?.confidence).toBeGreaterThanOrEqual(CONFIDENCE_THRESHOLD)
+  })
+
+  it('the preference clause itself still reads as low confidence', () => {
+    const found = extractCredential('CFA is preferred, but you must have 5+ years of experience.')
+    expect(found[0]?.confidence).toBeLessThan(CONFIDENCE_THRESHOLD)
+  })
+
+  it('"Head, Growth" reads as a director-level title, same as "Head of Growth"', () => {
+    const [r] = extractTitleSeniority('Head, Growth')
+    expect(r?.minYears).toBe(10)
+  })
+
+  it('a singular "1 year" minimum is extracted, not just plural phrasing', () => {
+    const [r] = extractExperienceYears('You must have at least 1 year of relevant experience.')
+    expect(r?.minYears).toBe(1)
+  })
+})

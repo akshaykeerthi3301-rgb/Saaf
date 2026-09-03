@@ -4,10 +4,10 @@ function Section({ children }: { children: React.ReactNode }) {
   return <section style={{ marginTop: 'var(--space-xl)' }}>{children}</section>
 }
 const H2 = ({ children }: { children: React.ReactNode }) => (
-  <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 500, margin: '0 0 12px' }}>{children}</h2>
+  <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 'var(--type-headline-md-weight)', margin: '0 0 var(--space-sm)' }}>{children}</h2>
 )
 const P = ({ children }: { children: React.ReactNode }) => (
-  <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', maxWidth: '65ch', margin: '0 0 12px' }}>
+  <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', maxWidth: '65ch', margin: '0 0 var(--space-md)' }}>
     {children}
   </p>
 )
@@ -23,7 +23,7 @@ export const metadata = { title: 'Privacy — Saaf' }
 export default function PrivacyPage() {
   return (
     <main className="measure" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
-      <h1 style={{ fontSize: 'var(--type-display-lg-size)', fontWeight: 300, margin: '0 0 16px' }}>
+      <h1 style={{ fontSize: 'var(--type-display-lg-size)', fontWeight: 'var(--type-display-lg-weight)', margin: '0 0 var(--space-md)' }}>
         Privacy
       </h1>
       <P>

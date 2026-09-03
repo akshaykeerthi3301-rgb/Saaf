@@ -24,12 +24,12 @@ type RoleRequirement = {
 
 type GateRow = {
   id: string
+  role_id: string
   outcome: 'cleared' | 'withheld' | 'stretch'
   refused_on: string | null
   reason: string
   score: number | null
   gap_years: number | null
-  first_shown_at: string
   roles: {
     title: string
     city: string | null
@@ -58,7 +58,7 @@ export default async function TodayPage() {
   const { data, error } = await supabase
     .from('gate_results')
     .select(`
-      id, outcome, refused_on, reason, score, gap_years, first_shown_at,
+      id, role_id, outcome, refused_on, reason, score, gap_years,
       roles(title, city, apply_url, company_name,
         role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
     `)
@@ -73,10 +73,23 @@ export default async function TodayPage() {
   const { count: indexed } = await supabase
     .from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)
 
+  // Insert-once, survives gate_results being deleted and recreated by the
+  // sweep in evaluate-user.ts — gate_results.first_shown_at itself resets on
+  // that cycle, since its freeze trigger only covers UPDATE, not INSERT.
+  // See supabase/migrations/0007_role_first_shown.sql.
+  const { data: firstShownRows } = await supabase
+    .from('role_first_shown')
+    .select('role_id, first_shown_at')
+    .eq('user_id', user.id)
+  const firstShownAt = new Map((firstShownRows ?? []).map((r) => [r.role_id, r.first_shown_at]))
+
   const company = (r: GateRow) => r.roles?.company_name ?? ''
 
   const newCutoff = new Date().getTime() - NEW_WITHIN_DAYS * 86400_000
-  const isNew = (r: GateRow) => new Date(r.first_shown_at).getTime() >= newCutoff
+  const isNew = (r: GateRow) => {
+    const shown = firstShownAt.get(r.role_id)
+    return shown ? new Date(shown).getTime() >= newCutoff : false
+  }
 
   // Every requirement extracted for the role, gated or not — a wrong verdict
   // is debugged by seeing what was read, not just what fired.
@@ -135,8 +148,8 @@ export default async function TodayPage() {
             : profile.function === 'consulting'
               ? 'consulting often gates on institute tier'
               : 'HR often gates on a recruitment-versus-generalist split'}, and we
-          don&apos;t have that working reliably. Only location, work authorisation and stated
-          seniority applied to this list. We&apos;d rather tell you than quietly use the wrong gate.
+          don&apos;t have that working reliably. Only location and stated seniority applied to
+          this list. We&apos;d rather tell you than quietly use the wrong gate.
         </p>
       ) : null}
 

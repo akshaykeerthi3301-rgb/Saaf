@@ -32,17 +32,17 @@ const QUESTIONS: Record<Fn, { q: string; note: string; options: string[] }> = {
   },
   marketing: {
     q: 'Confirm your experience band',
-    note: 'Marketing usually gates on channel ownership and budget scale rather than years. That gate is not live yet, so only location and work authorisation apply to you for now — we will say so on your list.',
+    note: 'Marketing usually gates on channel ownership and budget scale rather than years. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
     options: ['Understood'],
   },
   consulting: {
     q: 'Confirm your experience band',
-    note: 'Consulting often gates on institute tier. That gate is not live yet, so only location and work authorisation apply to you for now — we will say so on your list.',
+    note: 'Consulting often gates on institute tier. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
     options: ['Understood'],
   },
   hr: {
     q: 'Confirm your experience band',
-    note: 'HR often gates on a recruitment-versus-generalist split. That gate is not live yet, so only location and work authorisation apply to you for now — we will say so on your list.',
+    note: 'HR often gates on a recruitment-versus-generalist split. That gate is not live yet, so only location and stated seniority apply to you for now — we will say so on your list.',
     options: ['Understood'],
   },
 }

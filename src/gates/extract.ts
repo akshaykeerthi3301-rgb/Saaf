@@ -34,6 +34,21 @@ function sentences(text: string): string[] {
     .filter((s) => s.length > 0 && s.length < 400)
 }
 
+/** The clause of `sentence` containing character offset `index` — sentences()
+ *  doesn't split on commas, so a compound sentence like "CFA is preferred,
+ *  but you must have 5+ years..." stayed one unit and a preference anywhere
+ *  in it dragged every extracted value in the sentence down to 0.3
+ *  confidence, including a real requirement stated in a different clause. */
+function clauseAt(sentence: string, index: number): string {
+  let pos = 0
+  for (const clause of sentence.split(/[,;]/)) {
+    const end = pos + clause.length
+    if (index <= end) return clause
+    pos = end + 1 // +1 for the delimiter split() consumed
+  }
+  return sentence
+}
+
 /**
  * Confidence for a requirement found in `sentence`.
  *
@@ -62,7 +77,7 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
   // "Meesho's most visible 2-year bets", which is not a requirement and which
   // previously produced a 2-year minimum that suppressed a correct title gate.
   const re = new RegExp(
-    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*\\+?\\s*(?:years|yrs)\\b`,
+    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*\\+?\\s*(?:years?|yrs?)\\b`,
     'gi'
   )
   /** "a 2-year bet", "the 3-year plan" — adjectival, never a requirement. */
@@ -82,7 +97,7 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
         kind: 'experience_years',
         minYears: lo,
         sourceQuote: s.slice(0, 300),
-        confidence: confidenceFor(s),
+        confidence: confidenceFor(clauseAt(s, m.index ?? 0)),
       })
     }
   }
@@ -92,19 +107,24 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
 const CREDENTIALS: { cred: Credential; re: RegExp }[] = [
   { cred: 'CA', re: /\b(chartered accountant|\bCA\b)\b/i },
   { cred: 'CFA', re: /\b(chartered financial analyst|\bCFA\b)\b/i },
-  { cred: 'CS', re: /\b(company secretary|\bCS\b(?!\s*(?:degree|major)))\b/i },
+  // Spelled out only — "CS" bare is far too common as Computer Science
+  // shorthand in engineering postings ("Bachelor's in CS", "CS background") to
+  // trust as an abbreviation. Company Secretary is near-always written out in
+  // real postings, so nothing is lost by requiring the full phrase.
+  { cred: 'CS', re: /\bcompany secretary\b/i },
 ]
 
 export function extractCredential(description: string): TypedRequirement[] {
   const out: TypedRequirement[] = []
   for (const s of sentences(description)) {
     for (const { cred, re } of CREDENTIALS) {
-      if (!re.test(s)) continue
+      const m = re.exec(s)
+      if (!m) continue
       out.push({
         kind: 'credential',
         credential: cred,
         sourceQuote: s.slice(0, 300),
-        confidence: confidenceFor(s),
+        confidence: confidenceFor(clauseAt(s, m.index)),
       })
     }
   }
