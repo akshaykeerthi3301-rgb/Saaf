@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-03 · **Phase:** Develop — building. **27 of 54 tasks done; Phases 1 and 2 complete.** Design 6 of 7, Define 4 of 5 — both remaining steps are launches, deliberately deferred.
+**Last updated:** 2026-09-03 · **Phase:** Develop — **built. 52 of 53 tasks; only the Vercel deploy remains.** Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deliberately deferred, and **nothing has ever shipped to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the four decisions only the founder can make, the six actions needing their accounts, and the seven invariants a fresh session must not undo.
 
@@ -80,37 +80,59 @@ Filtered-out roles sat in San Francisco, London, New York, Pristina, Skopje. Ext
 
 ---
 
+**Facts the build itself established — 2026-09-03, do not re-derive**
+
+- **`slice` on Greenhouse is not the Indian fintech.** It is a company in North
+  Macedonia (Pristina, Skopje, Debar). The 2026-09-02 probe counted its 27 roles
+  as supply. Guessing company slugs finds the wrong employer; boards yielding no
+  India roles are now auto-deactivated.
+- **Razorpay's board 404s.** It returned 23 roles on 2026-09-02 and was gone a day
+  later. Registry entries rot — that is what `boards.last_error` is for.
+- **Workable puts `city`/`state`/`country` at the top level**, not under a
+  `location` object. Reading the nested field silently dropped every Workable
+  role — 162 from apna alone, with no error.
+- **A description that states nothing reads as permission.** Gating only on stated
+  requirements cleared 59 senior-titled roles for a two-year candidate. The title
+  is stated text in the posting, so gating on it is retrieval, not inference.
+- **Indian junior titles must be exempt.** "Assistant Manager" and "Senior
+  Associate" are junior here; matching bare "Manager" or "Director" manufactures
+  false refusals on exactly the jobs the candidate should see.
+- **GitHub Actions is disabled on this account** (`HTTP 422`), though push and
+  repository access work. That is why the scheduler is Vercel Cron.
+- **The full ingest takes ~34s at 20 boards**, about 1.7s per board.
+
+---
+
 ## Files
 
 ```
-productos/define/
-  1-Product-Offer.md      ✅ 166 lines · six elements locked, typed gates folded in
-  2-Customer-Persona.md   ✅ 235 lines · Rohan (engineering) at full framework depth
-  2b-Persona-Set.md       ✅ 169 lines · five functions, ranked by design priority
-  3-Pricing-Strategy.md   ⏭️ deliberately skipped — ₹0, decisions recorded in-file
-  4-Mini-Launch.md        ⬜ template
-productos/design/          (ProductOS material ignored; the work products below are tracked)
-  1-Product-Identity.md   ✅ Brand Card + five elements · name, worldview, belief, tone, visual lane
-  Design-Prompts.md       ✅ 3 paste-ready AI-design-tool prompts · system + 2 priority screens
-  2-Magic-Moment.md       ✅ primary + 2 alternates · the recognised refusal, <90s, two-sided metric
-  3-Onboarding-Flow.md    ✅ Switcher Funnel, 7 screens, magic moment at 6 (~63s)
-  onboarding-wireframe.html  ✅ clickable, 7 screens, annotations per screen
-  4a-Landing-Page.md      ✅ Product-Visual Hero, 11 sections, 3 substituted
-  landing-page-wireframe.html ✅ scrollable, 11 sections, scroll-driven annotations
-docs/
-  PRODUCT.md              ✅ ~3,600 words · eight sections, synthesised 2026-09-02
-  PRD.md                  ✅ 14 sections · 17 FRs, 7 tables, stack fixed, ₹0 run cost
-  ROADMAP.md              ✅ 54 tasks across 6 phases · magic moment at Phase 2
-  DESIGN.md               ✅ 30 colour tokens (light+dark), 9 type levels, 10 components · WCAG AA verified
-  DESIGN.html             ✅ live mirror of DESIGN.md · light/dark toggle, all tokens rendered
-  PROJECT-STATE.md        ✅ this file
+docs/                       tracked
+  PROJECT-STATE.md          this file
+  PRODUCT.md                the plain-English roll-up
+  DESIGN.md / DESIGN.html   design system, mirrored pair
+  PRD.md                    14 sections, the technical spec
+  ROADMAP.md                53 tasks, 52 done
+  HANDOFF.md                what still needs the founder
+  VERIFICATION.md           the five success criteria, measured
+  RUNBOOK.md                dashboard settings outside version control
+productos/                  selectively tracked — work products yes, ProductOS material no
+src/                        the app: gates, parser, screens, actions
+ingest/                     six ATS adapters, the daily pipeline
+registry/boards.json        20 boards — the moat, private
+supabase/migrations/        three migrations, all applied
 ```
 
-**Gitignore is selective, not wholesale — changed 2026-09-03.** ProductOS's own material (templates, checklists, BONUS best-practice docs, skills, onboarding references) stays untracked: it is licensed to the member, not the public. The founder's own filled-in work products **are** tracked, because the alternative was keeping the entire Define and Design output on one disk with no version control. Tracked from `productos/`: the four Define work products and the seven Design ones. Everything else there is ignored. `docs/`, `CLAUDE.md` and `AGENTS.md` remain tracked as before, and the cross-links in `docs/PRODUCT.md` now resolve for anyone with the repo.
+**Built and verified live:** the gate engine against 211 real postings (48 tests),
+the résumé parser against real PDF and .docx, RLS proven to deny by seeding a row,
+the daily ingest at 20 boards / 964 roles / 34s, the shortlist rendering real
+refusals, magic-link sign-in end to end, the daily digest actually sending, and a
+public audit page at `/audit`.
 
-⚠️ **Before ever making this repo public:** the tracked work products embed ProductOS template scaffolding — section headers, the italic prompts, the `> Good: / Bad:` guidance lines, the imagery-lane table — because the skills preserve that structure when they fill a file in. That is ProductOS's licensed content sitting inside the founder's files. It is not a problem for a private repo; it is a licensing question the moment one is published.
+**Not done:** `npx vercel deploy --prebuilt --prod` — the build succeeds
+(`vercel build` returns ok) but uploads failed from the agent's sandbox with
+`fetch failed`. Run it from a normal terminal, then update Supabase's Site URL
+and add `https://<domain>/**` to Redirect URLs, or sign-in breaks in production.
 
----
 
 ## The five personas, ranked
 
@@ -128,36 +150,49 @@ Meera ranks 4th but is **strategically the most valuable beta user** — an ATS 
 
 ## Next step
 
-Design Steps 1–6 are done. **Step 7 (`studio-launch`, the "here's what it looks like" relaunch) is the only one left in the phase** — but it depends on the deferred Mini-Launch, so there is no believers list to invite yet. Its win condition is one *"can I try it?"*.
+**1 · Deploy (one command).** `npx vercel deploy --prebuilt --prod`, then fix the
+Supabase URLs as above. Closes the build at 53/53.
 
-After that: the Develop phase (`productos/develop/DEVELOP-CHECKLIST.md`), starting with `studio-develop-prd-roadmap` → `docs/PRD.md` + `docs/ROADMAP.md`.
+**2 · Buy a domain.** This is the real blocker on having any user at all. Resend
+only delivers to the founder's own address until a domain is verified, so **no
+beta user can receive a sign-in link today.** A `.in` costs a few hundred rupees.
+Everything else on this list is refinement; this one is binary.
 
-**Decisions made across Design that a fresh session must not reverse:**
+**3 · Grow the registry — and stop at 28 boards.** 20 today, found by probing
+rather than guessing (`npm run registry:discover`). More boards thickens the
+cleared list, which is the weaker half: 43 cleared against 67 withheld for a
+two-year engineer. **Hard stop:** the Vercel Cron 60s ceiling breaks at ~30
+boards — migrate the scheduler to a Supabase Edge Function *before* that, not
+after. See HANDOFF D5.
 
-- **Three landing-page sections are substituted, not missing.** Logo bar → gate-audit strip; case studies → the public gate audit; pricing tiers → one line at ₹0. Saaf has zero users; the reference doc's own anti-pattern rule ("either show the logos or remove the section") drove this. Do not "fill in" testimonials or logos later — publishing self-audit instead is the position.
-- **No compliance badges anywhere.** SOC 2 and GDPR marks would be fabrication.
-- **A tier table would breach Vercel Hobby's non-commercial terms**, not merely be unnecessary.
-- **The onboarding is 7 screens, not the reference's 15–25.** That number exists to manufacture sunk cost before a paywall; there is no paywall here.
-- **Loading and empty states never use borrowed authority** — no rotating testimonials, no user counts. Real telemetry only.
+**4 · The two deferred launches.** `docs/LAUNCHES.md` does not exist; nothing has
+shipped to a real person. Define step 5 (Mini-Launch, win = one reply) and Design
+step 7 (relaunch, win = one "can I try it?") are both open. Both were sequenced
+to follow the refusal screenshot, which was discarded on 2026-09-03 — so they
+would now ship on description rather than on the image. Worth deciding
+deliberately rather than by default.
 
-`docs/PRODUCT.md` is done and is the input every downstream Design and Develop skill reads. Two things to know before building on it:
-
-- **It runs ~15 minutes, not the 4–6 the synthesis skill targets.** Deliberate. The Customer section alone is 793 words because all five personas carry real texture — a one-persona summary would have quietly re-narrowed this to an engineering tool. If a short version is ever needed, add a summary block on top rather than cutting sections; the detail is consumed downstream (personas by the onboarding-flow skill, cost structure by the PRD/roadmap skill).
-- **Proof is honestly empty.** The section says so in as many words: no code, no users, no launch, no first-party signal. Do not let a downstream skill dress this up into present-tense evidence.
-
-**Still open from Define:** the Mini-Launch (`4-Mini-Launch.md`). Run `studio-launch` once a refusal screenshot exists — see Open Questions 1 and 5.
-
-**Two open decisions carried from Design:**
-
-1. **Registrar check for Saaf.** Category and search presence were checked; actual domain and social-handle availability were never queried. Do this before the name goes anywhere public.
-2. **Repo directory rename.** The folder is still `~/Desktop/projects/jobmatch`. Cheap to change now, annoying later — but it breaks any saved path. Deliberately not done.
-
----
 
 ## Open questions
 
-1. **Proof is 100% future-tense.** The offer currently has zero present-tense evidence. The **refusal screenshot** is the cheapest and most persuasive artifact to earn — a portal calling the candidate a "Top Applicant" for a 15-year role beside this product correctly withholding it. Build should target it first.
-2. **All five personas are interview-unvalidated.** Ten interviews (2 each) planned; priority questions listed at the bottom of `2b-Persona-Set.md`.
-3. **Distribution is fragmented.** No single channel reaches all five personas — r/developersIndia reaches only Rohan, ICAI only Arjun, and LinkedIn is the sole overlap and the most crowded surface there is. Plan five small channel entries, not one launch.
-4. **Non-technical persona research is thinner than engineering.** Indian marketing communities are the weakest-mapped section; named creators were deliberately left blank rather than invented.
-5. **Mini-Launch (Define step 4) skipped for now.** It's the only step producing external evidence. Recommendation: run it once a refusal screenshot exists — it'll land far harder with one image than with a description.
+1. **Still zero users, and zero first-party proof.** Every success criterion that
+   needs people — withheld-section engagement, the eligibility rate — is marked
+   *pending cohort* in `VERIFICATION.md`, not ticked. The instrumentation to
+   answer them is live and verified.
+2. **The refusal screenshot was discarded** (2026-09-03). `PRODUCT.md` § Proof
+   names it as the first earnable evidence and both launches were sequenced
+   around it. Saaf's half already renders at `/today`; only the portal half is
+   missing, so it stays cheap to revisit.
+3. **All five personas remain interview-unvalidated.** Ten interviews planned,
+   zero done. The product now exists to show them, which makes the conversation
+   easier than it was in the Define phase.
+4. **Only two of five gate functions ship.** Engineering (experience band) and
+   finance (credential). Marketing, consulting and HR users are told plainly on
+   their own shortlist that their gate is not live — deliberate, and better than
+   silently applying the years gate, which is the bug this product exists to fix.
+5. **The scheduler has an expiry date.** Vercel Cron dies at ~30 boards and the
+   service-role key now sits in Vercel, which earlier design notes ruled out.
+   Migrating to a Supabase Edge Function fixes both. See HANDOFF D5.
+6. **Non-technical persona research is still the thinnest part.** Indian marketing
+   communities were the weakest-mapped section in the Define phase and nothing has
+   changed that.
