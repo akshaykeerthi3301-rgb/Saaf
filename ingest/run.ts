@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { ADAPTERS, USER_AGENT, type NormalisedRole } from './providers'
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
-import { classifyFunction, isCorporateRole } from './classify'
+import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 
 const PRUNE_DAYS = 30
 const BATCH = 500
@@ -78,7 +78,9 @@ export async function runIngest() {
       // right company but only posted gig work today is not "the wrong
       // company" and must not be deactivated over it.
       const indiaRaw = roles.filter((r) => resolveInIndia(r.locationRaw))
-      const kept = indiaRaw.filter((r) => isCorporateRole(r.title))
+      const kept = indiaRaw
+        .map((r) => ({ ...r, title: normaliseTitle(r.title) }))
+        .filter((r) => isCorporateRole(r.title) && !isJunkPosting(r.title))
       const droppedGig = indiaRaw.length - kept.length
       const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
 

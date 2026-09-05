@@ -9,7 +9,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('current_title, employer, years_experience, preferred_role, city, credential, work_mode_preference, salary_expectation')
+    .select('current_title, employer, years_experience, preferred_role, open_to_adjacent, city, credential, work_mode_preference, salary_expectation')
     .eq('id', user.id)
     .single()
 
@@ -28,6 +28,7 @@ export default async function ProfilePage() {
         employer: profile.employer ?? '',
         yearsExperience: String(profile.years_experience ?? ''),
         preferredRole: profile.preferred_role ?? '',
+        openToAdjacent: profile.open_to_adjacent === true,
         city: profile.city ?? '',
         credential: profile.credential ?? 'none',
         workModePreference: profile.work_mode_preference ?? 'no_preference',

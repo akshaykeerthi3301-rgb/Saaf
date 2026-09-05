@@ -62,6 +62,10 @@ export function RoleRow({
     <div className={outcome === 'stretch' ? styles.rowStretch : styles.row}>
       {isNew ? <span className={styles.tag}>New</span> : null}
       {unverified ? <span className={styles.tag}>Check the experience bar</span> : null}
+      {/* Stated on every row rather than discovered after the click. No ATS
+          board in the registry publishes pay, so this is true of all of them —
+          and finding out only on the employer's site is the whole complaint. */}
+      {outcome !== 'withheld' ? <span className={styles.tag}>Salary not stated</span> : null}
       {outcome === 'stretch' && gapYears !== undefined ? (
         <span className={styles.tag}>
           Stretch · {gapYears} year{gapYears === 1 ? '' : 's'} gap

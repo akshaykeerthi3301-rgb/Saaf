@@ -22,6 +22,8 @@ export type ParsedFields = {
    *  shape of the onboarding draft's confirmed fields, not just what the
    *  parser itself can produce. */
   preferredRole?: string
+  /** Also candidate-entered, not parsed. Strict scoping is the default. */
+  openToAdjacent?: boolean
 }
 
 export type ParseResult = {

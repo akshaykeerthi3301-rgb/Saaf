@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isCorporateRole, classifyFunction } from '../classify'
+import { isCorporateRole, classifyFunction, isJunkPosting, normaliseTitle } from '../classify'
 
 describe('isCorporateRole', () => {
   // Reported from the live product on 2026-09-02: an engineering candidate's
@@ -53,5 +53,58 @@ describe('classifyFunction', () => {
   // the count is watched rather than forgotten.
   it('returns other rather than guessing', () => {
     expect(classifyFunction('Client Onboarding Director')).toBe('other')
+  })
+})
+
+describe('junk postings', () => {
+  it('drops a test posting left open on a board', () => {
+    // Was live in the index and reachable by candidates.
+    expect(isJunkPosting('Test Jerin')).toBe(true)
+  })
+
+  it('keeps real engineering roles that contain the word test', () => {
+    // A bare /\btest\b/ filter looked obvious and would have withheld five real
+    // jobs. Withholding a real role is the worse error.
+    expect(isJunkPosting('Software Development Engineer in Test II')).toBe(false)
+    expect(isJunkPosting('Staff Software Engineer in Test')).toBe(false)
+    expect(isJunkPosting('QA Lead - Manual, Automation & AI Testing')).toBe(false)
+    expect(isJunkPosting('Software Development Engineer Testing')).toBe(false)
+  })
+
+  it('keeps a role whose title merely starts with a placeholder-ish word', () => {
+    expect(isJunkPosting('Testing Engineer')).toBe(false)
+  })
+})
+
+describe('title normalisation', () => {
+  it('collapses runs of whitespace', () => {
+    expect(normaliseTitle('Accounts Payable  Specialist - Mumbai'))
+      .toBe('Accounts Payable Specialist - Mumbai')
+  })
+
+  it('trims leading and trailing space', () => {
+    expect(normaliseTitle(' Staff Engineer – Enterprise IT Automation'))
+      .toBe('Staff Engineer – Enterprise IT Automation')
+  })
+
+  it('collapses repeated dashes', () => {
+    expect(normaliseTitle('Team Leader - LRM ---  Hyderabad'))
+      .toBe('Team Leader - LRM - Hyderabad')
+  })
+
+  it('title-cases a wholly lowercase title', () => {
+    expect(normaliseTitle('area collections manager, pune (recoveries)'))
+      .toBe('Area Collections Manager, Pune (Recoveries)')
+  })
+
+  it('preserves acronyms when title-casing', () => {
+    expect(normaliseTitle('business development & strategic partnerships - d2c'))
+      .toBe('Business Development & Strategic Partnerships - D2C')
+  })
+
+  it('leaves a title the employer already capitalised alone', () => {
+    // Only wholly-lowercase titles are recased — never second-guess an
+    // employer's own casing, which carries product and acronym names.
+    expect(normaliseTitle('Lead Product Designer I')).toBe('Lead Product Designer I')
   })
 })

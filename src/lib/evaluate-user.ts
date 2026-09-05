@@ -55,11 +55,26 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // match against — return rather than run an unfiltered/all-roles query.
   if (!profile.preferred_role?.trim()) return { written: 0 }
 
-  const { data: roles, error: rErr } = await db
+  // Strict by default, and that default is the product decision: a candidate
+  // who asked for "Product Manager" is not shown a credit analyst role unless
+  // they said they wanted adjacent ones. websearch_to_tsquery ANDs the terms,
+  // so every word must appear in the title. Opting in switches to an OR of the
+  // same terms, which widens the net and costs precision — the candidate makes
+  // that trade knowingly. See supabase/migrations/0012_open_to_adjacent.sql.
+  const terms = profile.preferred_role
+    .toLowerCase()
+    .replace(/[^a-z0-9&+ ]+/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+
+  const query = db
     .from('roles')
     .select('id, function, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
-    .textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
+
+  const { data: roles, error: rErr } = profile.open_to_adjacent && terms.length > 1
+    ? await query.textSearch('title_tsv', terms.join(' | '))
+    : await query.textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
   if (rErr) throw rErr
 
   const computedAt = new Date().toISOString()

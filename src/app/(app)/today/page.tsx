@@ -162,6 +162,17 @@ export default async function TodayPage() {
         searchTerm={profile.preferred_role ?? undefined}
       />
 
+      <p style={{
+        color: 'var(--color-on-surface-variant)',
+        fontSize: 'var(--type-body-sm-size)',
+        margin: '0 0 var(--space-md)',
+      }}>
+        No employer in this index publishes a salary, so nothing here is filtered
+        or ranked by pay — and we can&apos;t tell you what a role pays before you
+        open it. That&apos;s a gap in what company job boards make public, not a
+        judgement about the role.
+      </p>
+
       {/* A backend failure must never render as a verdict. If the read failed we
           say so plainly rather than showing an empty list. */}
       {error ? (

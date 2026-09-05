@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { RoleInput } from '@/components/features/role-input'
 import { Progress } from '@/components/features/progress'
 import { writeDraft } from '@/lib/onboarding-store'
 import { useDraft } from '@/lib/use-draft'
@@ -35,6 +36,9 @@ export default function ConfirmPage() {
     // editable, since "what you do now" and "what you want next" often differ.
     preferredRole: edits.preferredRole ?? fields.currentTitle ?? '',
     city: edits.city ?? fields.city ?? '',
+    // Strict is the default: a product manager is not shown a credit analyst
+    // role unless they say they want adjacent ones. See migration 0012.
+    openToAdjacent: edits.openToAdjacent ?? (fields.openToAdjacent ? 'yes' : 'no'),
   }
   const setF = (patch: Partial<typeof f>) =>
     setEdits((e) => ({ ...e, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) }))
@@ -51,7 +55,11 @@ export default function ConfirmPage() {
       setError('We need this to run the experience gate.')
       return
     }
-    writeDraft({ fields: { ...f, yearsExperience: Number(f.yearsExperience) } })
+    writeDraft({ fields: {
+      ...f,
+      yearsExperience: Number(f.yearsExperience),
+      openToAdjacent: f.openToAdjacent === 'yes',
+    } })
     router.push('/start/gate')
   }
 
@@ -81,13 +89,33 @@ export default function ConfirmPage() {
         value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
       <Input label="City" provenance={prov('city')} value={f.city}
         onChange={(e) => setF({ ...f, city: e.target.value })} />
-      <Input
+      <RoleInput
         label="What job role are you looking for?"
         provenance={fields.currentTitle ? "based on your current title — edit if you're looking for something different" : undefined}
         helper="e.g. 'Product Manager', not just 'Manager' — the more specific this is, the better your matches"
         value={f.preferredRole}
-        onChange={(e) => setF({ ...f, preferredRole: e.target.value })}
+        onChange={(v) => setF({ ...f, preferredRole: v })}
       />
+
+      <label style={{
+        display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start',
+        marginBottom: 'var(--space-md)', cursor: 'pointer',
+        fontSize: 'var(--type-body-md-size)',
+      }}>
+        <input
+          type="checkbox"
+          checked={f.openToAdjacent === 'yes'}
+          onChange={(e) => setF({ ...f, openToAdjacent: e.target.checked ? 'yes' : 'no' })}
+          style={{ marginTop: 4 }}
+        />
+        <span>
+          Also show me adjacent roles
+          <span style={{ display: 'block', color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>
+            Off by default. Your list stays strictly on the role above — turn this on
+            to widen it, at the cost of some precision.
+          </span>
+        </span>
+      </label>
 
       {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
       <Button onClick={next}>Looks right</Button>

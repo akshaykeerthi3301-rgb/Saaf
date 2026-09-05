@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { RoleInput } from '@/components/features/role-input'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
 
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
-  preferredRole: string; city: string; credential: string
+  preferredRole: string; openToAdjacent: boolean; city: string; credential: string
   workModePreference: string; salaryExpectation: string
 }
 
@@ -32,7 +33,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     const res = await confirmProfile({
       currentTitle: f.currentTitle, employer: f.employer,
       yearsExperience: Number(f.yearsExperience),
-      preferredRole: f.preferredRole, city: f.city,
+      preferredRole: f.preferredRole, openToAdjacent: f.openToAdjacent, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
       // Always sent from this screen (unlike onboarding, which never asks) —
       // an explicit "no preference" is a real answer here, not an omission.
@@ -51,9 +52,28 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <Input label="Years of experience" type="number" min={0} max={50} step={0.5}
         value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
       <Input label="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
-      <Input label="Preferred job role" value={f.preferredRole}
-        onChange={(e) => setF({ ...f, preferredRole: e.target.value })}
-        helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'." />
+      <RoleInput
+        label="Preferred job role"
+        value={f.preferredRole}
+        helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'."
+        onChange={(v) => setF({ ...f, preferredRole: v })}
+      />
+
+      <label style={{
+        display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start',
+        marginBottom: 'var(--space-md)', cursor: 'pointer',
+        fontSize: 'var(--type-body-md-size)',
+      }}>
+        <input type="checkbox" checked={f.openToAdjacent}
+          onChange={(e) => setF({ ...f, openToAdjacent: e.target.checked })}
+          style={{ marginTop: 4 }} />
+        <span>
+          Also show me adjacent roles
+          <span style={{ display: 'block', color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>
+            Off keeps your list strictly on the role above. On widens it, at the cost of precision.
+          </span>
+        </span>
+      </label>
 
       <div style={{ marginBottom: 'var(--space-md)' }}>
         <label htmlFor="cred" style={{
