@@ -3,15 +3,15 @@
     "provider": "lever",
     "token": "paytm",
     "company_name": "Paytm",
-    "roles": 202,
-    "india": 181
+    "roles": 198,
+    "india": 177
   },
   {
     "provider": "workable",
     "token": "apna",
     "company_name": "Apna",
-    "roles": 162,
-    "india": 162
+    "roles": 159,
+    "india": 159
   },
   {
     "provider": "ashby",
@@ -24,8 +24,8 @@
     "provider": "smartrecruiters",
     "token": "swiggy",
     "company_name": "Swiggy",
-    "roles": 70,
-    "india": 46
+    "roles": 67,
+    "india": 43
   },
   {
     "provider": "lever",
@@ -39,7 +39,7 @@
     "token": "freshworks",
     "company_name": "Freshworks",
     "roles": 100,
-    "india": 34
+    "india": 38
   },
   {
     "provider": "lever",
@@ -52,7 +52,7 @@
     "provider": "greenhouse",
     "token": "netradyne",
     "company_name": "Netradyne",
-    "roles": 29,
+    "roles": 30,
     "india": 18
   },
   {
@@ -95,27 +95,27 @@
     "token": "turing",
     "company_name": "Turing",
     "roles": 26,
-    "india": 6
+    "india": 7
   },
   {
     "provider": "greenhouse",
     "token": "groww",
     "company_name": "Groww",
-    "roles": 5,
-    "india": 5
+    "roles": 7,
+    "india": 7
   },
   {
     "provider": "ashby",
     "token": "atlan",
     "company_name": "Atlan",
-    "roles": 5,
-    "india": 5
+    "roles": 6,
+    "india": 6
   },
   {
     "provider": "greenhouse",
     "token": "postman",
     "company_name": "Postman",
-    "roles": 65,
+    "roles": 63,
     "india": 4
   },
   {
@@ -137,6 +137,83 @@
     "token": "lendingkart",
     "company_name": "Lendingkart",
     "roles": 1,
+    "india": 1
+  },
+  {
+    "provider": "greenhouse",
+    "token": "stage",
+    "company_name": "Stage",
+    "roles": 139,
+    "india": 26
+  },
+  {
+    "provider": "lever",
+    "token": "zeta",
+    "company_name": "Zeta",
+    "roles": 19,
+    "india": 18
+  },
+  {
+    "provider": "lever",
+    "token": "epifi",
+    "company_name": "Epifi",
+    "roles": 11,
+    "india": 11
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "ixigo",
+    "company_name": "Ixigo",
+    "roles": 10,
+    "india": 10
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "refyne",
+    "company_name": "Refyne",
+    "roles": 10,
+    "india": 9
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "shipsy",
+    "company_name": "Shipsy",
+    "roles": 5,
+    "india": 5
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "entropik",
+    "company_name": "Entropik",
+    "roles": 3,
+    "india": 3
+  },
+  {
+    "provider": "lever",
+    "token": "kenko",
+    "company_name": "Kenko",
+    "roles": 3,
+    "india": 3
+  },
+  {
+    "provider": "lever",
+    "token": "pocketfm",
+    "company_name": "Pocketfm",
+    "roles": 4,
+    "india": 2
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "interviewbit",
+    "company_name": "Interviewbit",
+    "roles": 1,
+    "india": 1
+  },
+  {
+    "provider": "greenhouse",
+    "token": "thoughtworks",
+    "company_name": "Thoughtworks",
+    "roles": 36,
     "india": 1
   }
 ]

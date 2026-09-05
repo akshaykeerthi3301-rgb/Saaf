@@ -146,6 +146,35 @@ candidate's preferred role is scored, ranked and shown.
   does not train on API content, and that "Type it in instead" avoids it entirely.
   The upload screen says the same *before* the file is chosen.
 
+### Stage D — instrument the claim, and grow the supply (2026-09-05)
+
+- **`score_breakdown_opened` and `score_reported`** restore success criterion 2,
+  which the pivot had left measuring a section that no longer exists. One
+  capture-phase listener for the whole list, not a prop per card — making
+  `RoleCard` a client component would serialise every source quote into the
+  payload twice, and the list is unbounded.
+- **Two DOM facts, checked in a browser rather than assumed.** `toggle` does not
+  bubble (a bubble-phase listener saw 0 of 4 events; capture saw all of them),
+  and `toggle` is queued asynchronously and **coalesces**, so the handler reads
+  the state at fire time, not toggle time.
+- **The function gap is stated, not closed.** `src/match/function-gap.ts` reads
+  the candidate's own preferred-role text — onboarding no longer asks the
+  function — and `/today` names what their function actually turns on and says
+  we don't read it. The patterns are narrow on purpose: bare "growth" and bare
+  "strategy" are excluded, because a false positive tells a candidate their
+  score is missing something when it is not.
+- **`rolesWithheld` is gone from `/api/audit/today`.** It had been a permanent
+  zero published under a name that still asserted the old product.
+- **Registry: 20 → 31 boards.** The candidate list in `discover-boards.ts` went
+  from ~110 slugs to 219; 30 came back live, 11 of them new (`stage`, `zeta`,
+  `epifi`, `ixigo`, `refyne`, `shipsy`, `entropik`, `kenko`, `pocketfm`,
+  `interviewbit`, `thoughtworks`). `druva` returned no India roles this run and
+  is retained rather than deleted — `boards.last_error` and auto-deactivation
+  are what handle rot.
+- **Measured at 31 boards: the fetch phase takes 14.4s against the 38s budget**,
+  and two 12s timeouts account for most of it. A slow board costs a pool slot,
+  not the run. The ceiling is far away.
+
 ### Deliberate residue — do not "tidy" these away
 
 - **`WithheldSection` and the report-refusal action are orphaned and kept.** *"This
@@ -229,7 +258,7 @@ docs/                       tracked
 productos/                  selectively tracked — work products yes, ProductOS material no
 src/                        the app: gates, parser, screens, actions
 ingest/                     six ATS adapters, the daily pipeline
-registry/boards.json        20 boards — the moat, private
+registry/boards.json        31 boards — the moat, private
 supabase/migrations/        three migrations, all applied
 ```
 
@@ -282,8 +311,11 @@ only delivers to the founder's own address until a domain is verified, so **no
 beta user can receive a sign-in link today.** A `.in` costs a few hundred rupees.
 Everything else on this list is refinement; this one is binary.
 
-**3 · Grow the registry — the hard stop at 28 boards is gone.** 20 today, found
-by probing rather than guessing (`npm run registry:discover`). Stage B changed
+**3 · Grow the registry — the hard stop at 28 boards is gone.** **31 as of
+2026-09-05**, found by probing rather than guessing
+(`npm run registry:discover`). New boards reach production with the next deploy:
+`ingest/run.ts` reads `registry/boards.json` from the bundle and upserts it at
+the top of every run, so a board added here is inert until the code ships. Stage B changed
 the arithmetic: at 7s for 20 boards under a concurrency-6 pool, and with the run
 declining to *start* a new board after 38s, outgrowing the budget now degrades
 into rotation rather than a timeout. **The scheduler migration is therefore no

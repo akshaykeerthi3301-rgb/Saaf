@@ -91,8 +91,10 @@ applied, and the LLM parse stays inert until `GEMINI_API_KEY` is set. Deploy
 first, set the key second, so the honest privacy copy is live before the
 behaviour it describes.
 
-**Grow the registry** (`npm run registry:discover`). 20 boards today. No longer
-capped by the scheduler — see the revised D5.
+~~**Grow the registry**~~ **Done 2026-09-05: 20 → 31 boards.** The candidate
+list in `scripts/discover-boards.ts` went from ~110 slugs to 219; 30 came back
+live and 11 were new. Growing it further means adding more slugs — the script
+probes a fixed list, so re-running it unchanged re-probes the same names.
 
 ~~**Close the silent function gap, or state it.**~~ **Stated, 2026-09-05.**
 `src/match/function-gap.ts` infers the function from the candidate's own
