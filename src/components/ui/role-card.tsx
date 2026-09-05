@@ -1,5 +1,6 @@
 import styles from './row.module.css'
 import { ReportScore } from '@/components/features/report-score'
+import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import type { ScoreBreakdown } from '@/match/score'
 import type { EvidenceItem } from './row'
@@ -7,6 +8,8 @@ import type { EvidenceItem } from './row'
 type Props = {
   /** gate_results.id — what a score report is filed against. */
   gateResultId: string
+  /** roles.id — what an application is tracked against. */
+  roleId: string
   title: string
   company: string
   city?: string
@@ -29,7 +32,7 @@ type Props = {
  * and a bare number would hide exactly that class of defect again.
  */
 export function RoleCard({
-  gateResultId, title, company, city, score, breakdown, reason, applyUrl,
+  gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
   isNew, requirements, profileCity,
 }: Props) {
   const band = score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match'
@@ -105,7 +108,10 @@ export function RoleCard({
         </details>
       ) : null}
 
-      <ReportScore gateResultId={gateResultId} />
+      <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+        <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} />
+        <ReportScore gateResultId={gateResultId} />
+      </div>
     </div>
   )
 }

@@ -40,7 +40,7 @@ Cost column is theirs. Gap column is what Saaf would have to build.
 |---|---|---|---|
 | **Career Profile** | Permanent career memory — skills, experience, target roles, salary goals; powers every other feature | **Shipped.** `profiles` + parse-then-confirm onboarding; skills and domain read by Gemini since Stage C | **Salary goals only.** Everything else exists |
 | **Should I Apply?** | Analyses a pasted JD against the saved profile, returns apply/skip with a breakdown | **Half-shipped, inverted.** `src/match/score.ts` scores six components with the sentence each was read from — but only against roles *in the index*, never a pasted JD | **Medium.** The scorer exists; it needs a paste-a-JD entry point and a single-role view |
-| **Application Tracker** | Kanban board — status, notes, follow-up dates | **Nothing.** No table, no screen | **Medium.** New table + RLS + board UI. No AI, no cost |
+| **Application Tracker** | Kanban board — status, notes, follow-up dates | **Shipped 2026-09-05.** `/applications` — five-stage pipeline, notes, follow-up dates, add-by-hand for jobs found anywhere, and "Track this" on every ranked role | **Closed** |
 | **ATS Resume Checker** | Simulates enterprise ATS scoring | **Nothing** | **Medium.** Deterministic and testable, which suits this codebase |
 | **Company-Specific ATS** | Matches a résumé against Workday / Taleo / Greenhouse behaviour | **Nothing.** Saaf reads six ATSs for *supply*, which is different knowledge but the same domain | **Medium** |
 | **JD Match Score** | Keyword match + gap analysis | **Shipped in substance** — score with per-component notes | **Small.** Needs the pasted-JD path above |
@@ -108,7 +108,7 @@ Cheapest and most compatible first; each row is independently shippable.
 
 | # | Build | Why here |
 |---|---|---|
-| 1 | **Application Tracker** | Their only free feature Saaf has no answer to, no AI cost, no locked-decision contact, and it is the natural home for a role the candidate has decided to act on — which is exactly where Saaf's shortlist currently dead-ends |
+| 1 | ~~**Application Tracker**~~ ✅ **Shipped 2026-09-05** (migration `0015`) | Their only free feature Saaf had no answer to, no AI cost, no locked-decision contact, and the natural home for a role the candidate has decided to act on — which is exactly where the shortlist dead-ended |
 | 2 | **Paste-a-JD → Should I Apply / JD Match Score** | The scorer already exists and already shows its working. This is an entry point, not an engine, and it makes Saaf useful for a role found anywhere — not only one in our registry |
 | 3 | **ATS Resume Checker + Company-Specific ATS** | Deterministic, testable, free to run, and adjacent to knowledge this codebase already holds about six ATSs |
 | 4 | **Resume Guides by Company** | Content. No engineering. Best organic acquisition per hour on this page |

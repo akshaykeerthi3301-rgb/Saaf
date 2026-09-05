@@ -114,6 +114,7 @@ export default async function TodayPage() {
           {today}
         </h1>
         <nav style={{ display: 'flex', gap: 'var(--space-md)', fontSize: 'var(--type-label-md-size)' }}>
+          <a href="/applications">Applications</a>
           <a href="/audit">Index audit</a>
           <a href="/profile">Profile</a>
         </nav>
@@ -169,6 +170,7 @@ export default async function TodayPage() {
         <RoleCard
           key={r.id}
           gateResultId={r.id}
+          roleId={r.role_id}
           title={r.roles?.title ?? ''}
           company={r.roles?.company_name ?? ''}
           city={r.roles?.city ?? undefined}
