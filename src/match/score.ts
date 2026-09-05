@@ -21,7 +21,7 @@ import { experienceFloor } from '@/gates/evaluate'
  */
 
 export type ScoreComponent = {
-  key: 'title' | 'seniority' | 'location' | 'work_mode' | 'credential'
+  key: 'title' | 'skills' | 'seniority' | 'location' | 'work_mode' | 'credential'
   label: string
   points: number
   max: number
@@ -38,13 +38,15 @@ export type ScoreBreakdown = {
 
 export type RoleFacts = {
   title: string
+  /** Matched against the candidate's confirmed skills. */
+  description?: string
   locationRaw?: string
   city?: string
   /** roles.unread_experience_mention — see migration 0011. */
   unreadExperienceMention?: boolean
 }
 
-const WEIGHTS = { title: 35, seniority: 30, location: 15, work_mode: 10, credential: 10 }
+const WEIGHTS = { title: 28, skills: 20, seniority: 25, location: 10, work_mode: 7, credential: 10 }
 
 /**
  * Crude suffix stripping — enough to match "engineering" to "engineer" and
@@ -98,6 +100,36 @@ function titleAffinity(preferredRole: string, title: string): ScoreComponent {
     : 'Title shares no words with the role you asked for.'
 
   return { key: 'title', label: 'Role match', points, max, note }
+}
+
+/**
+ * Confirmed candidate skills found in the posting's own text.
+ *
+ * Matched candidate-side rather than by extracting a skill list per role: one
+ * model call per résumé upload fits the free tier, one per role across the
+ * index would not. The posting is searched for skills the candidate actually
+ * confirmed, so a match is always evidence from both sides.
+ */
+function skillsFit(skills: string[], role: RoleFacts): ScoreComponent | null {
+  const max = WEIGHTS.skills
+  const text = (role.description ?? '').toLowerCase()
+  // No skills on file, or no text to search: the component does not apply and
+  // is left out of the total entirely rather than scored as a zero.
+  if (skills.length === 0 || text.length < 50) return null
+
+  const hits = skills.filter((s) => {
+    const needle = s.toLowerCase().trim()
+    return needle.length > 1 && text.includes(needle)
+  })
+
+  // Full marks well before every skill matches — no posting names them all,
+  // and requiring that would make the component unreachable.
+  const ratio = Math.min(1, hits.length / Math.min(5, skills.length))
+  const note = hits.length
+    ? `Mentions ${hits.length} of your skills: ${hits.slice(0, 4).join(', ')}${hits.length > 4 ? '…' : ''}.`
+    : 'Names none of the skills on your profile.'
+
+  return { key: 'skills', label: 'Skills', points: Math.round(max * ratio), max, note }
 }
 
 /**
@@ -213,16 +245,22 @@ export function scoreRole(
 
   const components: ScoreComponent[] = [
     titleAffinity(candidate.preferredRole ?? '', role.title),
+    skillsFit(candidate.skills ?? [], role),
     seniorityFit(candidate.yearsExperience, requirements, unread),
     locationFit(candidate.city, role),
     workModeFit(candidate.workModePreference, role),
     credentialFit(candidate.credential, requirements),
-  ]
+  ].filter((c): c is ScoreComponent => c !== null)
 
-  const total = components.reduce((sum, c) => sum + c.points, 0)
+  // Normalised over the components that APPLY, not over a fixed 100. A
+  // candidate with no skills on file would otherwise lose 20 points to a
+  // component that never had a chance to score, and every one of their roles
+  // would sit 20 below an identical candidate who had uploaded a résumé.
+  const earned = components.reduce((sum, c) => sum + c.points, 0)
+  const available = components.reduce((sum, c) => sum + c.max, 0)
 
   return {
-    total: Math.max(0, Math.min(100, Math.round(total))),
+    total: available === 0 ? 0 : Math.max(0, Math.min(100, Math.round((earned / available) * 100))),
     components,
     confidence: unread ? 'low' : 'high',
   }

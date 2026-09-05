@@ -36,10 +36,23 @@ export default function PrivacyPage() {
         <H2>Your résumé</H2>
         <P>
           Uploaded, parsed in memory, and deleted the moment parsing finishes. It is
-          never written to storage, never logged, and never sent to a third party.
-          Only the fields you explicitly confirm on the next screen — current title,
-          employer, years of experience, function, city, credential — are saved to
-          your profile.
+          never written to storage and never logged. Only the fields you explicitly
+          confirm on the next screen — current title, employer, years of experience,
+          preferred role, skills, city, credential — are saved to your profile.
+        </P>
+        <P>
+          One third party sees the text. To read your skills and industry, which
+          fixed patterns cannot do across arbitrary résumé layouts, we send the
+          extracted text to Google&apos;s Gemini API. Your email address, phone
+          number and profile links are stripped out before it leaves our server,
+          Google does not train on API content, and the file itself is never sent —
+          only text. Everything the model returns is shown to you for confirmation
+          before any of it is stored, and you can delete any of it.
+        </P>
+        <P>
+          If you would rather no third party saw it at all, use &ldquo;Type it in
+          instead&rdquo; on the upload screen. Nothing is sent anywhere, and you lose
+          only the pre-filling.
         </P>
       </Section>
 

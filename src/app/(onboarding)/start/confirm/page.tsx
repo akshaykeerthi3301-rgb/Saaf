@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
+import { SkillsField } from '@/components/features/skills-field'
 import { Progress } from '@/components/features/progress'
 import { writeDraft } from '@/lib/onboarding-store'
 import { useDraft } from '@/lib/use-draft'
@@ -22,6 +23,9 @@ export default function ConfirmPage() {
   const warnings = draft.warnings ?? []
 
   const [edits, setEdits] = useState<Partial<Record<string, string>>>({})
+  // Skills are a list, not a string, so they live outside the edits map.
+  // undefined means "untouched" — fall through to whatever was parsed.
+  const [skillEdits, setSkillEdits] = useState<string[]>()
   const [error, setError] = useState<string>()
 
   // Derived during render from the draft plus any edits — no effect, so no
@@ -40,6 +44,7 @@ export default function ConfirmPage() {
     // role unless they say they want adjacent ones. See migration 0012.
     openToAdjacent: edits.openToAdjacent ?? (fields.openToAdjacent ? 'yes' : 'no'),
   }
+  const skills = skillEdits ?? fields.skills ?? []
   const setF = (patch: Partial<typeof f>) =>
     setEdits((e) => ({ ...e, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) }))
 
@@ -59,6 +64,8 @@ export default function ConfirmPage() {
       ...f,
       yearsExperience: Number(f.yearsExperience),
       openToAdjacent: f.openToAdjacent === 'yes',
+      skills,
+      domain: fields.domain,
     } })
     router.push('/start/gate')
   }
@@ -95,6 +102,12 @@ export default function ConfirmPage() {
         helper="e.g. 'Product Manager', not just 'Manager' — the more specific this is, the better your matches"
         value={f.preferredRole}
         onChange={(v) => setF({ ...f, preferredRole: v })}
+      />
+
+      <SkillsField
+        skills={skills}
+        fromResume={(fields.skills?.length ?? 0) > 0}
+        onChange={setSkillEdits}
       />
 
       <label style={{

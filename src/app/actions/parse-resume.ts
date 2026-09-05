@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { pdfToText } from '@/lib/parse/pdf'
 import { docxToText } from '@/lib/parse/docx'
 import { extractFields, type ParseResult } from '@/lib/parse/extract'
+import { readResumeWithModel } from '@/lib/parse/llm'
 import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
 
 const ACCEPTED = {
@@ -57,7 +58,38 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
       }
     }
 
-    return { ok: true, ...extractFields(text) }
+    const deterministic = extractFields(text)
+
+    // Strictly additive. The model reaches skills and domain that fixed
+    // patterns cannot; where both produce a field the model wins, because it
+    // reads the whole document rather than the first 25 lines — and either way
+    // the candidate confirms every field on the next screen before anything
+    // is stored. A null here (no API key, timeout, bad JSON) leaves the
+    // deterministic result exactly as it was.
+    const model = await readResumeWithModel(text)
+    if (!model) return { ok: true, ...deterministic }
+
+    const fields = {
+      ...deterministic.fields,
+      currentTitle: model.currentTitle ?? deterministic.fields.currentTitle,
+      employer: model.employer ?? deterministic.fields.employer,
+      yearsExperience: model.yearsExperience ?? deterministic.fields.yearsExperience,
+      city: model.city ?? deterministic.fields.city,
+      skills: model.skills,
+      domain: model.domain,
+    }
+
+    // Warnings describe what still needs checking, so drop the ones the model
+    // has now answered — telling someone we could not find a city while
+    // showing them their city reads as a broken product.
+    const warnings = deterministic.warnings.filter((w) =>
+      !(fields.city && /city/i.test(w)) &&
+      !(fields.currentTitle && /current title/i.test(w)) &&
+      !(fields.employer && /employer/i.test(w)) &&
+      !(fields.yearsExperience !== undefined && /years of experience/i.test(w))
+    )
+
+    return { ok: true, fields, warnings }
   } catch {
     return {
       ok: false,

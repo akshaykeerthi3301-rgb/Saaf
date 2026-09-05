@@ -10,6 +10,10 @@ const schema = z.object({
   yearsExperience: z.coerce.number().min(0).max(50),
   preferredRole: z.string().min(1, 'We need this to match you against roles.'),
   openToAdjacent: z.boolean().optional(),
+  // Read from the résumé by a model, then confirmed on screen. Capped here as
+  // well as in the parser — this action is reachable independently of it.
+  skills: z.array(z.string().min(1).max(40)).max(40).optional(),
+  domain: z.string().max(40).optional(),
   city: z.string().min(1, 'We need this to run the location gate.'),
   workAuthorisation: z.string().optional(),
   credential: z.enum(['CA', 'CFA', 'CS', 'none']).default('none'),
@@ -49,6 +53,8 @@ export async function confirmProfile(input: ConfirmInput) {
     years_experience: v.yearsExperience,
     preferred_role: v.preferredRole,
     ...(v.openToAdjacent !== undefined ? { open_to_adjacent: v.openToAdjacent } : {}),
+    ...(v.skills !== undefined ? { skills: v.skills } : {}),
+    ...(v.domain !== undefined ? { domain: v.domain || null } : {}),
     city: v.city,
     work_authorisation: v.workAuthorisation ?? null,
     credential: v.credential,

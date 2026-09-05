@@ -35,6 +35,8 @@ export default function GatePage() {
       yearsExperience: f.yearsExperience ?? 0,
       preferredRole: f.preferredRole ?? '',
       openToAdjacent: f.openToAdjacent ?? false,
+      skills: f.skills ?? [],
+      domain: f.domain,
       city: f.city ?? '',
       credential: (choice && ['CA', 'CFA', 'CS'].includes(choice) ? choice : 'none') as 'CA' | 'CFA' | 'CS' | 'none',
       portals: d.portals,

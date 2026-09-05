@@ -18,6 +18,16 @@ import type { CandidateProfile, TypedRequirement } from '@/gates/types'
  * SUPABASE_SERVICE_ROLE_KEY, which is never exposed to the browser, and an
  * ESLint rule blocks src/app and src/components from importing it.
  */
+/**
+ * Most recent roles scored per candidate.
+ *
+ * Descriptions are now pulled for skill matching, so an unbounded query is
+ * both a memory and a time cost. A broad preferred role already matches 228 of
+ * 650 roles; at Stage B's target index size it would match thousands. Freshest
+ * first, because a stale posting is the least useful thing to rank.
+ */
+const MAX_ROLES_PER_CANDIDATE = 500
+
 export async function evaluateUser(userId: string): Promise<{ written: number }> {
   const db = createServiceClient()
 
@@ -38,6 +48,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     credential: profile.credential ?? 'none',
     preferredRole: profile.preferred_role ?? undefined,
     workModePreference: profile.work_mode_preference ?? undefined,
+    skills: profile.skills ?? undefined,
   }
 
   // Matching used to be an exact equality against the candidate's own guessed
@@ -71,12 +82,14 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
 
   const query = db
     .from('roles')
-    .select('id, title, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
+    .select('id, title, description, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
 
   const { data: roles, error: rErr } = profile.open_to_adjacent && terms.length > 1
     ? await query.textSearch('title_tsv', terms.join(' | '))
     : await query.textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
+      .order('last_seen_at', { ascending: false })
+      .limit(MAX_ROLES_PER_CANDIDATE)
   if (rErr) throw rErr
 
   const computedAt = new Date().toISOString()
@@ -93,6 +106,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
       candidate,
       {
         title: role.title,
+        description: role.description ?? undefined,
         locationRaw: role.location_raw ?? undefined,
         city: role.city ?? undefined,
         unreadExperienceMention: role.unread_experience_mention === true,

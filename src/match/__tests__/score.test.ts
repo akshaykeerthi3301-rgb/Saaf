@@ -99,3 +99,33 @@ describe('summarise', () => {
     expect(summarise(r)).toMatch(/clears every requirement/i)
   })
 })
+
+describe('skills', () => {
+  const withSkills: CandidateProfile = { ...junior, skills: ['SQL', 'Roadmapping', 'A/B testing'] }
+  const jd = { ...role, description: 'You will own the roadmap and run A/B testing. SQL is essential. '.repeat(3) }
+
+  it('lifts a role whose posting names the candidate’s skills', () => {
+    const named = scoreRole(withSkills, jd, []).total
+    const notNamed = scoreRole(withSkills, { ...role, description: 'Unrelated duties. '.repeat(10) }, []).total
+    expect(named).toBeGreaterThan(notNamed)
+  })
+
+  it('does not penalise a candidate who has no skills on file', () => {
+    // The component is left out of the total rather than scored zero —
+    // otherwise everyone who has not uploaded a résumé sits 20 points below
+    // an otherwise identical candidate who has.
+    const none = scoreRole(junior, jd, [])
+    expect(none.components.some((c) => c.key === 'skills')).toBe(false)
+    expect(none.total).toBeGreaterThanOrEqual(scoreRole(withSkills, { ...role, description: 'Unrelated. '.repeat(10) }, []).total)
+  })
+
+  it('omits the component when the posting has no text to search', () => {
+    const r = scoreRole(withSkills, role, [])
+    expect(r.components.some((c) => c.key === 'skills')).toBe(false)
+  })
+
+  it('names the matched skills back, rather than asserting a fit', () => {
+    const c = scoreRole(withSkills, jd, []).components.find((x) => x.key === 'skills')!
+    expect(c.note).toMatch(/SQL/)
+  })
+})

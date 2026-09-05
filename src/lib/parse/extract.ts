@@ -24,6 +24,11 @@ export type ParsedFields = {
   preferredRole?: string
   /** Also candidate-entered, not parsed. Strict scoping is the default. */
   openToAdjacent?: boolean
+  /** Read by the model, never by the regexes — see src/lib/parse/llm.ts.
+   *  Confirmed on screen before anything is stored, which is what contains
+   *  a hallucinated skill. */
+  skills?: string[]
+  domain?: string
 }
 
 export type ParseResult = {

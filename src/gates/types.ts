@@ -42,6 +42,8 @@ export type CandidateProfile = {
   preferredRole?: string
   /** 'remote' | 'hybrid' | 'onsite' | 'no_preference'. Scored, never gated. */
   workModePreference?: string
+  /** Confirmed by the candidate, read from the résumé by a model. */
+  skills?: string[]
 }
 
 export type Outcome = 'cleared' | 'withheld' | 'stretch'

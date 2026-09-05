@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
+import { SkillsField } from '@/components/features/skills-field'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
 
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
-  preferredRole: string; openToAdjacent: boolean; city: string; credential: string
+  preferredRole: string; openToAdjacent: boolean; skills: string[]; city: string; credential: string
   workModePreference: string; salaryExpectation: string
 }
 
@@ -33,7 +34,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     const res = await confirmProfile({
       currentTitle: f.currentTitle, employer: f.employer,
       yearsExperience: Number(f.yearsExperience),
-      preferredRole: f.preferredRole, openToAdjacent: f.openToAdjacent, city: f.city,
+      preferredRole: f.preferredRole, openToAdjacent: f.openToAdjacent,
+      skills: f.skills, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
       // Always sent from this screen (unlike onboarding, which never asks) —
       // an explicit "no preference" is a real answer here, not an omission.
@@ -74,6 +76,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           </span>
         </span>
       </label>
+
+      <SkillsField skills={f.skills} onChange={(skills) => setF({ ...f, skills })} />
 
       <div style={{ marginBottom: 'var(--space-md)' }}>
         <label htmlFor="cred" style={{
