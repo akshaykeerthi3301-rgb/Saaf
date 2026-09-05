@@ -335,6 +335,14 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 
 ## Open questions
 
+0. **Resolved 2026-09-05 — "why Saaf rather than Jobright, now that both
+   rank?"** `PRODUCT.md`'s own 2026-09-04 amendment posed this and left it
+   open. `docs/JOBRIGHT-ANALYSIS.md` answers it: the mechanism converged at
+   Stage A, but the registry, the shown-working score, the legal supply chain
+   and ₹0 are all things Jobright structurally cannot copy. The same document
+   confirms the current roadmap (Phase 7) targets JobMatchAI-equivalence, not
+   Jobright-equivalence, and names the four locked decisions that would need
+   reversing if that target ever changes.
 1. **Still zero users, and zero first-party proof.** Every success criterion that
    needs people — withheld-section engagement, the eligibility rate — is marked
    *pending cohort* in `VERIFICATION.md`, not ticked. The instrumentation to

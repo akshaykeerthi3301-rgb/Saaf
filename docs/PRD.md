@@ -1112,7 +1112,9 @@ Reconsider when: engineering and finance gates run for two weeks with a refusal-
 Why excluded: the MVP needs function, location, experience floor and credential — not a complete skills taxonomy. Full normalisation is what makes scoring nuanced, and nuanced scoring is not what the magic moment rests on.
 Reconsider when: the cleared list needs ranking better than "cleared, ordered by recency."
 
-**Everything not named anywhere:** employer accounts, applying through Saaf, recruiter features, mobile apps, payments, teams, referrals, interview prep. Several are permanently out of scope by product decision, not merely deferred — Saaf is pre-application and never applies on the candidate's behalf.
+**Everything not named anywhere:** employer accounts, applying through Saaf, recruiter features, mobile apps, payments, teams, referrals. **Permanently** out of scope by product decision, not merely deferred — each contradicts *"Saaf is pre-application and never applies on the candidate's behalf"* or the ₹0/no-two-sided-marketplace lock in `PROJECT-STATE.md`.
+
+~~Interview prep~~ **re-entered scope 2026-09-05** via `docs/ROADMAP.md` Phase 7 (TASK-065), scoped from `docs/PARITY.md`'s JobMatchAI comparison — a one-shot question generator and a mock-interview tool, not a standing agent. It was listed here as permanently excluded when this section was drafted; that line was never true of it specifically and is corrected rather than left standing, per `docs/JOBRIGHT-ANALYSIS.md` § 5, which is where this contradiction was found.
 
 ---
 

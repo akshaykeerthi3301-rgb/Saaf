@@ -26,9 +26,13 @@ strategy decision and not a documentation chore.*
 | **Honest empty state** | *"3 cleared your experience band"* | Now a narrowing, not a subtraction: *indexed · matching your search · a strong fit*. The principle it protects — a thin list is our coverage problem, never a verdict on the candidate — survived the pivot intact. |
 
 **The open question this leaves:** *why Saaf rather than Jobright, now that both
-rank?* That is a positioning decision for the founder, not something a build
-session should answer by rewriting this page. Until it is answered, treat the
-"Why this works" section as **known-stale**.
+rank?* **Answered 2026-09-05 in `docs/JOBRIGHT-ANALYSIS.md`** — not by the
+mechanism any more, which converged, but by the registry, the shown-working
+score, the legal supply chain and ₹0, none of which Jobright can copy without
+becoming a different company. That document also settles, once and for all,
+that finishing the current roadmap does not make Saaf a Jobright ditto — the
+two target different competitors on purpose. Until "Why this works" is
+rewritten to say that in its own voice, treat it as **known-stale**.
 
 ---
 
