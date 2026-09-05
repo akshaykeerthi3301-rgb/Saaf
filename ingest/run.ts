@@ -11,12 +11,47 @@
  */
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { ADAPTERS, USER_AGENT, type NormalisedRole } from './providers'
+import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole } from './providers'
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 
 const PRUNE_DAYS = 30
 const BATCH = 500
+
+/**
+ * Boards fetched at once.
+ *
+ * The run was strictly sequential with a 150ms courtesy sleep between boards:
+ * ~1.7s per board, ~34s at 20 boards, and a hard ceiling around 30 because
+ * Vercel Hobby kills a function at 60s. Since the registry compounding is the
+ * whole moat, that ceiling capped the product's supply.
+ *
+ * Board fetching is almost entirely network wait, so a small pool removes the
+ * ceiling without new infrastructure or a rupee of spend. Kept modest, and the
+ * courtesy delay is kept per board, because six third-party ATS providers are
+ * doing us a favour by publishing these endpoints at all.
+ */
+const CONCURRENCY = 6
+
+/** Per-posting detail fetches, for providers whose list endpoint omits the body. */
+const DETAIL_CONCURRENCY = 6
+
+/**
+ * Stop STARTING new boards after this. The run must degrade into rotation
+ * rather than a hard timeout — boards are ordered least-recently-ingested
+ * first, so whatever is skipped today is picked up first tomorrow.
+ * Leaves room in the 60s budget for recompute, audit and digests.
+ */
+const INGEST_BUDGET_MS = 38_000
+
+/** Bounded-concurrency map. No dependency; the pool is four lines. */
+async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>) {
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) await worker(items[cursor++])
+  })
+  await Promise.all(runners)
+}
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,19 +85,52 @@ async function fetchBoard(b: { id: string; provider: string; token: string }): P
   return a.parse(await res.json(), b.token)
 }
 
+/**
+ * Fill in descriptions for providers whose list endpoint has no job body.
+ *
+ * Only SmartRecruiters needs this today, and only for roles that survived the
+ * India and corporate filters — so it is roughly 90 extra requests across five
+ * boards, not one per posting fetched. Failures are per-role and silent by
+ * design: a missing description costs that role its extracted requirements,
+ * which is exactly the state it was already in, and is never worth failing a
+ * whole board over.
+ */
+async function fillDescriptions(provider: string, token: string, roles: NormalisedRole[]) {
+  const a = adapterFor(provider)
+  if (!a?.detailUrl || !a.parseDetail) return
+
+  await pool(roles, DETAIL_CONCURRENCY, async (r) => {
+    try {
+      const res = await fetch(a.detailUrl!(token, r.externalId), {
+        headers: { 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(12000),
+      })
+      if (!res.ok) return
+      r.description = a.parseDetail!(await res.json())
+    } catch {
+      // Leave the description empty; the role still ranks on its title.
+    }
+  })
+}
+
 export async function runIngest() {
   const started = Date.now()
   await syncRegistry()
 
+  // Least-recently-ingested first, so a run that runs out of budget resumes
+  // where it stopped instead of re-fetching the same head of the list.
   const { data: boards, error: bErr } = await db
     .from('boards').select('id, provider, token, company_name').eq('active', true)
+    .order('last_ingested_at', { ascending: true, nullsFirst: true })
   if (bErr) throw bErr
 
   let indexed = 0
   let ok = 0
+  let skipped = 0
   const seenRoleIds: string[] = []
 
-  for (const b of boards ?? []) {
+  await pool(boards ?? [], CONCURRENCY, async (b) => {
+    if (Date.now() - started > INGEST_BUDGET_MS) { skipped++; return }
     try {
       const roles = await fetchBoard(b)
       indexed += roles.length
@@ -83,6 +151,9 @@ export async function runIngest() {
         .filter((r) => isCorporateRole(r.title) && !isJunkPosting(r.title))
       const droppedGig = indiaRaw.length - kept.length
       const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
+
+      // Fetched only for roles we are actually keeping.
+      await fillDescriptions(b.provider, b.token, india)
 
       if (india.length) {
         // Extracted once and reused for both the role row and its requirements
@@ -164,7 +235,7 @@ export async function runIngest() {
       console.log(`  ✗ ${b.company_name.padEnd(16)} ${(e as Error).message}`)
     }
     await new Promise((r) => setTimeout(r, 150))
-  }
+  })
 
   // Prune. Load-bearing for the 500 MB free tier, not housekeeping.
   const cutoff = new Date(Date.now() - PRUNE_DAYS * 86400_000).toISOString()
@@ -172,7 +243,11 @@ export async function runIngest() {
     .from('roles').delete({ count: 'exact' }).lt('last_seen_at', cutoff)
   console.log(`  pruned ${pruned ?? 0} roles unseen for ${PRUNE_DAYS} days`)
 
-  console.log(`  ${ok}/${boards?.length ?? 0} boards ok · ${indexed} roles seen · ${Math.round((Date.now() - started) / 1000)}s`)
+  console.log(
+    `  ${ok}/${boards?.length ?? 0} boards ok · ${indexed} roles seen` +
+    `${skipped ? ` · ${skipped} skipped for time, first up next run` : ''}` +
+    ` · ${Math.round((Date.now() - started) / 1000)}s`
+  )
   return { indexed }
 }
 

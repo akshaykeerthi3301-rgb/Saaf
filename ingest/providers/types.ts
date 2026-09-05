@@ -17,6 +17,18 @@ export type Adapter = {
   url: (token: string) => string
   /** Provider payload → normalised roles. Shapes genuinely differ per provider. */
   parse: (raw: unknown, token: string) => NormalisedRole[]
+
+  /**
+   * Some providers' list endpoints carry no job body, so the description has
+   * to be fetched per posting. Declaring these two makes the ingest run do it;
+   * SmartRecruiters' adapter previously carried a comment saying ingest
+   * "fetches detail separately" when nothing ever did, and every one of its 91
+   * roles sat in the index with an empty description — 15% of the whole index
+   * scored on its title alone, with no experience floor to read.
+   */
+  detailUrl?: (token: string, externalId: string) => string
+  /** Detail payload → the description text. */
+  parseDetail?: (raw: unknown) => string
 }
 
 export const USER_AGENT =
@@ -31,6 +43,11 @@ export function toText(html: string): string {
   return html
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+    // Numeric entities, decimal and hex. SmartRecruiters emits &#xa0; rather
+    // than &nbsp; throughout, and it survived into stored descriptions where
+    // it splits words the extractor is trying to read.
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
     .replace(/&amp;/g, '&')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')

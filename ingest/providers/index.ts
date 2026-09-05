@@ -87,7 +87,7 @@ export const ADAPTERS: Adapter[] = [
         title: str(j.name),
         locationRaw: [rec(j.location).city, rec(j.location).country]
           .filter(Boolean).map(String).join(', '),
-        // The list endpoint omits the body; ingest fetches detail separately.
+        // Filled by detailUrl/parseDetail below — the list endpoint has no body.
         description: '',
         // The public posting URL is /{company identifier}/{id}. An ID alone
         // resolves to a generic landing page rather than the job — `ref` is an
@@ -96,6 +96,21 @@ export const ADAPTERS: Adapter[] = [
         applyUrl: `https://jobs.smartrecruiters.com/${str(rec(j.company).identifier) || token}/${str(j.id)}`,
         postedAt: (j.releasedDate as string) ?? null,
       })),
+
+    detailUrl: (t, id) => `https://api.smartrecruiters.com/v1/companies/${t}/postings/${id}`,
+
+    // jobDescription + qualifications only. companyDescription is boilerplate
+    // ("Swiggy is India's leading...") and actively harmful here: it is the
+    // exact prose the extractor's company-tenure filter has to fight, and it
+    // buries the one section that carries the requirement — qualifications is
+    // where "0-2 years in B2B sales" lives.
+    parseDetail: (raw) => {
+      const sections = rec(rec(rec(raw).jobAd).sections)
+      return ['jobDescription', 'qualifications']
+        .map((k) => toText(str(rec(sections[k]).text)))
+        .filter(Boolean)
+        .join('\n\n')
+    },
   },
 ]
 
