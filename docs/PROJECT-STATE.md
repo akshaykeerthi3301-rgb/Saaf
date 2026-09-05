@@ -325,9 +325,13 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
    (migration 0008) are now written by nothing and read by nothing. Karthik,
    Priya and Meera are therefore matched on title, seniority and skills like
    everyone else. That is a defensible ranking product, but it is not the
-   function-typed promise the personas were written against, and the earlier
-   "your gate is not live yet" notice that made the gap visible is also gone —
-   **the gap is now silent, which is the part worth deciding on.**
+   function-typed promise the personas were written against.
+   **Decided 2026-09-05: state it rather than build it — for now.** The gap is no
+   longer silent; `src/match/function-gap.ts` reads the candidate's own
+   preferred-role text and `/today` names the requirement their function turns
+   on and says we don't read it, attributed to our coverage. Building the reading
+   (extraction + the three onboarding questions + score components) remains open
+   and is the larger piece of work.
 5. **The scheduler's expiry date moved, and only half the reason remains.**
    Stage B's concurrency pool and 38s start-cutoff mean the run degrades into
    board rotation rather than timing out, so the ~30-board cliff is gone. What

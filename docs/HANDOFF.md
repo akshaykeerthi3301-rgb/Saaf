@@ -94,12 +94,15 @@ behaviour it describes.
 **Grow the registry** (`npm run registry:discover`). 20 boards today. No longer
 capped by the scheduler — see the revised D5.
 
-**Close the silent function gap, or state it.** `channel_budget`,
-`institute_tier` and `hr_track` are extracted by nothing and scored by nothing,
-onboarding no longer asks the per-function question, and the notice that used to
-make that visible is gone. Karthik, Priya and Meera are ranked on title,
-seniority and skills like everyone else, and are not told. Either build the
-reading, or say so on their shortlist.
+~~**Close the silent function gap, or state it.**~~ **Stated, 2026-09-05.**
+`src/match/function-gap.ts` infers the function from the candidate's own
+preferred-role text — onboarding no longer asks it — and `/today` names the
+requirement their function turns on and says plainly that we don't read it.
+**Building the reading is still open**: posting extraction for channel/budget
+scale, institute tier and the HR track, the three onboarding questions that fill
+`profiles.channel_budget` / `institute_tier` / `hr_track`, and three more score
+components. That is the larger piece, and it is what would make the score
+honest for those functions rather than explaining why it isn't.
 
 ~~**Retire the `rolesWithheld` field** on `/api/audit/today`.~~ ✅ Done 2026-09-05.
 

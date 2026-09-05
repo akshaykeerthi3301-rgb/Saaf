@@ -24,6 +24,30 @@ const CANDIDATES = [
   'apnaco','apna','jodo','classplus','physicswallah','vedantu','emeritus','simplilearn','scaler',
   'newtonschool','masaischool','turing','deel','hackerrank','hackerearth','springworks','plum',
   'onsurity','pazcare','nium','open','fampay','stashfin','lendingkart','indifi','flexiloans',
+
+  // Second sweep, 2026-09-05. The first pass hit on 20 of ~110 slugs; the
+  // registry is the moat and it only compounds by probing more of them. Every
+  // name here is an Indian employer or one with a real Indian engineering or
+  // GTM presence — the script rejects anything returning zero India roles, so
+  // a wrong guess costs a request and nothing else. That guard is why the
+  // `slice`-in-North-Macedonia mistake cannot repeat.
+  'cashfree','pinelabs','bharatpe','epifi','onecard','mobikwik','payu','billdesk','easebuzz',
+  'instamojo','zeta','refyne','zolve','fibe','kissht','moneytap','credgenics','finbox',
+  'coindcx','wazirx','coinswitch',
+  'kissflow','wingify','capillary','fyle','happay','sprinto','entropik','vymo','locus',
+  'shipsy','loconav','fleetx','uniphore','scalefusion','zluri','spendflo','toplyne',
+  'rocketlane','hiver','superops','plivo','ozonetel','keka','zimyo',
+  'udaan','ofbusiness','moglix','purplle','sugarcosmetics','wakefit','pepperfry','urbanladder',
+  'countrydelight','bigbasket','dunzo','rapido','porter','shadowfax','delhivery','xpressbees',
+  'upgrad','byjus','cuemath','teachmint','eruditus','greatlearning','codingninjas','crio',
+  'interviewbit','testbook','adda247',
+  'practo','pharmeasy','tata1mg','medibuddy','healthifyme','apollo247','even','kenko',
+  'mpl','games24x7','nazara','winzo','zupee','pocketfm','kukufm','stage',
+  'krutrim','ola','olaelectric','ather','yulu','batterysmart','log9','ultraviolette','euler',
+  'ninjacart','waycool','dehaat','arya','stellapps','otipy',
+  'thoughtworks','fractal','quantiphi','tredence','latentview','mathco','affine','tigeranalytics',
+  'makemytrip','ixigo','cleartrip','oyo','redbus','yatra',
+  'nobroker','housing','magicbricks','squareyards',
 ]
 
 const UA = { 'User-Agent': USER_AGENT }

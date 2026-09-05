@@ -5,6 +5,7 @@ import type { EvidenceItem } from '@/components/ui/row'
 import { Arithmetic } from '@/components/ui/arithmetic'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
+import { functionGap } from '@/match/function-gap'
 import type { ScoreBreakdown } from '@/match/score'
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
@@ -101,6 +102,7 @@ export default async function TodayPage() {
     }))
 
   const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
+  const gap = functionGap(profile.preferred_role)
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
@@ -133,6 +135,26 @@ export default async function TodayPage() {
         No employer in this index publishes a salary, so nothing here is ranked by
         pay, and we can&apos;t tell you what a role pays before you open it.
       </p>
+
+      {/* The score presents as complete, so a requirement we don't read has to be
+          named or it reads as one we checked and found nothing on. Attributed to
+          our coverage, never to the candidate — the same rule as a thin list. */}
+      {gap ? (
+        <p style={{
+          color: 'var(--color-on-surface-variant)',
+          fontSize: 'var(--type-body-sm-size)',
+          borderTop: '1px solid var(--color-outline-variant)',
+          borderBottom: '1px solid var(--color-outline-variant)',
+          padding: 'var(--space-md) 0',
+          margin: '0 0 var(--space-md)',
+        }}>
+          Roles like yours are usually decided by {gap.decidedBy}. We don&apos;t read
+          that from a posting yet, so every score below is built from title,
+          seniority, skills, location and work mode only. That&apos;s a gap in what
+          we read, not a judgement about you — open any score to see exactly what
+          went into it.
+        </p>
+      ) : null}
 
       {/* A backend failure must never render as a verdict. If the read failed we
           say so plainly rather than showing an empty list. */}
