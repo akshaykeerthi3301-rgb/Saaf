@@ -101,8 +101,13 @@ make that visible is gone. Karthik, Priya and Meera are ranked on title,
 seniority and skills like everyone else, and are not told. Either build the
 reading, or say so on their shortlist.
 
-**Retire the `rolesWithheld` field** on `/api/audit/today`. It is hard-written as
-0 by `ingest/audit.ts` and read by nothing.
+~~**Retire the `rolesWithheld` field** on `/api/audit/today`.~~ ✅ Done 2026-09-05.
+
+**Verify the signed-in shortlist.** `/api/dev-signin` was deleted once magic-link
+sign-in worked, so nothing signed-in can be exercised locally any more — the
+score-breakdown instrumentation and the "this score looks wrong" control were
+built and unit-verified but the assembled page was not. First signed-in session
+after deploy settles it.
 
 ---
 

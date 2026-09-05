@@ -1,9 +1,12 @@
 import styles from './row.module.css'
+import { ReportScore } from '@/components/features/report-score'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import type { ScoreBreakdown } from '@/match/score'
 import type { EvidenceItem } from './row'
 
 type Props = {
+  /** gate_results.id — what a score report is filed against. */
+  gateResultId: string
   title: string
   company: string
   city?: string
@@ -26,7 +29,7 @@ type Props = {
  * and a bare number would hide exactly that class of defect again.
  */
 export function RoleCard({
-  title, company, city, score, breakdown, reason, applyUrl,
+  gateResultId, title, company, city, score, breakdown, reason, applyUrl,
   isNew, requirements, profileCity,
 }: Props) {
   const band = score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match'
@@ -66,8 +69,10 @@ export function RoleCard({
         </span>
       ) : null}
 
+      {/* data-breakdown is how BreakdownEngaged tells this disclosure from the
+          evidence one below it — `toggle` carries no other signal. */}
       {breakdown ? (
-        <details className={styles.evidence}>
+        <details className={styles.evidence} data-breakdown="score">
           <summary className={styles.evidenceToggle}>How this score is built</summary>
           {breakdown.components.map((c) => (
             <div key={c.key} className={styles.evidenceItem}>
@@ -99,6 +104,8 @@ export function RoleCard({
           ))}
         </details>
       ) : null}
+
+      <ReportScore gateResultId={gateResultId} />
     </div>
   )
 }

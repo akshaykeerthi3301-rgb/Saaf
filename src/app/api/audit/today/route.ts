@@ -6,8 +6,12 @@ import { createClient } from '@supabase/supabase-js'
  * this before signup, and it is the page's only proof.
  *
  * If today's row is absent because the cron has not run, this returns the most
- * recent day WITH ITS DATE rather than zeros. A zero here would read as "we
- * refused nothing", which is the opposite of the claim being made.
+ * recent day WITH ITS DATE rather than zeros. A zero here would read as a
+ * result rather than as missing data.
+ *
+ * `rolesWithheld` was dropped on 2026-09-05. Nothing is withheld since the
+ * pivot, so `ingest/audit.ts` hard-wrote it as 0 and this endpoint published a
+ * permanent zero under a name that still asserted the old product.
  */
 export const revalidate = 3600
 
@@ -20,7 +24,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from('audit_daily')
-    .select('day, roles_indexed, roles_withheld, boards_active, by_reason')
+    .select('day, roles_indexed, boards_active, by_reason')
     .order('day', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -35,7 +39,6 @@ export async function GET() {
       day: data.day,
       stale: data.day !== today,
       rolesIndexed: data.roles_indexed,
-      rolesWithheld: data.roles_withheld,
       boardsActive: data.boards_active,
       byReason: data.by_reason,
     },

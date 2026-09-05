@@ -7,10 +7,9 @@ Three criteria are verifiable today. Two need real users, and are marked
 **pending cohort** rather than ticked — a criterion that needs people cannot be
 satisfied by a developer clicking through it.
 
-⚠️ **The pivot voided criterion 2 rather than delaying it.** It measured a
-section the product no longer has. It is rewritten below as *unmeasurable, with
-a named successor that is not yet instrumented* — not carried forward as if it
-were still merely pending.
+⚠️ **The pivot voided criterion 2 rather than delaying it** — it measured a
+section the product no longer has. It was restated and re-instrumented on
+2026-09-05 against what the product now claims, and is pending cohort again.
 
 ---
 
@@ -31,22 +30,42 @@ mobile data. The technical path cannot be the bottleneck; the human path still
 needs observing once there are users. PostHog measures it: the funnel from
 `onboarding_started` to `shortlist_viewed`.
 
-## 2. ~~≥60% engage the withheld section, <5% file a report~~ ❌ voided by the pivot
+## 2. ≥60% open a score breakdown, <5% report a score ⏳ pending cohort
 
-**This criterion no longer has a subject.** Nothing is withheld, so there is no
-withheld section to engage with. `withheld_section_engaged` survives in the
-`AnalyticsEvent` union in `src/lib/analytics.ts` but **nothing fires it** — the
-component that did is orphaned. `shortlist_viewed` still fires, always with
-`withheld: 0`.
+*Restated 2026-09-05. It read "≥60% engage the withheld section, <5% file a
+report" until the pivot removed the withheld section; the two-sidedness was the
+valuable part and is what carried over. Engagement alone would look like success
+while the scores were quietly wrong, so the report rate is still the other half.*
 
-**The successor, and it is not built yet.** The two-sidedness was the valuable
-part: engagement alone would look like success while the gate was quietly
-wrong, so a report rate was the other half. Under ranking the equivalent pair is
-*do candidates open the score breakdown* — the working behind the number, which
-is the whole claim — and *do they flag a badly-ranked role*. The report path
-exists (`src/app/actions/report-refusal.ts`, kept deliberately) but is wired to
-nothing, and there is no breakdown-opened event. **Neither half is instrumented.
-Do not report this criterion as pending-cohort; it is pending code.**
+**Instrumentation built 2026-09-05.** Both halves now fire:
+
+- `score_breakdown_opened` — once per session, the first time a candidate opens
+  *"How this score is built"* on any card
+  (`src/components/features/breakdown-engaged.tsx`). One capture-phase listener
+  for the whole list, not a prop per card: making the card a client component
+  would serialise every card's props into the payload twice, and the list is
+  unbounded.
+- `score_reported` — *"This score looks wrong"*, on every card
+  (`src/components/features/report-score.tsx`), writing through the
+  `reportRefusal` action that was kept when the withheld section was orphaned.
+  It sits on **every** card, not only weak ones: a score that is too high is the
+  more dangerous error, because a role the candidate cannot get presented as a
+  strong fit is the injury this product exists to fix.
+
+**Verified in a browser, not assumed** — opening the evidence disclosure does not
+fire it, opening the score breakdown fires exactly once, and reopening does not
+fire again. `toggle` neither bubbles nor reports its state synchronously, and
+both were checked rather than taken on faith.
+
+**Not yet verified signed-in.** `/api/dev-signin` was deleted once magic-link
+sign-in worked, so the rendered shortlist could not be exercised locally. The
+event wiring, the layout-neutrality of the wrapper and the action itself are
+each checked; **the assembled page is not.** Confirm on the first signed-in
+session after deploy.
+
+The metric itself needs real users. `withheld_section_engaged` and
+`refusal_reported` remain in the event union, fired by nothing, so historical
+data stays readable.
 
 ## 3. 100% eligibility rate ⏳ pending cohort
 

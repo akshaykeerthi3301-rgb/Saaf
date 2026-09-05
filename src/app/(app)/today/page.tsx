@@ -4,6 +4,7 @@ import { RoleCard } from '@/components/ui/role-card'
 import type { EvidenceItem } from '@/components/ui/row'
 import { Arithmetic } from '@/components/ui/arithmetic'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
+import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import type { ScoreBreakdown } from '@/match/score'
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
@@ -141,9 +142,11 @@ export default async function TodayPage() {
         </p>
       ) : null}
 
+      <BreakdownEngaged>
       {rows.map((r) => (
         <RoleCard
           key={r.id}
+          gateResultId={r.id}
           title={r.roles?.title ?? ''}
           company={r.roles?.company_name ?? ''}
           city={r.roles?.city ?? undefined}
@@ -156,6 +159,7 @@ export default async function TodayPage() {
           profileCity={profile.city ?? undefined}
         />
       ))}
+      </BreakdownEngaged>
     </main>
   )
 }

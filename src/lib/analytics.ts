@@ -13,6 +13,10 @@ export type SaafEvent =
   | 'resume_uploaded'
   | 'profile_confirmed'
   | 'shortlist_viewed'
+  | 'score_breakdown_opened'
+  | 'score_reported'
+  // Retired with the withheld section (Stage A) and fired by nothing. Kept in
+  // the union so historical PostHog data stays typed and readable.
   | 'withheld_section_engaged'
   | 'refusal_reported'
 
