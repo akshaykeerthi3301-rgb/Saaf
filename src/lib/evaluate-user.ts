@@ -1,9 +1,9 @@
 import { createServiceClient } from '@/lib/supabase/service'
-import { evaluate } from '@/gates/evaluate'
+import { scoreRole, summarise } from '@/match/score'
 import type { CandidateProfile, TypedRequirement } from '@/gates/types'
 
 /**
- * Recompute gate results for one candidate and store them.
+ * Recompute match scores for one candidate and store them.
  *
  * Deliberately materialised: evaluating every user against every role at request
  * time would put a multi-thousand-row scan on the 90-second path to the magic
@@ -36,6 +36,8 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     yearsExperience: Number(profile.years_experience ?? 0),
     city: profile.city ?? undefined,
     credential: profile.credential ?? 'none',
+    preferredRole: profile.preferred_role ?? undefined,
+    workModePreference: profile.work_mode_preference ?? undefined,
   }
 
   // Matching used to be an exact equality against the candidate's own guessed
@@ -69,7 +71,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
 
   const query = db
     .from('roles')
-    .select('id, function, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
+    .select('id, title, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
 
   const { data: roles, error: rErr } = profile.open_to_adjacent && terms.length > 1
@@ -87,15 +89,28 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
       sourceQuote: q.source_quote,
       confidence: Number(q.confidence),
     }))
-    const result = evaluate(candidate, reqs)
+    const breakdown = scoreRole(
+      candidate,
+      {
+        title: role.title,
+        locationRaw: role.location_raw ?? undefined,
+        city: role.city ?? undefined,
+        unreadExperienceMention: role.unread_experience_mention === true,
+      },
+      reqs
+    )
     return {
       user_id: userId,
       role_id: role.id,
-      outcome: result.outcome,
-      refused_on: result.refusedOn ?? null,
-      reason: result.reason,
-      score: result.score ?? null,
-      gap_years: result.gapYears ?? null,
+      // Nothing is withheld any more — every scoped role is ranked. The
+      // outcome column survives only so older rows stay readable until the
+      // recompute sweeps them. See migration 0013.
+      outcome: 'ranked',
+      refused_on: null,
+      reason: summarise(breakdown),
+      score: breakdown.total,
+      gap_years: null,
+      score_breakdown: breakdown,
       computed_at: computedAt,
     }
   })

@@ -7,8 +7,8 @@ import { createClient } from '@supabase/supabase-js'
  * reference playbook's own rule is "either show the logos or remove the
  * section" — so instead of borrowing credibility it publishes its own figures.
  *
- * Never renders zeros. If no run has completed, it renders nothing at all: a
- * zero here would read as "we refused nothing", the opposite of the claim.
+ * Never renders zeros. If no run has completed it renders nothing at all —
+ * a zero would read as a result rather than as missing data.
  */
 export async function AuditStrip() {
   const db = createClient(
@@ -18,7 +18,7 @@ export async function AuditStrip() {
   )
   const { data } = await db
     .from('audit_daily')
-    .select('day, roles_indexed, roles_withheld, boards_active')
+    .select('day, roles_indexed, boards_active')
     .order('day', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -37,8 +37,8 @@ export async function AuditStrip() {
       borderBottom: '1px solid var(--color-outline-variant)',
       padding: 'var(--space-md) 0', textAlign: 'center', margin: 'var(--space-xl) 0 0',
     }}>
-      {fmt(data.roles_indexed)} indexed {when} &middot; {fmt(data.roles_withheld)} withheld &middot;{' '}
-      {fmt(data.boards_active)} boards &middot; every refusal published
+      {fmt(data.roles_indexed)} roles indexed {when} &middot;{' '}
+      {fmt(data.boards_active)} company boards &middot; every score shows its working
     </p>
   )
 }

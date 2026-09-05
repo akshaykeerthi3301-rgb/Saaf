@@ -37,6 +37,11 @@ export type CandidateProfile = {
   city?: string
   credential?: Credential
   workAuthorisation?: string
+  /** The role the candidate asked for, in their own words. Scored against the
+   *  posting's title by src/match/score.ts — the gate itself never reads it. */
+  preferredRole?: string
+  /** 'remote' | 'hybrid' | 'onsite' | 'no_preference'. Scored, never gated. */
+  workModePreference?: string
 }
 
 export type Outcome = 'cleared' | 'withheld' | 'stretch'

@@ -73,18 +73,15 @@ export function evaluate(
   // in favour of 2 — clearing the role for a two-year candidate. The floor is
   // now taken across every confident stated requirement, and framing decides
   // only whether the title band still participates.
-  const framed = statedYears.filter((r) => r.confidence >= 0.9)
-  const statedFloor = Math.max(0, ...statedYears.map((r) => r.minYears!))
-  const titleFloor = Math.max(0, ...titleYears.map((r) => r.minYears!))
+  const { required: floorRequired, fromTitle } = experienceFloor(confident)
   const yearReqs =
-    framed.length > 0 ? statedYears
+    statedYears.filter((r) => r.confidence >= 0.9).length > 0 ? statedYears
     : [...statedYears, ...titleYears]
-  const fromTitle = framed.length === 0 && titleYears.length > 0 && titleFloor >= statedFloor
   if (yearReqs.length > 0) {
     // A single description can state several minimums ("10+ years ... with 5+
     // years leading"). Gate on the strictest reading — refusing on the higher
     // number is the safer error.
-    const required = framed.length > 0 ? statedFloor : Math.max(statedFloor, titleFloor)
+    const required = floorRequired
     const held = profile.yearsExperience
     if (held < required) {
       const gap = required - held
@@ -126,4 +123,35 @@ function scoreFor(_p: CandidateProfile, reqs: TypedRequirement[], gapYears: numb
   const evidence = Math.min(reqs.length * 4, 20)
   const penalty = gapYears * 8
   return Math.max(40, Math.min(95, Math.round(base + evidence - penalty)))
+}
+
+/**
+ * The experience floor a posting actually imposes.
+ *
+ * Shared by the gate and by src/match/score.ts's seniority component so the
+ * two cannot drift — this codebase has already paid for that once, when
+ * evaluate-user.ts and ingest/recompute.ts hand-duplicated the same pipeline
+ * and silently disagreed.
+ *
+ * A confidently framed statement suppresses the title band, because an
+ * explicit number in the description beats one inferred from a job title. It
+ * may never LOWER the floor below another confident stated requirement: an
+ * "Engagement Manager" posting stating "4-6 years" also said "at least 2 years
+ * in strategic GTM", the latter scored higher on its framing, and substituting
+ * it cleared the role for a two-year candidate.
+ */
+export function experienceFloor(
+  confident: TypedRequirement[]
+): { required: number; fromTitle: boolean } {
+  const stated = confident.filter((r) => r.kind === 'experience_years' && r.minYears !== undefined)
+  const titled = confident.filter((r) => r.kind === 'title_seniority' && r.minYears !== undefined)
+
+  const statedFloor = Math.max(0, ...stated.map((r) => r.minYears!))
+  const titleFloor = Math.max(0, ...titled.map((r) => r.minYears!))
+  const framed = stated.some((r) => r.confidence >= 0.9)
+
+  return {
+    required: framed ? statedFloor : Math.max(statedFloor, titleFloor),
+    fromTitle: !framed && titled.length > 0 && titleFloor >= statedFloor,
+  }
 }

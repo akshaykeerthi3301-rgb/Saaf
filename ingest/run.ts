@@ -181,7 +181,7 @@ export async function runAll() {
   const { recomputeAll } = await import('./recompute')
   await recomputeAll()
   const { writeAudit } = await import('./audit')
-  await writeAudit(indexed)
+  await writeAudit()
   const { sendDigests } = await import('./digest')
   await sendDigests()
   return { indexed }

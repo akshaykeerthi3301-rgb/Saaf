@@ -29,7 +29,7 @@ export default async function AuditPage() {
   )
   const { data } = await db
     .from('audit_daily')
-    .select('day, roles_indexed, roles_withheld, boards_active, by_reason')
+    .select('day, roles_indexed, boards_active, by_reason')
     .order('day', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -41,7 +41,7 @@ export default async function AuditPage() {
   return (
     <main className="measure" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 680 }}>
       <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-        We publish what we refused.
+        We publish what we read.
       </h1>
 
       {!data ? (
@@ -56,8 +56,7 @@ export default async function AuditPage() {
             fontVariantNumeric: 'tabular-nums', color: 'var(--color-on-surface)',
             paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-outline)',
           }}>
-            {fmt(data.roles_indexed)} indexed · {fmt(data.roles_withheld)} withheld ·{' '}
-            {fmt(data.boards_active)} boards
+            {fmt(data.roles_indexed)} roles indexed · {fmt(data.boards_active)} company boards
           </p>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 'var(--space-md)' }}>
@@ -67,7 +66,7 @@ export default async function AuditPage() {
               letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
               color: 'var(--color-on-surface-variant)', paddingBottom: 'var(--space-sm)',
             }}>
-              Why roles were withheld
+              Roles stating each requirement, read from the posting
             </caption>
             <tbody>
               {reasons.map(([k, v]) => (
