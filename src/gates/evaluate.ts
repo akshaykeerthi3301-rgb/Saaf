@@ -60,24 +60,31 @@ export function evaluate(
   const statedYears = confident.filter((r) => r.kind === 'experience_years' && r.minYears !== undefined)
   const titleYears = confident.filter((r) => r.kind === 'title_seniority' && r.minYears !== undefined)
 
-  // Only a CONFIDENTLY FRAMED statement ("must have 3+ years") may override the
-  // title band. An unframed mention must not be able to suppress a correct
-  // title gate — that composition let a marketing sentence about "2-year bets"
-  // clear a Senior Manager role for a two-year candidate.
+  // A confidently framed statement ("must have 3+ years") may override the
+  // TITLE BAND, because an explicit number in the description beats one
+  // inferred from a job title — that is what stops a "Senior Engineer" posting
+  // saying "3+ years" from manufacturing a false refusal.
+  //
+  // What it may NOT do is lower the floor below another stated requirement.
+  // Substituting the framed subset for the whole set did exactly that: an
+  // "Engagement Manager" posting stating "4-6 years of professional
+  // experience" also said "At least 2 years in strategic GTM", the latter
+  // scored 0.95 on its "at least" framing, and the 4-year floor was discarded
+  // in favour of 2 — clearing the role for a two-year candidate. The floor is
+  // now taken across every confident stated requirement, and framing decides
+  // only whether the title band still participates.
   const framed = statedYears.filter((r) => r.confidence >= 0.9)
+  const statedFloor = Math.max(0, ...statedYears.map((r) => r.minYears!))
+  const titleFloor = Math.max(0, ...titleYears.map((r) => r.minYears!))
   const yearReqs =
-    framed.length > 0 ? framed
+    framed.length > 0 ? statedYears
     : [...statedYears, ...titleYears]
-  const fromTitle =
-    yearReqs.length > 0 &&
-    Math.max(...yearReqs.map((r) => r.minYears!)) ===
-      Math.max(0, ...titleYears.map((r) => r.minYears!)) &&
-    titleYears.length > 0
+  const fromTitle = framed.length === 0 && titleYears.length > 0 && titleFloor >= statedFloor
   if (yearReqs.length > 0) {
     // A single description can state several minimums ("10+ years ... with 5+
     // years leading"). Gate on the strictest reading — refusing on the higher
     // number is the safer error.
-    const required = Math.max(...yearReqs.map((r) => r.minYears!))
+    const required = framed.length > 0 ? statedFloor : Math.max(statedFloor, titleFloor)
     const held = profile.yearsExperience
     if (held < required) {
       const gap = required - held

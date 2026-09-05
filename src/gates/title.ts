@@ -27,6 +27,14 @@ type Band = { re: RegExp; years: number; label: string }
 /** Ordered most senior first — the first match wins. */
 const BANDS: Band[] = [
   { re: /\b(chief|c[teofm]o|vp|vice president|svp|evp)\b/i, years: 15, label: 'an executive role' },
+  // Indian corporate abbreviations, and the reason a "Category Management-
+  // DGM/ GM" role reached a two-year candidate with no gate of any kind: the
+  // description's requirement was discarded by the boilerplate filter, and the
+  // title vocabulary had nothing to fall back on. Note \bvp\b above cannot
+  // match AVP (no word boundary inside the token), so it is listed here.
+  { re: /\b(gm|general manager)\b/i,                        years: 12, label: 'a general manager role' },
+  { re: /\b(dgm|agm|avp|deputy general manager|assistant general manager|assistant vice president)\b/i,
+                                                            years:  8, label: 'a senior management role' },
   // "head," has no trailing \b of its own — a comma is a non-word character,
   // so \b never holds between it and the space that normally follows ("Head,
   // Growth"), and the alternation's shared trailing \b silently killed this

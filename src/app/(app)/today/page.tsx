@@ -41,6 +41,7 @@ type GateRow = {
     // any more (matching is now free text, see evaluate-user.ts), but still
     // used here to say which roles don't have a real gate live yet.
     function: string | null
+    unread_experience_mention: boolean | null
     role_requirements: RoleRequirement[] | null
   } | null
 }
@@ -65,7 +66,7 @@ export default async function TodayPage() {
     .from('gate_results')
     .select(`
       id, role_id, outcome, refused_on, reason, score, gap_years,
-      roles(title, city, location_raw, apply_url, company_name, function,
+      roles(title, city, location_raw, apply_url, company_name, function, unread_experience_mention,
         role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
     `)
     .eq('user_id', user.id)
@@ -92,7 +93,15 @@ export default async function TodayPage() {
       // Stable sort: preserves each group's existing score-descending order.
       : [...list].sort((a, b) => Number(matchesWorkMode(b)) - Number(matchesWorkMode(a)))
 
-  const cleared = byWorkMode(rows.filter((r) => r.outcome === 'cleared'))
+  // A role whose description mentions an experience bar we could not read
+  // confidently is never presented as plainly cleared. It is shown, with the
+  // limit stated, and kept out of the cleared count so the published
+  // arithmetic stays true. See supabase/migrations/0011.
+  const unverified = (r: GateRow) => r.roles?.unread_experience_mention === true
+
+  const allCleared = rows.filter((r) => r.outcome === 'cleared')
+  const cleared = byWorkMode(allCleared.filter((r) => !unverified(r)))
+  const needsCheck = byWorkMode(allCleared.filter(unverified))
   const stretch = byWorkMode(rows.filter((r) => r.outcome === 'stretch'))
   const withheld = rows.filter((r) => r.outcome === 'withheld')
 
@@ -222,6 +231,38 @@ export default async function TodayPage() {
           requirements={evidence(r)}
           refusedOn={r.refused_on}
           profileCity={profile.city ?? undefined}
+        />
+      ))}
+
+      {/* Descending confidence: cleared, then stretch, then roles whose
+          experience bar we couldn't read, then refusals. Shown rather than
+          hidden — an unreadable posting is our limitation, not a verdict, and
+          withholding it outright would be the wrong refusal the product's own
+          principles call worse than a wrong match. */}
+      {needsCheck.length > 0 ? (
+        <h2 style={{
+          fontSize: 'var(--type-headline-md-size)', fontWeight: 500,
+          margin: 'var(--space-lg) 0 var(--space-sm)',
+        }}>
+          Worth a look, but check the experience bar yourself
+        </h2>
+      ) : null}
+
+      {needsCheck.map((r) => (
+        <RoleRow
+          key={r.id}
+          outcome="cleared"
+          title={r.roles?.title ?? ''}
+          company={company(r)}
+          city={r.roles?.city ?? undefined}
+          score={r.score ?? undefined}
+          reason={r.reason}
+          applyUrl={r.roles?.apply_url}
+          isNew={isNew(r)}
+          requirements={evidence(r)}
+          refusedOn={r.refused_on}
+          profileCity={profile.city ?? undefined}
+          unverified
         />
       ))}
 

@@ -12,7 +12,7 @@
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { ADAPTERS, USER_AGENT, type NormalisedRole } from './providers'
-import { extractAll, resolveInIndia } from '../src/gates/extract'
+import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole } from './classify'
 
 const PRUNE_DAYS = 30
@@ -83,6 +83,13 @@ export async function runIngest() {
       const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
 
       if (india.length) {
+        // Extracted once and reused for both the role row and its requirements
+        // — the flag below needs the extraction result, and running it twice
+        // per role would double the most expensive part of the daily run.
+        const extracted = new Map(
+          india.map((r) => [r.externalId, extractAll(r.description, r.locationRaw, r.title)])
+        )
+
         const { data: up, error } = await db.from('roles').upsert(
           india.map((r) => ({
             board_id: b.id,
@@ -96,6 +103,13 @@ export async function runIngest() {
             apply_url: r.applyUrl,
             posted_at: r.postedAt,
             company_name: b.company_name,
+            // The posting talks about years of experience but we could not
+            // read a requirement confident enough to gate on. Such a role is
+            // never shown as plainly cleared — see src/app/(app)/today.
+            unread_experience_mention: mentionsUnreadExperience(
+              r.description,
+              extracted.get(r.externalId) ?? []
+            ),
             last_seen_at: new Date().toISOString(),
           })),
           { onConflict: 'board_id,external_id' }
@@ -109,7 +123,7 @@ export async function runIngest() {
         const reqs = india.flatMap((r) => {
           const rid = idFor.get(r.externalId)
           if (!rid) return []
-          return extractAll(r.description, r.locationRaw, r.title).map((q) => ({
+          return (extracted.get(r.externalId) ?? []).map((q) => ({
             role_id: rid,
             kind: q.kind,
             min_years: q.minYears ?? null,

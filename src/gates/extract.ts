@@ -1,4 +1,4 @@
-import type { Credential, TypedRequirement } from './types'
+import { CONFIDENCE_THRESHOLD, type Credential, type TypedRequirement } from './types'
 import { extractTitleSeniority } from './title'
 
 /**
@@ -38,10 +38,17 @@ function sentences(text: string): string[] {
  *  doesn't split on commas, so a compound sentence like "CFA is preferred,
  *  but you must have 5+ years..." stayed one unit and a preference anywhere
  *  in it dragged every extracted value in the sentence down to 0.3
- *  confidence, including a real requirement stated in a different clause. */
+ *  confidence, including a real requirement stated in a different clause.
+ *
+ *  Parentheses split too, and that is load-bearing rather than tidying:
+ *  "5+ years of experience across high-growth startups (preferably at the
+ *  intersection of fintech and AI)" qualifies the DOMAIN, not the years —
+ *  but with only comma splitting, "preferably" sat in the same clause as the
+ *  5 and dropped a real floor to 0.3, which is how a 5-year role cleared for
+ *  a two-year candidate. */
 function clauseAt(sentence: string, index: number): string {
   let pos = 0
-  for (const clause of sentence.split(/[,;]/)) {
+  for (const clause of sentence.split(/[,;()]/)) {
     const end = pos + clause.length
     if (index <= end) return clause
     pos = end + 1 // +1 for the delimiter split() consumed
@@ -70,6 +77,20 @@ function confidenceFor(sentence: string): number {
   return 0.75 // a stated minimum in a posting binds unless framed as optional
 }
 
+/**
+ * Company tenure, never a candidate requirement — "founded 5 years ago",
+ * "10 years of building for India".
+ *
+ * Deliberately explicit constructions only. This replaced a sentence-wide test
+ * for the bare pronouns we/our/company, which discarded any sentence
+ * containing them — and "What **we're** looking for: 7-10 years of
+ * experience" is the single most common requirements header in real postings.
+ * That filter was deleting precisely the sentences carrying the requirements,
+ * and is the reason a 7-10 year role cleared for a two-year candidate.
+ */
+const COMPANY_TENURE_RE =
+  /\b(?:founded|established|in business (?:for|since)|been (?:building|around|operating)|years? (?:of )?(?:building|serving|operating|shipping))\b/i
+
 export function extractExperienceYears(description: string): TypedRequirement[] {
   const out: TypedRequirement[] = []
   // Plural only. Real requirements say "5+ years" / "6-8+ years"; the singular
@@ -85,23 +106,60 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
 
   for (const s of sentences(description)) {
     if (!/\b(?:years?|yrs?)\b/i.test(s)) continue
-    // Skip company boilerplate: "10 years of building", "over 5 years we have"
-    if (/\b(?:we|our|company|founded|since)\b/i.test(s) && !REQUIRED_RE.test(s)) continue
 
     for (const m of s.matchAll(re)) {
       const lo = Number(m[1])
       if (!Number.isFinite(lo) || lo < 0 || lo > 40) continue
       if (ADJECTIVAL.test(m[0])) continue
+
+      // Tested against the clause the number sits in, not the whole sentence.
+      // Deliberately an exclude-list and nothing more: 29 of 107 requirements
+      // in the real fixture omit the word "experience" entirely ("6-8+ years
+      // in a technical customer-facing role"), so demanding experience
+      // vocabulary as a positive test throws out a quarter of real
+      // requirements — a false refusal for every one it saves.
+      const clause = clauseAt(s, m.index ?? 0)
+      if (COMPANY_TENURE_RE.test(clause)) continue
+
       // "1-2 years" → the floor is what gates. "5+ years" → 5.
       out.push({
         kind: 'experience_years',
         minYears: lo,
         sourceQuote: s.slice(0, 300),
-        confidence: confidenceFor(clauseAt(s, m.index ?? 0)),
+        confidence: confidenceFor(clause),
       })
     }
   }
   return out
+}
+
+/** A year count sitting near experience vocabulary, in either order. */
+const YEARS_NEAR_EXPERIENCE_RE = new RegExp(
+  `\\d{1,2}\\s*\\+?\\s*(?:${DASH}|to)?\\s*\\d{0,2}\\s*\\+?\\s*(?:years?|yrs?)\\b[^.]{0,40}?\\b(?:experience|exp|background)\\b` +
+  `|\\b(?:experience|exp|background)\\b[^.]{0,40}?\\d{1,2}\\s*\\+?\\s*(?:years?|yrs?)\\b`,
+  'i'
+)
+
+/**
+ * The description talks about years of experience, but extraction produced no
+ * requirement confident enough to gate on.
+ *
+ * This exists because the gate had only two responses to a requirement — gate
+ * on it, or ignore it entirely — so every extraction failure silently became a
+ * false clearance, which is the exact harm this product exists to prevent. A
+ * role flagged here must never be presented as plainly cleared; it is shown
+ * with the limit stated, so an unreadable posting costs the candidate a
+ * caveat rather than forty wasted minutes.
+ */
+export function mentionsUnreadExperience(
+  description: string,
+  requirements: TypedRequirement[]
+): boolean {
+  const gated = requirements.some(
+    (r) => r.kind === 'experience_years' && r.confidence >= CONFIDENCE_THRESHOLD
+  )
+  if (gated) return false
+  return YEARS_NEAR_EXPERIENCE_RE.test(description)
 }
 
 const CREDENTIALS: { cred: Credential; re: RegExp }[] = [

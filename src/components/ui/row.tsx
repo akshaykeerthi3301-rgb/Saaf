@@ -34,6 +34,9 @@ type Props = {
   /** The candidate's own city on file, shown next to a location requirement
    *  so a mismatch is checkable at a glance. */
   profileCity?: string
+  /** The posting mentions an experience requirement we could not read
+   *  confidently. Never silently cleared — see roles.unread_experience_mention. */
+  unverified?: boolean
 }
 
 /**
@@ -46,7 +49,7 @@ type Props = {
  */
 export function RoleRow({
   outcome, title, company, city, reason, score, gapYears, applyUrl, onReport,
-  isNew, requirements, refusedOn, profileCity,
+  isNew, requirements, refusedOn, profileCity, unverified,
 }: Props) {
   const heading = (
     <span className={outcome === 'withheld' ? styles.titleWithheld : styles.title}>
@@ -58,6 +61,7 @@ export function RoleRow({
   return (
     <div className={outcome === 'stretch' ? styles.rowStretch : styles.row}>
       {isNew ? <span className={styles.tag}>New</span> : null}
+      {unverified ? <span className={styles.tag}>Check the experience bar</span> : null}
       {outcome === 'stretch' && gapYears !== undefined ? (
         <span className={styles.tag}>
           Stretch · {gapYears} year{gapYears === 1 ? '' : 's'} gap
@@ -74,6 +78,15 @@ export function RoleRow({
         {score !== undefined ? `${score}% — ` : ''}
         {reason}
       </span>
+
+      {/* Stated, not hidden, and never coloured as an error — an unreadable
+          posting is our limitation, not a verdict on the candidate. */}
+      {unverified ? (
+        <span className={styles.reason}>
+          This posting mentions an experience requirement we couldn&apos;t read reliably.
+          Check it against the description before you spend the forty minutes.
+        </span>
+      ) : null}
 
       {requirements && requirements.length > 0 ? (
         <details className={styles.evidence}>

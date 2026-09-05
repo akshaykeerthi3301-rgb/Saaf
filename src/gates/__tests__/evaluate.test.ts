@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { evaluate } from '../evaluate'
-import { extractExperienceYears, extractCredential, resolveInIndia, isRemoteLocation, isHybridLocation } from '../extract'
+import { extractAll, extractExperienceYears, extractCredential, mentionsUnreadExperience, resolveInIndia, isRemoteLocation, isHybridLocation } from '../extract'
 import { extractTitleSeniority } from '../title'
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '../types'
 
@@ -277,5 +277,77 @@ describe('work-mode preference helpers', () => {
   it('detects hybrid, as written in real Indian postings\' location field', () => {
     expect(isHybridLocation('Hybrid in Bangalore')).toBe(true)
     expect(isHybridLocation('Bengaluru, Karnataka')).toBe(false)
+  })
+})
+
+/**
+ * The false-clearance defect (2026-09-05).
+ *
+ * Five of 26 cleared roles stated more experience than the candidate held.
+ * Every one of the 85 tests above passed throughout, because they were written
+ * against invented strings. These are the real phrasings, kept verbatim from
+ * the postings that defeated the extractor.
+ */
+describe('false clearances found in production (2026-09-05)', () => {
+  const twoYears: CandidateProfile = { yearsExperience: 2, city: 'Bengaluru', credential: 'none' }
+
+  const gate = (description: string, title = 'Analyst') =>
+    evaluate(twoYears, extractAll(description, 'Bengaluru, India', title))
+
+  it('reads a requirement under a "What we\'re looking for" header', () => {
+    // The old sentence-wide we/our filter deleted this entire sentence, so the
+    // role cleared with no requirements extracted at all.
+    const r = gate("What We're Looking For : - 7-10 years of experience in Category Management.")
+    expect(r.outcome).toBe('withheld')
+    expect(r.refusedOn).toBe('experience_years')
+  })
+
+  it("reads a requirement under a lowercase \"what we're looking for\" bullet", () => {
+    const r = gate("What we're looking for ● 6–8 years of experience, ideally in consumer products.")
+    expect(r.outcome).toBe('withheld')
+  })
+
+  it('does not let a parenthetical preference void the stated floor', () => {
+    // "preferably" qualifies the domain, not the years. Clause splitting on
+    // commas alone put it in the same clause as the 5 and dropped it to 0.3.
+    const r = gate('Experience 5+ years of experience across high-growth startups (preferably at the intersection of fintech and AI).')
+    expect(r.outcome).toBe('withheld')
+  })
+
+  it('gates on the strictest stated floor, not the most confident one', () => {
+    // The 2-year clause scores higher on its "at least" framing. Substituting
+    // the framed subset for the whole set gated on 2 and cleared the role.
+    const r = gate('4–6 years of professional experience; at least 2 years in strategic enterprise GTM.')
+    expect(r.outcome).not.toBe('cleared')
+  })
+
+  it('still gates on a senior Indian title abbreviation', () => {
+    const r = gate('Own the category end to end.', 'Category Management- DGM/ GM')
+    expect(r.outcome).toBe('withheld')
+    expect(r.refusedOn).toBe('title_seniority')
+  })
+
+  it('an explicit lower floor still beats the title band', () => {
+    // The behaviour the framed rule exists to protect: a Senior Engineer
+    // posting saying 3+ years must not be refused on its title.
+    const r = gate('You must have at least 3 years of experience building web services.', 'Senior Engineer')
+    expect(r.outcome).not.toBe('withheld')
+  })
+
+  it('company tenure is never read as a candidate requirement', () => {
+    const r = gate('We have been building for India for over 10 years. Strong ownership expected.')
+    expect(r.outcome).toBe('cleared')
+  })
+
+  it('flags a description whose experience bar could not be read', () => {
+    // Preference framing on the only stated bar: not gateable, but the
+    // candidate must be told rather than shown a clean clearance.
+    const d = 'Ideally 3-5 years of proven experience in analytics.'
+    expect(mentionsUnreadExperience(d, extractAll(d, 'Bengaluru, India', 'Analyst'))).toBe(true)
+  })
+
+  it('does not flag a description whose bar was read confidently', () => {
+    const d = 'You must have 5+ years of experience in analytics.'
+    expect(mentionsUnreadExperience(d, extractAll(d, 'Bengaluru, India', 'Analyst'))).toBe(false)
   })
 })
