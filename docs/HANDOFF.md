@@ -1,6 +1,8 @@
 # Handoff — what Saaf still needs from you
 
-*Written 2026-09-03. **The MVP is built and deployed** — 53/53 tasks, live at https://saaf-akshay-keerthi.vercel.app. Read alongside `docs/PROJECT-STATE.md`.*
+*Written 2026-09-03, **revised 2026-09-05** for the Stage A–C pivot. The MVP is built and deployed at https://saaf-akshay-keerthi.vercel.app; **Stage C is committed but not yet deployed.** Read alongside `docs/PROJECT-STATE.md` — its **The pivot** section is the substance, this file is only what still needs you.*
+
+> ⚠️ **Saaf ranks; it does not gate.** Stage A reversed that on 2026-09-04. Two entries in §5 below described the pre-pivot product and have been corrected in place rather than deleted, so the reversal stays visible.
 
 Everything below is split by whether **you** have to do it or whether a coding
 session can. Nothing here is blocked on both.
@@ -11,26 +13,27 @@ session can. Nothing here is blocked on both.
 
 These change what gets built. A session should not resolve them alone.
 
-**D1 · The landing page promises document generation, which is out of MVP scope.**
-Benefit 3 on `productos/design/4a-Landing-Page.md` reads *"Nothing invented in your
-documents."* Document generation and the fabrication guard are P2 (see PRD §13).
-Either that copy comes off the page, or the feature comes into scope.
-*Recommendation: cut the copy.* Moving words is cheap; shipping a fabrication
-guard you cannot trust is not.
-**Blocks:** TASK-040, TASK-053.
+**D1 · ~~The landing page promises document generation~~ — RESOLVED 2026-09-03.**
+Benefit 3 (*"Nothing invented in your documents"*) was cut; the page runs three
+benefits. Restore it only when document generation actually ships.
+**Blocks:** nothing.
 
-**D2 · The withheld list is capped at 50 rows.**
-On a thin day that could be 50 struck-through rows against 3 cleared ones.
-*Recommendation: keep 50 for launch and instrument it.* If withheld-section
-engagement is high but session length collapses, drop to 20 with a remainder
-count. **Blocks:** nothing. Revisit after the first cohort.
+**D2 · ~~The withheld list is capped at 50 rows~~ — MOOT since the pivot.**
+There is no withheld list. The live question underneath it moved rather than
+disappeared: **how far down the ranked list is worth showing.** A candidate whose
+search matches 228 of 650 roles does not want 228 rows, and a tail of weak
+matches costs the same attention the withheld list would have. The page applies **no limit at all** — it renders every
+scored row, ordered by score; the only bound is upstream, at the 500 roles
+`evaluate-user` writes per candidate. *Recommendation: decide it against real session data, not in advance.*
+**Blocks:** nothing. Revisit after the first cohort.
 
 **D3 · Which companies go in the registry.**
 Phase 3 needs 30–40 Indian company ATS boards. A session can seed plausible ones
 from public sources, but you may have opinions about which employers your
 candidates actually want. **Blocks:** TASK-031 quality, not its existence.
 
-**D5 · The ingest scheduler has a 60-second ceiling — and now holds the service key.**
+**D5 · The ingest scheduler holds the service key. ~~And has a 60-second ceiling.~~**
+*Revised 2026-09-05: Stage B removed the deadline; the key placement is what's left.*
 Moving the scheduler to Vercel had a second consequence beyond the timeout. The
 ingest writes roles, requirements and gate results, all of which RLS blocks for
 ordinary clients, so `SUPABASE_SERVICE_ROLE_KEY` now lives in the Vercel
@@ -42,12 +45,18 @@ and the cron route requiring a bearer token. **Migrating to a Supabase Edge
 Function removes the key from Vercel entirely**, which is a second reason to do
 it beyond the timeout.
 
-Vercel Hobby caps a function at 60s and fires cron once daily, so the work cannot
-be split across invocations. The run takes ~34s at 20 boards. **It will time out
-past roughly 30 boards** — and growing the registry is the moat, so this is a
-*when*. Migrate to a Supabase Edge Function on `pg_cron` (150s) before then.
-*Recommendation: do it at 28 boards, not at 31.*
-**Blocks:** nothing today. Everything, quietly, the day the registry outgrows it.
+~~Vercel Hobby caps a function at 60s and fires cron once daily... it will time out
+past roughly 30 boards.~~ **Stage B changed this.** Board fetching runs as a
+concurrency-6 pool — measured 7s across the same 20 boards, down from 34s — and
+the run stops *starting* new boards after 38s, ordering them least-recently-ingested
+first. Outgrowing the budget now degrades into rotation (what's skipped today goes
+first tomorrow) rather than into a hard timeout. **There is no longer a board count
+that breaks the scheduler**, so "do it at 28 boards" no longer applies; re-measure
+before treating any number as a ceiling.
+
+*Recommendation: still migrate, but for the key, not the clock.* A Supabase Edge
+Function on `pg_cron` removes `SUPABASE_SERVICE_ROLE_KEY` from Vercel entirely.
+**Blocks:** nothing. It is now a security-posture improvement on your own schedule.
 
 **D4 · A domain, before beta.**
 Resend will only deliver to your own account email until a domain is verified,
@@ -62,7 +71,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 
 | # | Action | Needed for | Notes |
 |---|---|---|---|
-| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. Migrations `0001`–`0003` are already applied |
+| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **`0001`–`0014` are all applied** — `0014` (candidate skills/domain) landed 2026-09-05 and was verified live |
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
@@ -73,19 +82,27 @@ A session cannot do these — they need your accounts, your browser, or your car
 
 ## 3. What a session can do with no further input
 
-**Phase 3 — the pipeline (9 tasks), entirely unblocked.** Board registry, six
-provider adapters, daily ingest with India filtering and 30-day pruning, gate
-recompute, audit aggregation, the GitHub Actions workflow file, and swapping the
-fixture for live data.
+*Phases 3–5 are complete; TASK-039 (seven-day ingest stability) is the one
+roadmap box still open, and it needs elapsed time rather than work.* What a
+session can pick up now:
 
-**Phase 4 — trust surfaces (8 tasks), 7 of 8 unblocked.** Public audit page,
-profile editing, one-click deletion, stretch tier, daily digest, and the
-"gate not live for your function" notice. Only the landing page waits on **D1**.
+**Deploy Stage C.** The only unshipped code. Safe on its own — migration 0014 is
+applied, and the LLM parse stays inert until `GEMINI_API_KEY` is set. Deploy
+first, set the key second, so the honest privacy copy is live before the
+behaviour it describes.
 
-**Phase 5 — launch readiness (7 tasks), 5 unblocked.** Accessibility pass,
-performance pass, security review, magic-moment timing, and success-criteria
-verification. The refusal screenshot and the landing-page reconciliation depend
-on **D1** and **A5**.
+**Grow the registry** (`npm run registry:discover`). 20 boards today. No longer
+capped by the scheduler — see the revised D5.
+
+**Close the silent function gap, or state it.** `channel_budget`,
+`institute_tier` and `hr_track` are extracted by nothing and scored by nothing,
+onboarding no longer asks the per-function question, and the notice that used to
+make that visible is gone. Karthik, Priya and Meera are ranked on title,
+seniority and skills like everyone else, and are not told. Either build the
+reading, or say so on their shortlist.
+
+**Retire the `rolesWithheld` field** on `/api/audit/today`. It is hard-written as
+0 by `ingest/audit.ts` and read by nothing.
 
 ---
 
@@ -93,20 +110,24 @@ on **D1** and **A5**.
 
 Say **"continue"**. A session should then:
 
-1. Read `docs/PROJECT-STATE.md` and this file.
-2. Open `docs/ROADMAP.md`, find the first unchecked task, and work from there.
-3. Read only the Reference sections that task's phase lists — the PRD is ~10,000
-   words and loading all of it wastes context that belongs to code.
-4. Run `npm test`, `npm run lint`, `npm run typecheck` and `npm run verify:rls`
-   before committing anything.
+1. Read `docs/PROJECT-STATE.md` — **including its *The pivot* section** — and this
+   file. The roadmap and the PRD were written for the gating product and are
+   governed by the pivot, not the other way round.
+2. Pick from §3 above. The roadmap has one box left and it is a waiting task.
+3. `nvm use` first — Node 22.23.2 is pinned in `.nvmrc` and this shell defaults
+   to 18.
+4. Run `npm test` (130 tests), `npm run lint`, `npm run typecheck` and
+   `npm run verify:rls` before committing anything.
 
 **Useful commands**
 
 ```
 npm run dev              # localhost:3000
-npm test                 # 48 tests
+npm test                 # 130 tests
 npm run verify:rls       # proves RLS denies, by seeding a row first
-npm run gates:demo       # the gate engine against 211 real postings
+npm run gates:demo       # requirement extraction against 211 real postings.
+                         # The ONLY live caller of src/gates/evaluate.ts's
+                         # verdict path — no app code reaches it any more
 npm run db:load-fixture   # reload roles into Supabase
 npm run db:seed-test-user # recreate the test profile
 ```
@@ -124,18 +145,38 @@ Written down because each was reached deliberately and against an obvious defaul
 - **`boards` has RLS enabled with zero policies.** That is correct — the registry
   is the moat. Company names are denormalised onto `roles` precisely so nobody
   needs to read `boards`.
-- **The confidence threshold is 0.7, and unframed statements score 0.75.** An
-  earlier 0.6 default cleared 109 of 121 roles for a two-year candidate,
-  including Staff and Principal engineering roles. Lowering it reintroduces
-  false clearances, which is the original harm.
-- **Title seniority gates on the title, never on an invented years figure.** The
-  reason says what the title is and that the posting states no year count.
+- **The confidence threshold is 0.7, and an unframed stated minimum scores 0.75**
+  (`src/gates/extract.ts`). An earlier 0.6 default cleared 109 of 121 roles for a
+  two-year candidate, including Staff and Principal engineering roles. It now
+  decides whether a requirement is read into the *score* rather than into a
+  refusal, but lowering it still means believing text the extractor barely read.
+- **Seniority is judged on the title, never on an invented years figure.** The
+  posting's own words are retrieval; a year count nobody wrote down is inference.
 - **"Assistant Manager" and "Senior Associate" are junior Indian titles** and are
-  deliberately not gated. Matching bare "Manager" or "Director" manufactures
-  false refusals.
+  deliberately not penalised. Matching bare "Manager" or "Director" manufactures
+  false negatives on exactly the jobs the candidate should see.
 - **Parsed résumé fields never touch the database before confirmation**, because
-  the upload screen promises only confirmed fields are stored.
-- **No language model runs anywhere in the MVP.** Refusal reasons are templated
-  from the gate that fired.
-- **Marketing, consulting and HR users are told their gate is not live yet**
-  rather than silently having the years gate applied.
+  the upload screen promises only confirmed fields are stored. Stage C makes this
+  load-bearing rather than tidy: skills feed the score directly, so a hallucinated
+  one would move real rankings, and the confirm screen is what contains it.
+- ~~**No language model runs anywhere in the MVP.**~~ **Superseded 2026-09-05
+  (Stage C), and replaced by a narrower rule that must hold:** a model **reads,
+  never decides.** `src/lib/parse/llm.ts` reads skills and domain off the résumé;
+  scoring stays deterministic code. The call is **strictly additive** — no key, a
+  timeout, malformed JSON or any error returns null and the regex parser's result
+  stands. Nothing may make the upload path depend on the model.
+- ~~**Marketing, consulting and HR users are told their gate is not live yet.**~~
+  **No longer true, and not yet replaced.** There are no gates, onboarding asks
+  one unconditional credential question, and those functions' requirement kinds
+  are extracted by nothing and scored by nothing. The gap is real and now silent.
+  Do not treat its absence as a decision — see PROJECT-STATE open question 4.
+- **Nothing is withheld.** A role the candidate cannot get scores badly and sinks;
+  it is never hidden. If a future change needs to hide a row, that is a product
+  reversal and belongs in PROJECT-STATE's locked table, not in a patch.
+- **A thin list must never read as a verdict on the candidate.** The arithmetic
+  attributes the shortfall to registry coverage. That principle predates the
+  pivot and survived it intact — it is the one thing both products share.
+- **Copy ships in the same commit as the behaviour it describes.** Stage C
+  rewrote the privacy page in its own commit because the old text became false the
+  moment the code merged. The deploy order matters for the same reason: Stage C's
+  build goes out **before** `GEMINI_API_KEY` is set, never after.

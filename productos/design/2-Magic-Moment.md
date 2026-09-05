@@ -2,6 +2,11 @@
 
 *Drafted: September 2026. Generated from `docs/PRODUCT.md` and `productos/design/1-Product-Identity.md`, with live research into 2026 activation benchmarks and comparable aha moments.*
 
+> ⚠️ **VOID as of 2026-09-04 — read the amendment before this section.** The
+> recommended moment below depends on a withheld section the product no longer
+> has. Full reasoning under *Amendment* further down; `docs/PROJECT-STATE.md`
+> § The pivot governs.
+
 ---
 
 ## The recommended magic moment
@@ -19,6 +24,40 @@ It is the only candidate where the aha *is* the mechanism. The gate's sole visib
 The specification already exists in the customer research. `2-Customer-Persona.md` §9 names the objection that kills the deal — *"Naukri already says it matches me. Why would yours be any different?"* — and prescribes the answer: **do not claim it, demonstrate it.** Show a role the portals recommended them for, withheld here, with the reason stated. This magic moment is that prescription, engineered into the first session.
 
 **This is a committed hypothesis, not a proven truth.** No user has seen this product. It is the first bet, to be tested against the metric above and replaced by Candidate 3 if it fails.
+
+---
+
+## ⚠️ Amendment — 2026-09-04: the primary magic moment is void
+
+**Candidate 1 cannot happen any more.** Stage A replaced gating with ranking
+(`docs/PROJECT-STATE.md` § The pivot): nothing is withheld, there is no withheld
+section, and no refusal for a candidate to recognise as true. This document's own
+argument for Candidate 1 was that *"the aha **is** the mechanism — the gate's sole
+visible output is a refusal."* The mechanism changed, so the aha went with it.
+
+**What follows from that, and what does not:**
+
+- **Candidate 2 does not inherit the slot.** Its own two structural blockers are
+  untouched — it asks for a résumé before the confidentiality guarantee is made,
+  and the portal comparison needs LinkedIn or Naukri data that a locked decision
+  excludes.
+- **Candidate 3 is unaffected and still worth keeping.** The honest arithmetic
+  changed shape — from a subtraction to a narrowing (*indexed · matching your
+  search · a strong fit*) — but "the product did not inflate the list, and the
+  shortfall is our coverage" survived the pivot exactly.
+- **The nearest live successor is the itemised score**: a candidate opens the
+  working behind a number and finds a component they know is true — including the
+  gap that cost them points, stated rather than hidden. It is reachable in the
+  same first session and the same 90 seconds, it is what the landing page already
+  contrasts against an opaque portal badge, and it keeps the property that made
+  Candidate 1 strong: the value is *verifiability*, not the answer.
+- **It is not yet instrumented, and not yet decided.** There is no
+  `breakdown_opened` event, `withheld_section_engaged` fires from nothing, and the
+  §Success metric below measures a section that no longer exists. Naming the
+  successor is a founder decision — see `docs/VERIFICATION.md` § 2.
+
+*The candidates below are preserved as written. Read them as the record of a
+decision that has been overtaken, not as current instructions.*
 
 ---
 

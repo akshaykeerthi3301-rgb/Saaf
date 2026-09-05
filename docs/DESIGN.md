@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Saaf
-description: A flat, paper-toned, sharp-cornered design system for a product whose core visual act is refusing to show something. Monochrome by construction, hairline-ruled, no shadows, no rounding — derived from zerodha.tech and the plain-text credibility of a public notice.
+description: A flat, paper-toned, sharp-cornered design system for a product whose core visual act is publishing the working behind a number. (Amended 2026-09-04 — it was "refusing to show something" until the product stopped refusing.) Monochrome by construction, hairline-ruled, no shadows, no rounding — derived from zerodha.tech and the plain-text credibility of a public notice.
 colors:
   primary: "#141414"
   on-primary: "#F0F0F0"
@@ -130,12 +130,15 @@ components:
     typography: "{typography.body-lg}"
     rounded: "{rounded.none}"
     padding: 16px 0
+  # RETIRED 2026-09-04 (Stage A) — nothing is withheld. Kept, drawn nowhere.
   row-role-withheld:
     backgroundColor: transparent
     textColor: "{colors.on-surface-variant}"
     typography: "{typography.body-lg}"
     rounded: "{rounded.none}"
     padding: 16px 0
+  # RETIRED 2026-09-04 (Stage A) — a stretch tier only means something against
+  # a refusal. Kept, drawn nowhere; surface-container-high is now unused here.
   row-role-stretch:
     backgroundColor: "{colors.surface-container-high}"
     textColor: "{colors.on-surface}"
@@ -172,9 +175,9 @@ The palette is monochrome by construction, derived from computed styles on `zero
 - **Surface (#FFFFFF):** True white, used only for genuinely elevated content — input fields and modal sheets — so that "raised" means something.
 - **Surface-container-high (#E2E2D7):** The bone tint, the single non-grey surface in the system, lifted from the reference's one panel. Reserved for the **Stretch tier** — the only place the product shows a role the candidate does not fully clear.
 - **Primary (#141414):** Near-black ink, not pure black. Headlines, body, primary buttons, and links. Links are undecorated ink, following the reference — no blue, no underline.
-- **On-surface-variant (#5F5F5F):** Secondary text — the *reason* line on every recommendation, timestamps, metadata, and the text of a withheld role.
+- **On-surface-variant (#5F5F5F):** Secondary text — the *reason* line on every recommendation, timestamps, and metadata.
 - **Outline (#7A7A7A) vs Outline-variant (#C5C5C5):** A deliberate split. `outline-variant` is the soft hairline from the reference, used for decorative dividers between rows, where WCAG's non-text contrast rule does not apply. `outline` is darker and reserved for **interactive component boundaries** — input borders, focus rings — where 3:1 is required. It measures 3.77:1 on neutral, 4.29:1 on surface, and 3.29:1 on the bone container.
-- **Error (#8C2F22):** A low-chroma oxide red, the one chromatic value in the system. It is reserved **exclusively for system errors** — failed form validation, a broken upload, a destructive confirmation. It is **never** used for a gate outcome. A refused role is not an error; it is a correct answer, and colouring it red would reframe an honest no as a failure.
+- **Error (#8C2F22):** A low-chroma oxide red, the one chromatic value in the system. It is reserved **exclusively for system errors** — failed form validation, a broken upload, a destructive confirmation. It is **never** used for a match outcome. A badly-scored role is not an error; it is a correct answer, and colouring it red would reframe an honest number as a failure.
 
 Dark-mode values are carried in the same map under a `dark-` prefix (`dark-surface`, `dark-on-surface`, and so on) so both palettes stay machine-readable in one flat schema. Every foreground/background pair in both modes has been verified: body text ranges from 4.89:1 to 18.42:1, and no pair falls below the 4.5:1 AA threshold.
 
@@ -186,7 +189,7 @@ Public Sans is not a neutral default here — it is the typeface of United State
 
 - **Display (44px/300)** carries the light weight observed on the reference, where 182 of 210 elements were weight 300. That lightness is kept **only at display size**. Body drops to 400, because 300 is fragile at 15–17px on the low-DPI Windows displays a large share of Indian office users are on. This is a deliberate deviation from the anchor.
 - **Body-lg (17px/1.6)** is the reference's exact body size and rhythm, and is the default for role listings and long-form reading.
-- **Label-sm (11px/600, 0.08em, uppercase)** carries metadata, gate-type tags, and column headers on the audit table.
+- **Label-sm (11px/600, 0.08em, uppercase)** carries metadata, the match-band and status tags on a role row, and column headers on the audit table.
 - **Numeric-md (JetBrains Mono 15px)** exists for one reason: the arithmetic device. `3,200 → 47 → 3` is the brand's signature figure, and a monospaced tabular face makes the subtraction legible and columns align. Every number in a table, an audit row, or an empty state uses it. Set `font-variant-numeric: tabular-nums` alongside.
 
 ## Layout & Spacing
@@ -226,26 +229,41 @@ Primary buttons are solid `#141414` ink with `#F0F0F0` text, square-cornered, 44
 
 Input fields are white on the neutral ground with a 1px `outline` border at 2px radius. Focus does not add a glow or a coloured ring — the border thickens to 2px in `primary` ink. Labels sit above the field; helper text sits below in `body-sm` `on-surface-variant`. Error states swap the border to `error` and surface the message below in `error` — the only place chromatic colour appears in the interface.
 
-### Role rows — the three states
+### Role rows — one ranked state
 
-These three are the product, and they are the reason this system exists.
+*Amended 2026-09-04 (Stage A). The three-state row is retired: the product ranks
+rather than gates, so there is no verdict to draw. `RoleCard`
+(`src/components/ui/role-card.tsx`) is the single shipped row.*
 
-**`row-role`** is the default: a role that cleared every gate. Ink text at `body-lg`, hairline rule beneath, with its score and one-line reason in `on-surface-variant` `body-sm` underneath. Nothing decorates it — a role that qualifies simply appears.
+**`row-role`** is now the only role row, and its job is not to deliver a verdict
+but to show a score and let the candidate check the arithmetic behind it. Ink
+text at `body-lg`, hairline rule beneath, the score in tabular numerals followed
+by its one-line reason in `on-surface-variant` `body-sm`. `label-sm` tags carry
+the band — **Strong match** (≥75), **Worth a look** (≥50), **Weak match** below —
+plus *New*, *Salary not stated*, and *Check the experience bar* when the posting
+stated a bar the extractor could not read confidently. Nothing else decorates it.
 
-**`row-role-withheld`** is a role the gate refused. It is **drawn, not hidden.** The title is set in `on-surface-variant` with a 1px `line-through` in the same colour, and the reason follows in `body-sm` — *"asks for a chartered accountant; your profile doesn't carry one."* No red, no warning icon, no alert styling. The refusal reads as a stated fact, which is the entire brand position: colouring it as an error would make an honest answer look like a failure.
+**The breakdown is not decoration.** The score it replaced was
+`70 + posting verbosity` and never read the candidate at all; a bare number would
+hide exactly that class of defect again. Every component shows the sentence it
+was read from.
 
-**`row-role-stretch`** is the only experience-typed near-miss the product will show, capped at a two-year gap. It sits on the `surface-container-high` bone tint with 16px padding — the single tinted surface in the system — and carries a `label-sm` uppercase "STRETCH" tag. The tint exists so that a stretch role can never be mistaken for a cleared one at a glance, without resorting to colour coding.
+**Retired:** ~~`row-role-withheld`~~ (nothing is withheld — no strike-through, no
+refusal line) and ~~`row-role-stretch`~~ (a stretch tier only means something
+against a refusal; `surface-container-high` is consequently unused by the role
+list). The rule they existed to serve survives and now belongs to the band tags:
+a weak match must be **legible as weak at a glance, without colour coding.**
 
 ### Arithmetic figure
 
-`arithmetic-figure` renders the empty-state and audit numbers in JetBrains Mono: `3,200 indexed · 47 in your function · 3 cleared your experience band`. It is the brand's signature graphic device and appears on the empty state, the gate audit page, and the daily digest. It always shows the **subtraction**, never only the total — the falling number is the argument.
+`arithmetic-figure` renders the empty-state and audit numbers in JetBrains Mono. *Amended 2026-09-04:* it used to show a **subtraction** — indexed, then withheld — because refusal was the product. Under ranking nothing is withheld, so the figure is a **narrowing**: `650 indexed today · 47 matching your search · 3 a strong fit`. It is still the brand's signature graphic device and still appears on the empty state, the index audit page and the daily digest, and the rule is unchanged in substance — **never only the total.** The falling number is the argument.
 
 ## Do's and Don'ts
 
 **Do**
 
 - Show the arithmetic. Every count that narrows is displayed as a sequence, never as a single total.
-- Draw refusals. A withheld role appears struck through with its reason stated, never silently omitted.
+- Show the working. Every score is displayed with the components that produced it and the sentence each was read from — a number never appears alone. *(Replaces "draw refusals", 2026-09-04: nothing is withheld any more.)*
 - Attribute thinness to coverage. A short list says "that's a thin day for our coverage, not a verdict on you."
 - Use rows and hairlines for the role list. Reach for a card only when content is genuinely a self-contained object.
 - Set every number in `numeric-md` with tabular numerals so columns align down the page.
@@ -253,7 +271,7 @@ These three are the product, and they are the reason this system exists.
 
 **Don't**
 
-- Don't use `error` red for a gate outcome. It is reserved for system failures; a refusal is a correct answer.
+- Don't use `error` red for a match outcome. It is reserved for system failures. A low score is a correct answer, not a failure — colouring it red would reframe an honest number as an alarm.
 - Don't add a shadow — not one. The anti-reference has 196 of them; this system has zero. If something needs to separate, it gets a hairline or a lighter surface.
 - Don't round a corner beyond the 2px reserved for inputs. There is no `md` radius on purpose, and no pills — the anti-reference has 473 pill-shaped elements and eight competing radii.
 - Don't introduce a second chromatic accent, and never reach for a Tailwind default green/red/amber trio. The system is monochrome and the one oxide red is already spoken for.

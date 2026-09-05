@@ -1,10 +1,16 @@
 # Verification — the five success criteria
 
 *Measured 2026-09-03 against the production build. Re-run before launch.*
+*Reconciled 2026-09-05 for the Stage A pivot — see `PROJECT-STATE.md` § The pivot.*
 
 Three criteria are verifiable today. Two need real users, and are marked
 **pending cohort** rather than ticked — a criterion that needs people cannot be
 satisfied by a developer clicking through it.
+
+⚠️ **The pivot voided criterion 2 rather than delaying it.** It measured a
+section the product no longer has. It is rewritten below as *unmeasurable, with
+a named successor that is not yet instrumented* — not carried forward as if it
+were still merely pending.
 
 ---
 
@@ -13,7 +19,7 @@ satisfied by a developer clicking through it.
 | Step | Measured |
 |---|---|
 | Five onboarding screens, server render | **577 ms** total |
-| Gate evaluation, 522 roles | **1,138 ms** |
+| Match scoring, 522 roles *(measured pre-pivot as gate evaluation)* | **1,138 ms** |
 | Shortlist render | **673 ms** |
 | **Technical total** | **≈2.4 s** |
 
@@ -25,16 +31,22 @@ mobile data. The technical path cannot be the bottleneck; the human path still
 needs observing once there are users. PostHog measures it: the funnel from
 `onboarding_started` to `shortlist_viewed`.
 
-## 2. ≥60% engage the withheld section, <5% file a report ⏳ pending cohort
+## 2. ~~≥60% engage the withheld section, <5% file a report~~ ❌ voided by the pivot
 
-**Instrumentation is ready and verified.** Six events fire —
-`onboarding_started`, `resume_uploaded`, `profile_confirmed`,
-`shortlist_viewed`, `withheld_section_engaged`, `refusal_reported` — and
-`withheld_section_engaged` fires once per session on intersection.
+**This criterion no longer has a subject.** Nothing is withheld, so there is no
+withheld section to engage with. `withheld_section_engaged` survives in the
+`AnalyticsEvent` union in `src/lib/analytics.ts` but **nothing fires it** — the
+component that did is orphaned. `shortlist_viewed` still fires, always with
+`withheld: 0`.
 
-The metric itself needs real users. It is deliberately two-sided: engagement
-alone would look like success while the gate was quietly wrong, so the report
-rate is the other half.
+**The successor, and it is not built yet.** The two-sidedness was the valuable
+part: engagement alone would look like success while the gate was quietly
+wrong, so a report rate was the other half. Under ranking the equivalent pair is
+*do candidates open the score breakdown* — the working behind the number, which
+is the whole claim — and *do they flag a badly-ranked role*. The report path
+exists (`src/app/actions/report-refusal.ts`, kept deliberately) but is wired to
+nothing, and there is no breakdown-opened event. **Neither half is instrumented.
+Do not report this criterion as pending-cohort; it is pending code.**
 
 ## 3. 100% eligibility rate ⏳ pending cohort
 
@@ -49,24 +61,31 @@ Verified at 375 px:
 
 - `scrollWidth === innerWidth` — **no horizontal overflow**
 - No fixed width above 390 px anywhere in the rendered markup
-- The arithmetic line, including the withheld count, sits above the fold
-- The withheld section is open on first paint, not behind a `<details>`
-- The hero's side-by-side refusal stacks vertically
+- The arithmetic line sits above the fold *(it now reads indexed · matching ·
+  strong fit — a narrowing, not a subtraction)*
+- ~~The withheld section is open on first paint~~ — **no such section exists**
+- The hero's side-by-side stacks vertically *(it now contrasts an opaque
+  portal badge with an itemised score; re-verify at 375 px after the Stage C
+  deploy)*
 
 ## 5. Seven consecutive clean ingest runs ⏳ needs elapsed time
 
-The pipeline runs correctly — 21/21 boards, 964 roles, 25 s — but "seven
-consecutive days without intervention" cannot be compressed. It starts when the
-repo is pushed and the Actions secret is set (`HANDOFF` A3/A4).
+The pipeline runs correctly — and faster since Stage B, which took the same 20
+boards from 34 s to 7 s — but "seven consecutive days without intervention"
+cannot be compressed. **The runner is Vercel Cron, not GitHub Actions** (Actions
+are disabled on this account, `HTTP 422`), so the clock starts from the last
+production deploy rather than from A3/A4.
 
 ---
 
 ## Also verified
 
-**Accessibility (WCAG 2.1 AA).** No `aria-disabled` and no `<del>` tags on
-withheld rows; every refusal is stated in text, so a screen-reader user learns a
-role was withheld *and why* from the words rather than a strike-through they
-cannot perceive. Correct heading order, all controls labelled, no empty buttons.
+**Accessibility (WCAG 2.1 AA).** Measured pre-pivot, and half of what it
+measured is gone: there are no withheld rows and no strike-through to perceive.
+What carries over is the principle and the structural findings — correct heading
+order, all controls labelled, no empty buttons, and **every judgement stated in
+text rather than in styling**, which now applies to the score breakdown.
+**Re-run against the ranked shortlist before launch.**
 
 **Performance.** 135.7 KB gzipped blocks first paint against a 200 KB budget;
 DOMContentLoaded at 80 ms. Sentry and PostHog are deferred to idle.
@@ -75,10 +94,13 @@ DOMContentLoaded at 80 ms. Sentry and PostHog are deferred to idle.
 service-role reachability, the open-source gate split, résumé handling, auth,
 and third-party collection.
 
-**Landing page reconciliation.** All 15 claims trace to shipped, tested code.
-The document-generation promise is cut (Open Question Q1). Two features ship
-*without* being claimed — the stretch tier and the under-served-function notice
-— which is the safe direction.
+**Landing page reconciliation.** Measured 2026-09-03 against the gating page:
+all 15 claims traced to shipped code, and the document-generation promise was
+cut (Open Question Q1). **Stage A rewrote the page** — the headline promise
+*"nothing in your list is a job you can't get"* could not survive ranking — so
+the claim-by-claim reconciliation is stale and needs re-running against the
+current copy. The two features that shipped unclaimed no longer exist: the
+stretch tier is moot and the under-served-function notice is gone.
 
 ---
 
@@ -87,7 +109,8 @@ The document-generation promise is cut (Open Question Q1). Two features ship
 ```
 npm run audit:security   # 16 security checks
 npm run verify:rls       # proves RLS denies, by seeding a row first
-npm test                 # 48 tests, the gate engine and the parser
-npm run gates:demo       # the engine against real postings
+npm test                 # 130 tests, extraction, scoring and the parser
+npm run gates:demo       # extraction against real postings — the only live
+                         # caller of the old verdict path
 npm run ingest           # the full daily pipeline
 ```

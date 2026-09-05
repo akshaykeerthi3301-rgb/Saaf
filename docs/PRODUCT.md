@@ -8,6 +8,30 @@
 
 ---
 
+## ⚠️ Amendment — 2026-09-04: Saaf ranks, it does not gate
+
+*This document was written for the gating product. The build reversed that on
+2026-09-04 (Stage A, commit `ef47a45`), deliberately and with the reversal
+recorded. The passages below are now **false as written**, and are listed
+precisely rather than quietly edited, because what replaces the argument is a
+strategy decision and not a documentation chore.*
+
+| Passage | What it says | What is true |
+|---|---|---|
+| **Summary** | *"before anything gets scored it removes every role the candidate is structurally disqualified from"* | Nothing is removed. Every role scoped to the candidate's preferred role is scored on six weighted components and ranked; a role they cannot get scores badly and sinks, with the working shown. |
+| **Mechanism**, layer 3 | *"gates before scores… a disqualifying role cannot surface however well its skills score"* | Requirement extraction still reads the posting and still types what it finds, but it feeds the **score**. The Stretch tier is moot — it only meant something against a refusal. |
+| **Mechanism**, layer 4 | *"the only place a model is used at all"* is explanation | Since Stage C a model also **reads** the résumé for skills and domain (`src/lib/parse/llm.ts`). It reads; it never decides. Scoring is deterministic code. |
+| **Why this works** | *"a one-prompt ChatGPT user… will reproduce the fifteen-year bug exactly, because a model weighs where this product gates"* | **This is the load-bearing casualty.** The differentiation rested on gating where others weigh. Saaf now weighs too. What is left to defend is narrower and still real: the registry, the daily memory, the itemised score that shows its working, and the legal supply chain. **It is not the same argument, and it has not yet been rewritten.** |
+| **Proof** | The refusal screenshot as first earnable evidence | **Unbuildable** — the product no longer refuses. Its successor already renders: an opaque portal "TOP APPLICANT" badge against a 62 that breaks into its parts. |
+| **Honest empty state** | *"3 cleared your experience band"* | Now a narrowing, not a subtraction: *indexed · matching your search · a strong fit*. The principle it protects — a thin list is our coverage problem, never a verdict on the candidate — survived the pivot intact. |
+
+**The open question this leaves:** *why Saaf rather than Jobright, now that both
+rank?* That is a positioning decision for the founder, not something a build
+session should answer by rewriting this page. Until it is answered, treat the
+"Why this works" section as **known-stale**.
+
+---
+
 ## Summary
 
 **Saaf** is a free daily job shortlist for Indian professionals in their first five years of work — the ones applying to 30–50 roles a quarter and hearing nothing back. It pulls openings from a curated registry of Indian companies' own hiring boards, and before anything gets scored it removes every role the candidate is structurally disqualified from: the posting that wants fifteen years of experience when they have two, the one that requires a chartered accountancy qualification they don't hold, the one that asks for a paid-media budget they've never been given. What survives is ranked by honest odds, and every role arrives with the single line explaining the number — *"72% — go-to-market and stakeholder management match; the job description's three-year floor is your one gap."* When a role is worth the forty minutes, Saaf will draft a résumé and cover letter tailored to that specific posting — but only when asked, and only by reordering, trimming and re-wording facts already in the profile the candidate confirmed; a fabrication guard blocks any generated document that makes a claim the profile doesn't support, and the remedy is to add the fact, never to let the model assert it. It stops there: this is a pre-application tool, not an auto-apply bot, and it answers one question — *which of these deserves my next forty minutes?* It is free permanently, with no card, no ads and no paid tier, and it is built as a portfolio artifact held to the standards of a real product.

@@ -4,6 +4,48 @@
 
 ---
 
+## ⚠️ Amendment — 2026-09-04/05: the gate specification is superseded
+
+**Read this before any section below.** This PRD specifies a product that gates.
+Stages A–C reversed that, deliberately; `docs/PROJECT-STATE.md` § The pivot is
+the governing record. The spec is kept whole rather than rewritten — it is
+~10,000 words and most of it (data model, auth, API shape, error handling,
+non-functional requirements) is unaffected — but where it and the pivot disagree,
+**the pivot wins.**
+
+**What changed, by section:**
+
+- **§1 Overview, §6 Functional Requirements, §8 UI/UX.** Every clearance verdict,
+  withheld row, refusal reason and stretch tier is history. `src/match/score.ts`
+  scores six weighted components summing to 100 — title 28, seniority 25, skills
+  20, location 10, credential 10, work mode 7 — normalised over the components
+  that apply, and every role scoped to the candidate's preferred role is shown in
+  rank order. The three-section shortlist is one ranked list.
+- **§2 Technical Architecture.** Requirement extraction (`src/gates/extract.ts`)
+  survives and still types what it reads; the verdict path
+  (`src/gates/evaluate.ts`) has one live caller left, the fixture demo. Ingest is
+  a concurrency-6 pool with a 38 s start-cutoff, not a sequential run.
+- **§3 Data Model.** `gate_results.score_breakdown` now carries the itemised
+  score. `profiles.skills` and `profiles.domain` were added by migration 0014.
+  `profiles.channel_budget` / `institute_tier` / `hr_track` (migration 0008) are
+  now written by nothing and read by nothing — onboarding stopped branching per
+  function.
+- **§4 API Specification.** `/api/audit/today` still returns a `rolesWithheld`
+  field; it is hard-written as 0 and read by nothing.
+- **§12 Dependencies.** A language model is now in the résumé path — Gemini Flash
+  reads skills and domain (`src/lib/parse/llm.ts`), strictly additive, null on any
+  failure. §13's "no LLM in the MVP" line is superseded by a narrower rule: a
+  model **reads, never decides.**
+- **§13 Out of Scope.** The deferred *gating* logic for marketing, consulting and
+  HR is not merely still deferred — there is no gate to defer it into, and the
+  score has no component for those requirement kinds either.
+
+**Unaffected and still authoritative:** the data model's shape and RLS posture,
+auth (§9), edge cases (§11), non-functional requirements (§7), and the standing
+rule that a backend failure must never render as a verdict about the candidate.
+
+---
+
 ## 1. Overview
 
 ### Product Summary
@@ -80,7 +122,7 @@ flowchart TD
     class DIGEST p1
 ```
 
-Three things to read off this diagram. **The résumé file never reaches the database** — it is parsed in memory inside a server action and discarded; only confirmed profile fields persist. **Gate evaluation runs in the cron, not on request** — the shortlist is a read of precomputed rows, which is what makes the 90-second target achievable. **No language model appears anywhere in the MVP.**
+Three things to read off this diagram. **The résumé file never reaches the database** — it is parsed in memory inside a server action and discarded; only confirmed profile fields persist. **Scoring runs in the cron, not on request** — the shortlist is a read of precomputed rows, which is what makes the 90-second target achievable. ~~**No language model appears anywhere in the MVP.**~~ *Superseded 2026-09-05 (Stage C): a model reads skills and domain off the résumé inside the same server action, before anything persists. It reads; it never decides. The diagram's first claim is unchanged — the file still never reaches the database.*
 
 ### Chosen Stack
 

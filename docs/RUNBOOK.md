@@ -91,6 +91,15 @@ has to be reachable there. It is never set for preview or development, has no
 `src/app` and `src/components` from importing the client that uses it. Migrating
 the scheduler to a Supabase Edge Function would remove it from Vercel entirely.
 
+**`GEMINI_API_KEY` — not set anywhere, deliberately, as of 2026-09-05.** Stage C
+added a model that reads skills and domain off the résumé
+(`src/lib/parse/llm.ts`). It is strictly additive: with no key the call is never
+made, the regex parser's result stands, and nothing about the upload path
+changes. **Set it only after the Stage C build is deployed**, never before — the
+production privacy page must already name Google as a recipient before any
+résumé text is sent to Google. Server-only, no `NEXT_PUBLIC_` prefix, production
+first; free tier at ~1,500 requests/day, one call per résumé upload.
+
 After the first deploy, set the Supabase **Site URL** to the deployed origin and
 add `https://<project>.vercel.app/**` to Redirect URLs, or the magic link will
 bounce back to localhost.
