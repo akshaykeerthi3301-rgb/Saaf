@@ -65,7 +65,7 @@ export default function GatePage() {
                 font: 'inherit', fontSize: 'var(--type-body-lg-size)',
                 padding: 'var(--space-md)', marginBottom: 'var(--space-sm)',
                 borderRadius: 'var(--rounded-none)',
-                border: `1px solid ${on ? 'var(--color-primary)' : 'var(--color-outline)'}`,
+                border: `1px solid ${on ? 'var(--legacy-ink)' : 'var(--color-outline)'}`,
                 background: on ? 'var(--color-surface-container-high)' : 'transparent',
                 color: 'var(--color-on-surface)',
               }}>

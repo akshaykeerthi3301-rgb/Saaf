@@ -1,11 +1,114 @@
-/* Saaf design system — tokens mirrored from docs/DESIGN.md.
-   docs/DESIGN.md is the source of truth; docs/DESIGN.html renders it live.
-   Never hardcode a visual value that exists as a token here. */
+/* Saaf design system.
+   ---------------------------------------------------------------------------
+   TWO SYSTEMS LIVE HERE ON PURPOSE, AND ONE OF THEM IS TEMPORARY.
+
+   The product is moving from a monochrome, zero-shadow, 2px-radius system to
+   the shadcn/Tailwind system exported in saaf-ai/. Swapping them in one commit
+   would leave every unported screen unstyled, so both run side by side while
+   screens move across one at a time.
+
+     NEW  — Tailwind v4 + shadcn tokens (--background, --primary, --radius…).
+            Every new or ported screen uses these, via Tailwind classes.
+     OLD  — the --color-* / --type-* / --space-* tokens below, marked LEGACY.
+            Only unported screens still read them.
+
+   The legacy block is deleted when the last screen is ported. Nothing new
+   should reference it. docs/DESIGN.md documents the new system and is the
+   source of truth; docs/DESIGN.html renders it live.
+
+   Note: --color-primary and --color-secondary were renamed to --legacy-ink and
+   --legacy-ink-soft. Tailwind v4 generates its own --color-* variables from the
+   @theme block, so the old names collided — --color-secondary in particular
+   meant mid-grey text in the old system and a near-white surface in the new
+   one, which would have silently inverted every button hover.
+   --------------------------------------------------------------------------- */
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
 
 :root {
-  --color-primary: #141414;
+  color-scheme: light;
+
+  /* ---- NEW: shadcn / Tailwind tokens ------------------------------------ */
+  --background: oklch(0.975 0.008 240);
+  --foreground: oklch(0.22 0.025 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.025 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.025 250);
+  --primary: oklch(0.22 0.04 250);
+  --primary-foreground: oklch(0.985 0.005 240);
+  --secondary: oklch(0.95 0.014 235);
+  --secondary-foreground: oklch(0.28 0.035 250);
+  --muted: oklch(0.95 0.014 235);
+  --muted-foreground: oklch(0.5 0.025 245);
+  --accent: oklch(0.54 0.12 163);
+  --accent-foreground: oklch(0.98 0.01 160);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.89 0.018 235);
+  --input: oklch(0.89 0.018 235);
+  --ring: oklch(0.54 0.12 163);
+  --chart-1: oklch(0.54 0.12 163);
+  --chart-2: oklch(0.22 0.04 250);
+  --chart-3: oklch(0.5 0.025 245);
+  --chart-4: oklch(0.7 0.03 235);
+  --chart-5: oklch(0.89 0.018 235);
+  --radius: 0.8rem;
+  --sidebar: oklch(0.985 0.005 240);
+  --sidebar-foreground: oklch(0.22 0.025 250);
+  --sidebar-primary: oklch(0.22 0.04 250);
+  --sidebar-primary-foreground: oklch(0.985 0.005 240);
+  --sidebar-accent: oklch(0.95 0.014 235);
+  --sidebar-accent-foreground: oklch(0.28 0.035 250);
+  --sidebar-border: oklch(0.89 0.018 235);
+  --sidebar-ring: oklch(0.54 0.12 163);
+
+  /* ---- LEGACY: read only by screens not yet ported. Delete when empty. --- */
+  --legacy-ink: #141414;
   --color-on-primary: #F0F0F0;
-  --color-secondary: #5F5F5F;
+  --legacy-ink-soft: #5F5F5F;
   --color-neutral: #F0F0F0;
   --color-surface: #FFFFFF;
   --color-surface-container: #E9E9E4;
@@ -19,7 +122,6 @@
   --color-error: #8C2F22;
   --color-on-error: #F0F0F0;
 
-  /* Supplied by next/font in src/app/layout.tsx — self-hosted, no CDN request. */
   --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
 
@@ -35,8 +137,6 @@
   --type-label-sm-lh: 1.4;        --type-label-sm-ls: 0.08em;
   --type-numeric-md-size: 15px;   --type-numeric-md-weight: 400;  --type-numeric-md-lh: 1.5;
 
-  /* Three radii only. md, lg and xl are omitted on purpose so no screen can
-     quietly drift toward the consumer-app default. */
   --rounded-none: 0;
   --rounded-sm: 2px;
   --rounded-full: 9999px;
@@ -46,64 +146,47 @@
   --space-gutter: 24px; --space-margin: 48px;
 
   --measure: 950px;
-
-  color-scheme: light dark;
 }
 
-:root[data-theme="dark"] {
-  --color-primary: #E8E8E4;
-  --color-on-primary: #131313;
-  --color-secondary: #A0A09A;
-  --color-neutral: #131313;
-  --color-surface: #1C1C1C;
-  --color-surface-container: #1F1F1C;
-  --color-surface-container-high: #23231F;
-  --color-on-surface: #E8E8E4;
-  --color-on-surface-variant: #A0A09A;
-  --color-outline: #727270;
-  --color-outline-variant: #3A3A38;
-  --color-inverse-surface: #E8E8E4;
-  --color-inverse-on-surface: #131313;
-  --color-error: #E08C7E;
-  --color-on-error: #131313;
+/* DARK MODE IS OFF, DELIBERATELY, AND THIS IS NOT AN OVERSIGHT.
+   ---------------------------------------------------------------------------
+   The legacy system had a full dark palette. The new one has none — the
+   saaf-ai export declares a `dark` variant but never defines values for it.
+
+   Running the legacy dark blocks against a light-only new system produced a
+   real, visible defect the moment Tailwind landed: on a machine set to dark
+   mode, --legacy-ink flipped to near-white (#E8E8E4) while --background stayed
+   light, so the landing page's primary call to action rendered as pale text on
+   a pale button. Invisible.
+
+   Half a dark mode is worse than none, so both legacy dark blocks are disabled
+   until the new system has a dark palette designed for it. That is a design
+   decision, not something to invent in a stylesheet.
+
+   TO RESTORE: define dark values for the shadcn tokens under `.dark`, then
+   re-enable the two blocks below in the same commit. Never one without the
+   other — that is exactly the mismatch that caused the defect.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { @apply bg-background; }
+  body { @apply bg-background text-foreground; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-primary: #E8E8E4;
-    --color-on-primary: #131313;
-    --color-secondary: #A0A09A;
-    --color-neutral: #131313;
-    --color-surface: #1C1C1C;
-    --color-surface-container: #1F1F1C;
-    --color-surface-container-high: #23231F;
-    --color-on-surface: #E8E8E4;
-    --color-on-surface-variant: #A0A09A;
-    --color-outline: #727270;
-    --color-outline-variant: #3A3A38;
-    --color-inverse-surface: #E8E8E4;
-    --color-inverse-on-surface: #131313;
-    --color-error: #E08C7E;
-    --color-on-error: #131313;
-  }
-}
+/* ---- LEGACY globals. Still required by unported screens. ----------------- */
 
 * { box-sizing: border-box; }
 
 html, body { padding: 0; margin: 0; }
 
 body {
-  background: var(--color-neutral);
-  color: var(--color-on-surface);
   font-family: var(--font-sans);
   font-size: var(--type-body-lg-size);
   font-weight: var(--type-body-lg-weight);
   line-height: var(--type-body-lg-lh);
   -webkit-font-smoothing: antialiased;
 }
-
-/* There is no elevation in this system. Depth is a hairline or a lighter
-   surface — never a cast shadow, at any level. */
 
 .measure { max-width: var(--measure); margin: 0 auto; padding: 0 var(--space-md); }
 @media (min-width: 768px) { .measure { padding: 0 var(--space-margin); } }
@@ -113,4 +196,4 @@ body {
 a { color: var(--color-on-surface); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--legacy-ink); outline-offset: 2px; }

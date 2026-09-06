@@ -15,7 +15,7 @@ const P = ({ children }: { children: React.ReactNode }) => (
 )
 const Cta = () => (
   <Link href="/signin" style={{
-    display: 'inline-block', background: 'var(--color-primary)', color: 'var(--color-on-primary)',
+    display: 'inline-block', background: 'var(--legacy-ink)', color: 'var(--color-on-primary)',
     padding: '12px 24px', fontSize: 'var(--type-label-md-size)', fontWeight: 500,
     textDecoration: 'none', borderRadius: 'var(--rounded-none)',
   }}>{CTA}</Link>

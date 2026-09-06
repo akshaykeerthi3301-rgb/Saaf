@@ -10,11 +10,11 @@
 }
 .primary {
   composes: base;
-  background: var(--color-primary);
+  background: var(--legacy-ink);
   color: var(--color-on-primary);
   padding: 12px 24px;
 }
-.primary:hover:not(:disabled) { background: var(--color-secondary); }
+.primary:hover:not(:disabled) { background: var(--legacy-ink-soft); }
 .ghost {
   composes: base;
   background: transparent;

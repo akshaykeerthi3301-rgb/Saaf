@@ -9,7 +9,7 @@ export function Progress({ pct }: { pct: number }) {
       aria-label="Onboarding progress"
       style={{ height: 2, background: 'var(--color-outline-variant)', marginBottom: 'var(--space-lg)' }}
     >
-      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--color-primary)' }} />
+      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--legacy-ink)' }} />
     </div>
   )
 }

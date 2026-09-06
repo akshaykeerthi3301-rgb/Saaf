@@ -29,7 +29,7 @@
   border: 1px solid var(--color-outline);
 }
 /* Focus thickens the border. No glow, no coloured ring. */
-.input:focus { outline: none; border: 2px solid var(--color-primary); padding: 11px 13px; }
+.input:focus { outline: none; border: 2px solid var(--legacy-ink); padding: 11px 13px; }
 .inputError { border-color: var(--color-error); }
 .helper, .error {
   font-size: var(--type-body-sm-size);
