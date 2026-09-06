@@ -19,6 +19,16 @@ import { createClient } from '@supabase/supabase-js'
  * what the index actually supports: how many roles state each kind of
  * requirement. That keeps the page checkable — the point was never the
  * refusals themselves, it was publishing something a reader can verify.
+ *
+ * That last figure was itself wrong until 2026-09-06. It was computed by
+ * selecting every role_requirements row and aggregating in JS, and PostgREST
+ * caps a response at 1,000 rows against 1,496 in the table — so every kind was
+ * published roughly a third low (location 431 against a true 652). The
+ * aggregation now happens in SQL. See migration 0016.
+ *
+ * If the function is missing, this writes NO audit row rather than a wrong
+ * one. A stale row renders with its own date and reads honestly; a fresh row
+ * carrying a number we could not actually compute does not.
  */
 export async function writeAudit(): Promise<void> {
   const db = createClient(
@@ -33,19 +43,18 @@ export async function writeAudit(): Promise<void> {
   const { count: rolesIndexed } = await db
     .from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)
 
-  const { data: reqs, error } = await db
-    .from('role_requirements').select('kind, role_id')
-  if (error) throw error
-
-  // Roles stating each requirement kind, not requirement rows — a posting
-  // repeating "5+ years" three times states one experience floor, not three.
-  const rolesPerKind = new Map<string, Set<string>>()
-  for (const r of reqs ?? []) {
-    if (!rolesPerKind.has(r.kind)) rolesPerKind.set(r.kind, new Set())
-    rolesPerKind.get(r.kind)!.add(r.role_id)
+  const { data: kinds, error } = await db.rpc('audit_requirement_kinds')
+  if (error) {
+    console.error(
+      `  audit: audit_requirement_kinds() unavailable (${error.message}). ` +
+      'Apply supabase/migrations/0016_audit_requirement_kinds.sql. ' +
+      'No audit row written — a wrong figure is worse than a stale one.'
+    )
+    return
   }
+
   const byReason = Object.fromEntries(
-    [...rolesPerKind.entries()].map(([kind, roles]) => [kind, roles.size])
+    (kinds as { kind: string; roles: number }[]).map((k) => [k.kind, Number(k.roles)])
   )
 
   const day = new Date().toISOString().slice(0, 10)

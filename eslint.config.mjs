@@ -40,7 +40,15 @@ const eslintConfig = defineConfig([
 
   // .vercel/output is Vercel's generated build artifact — machine-written CJS
   // launchers that fail every rule and are not ours to fix.
-  globalIgnores([".next/**", ".vercel/**", "out/**", "build/**", "next-env.d.ts"]),
+  //
+  // saaf-ai/ is the v0-exported front end, staged in the repo root and not yet
+  // integrated. It is a separate project with its own dependency tree that is
+  // not installed here, so linting it reports failures about code we are about
+  // to move rather than about this app. It is excluded from tsconfig for the
+  // same reason. Both exclusions come OUT when the port lands and its screens
+  // live under src/ — at which point its real defects (bare <a> to a route,
+  // unused imports) get fixed rather than ignored.
+  globalIgnores([".next/**", ".vercel/**", "out/**", "build/**", "next-env.d.ts", "saaf-ai/**"]),
 ]);
 
 export default eslintConfig;

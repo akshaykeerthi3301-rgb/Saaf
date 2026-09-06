@@ -85,11 +85,19 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     .select('id, title, description, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
     .eq('in_india', true)
 
-  const { data: roles, error: rErr } = profile.open_to_adjacent && terms.length > 1
-    ? await query.textSearch('title_tsv', terms.join(' | '))
-    : await query.textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
-      .order('last_seen_at', { ascending: false })
-      .limit(MAX_ROLES_PER_CANDIDATE)
+  // The ternary picks the tsquery SHAPE only. Ordering and the cap are applied
+  // to whichever branch wins, deliberately outside it: they used to chain off
+  // the else-expression alone, so an `open_to_adjacent` candidate ran an
+  // unbounded, unordered query that pulled every matching role's full
+  // description into memory. At 650 roles that was survivable; it is the
+  // fastest path to an OOM as the index grows.
+  const scoped = profile.open_to_adjacent && terms.length > 1
+    ? query.textSearch('title_tsv', terms.join(' | '))
+    : query.textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
+
+  const { data: roles, error: rErr } = await scoped
+    .order('last_seen_at', { ascending: false })
+    .limit(MAX_ROLES_PER_CANDIDATE)
   if (rErr) throw rErr
 
   const computedAt = new Date().toISOString()

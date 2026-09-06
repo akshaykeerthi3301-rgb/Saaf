@@ -2,6 +2,25 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
 /**
+ * Where a digest link should point.
+ *
+ * These links were hardcoded to http://localhost:3000, which shipped in every
+ * production digest — a dead link in the one message that has to earn a return
+ * visit. The chain is ordered so the fix survives the domain purchase without
+ * another code change: SITE_URL wins once a real domain exists,
+ * VERCEL_PROJECT_PRODUCTION_URL is the stable production hostname (never the
+ * per-deployment VERCEL_URL, which would rot the moment the next deploy lands),
+ * and localhost is the local-development fallback.
+ */
+function siteUrl(): string {
+  const explicit = process.env.SITE_URL
+  if (explicit) return explicit.replace(/\/$/, '')
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (vercel) return `https://${vercel}`
+  return 'http://localhost:3000'
+}
+
+/**
  * The daily digest.
  *
  * It sends on empty days too, and says so. Every other product in this category
@@ -56,8 +75,8 @@ export async function sendDigests(): Promise<void> {
     })
 
     const body = ranked.length
-      ? `${audit?.roles_indexed ?? 0} roles indexed · ${ranked.length} new since yesterday · ${strong.length} scoring 75 or above.\n\n${lines.join('\n\n')}\n\nSee the full ranked list, with the working behind every score:\nhttp://localhost:3000/today`
-      : `${audit?.roles_indexed ?? 0} roles indexed · nothing new matched your role today.\n\nThat's a thin day for our coverage, not a verdict on you. We'd rather tell you than stay quiet.\n\nhttp://localhost:3000/today`
+      ? `${audit?.roles_indexed ?? 0} roles indexed · ${ranked.length} new since yesterday · ${strong.length} scoring 75 or above.\n\n${lines.join('\n\n')}\n\nSee the full ranked list, with the working behind every score:\n${siteUrl()}/today`
+      : `${audit?.roles_indexed ?? 0} roles indexed · nothing new matched your role today.\n\nThat's a thin day for our coverage, not a verdict on you. We'd rather tell you than stay quiet.\n\n${siteUrl()}/today`
 
     try {
       await resend.emails.send({

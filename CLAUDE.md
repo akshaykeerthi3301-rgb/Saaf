@@ -101,3 +101,5 @@ Before writing or changing any UI code:
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, and no hardcoded style values appear in any diff.
+
+ALL YOUR EXPLANATIONS SHOULD BE ORIENTED IN SUCH A WAY CONSIDERING I AM A NON TECHNICAL PERSON. A BEGINNER PRODUCT MANAGER AND AN ENTREPRENEUR.
