@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { DocPage } from '@/components/features/doc-page'
 
 export const revalidate = 3600
 
@@ -38,64 +39,44 @@ export default async function AuditPage() {
   const reasons = Object.entries((data?.by_reason ?? {}) as Record<string, number>)
     .sort((a, b) => b[1] - a[1])
 
-  return (
-    <main className="measure" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 680 }}>
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-        We publish what we read.
-      </h1>
 
+  return (
+    <DocPage eyebrow="Index audit" title="We publish what we read.">
       {!data ? (
-        <p style={{ color: 'var(--color-on-surface-variant)' }}>
+        <p className="mt-6 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
           No run has completed yet. This page will show the day&apos;s figures once one has —
           it will never show zeros in place of missing data.
         </p>
       ) : (
         <>
-          <p style={{
-            fontFamily: 'var(--font-mono)', fontSize: 'var(--type-numeric-md-size)',
-            fontVariantNumeric: 'tabular-nums', color: 'var(--color-on-surface)',
-            paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-outline)',
-          }}>
+          <p className="mt-6 border-b border-border pb-4 font-mono text-sm tabular-nums text-primary">
             {fmt(data.roles_indexed)} roles indexed · {fmt(data.boards_active)} company boards
           </p>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 'var(--space-md)' }}>
-            <caption style={{
-              captionSide: 'top', textAlign: 'left',
-              fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-              letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-              color: 'var(--color-on-surface-variant)', paddingBottom: 'var(--space-sm)',
-            }}>
+          <table className="mt-6 w-full border-collapse">
+            <caption className="pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Roles stating each requirement, read from the posting
             </caption>
             <tbody>
               {reasons.map(([k, v]) => (
                 <tr key={k}>
-                  <td style={{
-                    padding: 'var(--space-sm) 0',
-                    borderBottom: '1px solid var(--color-outline-variant)',
-                    fontSize: 'var(--type-body-md-size)',
-                  }}>{LABEL[k] ?? k}</td>
-                  <td style={{
-                    padding: 'var(--space-sm) 0', textAlign: 'right',
-                    borderBottom: '1px solid var(--color-outline-variant)',
-                    fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
-                    fontSize: 'var(--type-body-md-size)',
-                  }}>{fmt(v)}</td>
+                  <td className="border-b border-border py-3 text-sm text-primary">
+                    {LABEL[k] ?? k}
+                  </td>
+                  <td className="border-b border-border py-3 text-right font-mono text-sm tabular-nums text-primary">
+                    {fmt(v)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <p style={{
-            color: 'var(--color-on-surface-variant)',
-            fontSize: 'var(--type-body-sm-size)', marginTop: 'var(--space-md)',
-          }}>
+          <p className="mt-6 text-xs leading-5 text-muted-foreground">
             Figures for {data.day}. Updated daily. Every refusal above names a requirement
             stated in the posting — open any role and check it.
           </p>
         </>
       )}
-    </main>
+    </DocPage>
   )
 }

@@ -9,7 +9,7 @@ _Drafted: September 2026. Generated from `docs/PRODUCT.md`, `productos/design/1-
 3. Copy the entire prompt — from `Design a…` through the final `Use tokens from…` line.
 4. Paste it in. Don't add your own styling direction; the prompt already carries the palette, the type pairing, and the exclusions.
 5. Run Prompts 2 and 3 **on the same canvas** so the screens pull from the components Prompt 1 just produced.
-6. `docs/DESIGN.md` remains the source of truth for exact token values, and `docs/DESIGN.html` renders them live in a browser if you want to check a generated screen against the real system.
+6. `docs/DESIGN.md` remains the source of truth for exact token values. (`docs/DESIGN.html` rendered the retired monochrome system and was deleted on 2026-09-07 with the rest of it.)
 
 **One thing to watch.** This design system is monochrome, flat, and square-cornered by decision. AI design tools drift toward the category default — gradients, pill buttons, drop shadows, a green/red/amber status trio. Every prompt below forbids these explicitly. If a generation comes back with them anyway, regenerate rather than accepting it; the whole identity rests on not looking like the rest of the category.
 
@@ -223,6 +223,6 @@ Use tokens from `docs/DESIGN.md` where applicable for exact colors, type, spacin
 
 - Product context: [`docs/PRODUCT.md`](../../docs/PRODUCT.md)
 - Brand strategy: [`1-Product-Identity.md`](1-Product-Identity.md)
-- Design tokens: [`docs/DESIGN.md`](../../docs/DESIGN.md), with its live mirror [`docs/DESIGN.html`](../../docs/DESIGN.html)
+- Design tokens: [`docs/DESIGN.md`](../../docs/DESIGN.md)
 
 _Screens deliberately not covered here: the **public gate audit** page — the contrarian belief shipped as a feature, in nutrition-label form, which no competitor has. It sits closer to a marketing artifact than a product screen, so it belongs in Design Step 6 (`studio-design-landing-page`). Revisit it there._

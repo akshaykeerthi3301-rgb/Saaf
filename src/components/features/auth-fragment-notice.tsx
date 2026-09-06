@@ -50,12 +50,14 @@ export function AuthFragmentNotice() {
   if (!msg) return null
 
   return (
-    <div style={{
-      border: '1px solid var(--color-outline)', padding: 'var(--space-md)',
-      marginBottom: 'var(--space-lg)', fontSize: 'var(--type-body-md-size)',
-    }}>
-      <p style={{ margin: '0 0 8px', color: 'var(--color-on-surface)' }}>{msg}</p>
-      <a href="/signin" style={{ textDecoration: 'underline' }}>Send me a new link</a>
+    <div className="mb-8 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <p className="text-sm leading-6 text-primary">{msg}</p>
+      <a
+        href="/signin"
+        className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4"
+      >
+        Send me a new link
+      </a>
     </div>
   )
 }

@@ -1,26 +1,17 @@
 /* Saaf design system.
    ---------------------------------------------------------------------------
-   TWO SYSTEMS LIVE HERE ON PURPOSE, AND ONE OF THEM IS TEMPORARY.
+   ONE SYSTEM. The monochrome, zero-shadow, 2px-radius system this product
+   started on has been fully retired — the last screen moved across on
+   2026-09-07 and its tokens, its CSS modules and its unlayered global rules
+   were deleted in the same commit.
 
-   The product is moving from a monochrome, zero-shadow, 2px-radius system to
-   the shadcn/Tailwind system exported in saaf-ai/. Swapping them in one commit
-   would leave every unported screen unstyled, so both run side by side while
-   screens move across one at a time.
+   What is here now is Tailwind v4 plus the shadcn tokens exported in saaf-ai/:
+   --background, --foreground, --primary, --accent, --radius and the rest.
+   Every screen reads them through Tailwind classes; nothing reads a raw
+   variable except the two font families below, which Tailwind's own font-sans
+   and font-mono utilities resolve through.
 
-     NEW  — Tailwind v4 + shadcn tokens (--background, --primary, --radius…).
-            Every new or ported screen uses these, via Tailwind classes.
-     OLD  — the --color-* / --type-* / --space-* tokens below, marked LEGACY.
-            Only unported screens still read them.
-
-   The legacy block is deleted when the last screen is ported. Nothing new
-   should reference it. docs/DESIGN.md documents the new system and is the
-   source of truth; docs/DESIGN.html renders it live.
-
-   Note: --color-primary and --color-secondary were renamed to --legacy-ink and
-   --legacy-ink-soft. Tailwind v4 generates its own --color-* variables from the
-   @theme block, so the old names collided — --color-secondary in particular
-   meant mid-grey text in the old system and a near-white surface in the new
-   one, which would have silently inverted every button hover.
+   docs/DESIGN.md documents this system and is the source of truth.
    --------------------------------------------------------------------------- */
 
 @import 'tailwindcss';
@@ -71,7 +62,7 @@
 :root {
   color-scheme: light;
 
-  /* ---- NEW: shadcn / Tailwind tokens ------------------------------------ */
+  /* ---- shadcn / Tailwind tokens ------------------------------------------ */
   --background: oklch(0.975 0.008 240);
   --foreground: oklch(0.22 0.025 250);
   --card: oklch(1 0 0);
@@ -105,107 +96,37 @@
   --sidebar-border: oklch(0.89 0.018 235);
   --sidebar-ring: oklch(0.54 0.12 163);
 
-  /* ---- LEGACY: read only by screens not yet ported. Delete when empty. --- */
-  --legacy-ink: #141414;
-  --color-on-primary: #F0F0F0;
-  --legacy-ink-soft: #5F5F5F;
-  --color-neutral: #F0F0F0;
-  --color-surface: #FFFFFF;
-  --color-surface-container: #E9E9E4;
-  --color-surface-container-high: #E2E2D7;
-  --color-on-surface: #141414;
-  --color-on-surface-variant: #5F5F5F;
-  --color-outline: #7A7A7A;
-  --color-outline-variant: #C5C5C5;
-  --color-inverse-surface: #141414;
-  --color-inverse-on-surface: #F0F0F0;
-  --color-error: #8C2F22;
-  --color-on-error: #F0F0F0;
-
+  /* The only raw variables any screen reads. Tailwind v4's font-sans and
+     font-mono utilities resolve through these names, so setting them here is
+     what points those utilities at the two self-hosted faces wired up in
+     layout.tsx. */
   --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
-
-  --type-display-lg-size: 44px;   --type-display-lg-weight: 300;
-  --type-display-lg-lh: 1.3;      --type-display-lg-ls: -0.02em;
-  --type-headline-lg-size: 26px;  --type-headline-lg-weight: 400; --type-headline-lg-lh: 1.3;
-  --type-headline-md-size: 20px;  --type-headline-md-weight: 500; --type-headline-md-lh: 1.35;
-  --type-body-lg-size: 17px;      --type-body-lg-weight: 400;     --type-body-lg-lh: 1.6;
-  --type-body-md-size: 15px;      --type-body-md-weight: 400;     --type-body-md-lh: 1.6;
-  --type-body-sm-size: 13px;      --type-body-sm-weight: 400;     --type-body-sm-lh: 1.5;
-  --type-label-md-size: 13px;     --type-label-md-weight: 500;    --type-label-md-lh: 1.4;
-  --type-label-sm-size: 11px;     --type-label-sm-weight: 600;
-  --type-label-sm-lh: 1.4;        --type-label-sm-ls: 0.08em;
-  --type-numeric-md-size: 15px;   --type-numeric-md-weight: 400;  --type-numeric-md-lh: 1.5;
-
-  --rounded-none: 0;
-  --rounded-sm: 2px;
-  --rounded-full: 9999px;
-
-  --space-xs: 4px;  --space-sm: 8px;  --space-md: 16px;
-  --space-lg: 32px; --space-xl: 64px;
-  --space-gutter: 24px; --space-margin: 48px;
-
-  --measure: 950px;
 }
 
 /* DARK MODE IS OFF, DELIBERATELY, AND THIS IS NOT AN OVERSIGHT.
    ---------------------------------------------------------------------------
-   The legacy system had a full dark palette. The new one has none — the
-   saaf-ai export declares a `dark` variant but never defines values for it.
+   `color-scheme: light` above is the whole of it. The saaf-ai export declares a
+   `dark` variant but never defines values for it, so there is no dark palette
+   to switch to.
 
-   Running the legacy dark blocks against a light-only new system produced a
-   real, visible defect the moment Tailwind landed: on a machine set to dark
-   mode, --legacy-ink flipped to near-white (#E8E8E4) while --background stayed
-   light, so the landing page's primary call to action rendered as pale text on
-   a pale button. Invisible.
+   The retired system did have one, and running it against a light-only new
+   system produced a real, visible defect the moment Tailwind landed: on a
+   machine set to dark mode its ink flipped to near-white while --background
+   stayed light, so the landing page's primary call to action rendered as pale
+   text on a pale button. Invisible, with a green build. Half a dark mode is
+   worse than none.
 
-   Half a dark mode is worse than none, so both legacy dark blocks are disabled
-   until the new system has a dark palette designed for it. That is a design
-   decision, not something to invent in a stylesheet.
-
-   TO RESTORE: define dark values for the shadcn tokens under `.dark`, then
-   re-enable the two blocks below in the same commit. Never one without the
-   other — that is exactly the mismatch that caused the defect.
+   TO ADD ONE: define dark values for every shadcn token under `.dark` in a
+   single pass. A partial palette is the exact shape of the defect above.
    --------------------------------------------------------------------------- */
 
 @layer base {
   * { @apply border-border outline-ring/50; }
   html { @apply bg-background; }
-  body { @apply bg-background text-foreground; }
-}
-
-/* ---- LEGACY globals. Still required by unported screens. -----------------
-   These MUST stay inside @layer base, and the reason is not stylistic.
-
-   In the CSS cascade, unlayered rules beat layered ones outright — specificity
-   never enters into it. Tailwind emits its utilities into a layer, so an
-   unlayered `a { color: … }` here silently overrode `text-primary-foreground`
-   on every link in every ported screen. It cost the landing page's primary
-   call to action its text: dark ink on a dark button, present in the DOM and
-   invisible on screen, with a green build.
-
-   Anything added below goes in this layer, or it will outrank Tailwind. */
-
-@layer base {
-  * { box-sizing: border-box; }
-
-  html, body { padding: 0; margin: 0; }
-
   body {
+    @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    font-size: var(--type-body-lg-size);
-    font-weight: var(--type-body-lg-weight);
-    line-height: var(--type-body-lg-lh);
     -webkit-font-smoothing: antialiased;
   }
-
-  .measure { max-width: var(--measure); margin: 0 auto; padding: 0 var(--space-md); }
-  @media (min-width: 768px) { .measure { padding: 0 var(--space-margin); } }
-
-  .rule { border: 0; border-top: 1px solid var(--color-outline-variant); margin: 0; }
-
-  a { color: var(--color-on-surface); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  :focus-visible { outline: 2px solid var(--legacy-ink); outline-offset: 2px; }
 }

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/features/progress'
+import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { readDraft, clearDraft } from '@/lib/onboarding-store'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { track } from '@/lib/analytics'
@@ -48,41 +49,55 @@ export default function GatePage() {
     router.push('/today')
   }
 
+
   return (
-    <main className="measure" style={{ paddingTop: 32, paddingBottom: 64, maxWidth: 560 }}>
-      <Progress pct={80} />
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 16px' }}>
+    <OnboardingShell step={5}>
+      <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
         {spec.q}
       </h1>
 
-      <div role="group" aria-label={spec.q}>
+      <div className="mt-8 grid gap-3" role="group" aria-label={spec.q}>
         {spec.options.map((o) => {
           const on = choice === o
           return (
-            <button key={o} type="button" aria-pressed={on} onClick={() => setChoice(o)}
-              style={{
-                display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
-                font: 'inherit', fontSize: 'var(--type-body-lg-size)',
-                padding: 'var(--space-md)', marginBottom: 'var(--space-sm)',
-                borderRadius: 'var(--rounded-none)',
-                border: `1px solid ${on ? 'var(--legacy-ink)' : 'var(--color-outline)'}`,
-                background: on ? 'var(--color-surface-container-high)' : 'transparent',
-                color: 'var(--color-on-surface)',
-              }}>
+            <button
+              key={o}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setChoice(o)}
+              className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-3.5 text-left text-sm font-medium transition-colors ${
+                on
+                  ? 'border-accent bg-accent/5 text-primary'
+                  : 'border-input text-muted-foreground hover:border-foreground/30'
+              }`}
+            >
               {o}
+              {on ? <Check className="size-4 shrink-0 text-accent" /> : null}
             </button>
           )
         })}
       </div>
 
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)' }}>
-        {spec.note}
-      </p>
+      <p className="mt-4 text-xs leading-5 text-muted-foreground">{spec.note}</p>
 
-      {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
-      <Button onClick={finish} disabled={busy || !choice}>
-        {busy ? 'Running your first match…' : 'Confirm and run my first match'}
-      </Button>
-    </main>
+      {error ? (
+        <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-10 border-t border-border pt-6">
+        <Button className="w-full" onClick={finish} disabled={busy || !choice}>
+          {busy ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Running your first match…
+            </>
+          ) : (
+            'Confirm and run my first match'
+          )}
+        </Button>
+      </div>
+    </OnboardingShell>
   )
 }

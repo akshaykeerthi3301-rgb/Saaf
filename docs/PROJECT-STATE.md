@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-05 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; three stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; five stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -223,11 +223,69 @@ candidate's preferred role is scored, ranked and shown.
   and two 12s timeouts account for most of it. A slow board costs a pool slot,
   not the run. The ceiling is far away.
 
+### Stage E — one design system, and a shortlist that fits down a phone line (2026-09-07)
+
+**The design port finished.** Five screens still ran on the retired monochrome
+system while four had moved to the shadcn/Tailwind export, so the onboarding
+flow visibly changed style halfway through. `/start`, `/start/upload`,
+`/start/reading`, `/start/confirm`, `/start/gate`, `/signin`, `/profile`,
+`/audit`, `/privacy` and `/terms` all moved across, and **the old system was
+deleted rather than left dormant**: the `--color-*` / `--type-*` / `--space-*`
+token block, the `.measure` and `.rule` unlayered globals, four CSS modules,
+`row.tsx`, `arithmetic.tsx`, `progress.tsx`, `withheld-section.tsx` and
+`docs/DESIGN.html`. `grep` for a legacy token now returns nothing.
+
+- **Three shells now carry every screen** — `AppShell` (signed-in),
+  `OnboardingShell` (the five-step split screen), `DocPage` (privacy, terms,
+  audit). The onboarding shell holds `STEPS`, which is the single source of
+  truth for the flow's length and pacing; the screens no longer each carry a
+  hard-coded percentage.
+- **`docs/DESIGN.md` was rewritten.** It still documented the deleted system
+  while `CLAUDE.md` calls it law, which is the most expensive kind of stale doc
+  — a fresh session reading it would have built against tokens that no longer
+  exist. It now documents the shipped system and carries a table of what
+  survived the change, because most of the rules that matter (show the working,
+  never a score without its reason, red for system errors only, no invented
+  numbers) were never about the visuals.
+
+**`/today` stopped shipping 4MB.** The page rendered all 229 scored roles at
+once. Measured on the founder's real list:
+
+| | Before | After |
+|---|---|---|
+| HTML shipped | 3.77 MB | **0.89 MB** |
+| Cards rendered | 229 | 54 (20 a bucket) |
+| Server render, production build | 1.24 s | **0.71 s** |
+| DOM nodes | 17,748 | 4,180 |
+
+- **The database was never the problem.** The query took 338 ms, the two small
+  follow-up queries and the bucketing 172 ms; everything else was React
+  rendering the cards and serialising them. Roughly two-thirds of the shipped
+  bytes were the RSC hydration payload repeating the same tree.
+- **The 7 seconds observed was mostly the dev server.** A production build
+  renders the full 229-card page in 1.24 s. The payload, however, is real in
+  both — 3.77 MB is about six seconds of download on an ordinary Indian 4G
+  connection before anything appears.
+- **Nothing is hidden, and that was the constraint.** Each bucket still states
+  its full count above the cards; below them a plain link reads
+  *"Showing 20 of 165 — show all 165"* and `?show=<bucket>` renders it whole,
+  server-side, with no client JavaScript. `CARDS_PER_BUCKET` is a limit on what
+  a candidate downloads to find out, not on what they may see. This is the live
+  half of **D2** in `HANDOFF.md`, answered without capping the list.
+
+**Groq Zero Data Retention is on**, per the founder, so `/privacy` no longer
+says troubleshooting logs are kept for up to 30 days — it says the account has
+ZDR switched on and names what that stops.
+
 ### Deliberate residue — do not "tidy" these away
 
-- **`WithheldSection` and the report-refusal action are orphaned and kept.** *"This
-  shouldn't be here"* is still a real feedback loop worth rewiring onto a
-  badly-scored role, and deleting them would orphan the `refusal_reports` table.
+- ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~
+  **`WithheldSection` was deleted 2026-09-07.** The rewiring this note was
+  holding it for had already happened: `ReportScore` sits on every role card and
+  writes to `refusal_reports` through the same `report-refusal.ts` action, so
+  nothing was orphaned. The component itself was the last file in the codebase
+  reading legacy design tokens, and it had to go for the legacy block to go.
+  **The action and the table stay** — that half of the note still stands.
 - **`src/gates/evaluate.ts` and `src/gates/reasons.ts` still speak in refusals.**
   They are the demo path and the shared `experienceFloor()`, not live product
   behaviour.
@@ -297,7 +355,7 @@ Filtered-out roles sat in San Francisco, London, New York, Pristina, Skopje. Ext
 docs/                       tracked
   PROJECT-STATE.md          this file
   PRODUCT.md                the plain-English roll-up
-  DESIGN.md / DESIGN.html   design system, mirrored pair
+  DESIGN.md                 design system, the source of truth
   PRD.md                    14 sections, the technical spec
   ROADMAP.md                53 tasks, 52 done
   HANDOFF.md                what still needs the founder

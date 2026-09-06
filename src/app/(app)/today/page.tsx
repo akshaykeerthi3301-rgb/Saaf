@@ -1,9 +1,9 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ShieldCheck, Target, Wallet } from 'lucide-react'
+import { ChevronRight, ShieldCheck, Target, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
-import { RoleCard } from '@/components/ui/role-card'
-import type { EvidenceItem } from '@/components/ui/row'
+import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
@@ -12,6 +12,20 @@ import { bucketFor, BUCKET_META, type Bucket, type ScoreBreakdown } from '@/matc
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
 const NEW_WITHIN_DAYS = 7
+
+/** How many cards of a bucket are rendered before the "show all" link.
+ *
+ *  NOT a limit on what the candidate can see — every role stays one click away
+ *  and every bucket states its full count above the cards, so nothing is
+ *  hidden. It is a limit on what we make them download to find out.
+ *
+ *  Measured on a real 229-role list: rendering all of it produced 4.27MB of
+ *  HTML (1.8MB markup and 2.4MB of hydration data for the same tree a second
+ *  time) and took 6.8s to render, against 0.3s for the query that fed it. The
+ *  page was slow because of how much of it existed, not because of the
+ *  database. 20 a bucket is roughly what a person scans before deciding to
+ *  narrow their search instead of scrolling further. */
+const CARDS_PER_BUCKET = 20
 
 type RoleRequirement = {
   kind: string
@@ -45,7 +59,12 @@ type MatchRow = {
  * scored, ordered, and shown with the working behind its number. Nothing is
  * withheld, so there is no refusal to publish and no withheld section.
  */
-export default async function TodayPage() {
+export default async function TodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ show?: string }>
+}) {
+  const { show } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
@@ -149,6 +168,11 @@ export default async function TodayPage() {
             {BUCKET_META.map(({ key, title, blurb }) => {
               const inBucket = byBucket.get(key) ?? []
               if (inBucket.length === 0) return null
+              // ?show=<bucket> renders that bucket whole. A plain link, so this
+              // costs no client JavaScript and the expanded view is its own
+              // shareable URL.
+              const expanded = show === key || show === 'all'
+              const visible = expanded ? inBucket : inBucket.slice(0, CARDS_PER_BUCKET)
               return (
                 <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
                   <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
@@ -165,7 +189,7 @@ export default async function TodayPage() {
                   <p className="mb-4 max-w-2xl text-xs leading-5 text-muted-foreground">{blurb}</p>
 
                   <div className="space-y-4">
-                    {inBucket.map((r) => (
+                    {visible.map((r) => (
                       <RoleCard
                         key={r.id}
                         gateResultId={r.id}
@@ -184,6 +208,18 @@ export default async function TodayPage() {
                       />
                     ))}
                   </div>
+
+                  {/* The count above is always the whole bucket, so this reads
+                      as "there is more", never as "there was a cut". */}
+                  {visible.length < inBucket.length ? (
+                    <Link
+                      href={`/today?show=${key}#bucket-${key}`}
+                      className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent"
+                    >
+                      Showing {visible.length} of {inBucket.length} — show all {inBucket.length}
+                      <ChevronRight className="size-3.5" />
+                    </Link>
+                  ) : null}
                 </section>
               )
             })}

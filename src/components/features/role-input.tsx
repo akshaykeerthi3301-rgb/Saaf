@@ -62,8 +62,9 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
   const exact = shown.find((s) => s.phrase.toLowerCase() === term.toLowerCase())
   const noneFound = !busy && term.length >= 2 && checked === term && suggestions.length === 0
 
+
   return (
-    <div style={{ marginBottom: 'var(--space-md)' }}>
+    <div className="mb-6">
       <Input
         label={label}
         provenance={provenance}
@@ -74,48 +75,36 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
       />
 
       {exact ? (
-        <p style={{
-          margin: '0 0 var(--space-xs)', fontSize: 'var(--type-body-sm-size)',
-          color: 'var(--color-on-surface-variant)',
-        }}>
-          {exact.count.toLocaleString('en-IN')} role{exact.count === 1 ? '' : 's'} in today&apos;s index match this.
+        <p className="-mt-4 mb-3 text-xs leading-5 text-muted-foreground">
+          {exact.count.toLocaleString('en-IN')} role{exact.count === 1 ? '' : 's'} in
+          today&apos;s index match this.
         </p>
       ) : null}
 
       {noneFound ? (
-        <p style={{
-          margin: '0 0 var(--space-xs)', fontSize: 'var(--type-body-sm-size)',
-          color: 'var(--color-on-surface-variant)',
-        }}>
-          Nothing in today&apos;s index matches that. You can still use it — your list
-          will fill as the registry grows — or try a broader title.
+        <p className="-mt-4 mb-3 text-xs leading-5 text-muted-foreground">
+          Nothing in today&apos;s index matches that. You can still use it — your list will fill
+          as the registry grows — or try a broader title.
         </p>
       ) : null}
 
       {shown.length > 0 ? (
         <div>
-          <p style={{
-            margin: '0 0 var(--space-xs)', fontSize: 'var(--type-label-sm-size)',
-            letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-            color: 'var(--color-on-surface-variant)',
-          }}>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             In the index right now
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' }}>
+          <div className="flex flex-wrap gap-2">
             {shown.map((s) => (
               <button
                 key={s.phrase}
                 type="button"
                 onClick={() => onChange(s.phrase)}
-                style={{
-                  font: 'inherit', fontSize: 'var(--type-body-sm-size)', cursor: 'pointer',
-                  background: 'transparent', color: 'var(--color-on-surface)',
-                  border: '1px solid var(--color-outline)',
-                  borderRadius: 'var(--rounded-none)', padding: '4px 10px',
-                }}
+                className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:border-accent/60 hover:bg-accent/5"
               >
                 {s.phrase}
-                <span style={{ color: 'var(--color-on-surface-variant)' }}> · {s.count}</span>
+                <span className="ml-1 font-mono tabular-nums text-muted-foreground">
+                  · {s.count}
+                </span>
               </button>
             ))}
           </div>

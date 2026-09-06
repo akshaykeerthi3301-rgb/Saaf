@@ -47,121 +47,109 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     else setMsg('Saved. Your list has been rebuilt against today’s roles.')
   }
 
+
+  const selectClass =
+    'w-full rounded-xl border border-input bg-card px-4 py-3.5 text-sm text-primary outline-none transition-colors hover:border-foreground/30 focus:border-accent focus:ring-2 focus:ring-accent/10'
+
   return (
     <>
-      <Input label="Current title" value={f.currentTitle} onChange={(e) => setF({ ...f, currentTitle: e.target.value })} />
-      <Input label="Employer" value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} />
-      <Input label="Years of experience" type="number" min={0} max={50} step={0.5}
-        value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
-      <Input label="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
-      <RoleInput
-        label="Preferred job role"
-        value={f.preferredRole}
-        helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'."
-        onChange={(v) => setF({ ...f, preferredRole: v })}
-      />
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <Input label="Current title" value={f.currentTitle} onChange={(e) => setF({ ...f, currentTitle: e.target.value })} />
+        <Input label="Employer" value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} />
+        <Input label="Years of experience" type="number" min={0} max={50} step={0.5}
+          value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
+        <Input label="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
+        <RoleInput
+          label="Preferred job role"
+          value={f.preferredRole}
+          helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'."
+          onChange={(v) => setF({ ...f, preferredRole: v })}
+        />
 
-      <label style={{
-        display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start',
-        marginBottom: 'var(--space-md)', cursor: 'pointer',
-        fontSize: 'var(--type-body-md-size)',
-      }}>
-        <input type="checkbox" checked={f.openToAdjacent}
-          onChange={(e) => setF({ ...f, openToAdjacent: e.target.checked })}
-          style={{ marginTop: 4 }} />
-        <span>
-          Also show me adjacent roles
-          <span style={{ display: 'block', color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>
-            Off keeps your list strictly on the role above. On widens it, at the cost of precision.
+        <label className="mb-6 flex cursor-pointer items-start gap-3 rounded-xl border border-input p-4 transition-colors hover:border-foreground/30">
+          <input type="checkbox" checked={f.openToAdjacent}
+            onChange={(e) => setF({ ...f, openToAdjacent: e.target.checked })}
+            className="mt-0.5 size-4 accent-accent" />
+          <span>
+            <span className="block text-sm font-semibold text-primary">Also show me adjacent roles</span>
+            <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+              Off keeps your list strictly on the role above. On widens it, at the cost of precision.
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
 
-      <SkillsField skills={f.skills} onChange={(skills) => setF({ ...f, skills })} />
+        <SkillsField skills={f.skills} onChange={(skills) => setF({ ...f, skills })} />
 
-      <div style={{ marginBottom: 'var(--space-md)' }}>
-        <label htmlFor="cred" style={{
-          display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-          letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-          color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
-        }}>Credential</label>
-        <select id="cred" value={f.credential} onChange={(e) => setF({ ...f, credential: e.target.value })}
-          style={{
-            width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
-            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-            font: 'inherit', fontSize: 'var(--type-body-md-size)',
-            border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
-          }}>
-          <option value="none">None of these</option>
-          <option value="CA">CA</option>
-          <option value="CFA">CFA</option>
-          <option value="CS">CS</option>
-        </select>
-      </div>
+        <div className="mb-6">
+          <label htmlFor="cred" className="mb-2 block text-sm font-semibold text-primary">Credential</label>
+          <select id="cred" value={f.credential} onChange={(e) => setF({ ...f, credential: e.target.value })}
+            className={selectClass}>
+            <option value="none">None of these</option>
+            <option value="CA">CA</option>
+            <option value="CFA">CFA</option>
+            <option value="CS">CS</option>
+          </select>
+        </div>
 
-      <div style={{ marginBottom: 'var(--space-md)' }}>
-        <label htmlFor="workMode" style={{
-          display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-          letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-          color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
-        }}>Work mode</label>
-        <select id="workMode" value={f.workModePreference}
-          onChange={(e) => setF({ ...f, workModePreference: e.target.value })}
-          style={{
-            width: '100%', maxWidth: 420, height: 44, padding: '12px 14px',
-            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-            font: 'inherit', fontSize: 'var(--type-body-md-size)',
-            border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-sm)',
-          }}>
-          {WORK_MODE_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
-        <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)', margin: 'var(--space-xs) 0 0' }}>
-          Never withholds a role — only moves a better-matching one higher on your list.
+        <div className="mb-6">
+          <label htmlFor="workMode" className="mb-2 block text-sm font-semibold text-primary">Work mode</label>
+          <select id="workMode" value={f.workModePreference}
+            onChange={(e) => setF({ ...f, workModePreference: e.target.value })}
+            className={selectClass}>
+            {WORK_MODE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Never withholds a role — only moves a better-matching one higher on your list.
+          </p>
+        </div>
+
+        <Input label="Salary expectation" value={f.salaryExpectation}
+          onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}
+          helper="No role we index states a salary, so this can't filter your list yet — it's here so it's ready if that changes." />
+
+        {error ? (
+          <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</p>
+        ) : null}
+        {msg ? (
+          <p className="mb-4 rounded-xl border border-border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground">{msg}</p>
+        ) : null}
+
+        <Button onClick={save} disabled={busy}>{busy ? 'Rebuilding your list…' : 'Save'}</Button>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">
+          Start again with a different résumé
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Runs onboarding from the top. Your current list stays up until the new profile is
+          confirmed, so you are never left staring at nothing.
         </p>
-      </div>
-
-      <Input label="Salary expectation" value={f.salaryExpectation}
-        onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}
-        helper="No role we index states a salary, so this can't filter your list yet — it's here so it's ready if that changes." />
-
-      {error ? <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p> : null}
-      {msg ? <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)' }}>{msg}</p> : null}
-
-      <Button onClick={save} disabled={busy}>{busy ? 'Rebuilding your list…' : 'Save'}</Button>
-
-      <hr className="rule" style={{ margin: 'var(--space-xl) 0 var(--space-md)' }} />
-
-      <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 500, margin: '0 0 8px' }}>
-        Start again with a different résumé
-      </h2>
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', marginTop: 0 }}>
-        Runs onboarding from the top. Your current list stays up until the new
-        profile is confirmed, so you are never left staring at nothing.
-      </p>
-      <form action={restartOnboarding}>
-        <Button type="submit" variant="ghost">Upload a different résumé</Button>
-      </form>
-
-      <hr className="rule" style={{ margin: 'var(--space-xl) 0 var(--space-md)' }} />
-
-      <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 500, margin: '0 0 8px' }}>
-        Delete your account
-      </h2>
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', marginTop: 0 }}>
-        Everything goes: your profile, your lists, your reports. One click, no email, and we
-        can&apos;t undo it.
-      </p>
-
-      {confirming ? (
-        <form action={deleteAccount} style={{ display: 'flex', gap: 8 }}>
-          <Button type="submit">Yes, delete everything</Button>
-          <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Keep my account</Button>
+        <form action={restartOnboarding} className="mt-4">
+          <Button type="submit" variant="ghost">Upload a different résumé</Button>
         </form>
-      ) : (
-        <Button variant="ghost" onClick={() => setConfirming(true)}>Delete my account</Button>
-      )}
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">Delete your account</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Everything goes: your profile, your lists, your reports. One click, no email, and we
+          can&apos;t undo it.
+        </p>
+
+        {confirming ? (
+          <form action={deleteAccount} className="mt-4 flex flex-wrap gap-3">
+            <Button type="submit">Yes, delete everything</Button>
+            <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Keep my account</Button>
+          </form>
+        ) : (
+          <div className="mt-4">
+            <Button variant="ghost" onClick={() => setConfirming(true)}>Delete my account</Button>
+          </div>
+        )}
+      </section>
     </>
   )
 }

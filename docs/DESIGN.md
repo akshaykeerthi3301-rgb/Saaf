@@ -1,279 +1,350 @@
 ---
-version: alpha
+version: beta
 name: Saaf
-description: A flat, paper-toned, sharp-cornered design system for a product whose core visual act is publishing the working behind a number. (Amended 2026-09-04 — it was "refusing to show something" until the product stopped refusing.) Monochrome by construction, hairline-ruled, no shadows, no rounding — derived from zerodha.tech and the plain-text credibility of a public notice.
+description: >
+  The shadcn/Tailwind system exported in saaf-ai/, adopted 2026-09-05 and
+  completed 2026-09-07. Paper-blue ground, white cards, one green accent, a
+  single 0.8rem radius scale, and one soft shadow used only on cards. It
+  replaced a monochrome, zero-shadow, square-cornered system derived from
+  zerodha.tech — see "What was retired, and why" for what that cost and what
+  survived it.
 colors:
-  primary: "#141414"
-  on-primary: "#F0F0F0"
-  secondary: "#5F5F5F"
-  neutral: "#F0F0F0"
-  surface: "#FFFFFF"
-  surface-container: "#E9E9E4"
-  surface-container-high: "#E2E2D7"
-  on-surface: "#141414"
-  on-surface-variant: "#5F5F5F"
-  outline: "#7A7A7A"
-  outline-variant: "#C5C5C5"
-  inverse-surface: "#141414"
-  inverse-on-surface: "#F0F0F0"
-  error: "#8C2F22"
-  on-error: "#F0F0F0"
-  dark-primary: "#E8E8E4"
-  dark-on-primary: "#131313"
-  dark-secondary: "#A0A09A"
-  dark-neutral: "#131313"
-  dark-surface: "#1C1C1C"
-  dark-surface-container: "#1F1F1C"
-  dark-surface-container-high: "#23231F"
-  dark-on-surface: "#E8E8E4"
-  dark-on-surface-variant: "#A0A09A"
-  dark-outline: "#727270"
-  dark-outline-variant: "#3A3A38"
-  dark-inverse-surface: "#E8E8E4"
-  dark-inverse-on-surface: "#131313"
-  dark-error: "#E08C7E"
-  dark-on-error: "#131313"
+  # oklch, exactly as they sit in src/app/globals.css. Hex equivalents are
+  # approximate and are here only to make the values readable at a glance.
+  background:            "oklch(0.975 0.008 240)"   # ~#F1F4F8 — page ground
+  foreground:            "oklch(0.22 0.025 250)"    # ~#2B3140 — body text
+  card:                  "oklch(1 0 0)"             # #FFFFFF — every raised surface
+  card-foreground:       "oklch(0.22 0.025 250)"
+  popover:               "oklch(1 0 0)"
+  popover-foreground:    "oklch(0.22 0.025 250)"
+  primary:               "oklch(0.22 0.04 250)"     # ~#28304A — ink, headings, solid buttons
+  primary-foreground:    "oklch(0.985 0.005 240)"
+  secondary:             "oklch(0.95 0.014 235)"    # ~#E9EDF3 — quiet fills, chips
+  secondary-foreground:  "oklch(0.28 0.035 250)"
+  muted:                 "oklch(0.95 0.014 235)"
+  muted-foreground:      "oklch(0.5 0.025 245)"     # ~#6E7689 — secondary text
+  accent:                "oklch(0.54 0.12 163)"     # ~#12876A — the one chromatic value
+  accent-foreground:     "oklch(0.98 0.01 160)"
+  destructive:           "oklch(0.577 0.245 27.325)" # system errors ONLY
+  border:                "oklch(0.89 0.018 235)"    # ~#D6DCE6 — every hairline
+  input:                 "oklch(0.89 0.018 235)"    # field borders
+  ring:                  "oklch(0.54 0.12 163)"     # focus ring == accent
 typography:
-  display-lg:
-    fontFamily: Public Sans
-    fontSize: 44px
-    fontWeight: 300
-    lineHeight: 1.3
-    letterSpacing: -0.02em
-  headline-lg:
-    fontFamily: Public Sans
-    fontSize: 26px
-    fontWeight: 400
-    lineHeight: 1.3
-  headline-md:
-    fontFamily: Public Sans
-    fontSize: 20px
-    fontWeight: 500
-    lineHeight: 1.35
-  body-lg:
-    fontFamily: Public Sans
-    fontSize: 17px
-    fontWeight: 400
-    lineHeight: 1.6
-  body-md:
-    fontFamily: Public Sans
-    fontSize: 15px
-    fontWeight: 400
-    lineHeight: 1.6
-  body-sm:
-    fontFamily: Public Sans
-    fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.5
-  label-md:
-    fontFamily: Public Sans
-    fontSize: 13px
-    fontWeight: 500
-    lineHeight: 1.4
-  label-sm:
-    fontFamily: Public Sans
-    fontSize: 11px
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: 0.08em
-  numeric-md:
-    fontFamily: JetBrains Mono
-    fontSize: 15px
-    fontWeight: 400
-    lineHeight: 1.5
-rounded:
-  none: 0
-  sm: 2px
-  full: 9999px
+  # Two faces, self-hosted at build time by next/font (src/app/layout.tsx).
+  # Tailwind's font-sans / font-mono resolve through --font-sans / --font-mono
+  # set in :root; nothing else reads a raw font variable.
+  families:
+    sans: Public Sans
+    mono: JetBrains Mono
+  scale:
+    # Tailwind's own scale. Sizes below are what the shipped screens use.
+    display:   { class: "text-4xl sm:text-6xl lg:text-7xl", weight: 600, tracking: "-0.05em" }
+    page-title:{ class: "text-2xl sm:text-3xl",             weight: 600, tracking: "-0.06em" }
+    card-title:{ class: "text-xl sm:text-2xl",              weight: 600, tracking: "-0.045em" }
+    section:   { class: "text-lg",                          weight: 600, tracking: "-0.03em" }
+    body:      { class: "text-sm leading-6",                weight: 400 }
+    small:     { class: "text-xs leading-5",                weight: 400 }
+    eyebrow:   { class: "text-xs uppercase tracking-[0.18em]", weight: 700, color: accent }
+    label:     { class: "text-[10px] uppercase tracking-[0.14em]", weight: 600, color: muted-foreground }
+    numeric:   { class: "font-mono tabular-nums",           weight: 400 }
+radius:
+  # One scale, generated from --radius: 0.8rem in @theme inline.
+  base: 0.8rem
+  sm:   0.48rem   # calc(base * 0.6)
+  md:   0.64rem   # calc(base * 0.8)
+  lg:   0.8rem    # base
+  xl:   1.12rem   # calc(base * 1.4)  — the card radius (rounded-2xl reads here)
+  full: 9999px    # pills, avatars, status dots
+elevation:
+  none:  "no shadow — the default"
+  card:  "shadow-sm — cards, headers, the brand mark"
+  raised:"shadow-lg shadow-primary/10 — the landing page's primary call to action, and nothing else"
 spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 32px
-  xl: 64px
-  gutter: 24px
-  margin: 48px
+  # Tailwind's 0.25rem step. Named rhythms the screens actually keep to:
+  field-gap:    "mb-6"      # between form fields
+  section-gap:  "mt-10 / mt-12"
+  card-padding: "p-5 sm:p-6"
+  page-padding: "p-5 sm:p-8"
+  measure:      "max-w-2xl prose · max-w-3xl documents · max-w-[1500px] app"
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: 12px 24px
-    height: 44px
-  button-primary-hover:
-    backgroundColor: "{colors.secondary}"
-    textColor: "{colors.on-primary}"
+    background: "{colors.primary}"
+    text: "{colors.primary-foreground}"
+    radius: "{radius.lg}"
+    padding: "px-5 py-3.5"
+    typography: "text-sm font-semibold"
+    shadow: "{elevation.card}"
+    hover: "bg-primary/90, translate-y-[-2px]"
   button-ghost:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: 12px 20px
-    height: 44px
-  button-ghost-hover:
-    backgroundColor: "{colors.surface-container}"
-    textColor: "{colors.on-surface}"
+    background: "{colors.card}"
+    text: "{colors.primary}"
+    border: "1px {colors.border}"
+    radius: "{radius.lg}"
+    padding: "px-5 py-3.5"
+    hover: "border-foreground/30, bg-secondary/60"
   input-field:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
-    padding: 12px 14px
-    height: 44px
-  input-field-focus:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.on-surface}"
-  row-role:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-lg}"
-    rounded: "{rounded.none}"
-    padding: 16px 0
-  # RETIRED 2026-09-04 (Stage A) — nothing is withheld. Kept, drawn nowhere.
-  row-role-withheld:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface-variant}"
-    typography: "{typography.body-lg}"
-    rounded: "{rounded.none}"
-    padding: 16px 0
-  # RETIRED 2026-09-04 (Stage A) — a stretch tier only means something against
-  # a refusal. Kept, drawn nowhere; surface-container-high is now unused here.
-  row-role-stretch:
-    backgroundColor: "{colors.surface-container-high}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-lg}"
-    rounded: "{rounded.none}"
-    padding: 16px
-  arithmetic-figure:
-    backgroundColor: transparent
-    textColor: "{colors.on-surface}"
-    typography: "{typography.numeric-md}"
-    rounded: "{rounded.none}"
-    padding: 0
+    background: "{colors.card}"
+    border: "1px {colors.input}"
+    radius: "{radius.lg}"
+    padding: "px-4 py-3.5"
+    typography: "text-sm"
+    focus: "border-accent + ring-2 ring-accent/10"
+    error: "border-destructive + ring-destructive/10, message below in destructive"
+  role-card:
+    background: "{colors.card}"
+    border: "1px {colors.border}"
+    radius: "{radius.xl}"
+    padding: "p-5 sm:p-6"
+    shadow: "{elevation.card}"
+  option-card:
+    # The repeated single/multi-select control across onboarding.
+    unselected: "border-input, text-muted-foreground, hover:border-foreground/30"
+    selected:   "border-accent, bg-accent/5, text-primary, Check icon in accent"
+    radius: "{radius.lg}"
+    padding: "px-4 py-3.5"
 ---
 
 # Saaf
 
 ## Brand & Style
 
-Saaf is a free daily job shortlist for Indian professionals in their first five years of work. Its distinguishing act is not showing roles — it is *refusing* to show them, and publishing what it refused and why. The design system exists to make that refusal legible, checkable, and impossible to mistake for a marketing claim.
+Saaf is a free job-matching product for Indian professionals. Its distinguishing
+act is not showing roles — it is **showing the working behind every number it
+publishes**, and saying plainly where it is uncertain. The design system exists
+to make that working legible and checkable.
 
-The aesthetic intent is **a public notice, not a dashboard**. Pages should read like something printed and posted rather than something rendered and animated — a nutrition label, a published audit, a shareholders' letter. The emotional response is trust through plainness: nothing here is trying to persuade you, which is exactly why you believe it. The brand's tone is exact, unhedged, and quiet, and the surface has to match — a product that tells a candidate "no" with a stated reason cannot be wrapped in gradients and glow without the two contradicting each other.
+The aesthetic is a **calm product surface**: a paper-blue ground, white cards
+that carry one soft shadow, a single green accent used sparingly to mark what is
+live or confirmed, and generous but not airy spacing. Nothing on screen tries to
+persuade; the credibility comes from the fact that every number opens to show
+where it came from.
 
-Two anti-patterns govern everything below. **This must never look like an AI product** — no purple-to-blue gradient, no glassmorphism, no blurred orb, no rounded-square icon card above a heading, no oversized italic serif hero. And **it must never look like a dashboard** — no widget grids, no sparkline chrome, no metric tiles competing for attention. If a screen starts to feel like an analytics panel, return it to a single column.
+Two anti-patterns still govern everything. **This must not look like a generic
+AI product** — no purple-to-blue gradient, no glassmorphism, no blurred orb, no
+oversized italic serif hero. And **it must not become a dashboard of invented
+figures** — every tile on the signed-in rail shows a number the database
+actually holds. The saaf-ai export shipped a profile-strength meter, a weekly
+application limit and a B2B discoverability toggle; all three were dropped
+because the first two are made up and the third is parked.
 
-The anti-reference is **resumly.ai**, and it is named here deliberately rather than described in the abstract. Measured on its live page in September 2026, it runs **196 shadowed elements** across four shadow recipes, **eight** corner radii in simultaneous use (999px pills on 473 elements, plus 20, 16, 12, 10, 8, 6 and 50%), **four** gradient recipes including a `135deg` blue-to-lighter-blue hero, **two** banned typefaces (Inter and Plus Jakarta Sans), five font weights, and eight ad-hoc type sizes with no scale between them. The anchor this system is built from runs zero shadows, one radius, one font and one dominant weight. These are not two points on a spectrum; they are opposite answers to the same question, and when a future screen drifts, it will drift toward Resumly. Measure against those numbers, not against a feeling.
-
-The contradiction runs deeper than surface. Resumly's headline is *"Your Job Search, Fully Automated — applies for you while you sleep"*, which is the auto-apply behaviour this product exists to argue against. Borrowing its visual language would put the look and the argument in opposition. One device is worth taking: framing the product screenshot inside browser chrome, which is an honest way to show a screenshot-first product and carries no ideological freight.
+The named anti-reference is still **resumly.ai**, but for its argument rather
+than its shadows: its headline is *"Your Job Search, Fully Automated — applies
+for you while you sleep"*, which is the auto-apply behaviour this product exists
+to argue against.
 
 ## Colors
 
-The palette is monochrome by construction, derived from computed styles on `zerodha.tech` — an Indian product in an adjacent trust-critical category, aimed at the same person.
+The palette is a cool near-neutral with exactly one chromatic accent.
 
-- **Neutral (#F0F0F0):** The page ground, taken directly from the reference. Deliberately not white — it reads as paper and lowers the glare for a user who is on a laptop in a dark room at 11pm.
-- **Surface (#FFFFFF):** True white, used only for genuinely elevated content — input fields and modal sheets — so that "raised" means something.
-- **Surface-container-high (#E2E2D7):** The bone tint, the single non-grey surface in the system, lifted from the reference's one panel. Reserved for the **Stretch tier** — the only place the product shows a role the candidate does not fully clear.
-- **Primary (#141414):** Near-black ink, not pure black. Headlines, body, primary buttons, and links. Links are undecorated ink, following the reference — no blue, no underline.
-- **On-surface-variant (#5F5F5F):** Secondary text — the *reason* line on every recommendation, timestamps, and metadata.
-- **Outline (#7A7A7A) vs Outline-variant (#C5C5C5):** A deliberate split. `outline-variant` is the soft hairline from the reference, used for decorative dividers between rows, where WCAG's non-text contrast rule does not apply. `outline` is darker and reserved for **interactive component boundaries** — input borders, focus rings — where 3:1 is required. It measures 3.77:1 on neutral, 4.29:1 on surface, and 3.29:1 on the bone container.
-- **Error (#8C2F22):** A low-chroma oxide red, the one chromatic value in the system. It is reserved **exclusively for system errors** — failed form validation, a broken upload, a destructive confirmation. It is **never** used for a match outcome. A badly-scored role is not an error; it is a correct answer, and colouring it red would reframe an honest number as a failure.
+- **background** — the page ground. A very light blue-grey, not white, so a
+  white card reads as raised without needing a heavy shadow.
+- **card (#FFFFFF)** — every raised surface: role cards, the app header, the
+  sidebar, form panels, document pages.
+- **primary** — a deep desaturated navy-black. Headings, body emphasis, solid
+  buttons, and the active navigation item. It is the ink.
+- **muted-foreground** — secondary text: the reason line on every role, helper
+  text under every field, metadata.
+- **border** — the single hairline value. Used for card borders, dividers,
+  table rules and unfocused input borders alike.
+- **accent (a deep green)** — the one chromatic value, and it is rationed. It
+  marks **eyebrows**, **the focus ring**, **a confirmed or selected state**, and
+  **live figures**. It never carries a match outcome.
+- **destructive** — reserved **exclusively for system errors**: a failed upload,
+  a rejected form, a destructive confirmation. It is **never** used for a match
+  outcome. A low score is a correct answer, not a failure.
 
-Dark-mode values are carried in the same map under a `dark-` prefix (`dark-surface`, `dark-on-surface`, and so on) so both palettes stay machine-readable in one flat schema. Every foreground/background pair in both modes has been verified: body text ranges from 4.89:1 to 18.42:1, and no pair falls below the 4.5:1 AA threshold.
+There is **no dark palette**. `color-scheme: light` is set and the `dark`
+variant is declared but undefined. Adding one means defining every token under
+`.dark` in a single pass — a partial dark palette previously shipped a real
+invisible-button defect, and the note in `globals.css` records it.
 
 ## Typography
 
-The system is set in **Public Sans** throughout, with **JetBrains Mono** carrying numbers. Both are free for commercial use.
+Two faces, both free for commercial use and both self-hosted at build time by
+`next/font`, so no request reaches Google from a candidate's browser. That
+matters for this product specifically: a font CDN request from a job-search page
+is exactly the leak the privacy guarantee rules out.
 
-Public Sans is not a neutral default here — it is the typeface of United States civic communication, drawn for public notices and government forms. A product whose central claim is *we publish what we refused, in a form you can check* should be set in the type of an official notice. It also substitutes cleanly for the Inter found on the reference site, which is excluded as a vibe-coded default.
+- **Public Sans** carries everything. It is the typeface of United States civic
+  communication, drawn for public notices and government forms — the right voice
+  for a product whose claim is *check our working*. It survived the system
+  change unchanged.
+- **JetBrains Mono** carries every number that is meant to be compared: scores,
+  counts, the index audit table, the arithmetic figure. Always with
+  `tabular-nums` so columns align down the page.
 
-- **Display (44px/300)** carries the light weight observed on the reference, where 182 of 210 elements were weight 300. That lightness is kept **only at display size**. Body drops to 400, because 300 is fragile at 15–17px on the low-DPI Windows displays a large share of Indian office users are on. This is a deliberate deviation from the anchor.
-- **Body-lg (17px/1.6)** is the reference's exact body size and rhythm, and is the default for role listings and long-form reading.
-- **Label-sm (11px/600, 0.08em, uppercase)** carries metadata, the match-band and status tags on a role row, and column headers on the audit table.
-- **Numeric-md (JetBrains Mono 15px)** exists for one reason: the arithmetic device. `3,200 → 47 → 3` is the brand's signature figure, and a monospaced tabular face makes the subtraction legible and columns align. Every number in a table, an audit row, or an empty state uses it. Set `font-variant-numeric: tabular-nums` alongside.
+Weight 600 does the work at every heading size, with tight negative tracking
+(−0.03em to −0.06em) that increases as the size does. Body is 400 at
+`text-sm`/`leading-6`. The old system's 300-weight display face is gone with it.
 
 ## Layout & Spacing
 
-The layout model is a document, not a canvas.
+Three shells, and every screen uses one of them.
 
-- **Content width:** 950px maximum, taken from the reference's measured `max-width`. Prose and role listings sit in a single column and never widen into a grid. Outer margins start at 48px (`margin`) and compress to 16px (`md`) on mobile — the primary surface for a user hiding a search on a personal phone.
-- **Vertical rhythm:** An 8px base governs everything: `xs (4) — sm (8) — md (16) — lg (32) — xl (64)`, with `gutter (24)` and `margin (48)` as named layout tokens. The reference's irregular 15px and 18px paddings were normalised onto this scale rather than copied.
-- **Rows over cards:** The core object — a role — is a **row separated by a hairline**, not a card. Cards imply containers a user can rearrange; rows imply a list someone else compiled and is accountable for. Row padding is 16px vertical, 0 horizontal, so the rule runs the full measure.
-- **Section breaks** use 64px (`xl`), and this is the only generosity in the system. Density is otherwise comfortable rather than airy — the audit table should feel like a document with a lot on it.
+- **`AppShell`** (`src/components/features/app-shell.tsx`) — the signed-in
+  frame. Fixed 256px sidebar on desktop, a drawer on mobile, and a 80px header
+  carrying eyebrow, page title and the account initials. It takes the page body
+  as `children`, so every screen inside it stays a **server component** and
+  keeps its auth check and its database read on the server. Used by `/today`,
+  `/applications`, `/profile`.
+- **`OnboardingShell`** (`src/components/features/onboarding-shell.tsx`) — the
+  five-step split screen. A sticky gradient panel on the left carrying the mark
+  and the two promises the product actually keeps, and the step on the right
+  with "Step N of 5" and a progress bar. `STEPS` in that file is the single
+  source of truth for the flow's length and pacing.
+- **`DocPage`** (`src/components/features/doc-page.tsx`) — the standing
+  documents: `/privacy`, `/terms`, `/audit`. Narrow measure, a header that gets
+  the reader back out, no marketing furniture.
+
+`/` (the landing page) carries its own header and footer and belongs to none of
+the three.
+
+Content widths: `max-w-2xl` for forms and prose, `max-w-3xl` for documents,
+`max-w-[1500px]` for the signed-in app. Page padding is `p-5` rising to `p-8`
+from the `sm` breakpoint — mobile is the primary surface for a candidate hiding
+a search on a personal phone.
 
 ## Elevation & Depth
 
-There is no elevation. The reference returned an empty set for box-shadows across every element on the page, and that is reproduced here exactly.
+There are exactly three levels, and reaching past them is drift.
 
-- **Level 1 (Page):** The neutral ground. No shadow, no border.
-- **Level 2 (Rows and sections):** Separated by a single 1px `outline-variant` hairline. That rule is the entire depth model.
-- **Level 3 (Inputs, modals):** A white `surface` with a 1px `outline` border. Still no shadow — a raised element is identified by its lighter surface and its darker border, never by a cast shadow.
+- **Level 1 — page.** The `background` ground. No border, no shadow.
+- **Level 2 — cards.** `bg-card` + `border border-border` + `shadow-sm`. Role
+  cards, form panels, rail tiles, headers, the sidebar.
+- **Level 3 — the one call to action.** `shadow-lg shadow-primary/10` on the
+  landing page's primary button. Nowhere else.
 
-This is a conviction, not a style preference. Shadow simulates a physical object floating above a plane; this product is arguing that it is a published document, and documents do not float. Anything softer than a hairline breaks the argument.
+The previous system had **zero** shadows as a matter of conviction. This one has
+one soft recipe, used consistently. That is the trade the change made, and the
+guard is that it stays *one* recipe: the anti-reference runs 196 shadowed
+elements across four recipes, and drift toward it will start by adding a second.
 
 ## Shapes
 
-Corners are square. The reference contained no rounded rectangles at all — the only radius on the entire page was `50%` on circular avatars.
+One radius scale, generated from `--radius: 0.8rem`.
 
-`rounded.none (0)` is the default for every surface, button, row, table, and container. `rounded.sm (2px)` exists for one purpose: input fields, where a hair of softening signals "you can type here" and distinguishes a field from a static cell. `rounded.full` is reserved for genuinely circular elements — avatars and status dots.
+Everything interactive is `rounded-xl` (buttons, inputs, option cards, nav
+items). Containers are `rounded-2xl` (cards, panels, dropzones). `rounded-full`
+is for genuinely round things: status dots, avatars, badges and the score ring.
+`rounded-lg` covers small inline chrome — icon tiles, skill chips, the remove
+button on a chip.
 
-The scale deliberately has **no `md`, `lg`, or `xl` levels.** They are omitted rather than left unused, so that no future screen can quietly reach for a 12px radius and drift the system toward the consumer-app default.
+Do not introduce a radius outside this scale. Eight simultaneous radii is a
+measured property of the anti-reference.
 
 ## Components
 
 ### Buttons
 
-Primary buttons are solid `#141414` ink with `#F0F0F0` text, square-cornered, 44px tall, one per screen. Hover shifts the background to `secondary` — a lightening, not a colour change. Ghost buttons are transparent with ink text and a `surface-container` hover, used for everything secondary. There is no tertiary or outlined button variant; two are enough, and a third invites hierarchy the product does not have.
+`src/components/ui/button.tsx`. **Two variants only** — `primary` (solid ink,
+white text, `shadow-sm`, lifts 2px on hover) and `ghost` (white card surface,
+ink text, hairline border). A third variant invites hierarchy the product does
+not have. Full width is not the default: pass `className="w-full"`, which
+onboarding does everywhere and the app shell does nowhere.
 
 ### Inputs
 
-Input fields are white on the neutral ground with a 1px `outline` border at 2px radius. Focus does not add a glow or a coloured ring — the border thickens to 2px in `primary` ink. Labels sit above the field; helper text sits below in `body-sm` `on-surface-variant`. Error states swap the border to `error` and surface the message below in `error` — the only place chromatic colour appears in the interface.
+`src/components/ui/input.tsx`. Label above in `text-sm font-semibold`, optional
+**provenance** note beside it in `text-xs` muted — the mechanism that turns
+typing into checking on the confirm screen. Field is white on the page ground
+with a hairline border; focus swaps the border to `accent` and adds
+`ring-2 ring-accent/10`. Error swaps border and ring to `destructive` and puts
+the message below in `destructive` — the only place chromatic red appears.
 
-### Role rows — one ranked state
+### Role card
 
-*Amended 2026-09-04 (Stage A). The three-state row is retired: the product ranks
-rather than gates, so there is no verdict to draw. `RoleCard`
-(`src/components/ui/role-card.tsx`) is the single shipped row.*
+`src/components/ui/role-card.tsx`. The single shipped role object, and still a
+**server component**: the disclosures are native `<details>`, the only client
+code is the two action buttons, and **the breakdown is never behind a request**
+— a candidate can check the arithmetic without a round trip.
 
-**`row-role`** is now the only role row, and its job is not to deliver a verdict
-but to show a score and let the candidate check the arithmetic behind it. Ink
-text at `body-lg`, hairline rule beneath, the score in tabular numerals followed
-by its one-line reason in `on-surface-variant` `body-sm`. `label-sm` tags carry
-the band — **Strong match** (≥75), **Worth a look** (≥50), **Weak match** below —
-plus *New*, *Salary not stated*, and *Check the experience bar* when the posting
-stated a bar the extractor could not read confidently. Nothing else decorates it.
+Left column carries band tag, title, company, city and salary chips, the one
+reason line, and two disclosures — *How this score is built* (every component
+with the sentence it was read from) and *What we read from this posting* (every
+extracted requirement with its source quote). Right column is the score ring:
+the number in `text-4xl tabular-nums`, the band beneath, and the two
+highest-weighted components under a rule. A strong match (≥75, in the `matches`
+bucket) inverts to ink-on-primary with an accent ring.
 
 **The breakdown is not decoration.** The score it replaced was
 `70 + posting verbosity` and never read the candidate at all; a bare number would
-hide exactly that class of defect again. Every component shows the sentence it
-was read from.
+hide exactly that class of defect again.
 
-**Retired:** ~~`row-role-withheld`~~ (nothing is withheld — no strike-through, no
-refusal line) and ~~`row-role-stretch`~~ (a stretch tier only means something
-against a refusal; `surface-container-high` is consequently unused by the role
-list). The rule they existed to serve survives and now belongs to the band tags:
-a weak match must be **legible as weak at a glance, without colour coding.**
+### Option card
+
+The repeated select control across onboarding — portals, credential, job type.
+Unselected is a muted hairline box; selected takes `border-accent`, a 5% accent
+wash and a `Check` in accent. It is a `<button aria-pressed>` for multi-select
+groups and never a coloured pill.
 
 ### Arithmetic figure
 
-`arithmetic-figure` renders the empty-state and audit numbers in JetBrains Mono. *Amended 2026-09-04:* it used to show a **subtraction** — indexed, then withheld — because refusal was the product. Under ranking nothing is withheld, so the figure is a **narrowing**: `650 indexed today · 47 matching your search · 3 a strong fit`. It is still the brand's signature graphic device and still appears on the empty state, the index audit page and the daily digest, and the rule is unchanged in substance — **never only the total.** The falling number is the argument.
+Still the brand's signature graphic device, still in JetBrains Mono, and still a
+**narrowing**, never a single total: `650 indexed today · 47 matching your
+search · 3 a strong fit`. It appears on the empty state, the index audit page
+and the daily digest. **Never only the total.** The falling number is the
+argument.
 
 ## Do's and Don'ts
 
 **Do**
 
-- Show the arithmetic. Every count that narrows is displayed as a sequence, never as a single total.
-- Show the working. Every score is displayed with the components that produced it and the sentence each was read from — a number never appears alone. *(Replaces "draw refusals", 2026-09-04: nothing is withheld any more.)*
-- Attribute thinness to coverage. A short list says "that's a thin day for our coverage, not a verdict on you."
-- Use rows and hairlines for the role list. Reach for a card only when content is genuinely a self-contained object.
-- Set every number in `numeric-md` with tabular numerals so columns align down the page.
-- Keep the reason line adjacent to the score. A number never appears without its explanation.
+- Show the arithmetic. Every count that narrows is displayed as a sequence.
+- Show the working. Every score appears with the components that produced it and
+  the sentence each was read from. A number never appears alone.
+- Attribute thinness to coverage. A short list says "that's a thin day for our
+  coverage, not a verdict on you."
+- Set every comparable number in `font-mono tabular-nums`.
+- Keep the reason line adjacent to the score.
+- Reach for an existing shell before inventing a layout.
 
 **Don't**
 
-- Don't use `error` red for a match outcome. It is reserved for system failures. A low score is a correct answer, not a failure — colouring it red would reframe an honest number as an alarm.
-- Don't add a shadow — not one. The anti-reference has 196 of them; this system has zero. If something needs to separate, it gets a hairline or a lighter surface.
-- Don't round a corner beyond the 2px reserved for inputs. There is no `md` radius on purpose, and no pills — the anti-reference has 473 pill-shaped elements and eight competing radii.
-- Don't introduce a second chromatic accent, and never reach for a Tailwind default green/red/amber trio. The system is monochrome and the one oxide red is already spoken for.
-- Don't render a score without its reason, anywhere — that is the exact failure the product exists to correct.
-- Don't build a dashboard. No metric tiles, no widget grid, no sparkline chrome. One column, one document.
+- Don't use `destructive` for a match outcome. It is for system failures.
+- Don't add a second shadow recipe. There is `shadow-sm` for cards and one
+  `shadow-lg` on one button.
+- Don't add a radius outside the `--radius` scale.
+- Don't introduce a second chromatic accent, and never reach for a Tailwind
+  default green/red/amber trio. One green is already spoken for.
+- Don't render a score without its reason, anywhere — that is the exact failure
+  the product exists to correct.
+- Don't ship a number the database does not hold. If the export has a tile for
+  it and we cannot compute it, the tile does not ship.
+- Don't half-add dark mode. All tokens or none.
+
+## What was retired, and why
+
+The original system was monochrome by construction, hairline-ruled, zero-shadow
+and square-cornered, anchored on live computed styles from `zerodha.tech`, and
+set on a `#F0F0F0` paper ground. Its argument was that the product is a
+**published notice**, and notices do not float — so no shadow, no rounding, rows
+rather than cards.
+
+It was replaced by the saaf-ai export because the founder wanted the product to
+read as a product rather than as a document, and because the export carried a
+worked-through signed-in application — sidebar, header, score ring, kanban —
+that the notice system had no answer for. **That is a taste decision that was
+made deliberately, not a defect that was fixed.** The honest cost: the
+"published notice" argument no longer runs at the level of the surface.
+
+What survived the change, because it was never really about the visuals:
+
+| Survived | Where it lives now |
+|---|---|
+| Show the working behind every score | `role-card.tsx` disclosures |
+| Never a score without its reason | `role-card.tsx` |
+| Chromatic red for system errors only | `destructive`, used in three places |
+| Attribute a thin list to coverage | `/today` rail |
+| The arithmetic figure, as a narrowing | `/today`, `/audit`, digest |
+| Public Sans + JetBrains Mono | `layout.tsx` |
+| No invented numbers on screen | `/today` rail, and the three export tiles that were dropped |
+
+Retired with the system and drawn nowhere: `row-role-withheld` and
+`row-role-stretch` (nothing is withheld — that went with gating on 2026-09-04),
+the `--color-*` / `--type-*` / `--space-*` token block, the `.measure` and
+`.rule` global classes, and the CSS modules for button, input, row and
+arithmetic. `docs/DESIGN.html`, the live style guide that rendered the retired
+system, was deleted with it — a page that renders tokens no screen uses any more
+is a trap, not a record, and git history keeps it if it is ever wanted. **There
+is no live style guide for this system yet**; this file is the source of truth
+until one is built.

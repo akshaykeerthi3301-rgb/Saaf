@@ -1,13 +1,16 @@
 import Link from 'next/link'
+import { DocPage } from '@/components/features/doc-page'
 
 function Section({ children }: { children: React.ReactNode }) {
-  return <section style={{ marginTop: 'var(--space-xl)' }}>{children}</section>
+  return <section className="mt-12">{children}</section>
 }
 const H2 = ({ children }: { children: React.ReactNode }) => (
-  <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 'var(--type-headline-md-weight)', margin: '0 0 var(--space-sm)' }}>{children}</h2>
+  <h2 className="mb-3 text-lg font-semibold tracking-[-0.03em] text-primary">{children}</h2>
 )
+/* Inline links are styled here rather than globally: the new system has no
+   blanket `a` rule, and these documents are the only prose that carries them. */
 const P = ({ children }: { children: React.ReactNode }) => (
-  <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', maxWidth: '65ch', margin: '0 0 var(--space-md)' }}>
+  <p className="mb-4 max-w-[65ch] text-sm leading-6 text-muted-foreground [&_a]:font-semibold [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4">
     {children}
   </p>
 )
@@ -28,10 +31,7 @@ export default function PrivacyPage() {
   const providerLabel = PROVIDER_LABEL[activeProvider() ?? 'gemini']
 
   return (
-    <main className="measure" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
-      <h1 style={{ fontSize: 'var(--type-display-lg-size)', fontWeight: 'var(--type-display-lg-weight)', margin: '0 0 var(--space-md)' }}>
-        Privacy
-      </h1>
+    <DocPage eyebrow="How we handle your data" title="Privacy">
       <P>
         Saaf exists because a job search a candidate is hiding from their employer
         deserves to actually be hidden. Everything below is enforced in code, not
@@ -61,9 +61,10 @@ export default function PrivacyPage() {
           than from our summary of them. Groq is <em>not permitted to use inputs or
           outputs to train or fine-tune any model</em> unless we explicitly grant
           permission, and we have not. Inference requests are <em>not retained by
-          default</em>; logs are created only when troubleshooting an error or
-          investigating suspected abuse, and are kept for up to 30 days unless a law
-          requires longer. You keep the intellectual property in anything you send
+          default</em>, and we have additionally switched on{' '}
+          <strong>Zero Data Retention</strong> on our account, which stops the
+          troubleshooting and abuse-investigation logs that would otherwise be kept
+          for up to 30 days. You keep the intellectual property in anything you send
           and anything returned.
         </P>
         <P>
@@ -124,9 +125,9 @@ export default function PrivacyPage() {
         </P>
       </Section>
 
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)', marginTop: 'var(--space-xl)' }}>
+      <p className="mt-12 text-xs leading-5 text-muted-foreground">
         Last updated September 2026.
       </p>
-    </main>
+    </DocPage>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { X } from 'lucide-react'
 
 type Props = {
   skills: string[]
@@ -28,47 +29,38 @@ export function SkillsField({ skills, onChange, fromResume }: Props) {
   }
 
   return (
-    <div style={{ marginBottom: 'var(--space-md)' }}>
-      <label htmlFor="skill-add" style={{
-        display: 'block', fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-        letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-        color: 'var(--color-on-surface-variant)', marginBottom: 'var(--space-xs)',
-      }}>
+    <div className="mb-6">
+      <label htmlFor="skill-add" className="mb-2 block text-sm font-semibold text-primary">
         Skills
         {fromResume ? (
-          <span style={{ textTransform: 'none', letterSpacing: 'normal', fontWeight: 400, marginLeft: 8 }}>
+          <span className="ml-2 text-xs font-normal text-muted-foreground">
             read from your résumé — remove anything that isn&apos;t yours
           </span>
         ) : null}
       </label>
 
       {skills.length > 0 ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)', marginBottom: 'var(--space-xs)' }}>
+        <div className="mb-3 flex flex-wrap gap-2">
           {skills.map((s) => (
-            <span key={s} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              border: '1px solid var(--color-outline)', padding: '3px 6px 3px 10px',
-              fontSize: 'var(--type-body-sm-size)',
-            }}>
+            <span
+              key={s}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/50 py-1 pl-3 pr-1.5 text-xs font-medium text-primary"
+            >
               {s}
               <button
                 type="button"
                 onClick={() => onChange(skills.filter((x) => x !== s))}
                 aria-label={`Remove ${s}`}
-                style={{
-                  font: 'inherit', lineHeight: 1, cursor: 'pointer', padding: '2px 4px',
-                  background: 'transparent', color: 'var(--color-on-surface-variant)',
-                  border: 0,
-                }}
+                className="flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-primary"
               >
-                ×
+                <X className="size-3" />
               </button>
             </span>
           ))}
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 'var(--space-xs)', maxWidth: 420 }}>
+      <div className="flex gap-2">
         <input
           id="skill-add"
           value={draft}
@@ -76,26 +68,18 @@ export function SkillsField({ skills, onChange, fromResume }: Props) {
           autoComplete="off"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
-          style={{
-            flex: 1, height: 44, padding: '12px 14px',
-            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-            font: 'inherit', fontSize: 'var(--type-body-md-size)',
-            border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-none)',
-          }}
+          className="min-w-0 flex-1 rounded-xl border border-input bg-card px-4 py-3 text-sm text-primary outline-none transition-colors placeholder:text-muted-foreground hover:border-foreground/30 focus:border-accent focus:ring-2 focus:ring-accent/10"
         />
-        <button type="button" onClick={add} style={{
-          font: 'inherit', fontSize: 'var(--type-body-md-size)', cursor: 'pointer',
-          padding: '0 16px', background: 'transparent', color: 'var(--color-on-surface)',
-          border: '1px solid var(--color-outline)', borderRadius: 'var(--rounded-none)',
-        }}>
+        <button
+          type="button"
+          onClick={add}
+          className="shrink-0 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-primary transition-colors hover:border-foreground/30 hover:bg-secondary/60"
+        >
           Add
         </button>
       </div>
 
-      <p style={{
-        color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)',
-        margin: 'var(--space-xs) 0 0',
-      }}>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">
         Roles naming these score higher on your list.
       </p>
     </div>

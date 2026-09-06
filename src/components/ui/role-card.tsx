@@ -3,7 +3,20 @@ import { ReportScore } from '@/components/features/report-score'
 import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import type { Bucket, ScoreBreakdown } from '@/match/score'
-import type { EvidenceItem } from './row'
+
+/** One requirement the extractor read out of a posting, with the sentence it
+ *  came from. Lived in the retired `row.tsx` alongside the three-outcome role
+ *  row; the row went with gating, this stayed. */
+export type EvidenceItem = {
+  kind: string
+  minYears?: number
+  credential?: string
+  valueText?: string
+  /** The literal sentence from the posting. Rendered as plain text — never
+   *  dangerouslySetInnerHTML — since it's untrusted third-party content. */
+  sourceQuote: string
+  confidence: number
+}
 
 type Props = {
   /** gate_results.id — what a score report is filed against. */

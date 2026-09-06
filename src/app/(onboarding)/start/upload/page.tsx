@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { FileUp, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/features/progress'
+import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { parseResume } from '@/app/actions/parse-resume'
 import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
 import { writeDraft } from '@/lib/onboarding-store'
@@ -16,6 +17,7 @@ export default function UploadPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const [years, setYears] = useState('')
+  const [dragging, setDragging] = useState(false)
 
   // Asked here, before the file, and never parsed. Experience is the most
   // heavily weighted thing the scorer reads and the field a parser gets wrong
@@ -57,28 +59,22 @@ export default function UploadPage() {
   }
 
   return (
-    <main className="measure" style={{ paddingTop: 32, paddingBottom: 64, maxWidth: 560 }}>
-      <Progress pct={25} />
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 16px' }}>
+    <OnboardingShell step={2}>
+      <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
         Upload your résumé
       </h1>
 
-      <label style={{ display: 'block', marginBottom: 'var(--space-md)' }}>
-        <span style={{
-          display: 'block', fontSize: 'var(--type-label-md-size)', fontWeight: 500,
-          marginBottom: 6,
-        }}>
+      <div className="mt-8">
+        <label className="mb-2 block text-sm font-semibold text-primary" htmlFor="years">
           How many years have you worked full-time?
-        </span>
-        <span style={{
-          display: 'block', color: 'var(--color-on-surface-variant)',
-          fontSize: 'var(--type-body-sm-size)', marginBottom: 8,
-        }}>
-          Excluding internships. We ask rather than guess — this is the single
-          biggest input to your scores, and a résumé&apos;s dates are ambiguous
-          about contracts, gaps and promotions.
-        </span>
+        </label>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Excluding internships. We ask rather than guess — this is the single biggest input to
+          your scores, and a résumé&apos;s dates are ambiguous about contracts, gaps and
+          promotions.
+        </p>
         <input
+          id="years"
           type="number"
           inputMode="decimal"
           min={0}
@@ -87,67 +83,96 @@ export default function UploadPage() {
           value={years}
           onChange={(e) => setYears(e.target.value)}
           placeholder="e.g. 3"
-          style={{
-            width: '100%', padding: 12, font: 'inherit',
-            fontSize: 'var(--type-body-md-size)',
-            border: '1px solid var(--color-outline)',
-            borderRadius: 'var(--rounded-sm)',
-            background: 'var(--color-surface)', color: 'var(--color-on-surface)',
-          }}
+          className="w-full rounded-xl border border-input bg-card px-4 py-3.5 text-sm text-primary outline-none transition-colors placeholder:text-muted-foreground hover:border-foreground/30 focus:border-accent focus:ring-2 focus:ring-accent/10"
         />
-      </label>
+      </div>
 
-      <button
-        type="button"
-        onClick={() => input.current?.click()}
-        disabled={busy || !yearsValid}
-        style={{
-          width: '100%', minHeight: 140, cursor: busy ? 'wait' : 'pointer',
-          border: '1px dashed var(--color-outline)', background: 'transparent',
-          color: 'var(--color-on-surface-variant)', font: 'inherit',
-          fontSize: 'var(--type-body-md-size)', borderRadius: 'var(--rounded-none)',
-        }}
-      >
-        {busy ? 'Reading…' : 'Choose a PDF or .docx'}
-      </button>
-      {!yearsValid && !busy ? (
-        <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)', marginTop: 8 }}>
-          Add your years of experience above first.
-        </p>
-      ) : null}
-      <input
-        ref={input}
-        type="file"
-        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        hidden
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f) }}
-      />
-
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)' }}>
-        We read it once to fill in your profile, then delete the file. Only the fields
-        you confirm are stored. To read your skills we send the text — with your email,
-        phone and profile links removed — to a third-party model provider, named on our{' '}
-        <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy page</a>.
-        Everything it returns is shown to you before anything is saved.
-      </p>
+      <div className="mt-8">
+        <span className="mb-3 block text-sm font-semibold text-primary">Résumé</span>
+        {/* The dashed box is a real drop target, not just a picture of one. */}
+        <button
+          type="button"
+          onClick={() => input.current?.click()}
+          disabled={busy || !yearsValid}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDragging(false)
+            if (busy || !yearsValid) return
+            const f = e.dataTransfer.files[0]
+            if (f) onFile(f)
+          }}
+          className={`flex w-full flex-col items-center justify-center rounded-2xl border border-dashed px-5 py-10 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            dragging
+              ? 'border-accent bg-accent/5'
+              : 'border-border bg-secondary/25 enabled:hover:border-accent/60 enabled:hover:bg-accent/5'
+          }`}
+        >
+          <span className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            {busy ? <Loader2 className="size-5 animate-spin" /> : <FileUp className="size-5" />}
+          </span>
+          <span className="text-sm font-semibold text-primary">
+            {busy ? 'Reading…' : 'Choose a PDF or .docx'}
+          </span>
+          <span className="mt-1 text-xs text-muted-foreground">
+            {busy ? 'This takes a few seconds.' : 'Or drop the file here. 5 MB maximum.'}
+          </span>
+        </button>
+        {!yearsValid && !busy ? (
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Add your years of experience above first.
+          </p>
+        ) : null}
+        <input
+          ref={input}
+          type="file"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          hidden
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f) }}
+        />
+      </div>
 
       {error ? (
-        <p style={{ color: 'var(--color-error)', fontSize: 'var(--type-body-sm-size)' }}>{error}</p>
+        <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
       ) : null}
 
+      <p className="mt-6 flex gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-xs leading-5 text-muted-foreground">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <span>
+          We read it once to fill in your profile, then delete the file. Only the fields you
+          confirm are stored. To read your skills we send the text — with your email, phone and
+          profile links removed — to a third-party model provider, named on our{' '}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary underline underline-offset-4"
+          >
+            privacy page
+          </a>
+          . Everything it returns is shown to you before anything is saved.
+        </span>
+      </p>
+
       {/* Never a dead end: manual entry is a full alternative, not a fallback. */}
-      <Button
-        variant="ghost"
-        onClick={() => {
-          writeDraft({
-            fields: yearsValid ? { yearsExperience: yearsNum } : {},
-            warnings: [],
-          })
-          router.push('/start/confirm')
-        }}
-      >
-        Type it in instead
-      </Button>
-    </main>
+      <div className="mt-10 border-t border-border pt-6">
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => {
+            writeDraft({
+              fields: yearsValid ? { yearsExperience: yearsNum } : {},
+              warnings: [],
+            })
+            router.push('/start/confirm')
+          }}
+        >
+          Type it in instead
+        </Button>
+      </div>
+    </OnboardingShell>
   )
 }

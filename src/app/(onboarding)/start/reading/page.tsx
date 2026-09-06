@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, ShieldCheck } from 'lucide-react'
+import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { useDraft } from '@/lib/use-draft'
 
 /**
@@ -13,10 +14,14 @@ import { useDraft } from '@/lib/use-draft'
  * cannot show its working for, so every line below is a fact about the file
  * that was just read.
  *
- * NO PROGRESS PERCENTAGE, DELIBERATELY. We do not know one. A bar that fills
- * at a rate unrelated to the work is the smallest possible version of the thing
- * this product exists to argue against, and it would sit two screens away from
- * a privacy promise we do keep.
+ * NO PROGRESS PERCENTAGE FOR THE READ, DELIBERATELY. We do not know one. A bar
+ * that fills at a rate unrelated to the work is the smallest possible version of
+ * the thing this product exists to argue against, and it would sit two screens
+ * away from a privacy promise we do keep.
+ *
+ * The shell's bar is a different claim and stays: it measures the five-step
+ * flow, is labelled "Step 3 of 5", and 3 of 5 is a fact. The sentence below
+ * says "for the read itself" so the two can't be read as one.
  *
  * SCOPE OF THE CLAIMS. The parse has already finished by the time this renders
  * — it runs in the server action on the upload screen. So the steps here are
@@ -76,75 +81,68 @@ export default function ReadingPage() {
   }, [router, steps])
 
   return (
-    <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:px-8 sm:py-16">
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
-            What is actually happening
-          </p>
-          <h1 className="mt-3 text-2xl font-semibold leading-[1.15] tracking-[-0.05em] text-primary sm:text-3xl">
-            We&apos;re building your first shortlist, carefully.
-          </h1>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            We show our working, because a career match should be checkable. No invented
-            progress percentage — just the steps we took with your file.
-          </p>
+    <OnboardingShell step={3}>
+      <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
+        We&apos;re building your first shortlist, carefully.
+      </h1>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        We show our working, because a career match should be checkable. No invented
+        progress bar for the read itself — just the steps we took with your file.
+      </p>
 
-          <ol className="mt-8 space-y-5" aria-live="polite">
-            {steps.map((s, i) => {
-              const done = i < step
-              const current = i === step
-              if (!done && !current) return null
-              return (
-                <li key={s.title} className="flex gap-4">
-                  <span
-                    className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border ${
-                      done
-                        ? 'border-accent bg-accent text-accent-foreground'
-                        : 'border-border bg-secondary text-muted-foreground'
-                    }`}
-                  >
-                    {done ? (
-                      <Check className="size-3.5" strokeWidth={3} />
-                    ) : (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-primary">
-                      {s.title}
-                      {current && (
-                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
-                          now
-                        </span>
-                      )}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{s.detail}</p>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
+      <ol className="mt-8 space-y-5" aria-live="polite">
+        {steps.map((s, i) => {
+          const done = i < step
+          const current = i === step
+          if (!done && !current) return null
+          return (
+            <li key={s.title} className="flex gap-4">
+              <span
+                className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border ${
+                  done
+                    ? 'border-accent bg-accent text-accent-foreground'
+                    : 'border-border bg-secondary text-muted-foreground'
+                }`}
+              >
+                {done ? (
+                  <Check className="size-3.5" strokeWidth={3} />
+                ) : (
+                  <Loader2 className="size-3.5 animate-spin" />
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-primary">
+                  {s.title}
+                  {current && (
+                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+                      now
+                    </span>
+                  )}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{s.detail}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
 
-          <div className="mt-8 flex gap-3 rounded-xl border border-border bg-secondary/60 p-4">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p className="text-xs leading-5 text-muted-foreground">
-              The file is deleted the moment parsing finishes, and only the fields you confirm
-              on the next screen are ever stored.
-            </p>
-          </div>
-
-          {slow && (
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              This is taking longer than it should. If nothing happens shortly,{' '}
-              <a href="/start/confirm" className="font-semibold text-primary underline underline-offset-4">
-                go straight to your details
-              </a>{' '}
-              — nothing is lost.
-            </p>
-          )}
-        </div>
+      <div className="mt-8 flex gap-3 rounded-xl border border-border bg-secondary/60 p-4">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <p className="text-xs leading-5 text-muted-foreground">
+          The file is deleted the moment parsing finishes, and only the fields you confirm
+          on the next screen are ever stored.
+        </p>
       </div>
-    </main>
+
+      {slow && (
+        <p className="mt-4 text-xs leading-5 text-muted-foreground">
+          This is taking longer than it should. If nothing happens shortly,{' '}
+          <a href="/start/confirm" className="font-semibold text-primary underline underline-offset-4">
+            go straight to your details
+          </a>{' '}
+          — nothing is lost.
+        </p>
+      )}
+    </OnboardingShell>
   )
 }

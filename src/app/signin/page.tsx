@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,36 +49,60 @@ export default function SignInPage() {
     if (error) { setBusy(false); setError('Could not start Google sign-in. Try again, or use email below.') }
   }
 
+
   return (
-    <main className="measure" style={{ paddingTop: 64, paddingBottom: 64, maxWidth: 480 }}>
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-        Sign in
-      </h1>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background px-5 py-12 text-foreground">
+      <Link
+        href="/"
+        className="mb-8 flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary"
+        aria-label="Saaf home"
+      >
+        <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+          <Sparkles className="size-4" />
+        </span>
+        Saaf AI
+      </Link>
 
-      <Button type="button" variant="ghost" onClick={withGoogle} disabled={busy}>
-        Continue with Google
-      </Button>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary">
+          Sign in
+        </h1>
 
-      <hr className="rule" style={{ margin: 'var(--space-md) 0' }} />
-
-      <form onSubmit={submit}>
-        <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', marginTop: 0 }}>
-          No password. Enter your email to sign in.
-        </p>
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={error}
-        />
-        <Button type="submit" disabled={busy || !email}>
-          {busy ? 'Signing in…' : 'Continue'}
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-6 w-full"
+          onClick={withGoogle}
+          disabled={busy}
+        >
+          Continue with Google
         </Button>
-      </form>
+
+        <div className="my-6 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <form onSubmit={submit}>
+          <p className="mb-5 text-sm leading-6 text-muted-foreground">
+            No password. Enter your email to sign in.
+          </p>
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={error}
+          />
+          <Button type="submit" className="w-full" disabled={busy || !email}>
+            {busy ? 'Signing in…' : 'Continue'}
+          </Button>
+        </form>
+      </div>
     </main>
   )
 }

@@ -1,13 +1,16 @@
 import Link from 'next/link'
+import { DocPage } from '@/components/features/doc-page'
 
 function Section({ children }: { children: React.ReactNode }) {
-  return <section style={{ marginTop: 'var(--space-xl)' }}>{children}</section>
+  return <section className="mt-12">{children}</section>
 }
 const H2 = ({ children }: { children: React.ReactNode }) => (
-  <h2 style={{ fontSize: 'var(--type-headline-md-size)', fontWeight: 'var(--type-headline-md-weight)', margin: '0 0 var(--space-sm)' }}>{children}</h2>
+  <h2 className="mb-3 text-lg font-semibold tracking-[-0.03em] text-primary">{children}</h2>
 )
+/* Inline links are styled here rather than globally: the new system has no
+   blanket `a` rule, and these documents are the only prose that carries them. */
 const P = ({ children }: { children: React.ReactNode }) => (
-  <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)', maxWidth: '65ch', margin: '0 0 var(--space-md)' }}>
+  <p className="mb-4 max-w-[65ch] text-sm leading-6 text-muted-foreground [&_a]:font-semibold [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4">
     {children}
   </p>
 )
@@ -22,10 +25,7 @@ export const metadata = { title: 'Terms — Saaf' }
  */
 export default function TermsPage() {
   return (
-    <main className="measure" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
-      <h1 style={{ fontSize: 'var(--type-display-lg-size)', fontWeight: 'var(--type-display-lg-weight)', margin: '0 0 var(--space-md)' }}>
-        Terms
-      </h1>
+    <DocPage eyebrow="What to expect" title="Terms">
       <P>
         This is a plain description of how Saaf works and what to expect from it —
         not a lawyer-drafted contract. See <Link href="/privacy">Privacy</Link> for
@@ -92,9 +92,9 @@ export default function TermsPage() {
         </P>
       </Section>
 
-      <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-sm-size)', marginTop: 'var(--space-xl)' }}>
+      <p className="mt-12 text-xs leading-5 text-muted-foreground">
         Last updated September 2026.
       </p>
-    </main>
+    </DocPage>
   )
 }
