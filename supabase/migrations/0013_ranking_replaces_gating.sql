@@ -1,6 +1,6 @@
 -- Saaf — ranking replaces gating.
 --
--- The product pivots to a Jobright-equivalent: every role scoped to the
+-- The product pivots to precision ranking: every role scoped to the
 -- candidate's preferred role is SCORED and RANKED, and nothing is ever
 -- withheld. The deterministic gate is not deleted — requirement extraction in
 -- src/gates/ is now the input to the score rather than to a refusal.
@@ -17,7 +17,7 @@
 --    real gap recorded, so the cap goes.
 --
 -- 3. score_breakdown carries the per-component working behind the number.
---    Jobright shows a Match Score with its reasoning; a bare number would
+--    The category leader shows a Match Score with its reasoning; a bare number would
 --    repeat the failure this codebase already has, where the displayed score
 --    was 70 + posting-verbosity and never read the candidate at all.
 

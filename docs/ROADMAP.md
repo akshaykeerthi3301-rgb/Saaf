@@ -4,7 +4,7 @@
 > The coding agent MUST mark tasks `- [x]` as they are finished.
 
 **Status:** 57/66 tasks complete, 1 discarded (TASK-052), 8 open — the MVP (Phases 0–5), Stage D hardening (Phase 6) and the first parity item (Phase 7, TASK-059) are all built. TASK-039's seven-day stability window is open and needs elapsed time, not work. TASK-060–066 (the rest of Phase 7) are not started.
-**Current Phase:** Post-MVP, building toward parity with JobMatchAI per `docs/PARITY.md`. Stages A–D have landed since this roadmap was written; A, B and D are deployed, **C and Phase 7 are not — deployment is on hold until the founder says the build is done.**
+**Current Phase:** Post-MVP, building the application co-pilot (see `docs/PARITY.local.md`, untracked). Stages A–D have landed since this roadmap was written; A, B and D are deployed, **C and Phase 7 are not — deployment is on hold until the founder says the build is done.**
 
 > ⚠️ **This roadmap describes the gating product and is superseded where the two disagree.**
 > Stage A (2026-09-04) replaced gating with ranking: every scoped role is scored and
@@ -15,7 +15,7 @@
 >
 > **Phases 6 and 7 are new** — added 2026-09-05, after Phase 5 was already
 > complete. Phase 6 is Stage D, the hardening the pivot itself needed. Phase 7
-> is the founder-directed build toward **a JobMatchAI equivalent for the Indian
+> is the founder-directed build of the application co-pilot for the Indian
 > market — mechanics and functions ditto, our own front end** — sequenced per
 > `docs/PARITY.md`, which carries the full feature-by-feature comparison this
 > roadmap only summarises. **No deployment until Phase 7 is done**; Stage C and
@@ -343,13 +343,13 @@
 
 ---
 
-## Phase 7: Parity with JobMatchAI
+## Phase 7: The application co-pilot
 
-> **Goal:** A JobMatchAI equivalent for the Indian market — mechanics and
+> **Goal:** The co-pilot half of the product for the Indian market — mechanics and
 > functions ditto, our own front end. `docs/PARITY.md` is the full
-> feature-by-feature comparison, probed live against `jobmatchai.in`; this
+> feature-by-feature comparison, probed live against the category; this
 > phase is that document's recommended order turned into tasks. **The two
-> products don't overlap** — JobMatchAI works on documents the candidate
+> products don't overlap** — that competitor works on documents the candidate
 > brings (résumé, LinkedIn text, a pasted JD) and has no index or ranking, so
 > this phase is additive to the supply-side engine rather than a rewrite of
 > it.

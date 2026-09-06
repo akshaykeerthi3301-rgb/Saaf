@@ -68,7 +68,7 @@ This PRD covers the MVP as fixed in the scoping interview: the core loop plus th
 
 ### Market Differentiation
 
-Every competitor in this category sells *more, faster*, and proves it with numbers nobody can check — Jobright's homepage claims "3x interviews landed" and "2,000,000+ users". Saaf sells *fewer, honest*, and proves it with a refusal any candidate can verify against the job description in thirty seconds. Three things must be true in the implementation for that differentiation to survive contact with users. **Gates run in plain deterministic code, never in a model** — a language model asked to judge eligibility weighs when it should gate, which is precisely how the "Top Applicant on a fifteen-year role" failure is born. **Every refusal carries the specific requirement that triggered it**, extracted from the job description and stored alongside the decision, so the reason is retrieved rather than generated. **The refusal counts are aggregated and publishable from day one**, because the landing page's only proof is the audit.
+Every competitor in this category sells *more, faster*, and proves it with numbers nobody can check — The category leader's homepage claims "3x interviews landed" and "2,000,000+ users". Saaf sells *fewer, honest*, and proves it with a refusal any candidate can verify against the job description in thirty seconds. Three things must be true in the implementation for that differentiation to survive contact with users. **Gates run in plain deterministic code, never in a model** — a language model asked to judge eligibility weighs when it should gate, which is precisely how the "Top Applicant on a fifteen-year role" failure is born. **Every refusal carries the specific requirement that triggered it**, extracted from the job description and stored alongside the decision, so the reason is retrieved rather than generated. **The refusal counts are aggregated and publishable from day one**, because the landing page's only proof is the audit.
 
 ### Magic Moment
 
@@ -1114,7 +1114,7 @@ Reconsider when: the cleared list needs ranking better than "cleared, ordered by
 
 **Everything not named anywhere:** employer accounts, applying through Saaf, recruiter features, mobile apps, payments, teams, referrals. **Permanently** out of scope by product decision, not merely deferred — each contradicts *"Saaf is pre-application and never applies on the candidate's behalf"* or the ₹0/no-two-sided-marketplace lock in `PROJECT-STATE.md`.
 
-~~Interview prep~~ **re-entered scope 2026-09-05** via `docs/ROADMAP.md` Phase 7 (TASK-065), scoped from `docs/PARITY.md`'s JobMatchAI comparison — a one-shot question generator and a mock-interview tool, not a standing agent. It was listed here as permanently excluded when this section was drafted; that line was never true of it specifically and is corrected rather than left standing, per `docs/JOBRIGHT-ANALYSIS.md` § 5, which is where this contradiction was found.
+~~Interview prep~~ **re-entered scope 2026-09-05** via `docs/ROADMAP.md` Phase 7 (TASK-065), scoped from `docs/PARITY.local.md`'s competitor comparison — a one-shot question generator and a mock-interview tool, not a standing agent. It was listed here as permanently excluded when this section was drafted; that line was never true of it specifically and is corrected rather than left standing, per `docs/COMPETITOR-ANALYSIS.local.md` § 5, which is where this contradiction was found.
 
 ---
 

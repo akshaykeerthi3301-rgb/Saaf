@@ -8,6 +8,35 @@
 
 ---
 
+## ⚠️ Amendment — 2026-09-06: the product is matching **plus** a co-pilot, and results come in buckets
+
+*Supersedes the 2026-09-04 amendment below where the two differ.
+`docs/PROJECT-STATE.md` § What this is is the current definition.*
+
+Three changes to what this document describes:
+
+1. **Results are bucketed, not one ranked column.** Matches you / experience out
+   of range / location out of range / worth a look. Nothing is hidden — the
+   buckets *are* the disclosure. This settles a question this document has been
+   wrong about twice: the original gating removed roles, and the Stage A pivot
+   flattened everything into one list. Buckets keep every role visible while
+   keeping the distinction between "this fits" and "this fits except the years."
+
+2. **Saaf is also an application co-pilot.** It fills forms on the employer's own
+   site and drafts a résumé curated to the specific posting, from confirmed facts
+   only. The Summary below says document generation is out of scope; it is in
+   scope now, and the fabrication guard ships with it rather than after it.
+
+3. **Never applying on the candidate's behalf is now a locked decision**, not an
+   implication. Assisted application is the product; automatic application never
+   is. That line is what separates this from the category's failure mode.
+
+**Unchanged and load-bearing:** ₹0 with no paid tier, the legal supply chain, the
+itemised score that shows its working, and thinness attributed to our coverage
+rather than to the candidate.
+
+---
+
 ## ⚠️ Amendment — 2026-09-04: Saaf ranks, it does not gate
 
 *This document was written for the gating product. The build reversed that on
@@ -25,12 +54,12 @@ strategy decision and not a documentation chore.*
 | **Proof** | The refusal screenshot as first earnable evidence | **Unbuildable** — the product no longer refuses. Its successor already renders: an opaque portal "TOP APPLICANT" badge against a 62 that breaks into its parts. |
 | **Honest empty state** | *"3 cleared your experience band"* | Now a narrowing, not a subtraction: *indexed · matching your search · a strong fit*. The principle it protects — a thin list is our coverage problem, never a verdict on the candidate — survived the pivot intact. |
 
-**The open question this leaves:** *why Saaf rather than Jobright, now that both
-rank?* **Answered 2026-09-05 in `docs/JOBRIGHT-ANALYSIS.md`** — not by the
+**The open question this leaves:** *why Saaf rather than the category leader, now
+that both rank?* **Answered 2026-09-05 in `docs/COMPETITOR-ANALYSIS.local.md`** (untracked) — not by the
 mechanism any more, which converged, but by the registry, the shown-working
-score, the legal supply chain and ₹0, none of which Jobright can copy without
+score, the legal supply chain and ₹0, none of which the incumbent can copy without
 becoming a different company. That document also settles, once and for all,
-that finishing the current roadmap does not make Saaf a Jobright ditto — the
+that finishing the current roadmap does not make Saaf a copy of the incumbent — the
 two target different competitors on purpose. Until "Why this works" is
 rewritten to say that in its own voice, treat it as **known-stale**.
 
@@ -70,7 +99,7 @@ Four layers, and three of them run before any language model sees the job. **Fir
 
 ## Why
 
-The advantage compounds in the one place a competitor can't copy quickly and a foundation-model release can't absorb: the registry. Every board added is permanent supply, it grows weekly, and nobody else has it — which is exactly why the gating logic gets open-sourced as public proof while the registry stays private. The category makes the gap easy to see. Jobright charges $39.99 a month for the strongest match scoring in the market and indexes US roles only. Teal runs free to $29 a month and is a tracker and résumé builder with no matching engine behind it. Simplify is free to $39.99 with unlimited autofill and a 4.9-star rating across 3,800 reviews, but it fills applications rather than deciding which are worth filling. The auto-apply tools at $99–249 a month are the category's reputational failure mode — they are a large part of why recruiters stopped reading in the first place. Nobody is serving Indian supply, legally, at this precision, at ₹0.
+The advantage compounds in the one place a competitor can't copy quickly and a foundation-model release can't absorb: the registry. Every board added is permanent supply, it grows weekly, and nobody else has it — which is exactly why the gating logic gets open-sourced as public proof while the registry stays private. The category makes the gap easy to see. The strongest match-scoring product charges around $40 a month and indexes US roles only. The best-known tracker-and-résumé-builder runs free to $29 with no matching engine behind it. The most-installed autofill extension is free to around $40 and very highly rated, but it fills applications rather than deciding which are worth filling. The auto-apply tools at $99–249 a month are the category's reputational failure mode — they are a large part of why recruiters stopped reading in the first place. Nobody is serving Indian supply, legally, at this precision, at ₹0.
 
 The legal position is an advantage rather than a constraint we tolerate. *hiQ Labs v. LinkedIn* established that scraping public data isn't a computer-fraud violation, but hiQ still lost on breach of contract and settled with a $500,000 judgment and a permanent injunction — so LinkedIn and Naukri are excluded from the supply chain entirely, and any competitor built on those surfaces carries a risk this product doesn't. Everything except the explanation layer survives the next model release: a one-prompt ChatGPT user cannot maintain three hundred boards, cannot run unattended every morning, cannot hold a profile's state across months, and will reproduce the fifteen-year bug exactly, because a model weighs where this product gates.
 
@@ -86,7 +115,7 @@ Nobody pays. The product is free permanently — no card, no ads, no paid tier h
 
 ## Proof
 
-What proves the market exists: people already pay real money for weaker versions of this. Jobright charges $39.99 a month — raised 33% from $29.99 — for the strongest match scoring in the category, and indexes US roles only. Teal runs free to $29 as a tracker and résumé builder. Simplify is free to $39.99 and holds 4.9 stars across 3,800 ratings for filling applications rather than choosing which are worth filling. Auto-apply services charge $99–249. In India the same demand surfaces as ₹4,200 for a Naukri résumé rewrite and ₹2.5–4.5 lakh for a Scaler cohort. And the pain is documented verbatim rather than inferred: Blind threads titled *"LinkedIn feels dead in India, where are people actually getting callbacks"* and *"50 days zero interview calls, is the job market broken"* — the latter from a Bangalore candidate with thirteen-plus years and fifty-plus applications across all three portals who got *"not even one call"* — while r/developersIndia's community wiki carries a canonical page titled *"Service Based to Product Based."* A wiki page maintained for this exact transition is the clearest evidence the customer is real.
+What proves the market exists: people already pay real money for weaker versions of this. The strongest match-scoring product charges around $40 a month — raised 33% in a year — and indexes US roles only. The best-known tracker runs free to $29. The most-installed autofill extension is free to around $40 and very highly rated, for filling applications rather than choosing which are worth filling. Auto-apply services charge $99–249. In India the same demand surfaces as ₹4,200 for a Naukri résumé rewrite and ₹2.5–4.5 lakh for a Scaler cohort. And the pain is documented verbatim rather than inferred: Blind threads titled *"LinkedIn feels dead in India, where are people actually getting callbacks"* and *"50 days zero interview calls, is the job market broken"* — the latter from a Bangalore candidate with thirteen-plus years and fifty-plus applications across all three portals who got *"not even one call"* — while r/developersIndia's community wiki carries a canonical page titled *"Service Based to Product Based."* A wiki page maintained for this exact transition is the clearest evidence the customer is real.
 
 What proves this product specifically: nothing yet, and nothing is claimed. As of September 2026 no code has been written, no user has seen it, the Mini-Launch has not been run, and there is no launch log, no believers list, and no first-party signal of any kind. The five personas are research-backed and interview-unvalidated — zero interviews conducted, ten planned at two per persona. Proof here is entirely future-tense, and this should be the first section of this document to change.
 

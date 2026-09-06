@@ -41,7 +41,7 @@ Four quick checks before you commit:
 - **Say it** — ✅ "I found it on Saaf." One syllable, no stumble, no explaining.
 - **Spell it** — ✅ four letters, phonetically unambiguous.
 - **Search it** — ✅ nothing in jobs or careers uses it. Nearest collisions are Saaf Tech (Puducherry, security services) and Saaf Capital (Saudi), both far enough away to be irrelevant. ⚠️ **Registrar lookup not yet run** — category conflict was checked via search, actual domain and handle availability has not been. Do this before any public use.
-- **Feel it** — ✅ carries the *refusal* rather than the matching. Every competitor is a job-compound (Jobright, JobTatkal, Job Match Pro, myjobb, Jobmatcher); this is not, and it names the thing that makes the product different.
+- **Feel it** — ✅ carries the *refusal* rather than the matching. Every competitor is a job-compound; this is not, and it names the thing that makes the product different.
 
 `[Known drag: "saaf" primarily means "clean", and Indian hygiene and sanitation brands own that association. There is a real chance it reads as a cleaning app before it reads as this. Accepted deliberately — the idiom is stronger than the literal.]`
 
@@ -79,7 +79,7 @@ Second clause it implies, load-bearing for the honest empty state: **no system s
 
 **Most job platforms believe a match score exists to rank everything and show you more. We believe a match score's first job is to refuse — and to publish what it refused and why — because an unverifiable number is exactly how the last eight months got wasted.**
 
-Names the opponent precisely. Jobright's homepage claims "3x interviews landed" and "2,000,000+ users"; publishing a refusal log would contradict the number its conversion depends on. No competitor can sign this without disowning their own front page.
+Names the opponent precisely. The category leader's homepage claims "3x interviews landed" and "2,000,000+ users"; publishing a refusal log would contradict the number its conversion depends on. No competitor can sign this without disowning their own front page.
 
 Descends from the worldview: if a system shouldn't hand out a maybe it knows is false, then in this category the score must be willing to say no *and* show its working. The public gate audit is this belief shipped as a feature.
 
@@ -114,7 +114,7 @@ Define three things:
 
 > "We can tell you this posting's three-year floor is your only gap. We can't tell you whether you'll get it, and anyone who says they can is guessing."
 
-Total precision about what the product knows, flat refusal of what it doesn't. Jobright cannot write it — "3x interviews landed" is the guess this sentence calls out.
+Total precision about what the product knows, flat refusal of what it doesn't. The category leader cannot write it — "3x interviews landed" is the guess this sentence calls out.
 
 **Empty-state sentence** — the hardest thing this brand has to say, and where trust is won or lost:
 
@@ -147,7 +147,7 @@ Then define:
 
 **Your answer:**
 
-**Lane: screenshot-first.** The hero artifact of this brand is a picture of the product *declining* to show something, so it has to be photographed from the product itself. Jobright is also screenshot-led; the separation is subject matter. Its screenshots sell abundance — dashboards, match counts, two million users. Ours sell subtraction. **Nobody in this category screenshots what they refused.**
+**Lane: screenshot-first.** The hero artifact of this brand is a picture of the product *declining* to show something, so it has to be photographed from the product itself. The category leader is also screenshot-led; the separation is subject matter. Its screenshots sell abundance — dashboards, match counts, two million users. Ours sell subtraction. **Nobody in this category screenshots what they refused.**
 
 **Style notes**
 
@@ -176,9 +176,10 @@ Then define:
 Live research, September 2026. Re-verify before any public launch — the AI category's visual defaults move fast.
 
 **Competitors examined**
-- [Jobright](https://jobright.ai/) — headline verbatim *"No More Solo Job Hunting — Do it with AI"*; blue/white, screenshots plus user photography; claims "3x interviews landed", "80% time saved", "2,000,000+ users", "in less than 1 min". $39.99/mo, US supply only.
-- Teal (free–$29, tracker and résumé builder), Simplify (free–$39.99, autofill, 4.9★ from 3,800 ratings), Huntr — from `docs/PRODUCT.md` competitor research.
-- India wedge: [Job Match Pro](https://www.jobmatchpro.in/) (Mployee), [JobTatkal](https://www.jobtatkal.com/), [myjobb AI](https://myjobb.ai/), Michael Page Job Match, [Jobmatcher](https://jobmatcher.app/).
+- Category research — the US match-scoring leader, the best-known tracker/résumé
+  builder, the most-installed autofill extension, and the India-wedge products —
+  is held in `docs/COMPETITOR-ANALYSIS.local.md` and `docs/PARITY.local.md`, both
+  untracked. Named companies stay out of the repository.
 - **Naming convention across the set:** job-compounds almost without exception. Teal and Simplify are the only two that read as brands rather than search terms.
 
 **Category visual defaults, 2026** — purple-to-blue gradients, glassmorphism, blurred orbs, monospace accents, rounded-square icon cards above headings, oversized italic-serif heroes. All deliberately excluded above.

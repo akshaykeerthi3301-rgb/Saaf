@@ -27,7 +27,7 @@ A worksheet for defining your offer across the six core elements. Fill in each s
 
 `[India-only for v1 — the ATS registry, the language, and the first users are all Indian. ESCO is EU-built and O*NET is US, but both function as vocabularies anywhere, so geographic expansion is a registry problem rather than an engine problem.]`
 
-`[Engine scope and launch wedge are deliberately different fields. The engine is general because skills-and-experience matching genuinely is; the named customer is narrow because with zero marketing budget the first fifty users come from the founder's own network. Linear, Stripe and Jobright all shipped general engines behind narrow offers.]`
+`[Engine scope and launch wedge are deliberately different fields. The engine is general because skills-and-experience matching genuinely is; the named customer is narrow because with zero marketing budget the first fifty users come from the founder's own network. Linear, Stripe and the category leader all shipped general engines behind narrow offers.]`
 
 ---
 
@@ -139,7 +139,7 @@ The proof this product can earn, in the order it arrives:
 Research and live API probes performed during this session (September 2026):
 
 **Category / competitors**
-- [Jobright AI Review 2026](https://favtutor.com/jobright-ai-review/) and [Jobright pricing](https://zplatform.ai/ai-reviews/jobright-ai/) — $39.99/mo Turbo, raised 33% from $29.99; strongest match scoring in category; US-only supply
+- Category pricing research (sources held in `docs/COMPETITOR-ANALYSIS.local.md`, untracked) — $39.99/mo Turbo, raised 33% from $29.99; strongest match scoring in category; US-only supply
 - [Best AI Job Search Tools in 2026](https://remotehunt.app/blog/best-ai-job-search-tools-2026) — Teal free/$29/mo (tracker + résumé builder, no matching engine); Simplify free/$39.99 with unlimited free autofill and 4.9★ from 3,800 ratings; Huntr as tracker; auto-apply tools ($99–249) as the category's reputational failure mode
 
 **Verbatim pain**

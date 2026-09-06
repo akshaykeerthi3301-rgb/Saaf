@@ -12,15 +12,48 @@ Read this first. It carries decisions and verified facts from the originating se
 
 ## What this is
 
-A free job-matching product for Indian candidates. It sources roles from company ATS boards, scores every role scoped to the candidate's stated preferred role against their confirmed profile, and ranks them. **Nothing is withheld** — a role the candidate cannot get scores badly and sinks, with the working shown. Document generation (tailored résumé and cover letter, on request only) is specified but out of MVP scope.
+**Saaf is a precision job-matching product and application co-pilot for India.**
+Two halves, one candidate:
 
-**Not** an auto-apply tool. **Not** a niche engineering platform — the engine is role-general across all corporate functions.
+**The matching half** sources roles from company hiring boards, scores every one
+against the candidate's confirmed profile and stated preferences, and sorts the
+result into **buckets** rather than a single ranked list:
 
-**Frame:** portfolio artifact first, built like a real product. ₹0 forever, no ads, no paid tier.
+| Bucket | Meaning |
+|---|---|
+| **Matches you** | Profile, experience and location all line up. Assisted application available. |
+| **Experience is out of range** | The work matches; the years don't. Shown, labelled, with the gap named. |
+| **Location is out of range** | The work matches; the city doesn't. Shown, labelled. |
+| **Worth a look** | Matches on the work, uncertain elsewhere — the posting didn't state enough to be sure. |
 
-Named **Saaf** on 2026-09-02 (Design Step 1) — from *saaf saaf batao*, "tell it to me straight." The repo directory is still `jobmatch`; that is a path, not the brand, and renaming it is an open decision.
+**Nothing is hidden.** The buckets are the honest disclosure: a candidate sees
+every role we hold that matches their work, and sees *exactly why* we are not
+confident about the ones we are not confident about. That is what replaced the
+withheld list, and it is a better answer than either hiding roles or dumping
+everything into one ranked column.
 
----
+**The co-pilot half** helps the candidate act on what they chose. It fills
+application forms on the employer's own site so a 40-minute application takes a
+fraction of that, and it drafts a résumé curated to the specific posting — built
+only from facts the candidate has confirmed, never invented.
+
+**It does not apply on anyone's behalf. That is permanent, not a phase.** The
+candidate reviews and submits every application themselves. This is the line the
+product is defined by: we make applying faster and better-aimed, never automatic.
+
+**Frame:** portfolio artifact first, built like a real product. ₹0 forever, no
+ads, no paid tier.
+
+Named **Saaf** on 2026-09-02 (Design Step 1) — from *saaf saaf batao*, "tell it
+to me straight." The repo directory is still `jobmatch`; that is a path, not the
+brand.
+
+> **A note on "100% accuracy."** The product targets it and should be built for
+> it, but it must never be *claimed* on a page. No matching system is perfectly
+> accurate, this repo's own standing rule is that a promise the product cannot
+> keep is a defect rather than marketing, and the brand is built on being
+> checkable. The honest form of the same ambition is what the buckets already
+> do: be certain where we are certain, and say so plainly where we are not.
 
 ## Origin
 
@@ -40,8 +73,9 @@ The personal automation in `derivatives-bot` **continues running unchanged**. It
 | **No LinkedIn or Naukri** | ToS breach. *hiQ v. LinkedIn* settled with a $500k judgment + permanent injunction. Removes ~84% of the personal bot's lead flow. Non-negotiable for a public product. |
 | **Supply = ATS public APIs** | Greenhouse, Lever, Ashby, Workable, Recruitee, SmartRecruiters. Curated registry: ~100 boards seeded by hand, then automated discovery. **The registry is the moat.** |
 | **Pre-application, not post** | The product answers *"which of these deserves my next 40 minutes?"* It does not attempt to explain post-application silence — that needs recruiter data nobody has. |
-| ~~**Gates, not weights — typed by function**~~ **· REVERSED 2026-09-04 (Stage A)** | Superseded by **rank everything, withhold nothing**. Typed *reading* survives and still matters: the extractor types a requirement as years, credential, channel/budget, institute tier or HR track, and each type feeds the score differently. What died is the verdict — no requirement removes a role from the list. |
+| **Buckets, not a single list — and never a hidden role** *(settled 2026-09-06, supersedes both earlier positions)* | The original design **gated** (roles removed). Stage A reversed that to **rank everything in one column**. Both were wrong at the edges: gating hid roles the candidate should judge for themselves, and one flat list buried the distinction between "this fits" and "this fits except the years." The product now sorts into buckets — matches you / experience out of range / location out of range / worth a look. Nothing is removed, and the uncertainty is *stated* rather than averaged into a number. Typed reading survives and feeds the bucket assignment. |
 | ~~**Stretch tier ≤2 years, experience-typed only**~~ **· MOOT** | A stretch tier only means something against a refusal. With nothing refused, an experience gap is a score component carrying its own line of working. |
+| **Never applies on the candidate's behalf** | Permanent, not a phase. Saaf fills forms and drafts documents; the candidate reviews and submits. Auto-apply is the category's reputational failure mode and a large part of why recruiters stopped reading. Assisted application is in scope; automatic application never is. |
 | **No volume promise** | Precision over quantity. A short honest list beats a padded one. |
 | **Never turn users away** | No signup gating, even for poorly-served segments. Instead the **honest empty state** — *"650 indexed today · 47 matching your search · 3 a strong fit"* (a narrowing since the pivot; it read as a subtraction ending in "3 cleared your experience band" before). Thinness is attributed to registry coverage, never to the candidate. **This decision survived the pivot untouched** and is the one thing both products share. |
 | **Parse-then-confirm onboarding** | Résumé parsed to pre-fill; candidate confirms every field before the first match runs. Source file **deleted after parsing** (DPDP posture + confidentiality guarantee). |
@@ -62,7 +96,7 @@ proves each claim.
 
 ### Stage A — ranking replaces gating · `ef47a45`
 
-The product became a Jobright-equivalent for India. Every role scoped to the
+The product became a precision-matching product for India. Every role scoped to the
 candidate's preferred role is scored, ranked and shown.
 
 - **`src/match/score.ts` is the substance.** Six weighted components summing to
@@ -335,13 +369,13 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 
 ## Open questions
 
-0. **Resolved 2026-09-05 — "why Saaf rather than Jobright, now that both
+0. **Resolved 2026-09-05 — "why Saaf rather than the category leader, now that both
    rank?"** `PRODUCT.md`'s own 2026-09-04 amendment posed this and left it
-   open. `docs/JOBRIGHT-ANALYSIS.md` answers it: the mechanism converged at
+   open. `docs/COMPETITOR-ANALYSIS.local.md` (untracked) answers it: the mechanism converged at
    Stage A, but the registry, the shown-working score, the legal supply chain
-   and ₹0 are all things Jobright structurally cannot copy. The same document
-   confirms the current roadmap (Phase 7) targets JobMatchAI-equivalence, not
-   Jobright-equivalence, and names the four locked decisions that would need
+   and ₹0 are all things the incumbent structurally cannot copy. The same document
+   confirms the current roadmap (Phase 7) targets the co-pilot surface, not
+   index-scale parity, and names the four locked decisions that would need
    reversing if that target ever changes.
 1. **Still zero users, and zero first-party proof.** Every success criterion that
    needs people — withheld-section engagement, the eligibility rate — is marked

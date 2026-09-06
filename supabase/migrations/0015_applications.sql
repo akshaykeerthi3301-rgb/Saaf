@@ -1,6 +1,6 @@
 -- Saaf — the application tracker.
 --
--- Parity item 1 from docs/PARITY.md: JobMatchAI's only free feature Saaf has no
+-- Parity item 1 from docs/PARITY.local.md: a competitor's only free feature Saaf has no
 -- answer to. It costs no model call, touches no locked decision, and it is where
 -- the shortlist currently dead-ends — a candidate decides a role is worth their
 -- next forty minutes and then leaves for a spreadsheet.

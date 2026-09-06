@@ -79,7 +79,7 @@ decision that has been overtaken, not as current instructions.*
 - **Wow:** A direct contradiction of a portal they already distrust, before spending anything or handing over an account.
 - **Where:** Pre-signup, on the landing page.
 - **Time-to-aha:** Under 60 seconds from landing.
-- **Comparable evidence:** **Lovable** — a working app generated from a prompt pre-signup, in roughly 60 seconds. **Perplexity** — a cited answer with no login required. **Jobright** — claims a match "in less than 1 min", which sets the category's speed expectation.
+- **Comparable evidence:** **Lovable** — a working app generated from a prompt pre-signup, in roughly 60 seconds. **Perplexity** — a cited answer with no login required. The **category leader** claims a match "in less than 1 min", which sets the category's speed expectation.
 - **Risk:** Two structural blockers, not merely risks. It asks for a résumé *before* the confidentiality guarantee has been made, inverting the parse-then-confirm and data-minimisation posture. And demonstrating "what the portals recommended" requires LinkedIn or Naukri data, which is excluded by a locked decision (*hiQ v. LinkedIn*). Stripped of the comparison it degrades into a weaker Candidate 1, run before the résumé has been earned.
 - **Metric:** 25% of landing-page visitors complete the check; 40% of completers create an account.
 
@@ -104,5 +104,5 @@ decision that has been overtaken, not as current instructions.*
 - [App Retention Benchmarks for 2026](https://enable3.io/blog/app-retention-benchmarks-2025) — apps activating users within 3 minutes see nearly 2x higher retention; aha within 5 minutes yields 40% higher 30-day retention than 15+ minutes.
 - [How to Increase User Activation in SaaS (2026)](https://kompassify.com/blog/how-to-increase-user-activation) — a well-defined aha moment produces 30–40% activation that predicts retention; target under 20 minutes for self-serve.
 - [Explainable recommendation: when design meets trust calibration](https://link.springer.com/article/10.1007/s11280-021-00916-0) — explanations can *mis*calibrate trust as easily as build it; black-box opacity weakens a user's ability to judge when to follow or reject system output. This is the research basis for the reason line attached to every score and every refusal, and for treating a wrong refusal as the primary risk.
-- Category comparables and the Jobright speed claim were captured from live pages during the Design phase; see `productos/design/1-Product-Identity.md` Sources.
+- Category comparables and the incumbent speed claim were captured from live pages during the Design phase; see `productos/design/1-Product-Identity.md` Sources.
 - Customer evidence: [`2-Customer-Persona.md`](../define/2-Customer-Persona.md) §9 (the objection that kills the deal, and the demonstration that beats it).

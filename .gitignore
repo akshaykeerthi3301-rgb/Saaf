@@ -24,7 +24,10 @@ productos/design/*
 !productos/design/onboarding-wireframe.html
 !productos/design/landing-page-wireframe.html
 
-# Local-only private notes — never tracked, at any path
+# Local-only private notes — never tracked, at any path.
+# Competitor research lives here on purpose: it is useful to us and it is not
+# ours to publish. docs/COMPETITOR-ANALYSIS.local.md and docs/PARITY.local.md
+# name specific companies and stay out of the repository.
 *.local.md
 
 node_modules/
