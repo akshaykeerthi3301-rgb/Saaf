@@ -2,8 +2,9 @@
 
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { signOut } from '@/app/actions/sign-out'
 import {
-  BriefcaseBusiness, FlaskConical, Grid2X2, Menu, Settings, ShieldCheck, Sparkles, X,
+  BriefcaseBusiness, FlaskConical, Grid2X2, LogOut, Menu, Settings, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
 
 /**
@@ -85,7 +86,7 @@ export function AppShell({
             ))}
           </nav>
 
-          <div className="mt-auto border-t border-border pt-4">
+          <div className="mt-auto space-y-1 border-t border-border pt-4">
             <Link
               href="/profile"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-primary"
@@ -93,6 +94,17 @@ export function AppShell({
               <Settings className="size-[18px]" />
               Profile &amp; settings
             </Link>
+            {/* Signing out kept the account; until this existed the only way
+                out of a session was to delete it. */}
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-primary"
+              >
+                <LogOut className="size-[18px]" />
+                Sign out
+              </button>
+            </form>
           </div>
         </aside>
 
