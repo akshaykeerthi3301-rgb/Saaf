@@ -1,7 +1,7 @@
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '@/gates/types'
 import { isRemoteLocation, isHybridLocation } from '@/gates/extract'
 import { matchLocation } from '@/lib/taxonomy/locations'
-import { experienceFloor } from '@/gates/evaluate'
+import { experienceFloor, experienceCeiling } from '@/gates/evaluate'
 
 /**
  * Per-candidate match scoring.
@@ -40,7 +40,7 @@ export type ScoreComponent = {
  * an admission about us — and any rule that inferred a bucket from the ratio
  * alone would have labelled the second one as the first.
  */
-export type ExperienceStanding = 'meets' | 'short' | 'far_short' | 'unstated' | 'unread'
+export type ExperienceStanding = 'meets' | 'short' | 'far_short' | 'over' | 'unstated' | 'unread'
 
 /** Where the role sits against the city the candidate asked for. */
 export type LocationStanding = 'exact' | 'cluster' | 'remote' | 'hybrid' | 'unstated' | 'elsewhere'
@@ -173,6 +173,7 @@ function seniorityFit(
   const confident = reqs.filter((r) => r.confidence >= CONFIDENCE_THRESHOLD)
   // Shared with the gate rather than reimplemented — see experienceFloor().
   const { required } = experienceFloor(confident)
+  const ceiling = experienceCeiling(confident)
 
   if (required === 0) {
     return [{
@@ -185,26 +186,40 @@ function seniorityFit(
   }
 
   const gap = required - held
-  // Meeting the bar scores full. Falling short decays fast — a five-year gap
-  // is a poor match, but it is still shown and still ranked.
-  // Being far above scores slightly down: over-qualification is also a
-  // mismatch, and it is what pushes senior roles off an early-career list.
+  // Over the top of a STATED band. `over` stays 0 when the posting drew no
+  // ceiling — "5+ years" is open-ended, and the old code guessed one anyway
+  // (held > required + 8 scored a candidate down against an upper bound nobody
+  // had written). Inventing a requirement to penalise someone on is the one
+  // thing this scorer is not allowed to do, so that guess is gone.
+  const over = ceiling !== undefined && held > ceiling ? held - ceiling : 0
+
+  const band = required === ceiling || ceiling === undefined
+    ? `${required} years`
+    : `${required}–${ceiling} years`
+
+  // Falling short decays fast — a five-year gap is a poor match, though still
+  // shown and still ranked. Standing over the ceiling decays gently: it is a
+  // mismatch of fit, not of eligibility, and the candidate can still apply.
   const ratio =
-    gap <= 0 ? (held > required + 8 ? 0.75 : 1)
-    : gap <= 1 ? 0.7
-    : gap <= 2 ? 0.5
-    : gap <= 4 ? 0.25
-    : 0.05
+    gap > 0 ? (gap <= 1 ? 0.7 : gap <= 2 ? 0.5 : gap <= 4 ? 0.25 : 0.05)
+    : over <= STRETCH_YEARS ? 1
+    : over <= 5 ? 0.7
+    : over <= 10 ? 0.55
+    : 0.4
 
   const note =
-    gap <= 0 ? `Asks for ${required} years; you have ${held}.`
-    : `Asks for ${required} years; you have ${held} — ${Math.round(gap * 10) / 10} short.`
+    gap > 0 ? `Asks for ${band}; you have ${held} — ${Math.round(gap * 10) / 10} short.`
+    : over > STRETCH_YEARS ? `Asks for ${band}; you have ${held} — ${Math.round(over * 10) / 10} over.`
+    : `Asks for ${band}; you have ${held}.`
 
-  // Below the bar at all is 'short', however small the gap. Half a year under a
-  // "2+ years" posting is still under it, and the candidate is entitled to be
-  // told that rather than to find the role at the top of their list.
+  // Outside the band at all is called, however small the gap — half a year
+  // under a "2+ years" posting is still under it. The same ±STRETCH_YEARS
+  // tolerance applies on both sides, and beyond it each side gets its own
+  // bucket rather than being absorbed into the number.
   const standing: ExperienceStanding =
-    gap <= 0 ? 'meets' : gap <= STRETCH_YEARS ? 'short' : 'far_short'
+    gap > 0 ? (gap <= STRETCH_YEARS ? 'short' : 'far_short')
+    : over > STRETCH_YEARS ? 'over'
+    : 'meets'
 
   return [{ key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }, standing]
 }
@@ -374,6 +389,7 @@ export function summarise(breakdown: ScoreBreakdown): string {
 export type Bucket =
   | 'matches'
   | 'experience_short'
+  | 'experience_over'
   | 'experience_out'
   | 'location_out'
   | 'worth_a_look'
@@ -424,6 +440,12 @@ export function bucketFor(breakdown: ScoreBreakdown | null | undefined): Bucket 
   // candidate never asked for would make the heading false.
   if (breakdown.experience === 'short') return 'experience_short'
 
+  // Over the top of a stated band. It never becomes "out of range", and the
+  // asymmetry is deliberate: under the floor an employer may simply reject
+  // you, whereas over the ceiling the only question is whether you want the
+  // role — that is the candidate's call, so we rank it down and say why.
+  if (breakdown.experience === 'over') return 'experience_over'
+
   if (breakdown.confidence === 'low') return 'worth_a_look'
 
   return 'matches'
@@ -464,6 +486,11 @@ export const BUCKET_META: { key: Bucket; title: string; blurb: string }[] = [
     key: 'experience_short',
     title: 'Good match, short on experience',
     blurb: `The work and the location line up, but the posting asks for more years than your profile holds — by up to ${STRETCH_YEARS}. Worth applying to on the strength of the rest, which is why these are here and not further down. They are not in "Matches you", because you do not meet the bar this posting states and we are not going to round that off.`,
+  },
+  {
+    key: 'experience_over',
+    title: 'Good match, more experience than asked for',
+    blurb: `The work and the location line up, but the posting states a band topping out more than ${STRETCH_YEARS} years below your experience. Whether that matters is your call — these are usually still open to you, just pitched lower than where you are. Only postings that state an upper bound can appear here; "5+ years" has no ceiling to be over.`,
   },
   {
     key: 'experience_out',

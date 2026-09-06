@@ -22,6 +22,10 @@ export type Credential = 'CA' | 'CFA' | 'CS' | 'none'
 export type TypedRequirement = {
   kind: RequirementKind
   minYears?: number
+  /** Upper bound of a stated range: 5 for "1 - 5 years". Undefined when the
+   *  posting states a floor and no ceiling ("5+ years"), which is an open-ended
+   *  requirement — over-qualification is not scored against one. */
+  maxYears?: number
   credential?: Credential
   valueText?: string
   /** The sentence this was extracted from. Every refusal reason is retrieved,

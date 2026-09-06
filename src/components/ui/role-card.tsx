@@ -22,6 +22,7 @@ export type EvidenceItem = {
  *  above it can never disagree; 'matches' falls through to the score bands. */
 const BAND: Partial<Record<Bucket, string>> = {
   experience_short: 'Short on experience',
+  experience_over: 'More experience than asked',
   experience_out: 'Experience out of range',
   location_out: 'Another city',
   worth_a_look: 'Worth a look',

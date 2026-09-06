@@ -189,3 +189,52 @@ describe('location standing', () => {
     expect(inNoida.components.find((c) => c.key === 'location')!.note).toBe('In Noida.')
   })
 })
+
+describe('over-qualification, against a stated ceiling only', () => {
+  const inBengaluru = { title: 'Product Manager', locationRaw: 'Bengaluru, India', city: 'Bengaluru' }
+  const range = (min: number, max: number) => [req({ minYears: min, maxYears: max })]
+
+  it('reads a candidate past the top of a "1 - 5 years" band as over', () => {
+    const b = scoreRole({ ...junior, yearsExperience: 12 }, inBengaluru, range(1, 5))
+    expect(b.experience).toBe('over')
+    expect(bucketFor(b)).toBe('experience_over')
+    expect(b.components.find((c) => c.key === 'seniority')!.note)
+      .toBe('Asks for 1–5 years; you have 12 — 7 over.')
+  })
+
+  it('allows the same two-year tolerance above the ceiling as below the floor', () => {
+    const b = scoreRole({ ...junior, yearsExperience: 7 }, inBengaluru, range(1, 5))
+    expect(b.experience).toBe('meets')
+    expect(bucketFor(b)).toBe('matches')
+  })
+
+  it('never calls anyone over-qualified against an open-ended posting', () => {
+    // "5+ years" states no ceiling. The old scorer guessed one — held >
+    // required + 8 — and scored a 20-year candidate down against an upper
+    // bound nobody had written.
+    const b = scoreRole({ ...junior, yearsExperience: 20 }, inBengaluru, [req({ minYears: 5 })])
+    expect(b.experience).toBe('meets')
+    expect(b.components.find((c) => c.key === 'seniority')!.points)
+      .toBe(b.components.find((c) => c.key === 'seniority')!.max)
+  })
+
+  it('scores further over the ceiling lower than just over it', () => {
+    const near = scoreRole({ ...junior, yearsExperience: 9 }, inBengaluru, range(1, 5))
+    const far = scoreRole({ ...junior, yearsExperience: 25 }, inBengaluru, range(1, 5))
+    expect(near.total).toBeGreaterThan(far.total)
+    expect(near.experience).toBe('over')
+    expect(far.experience).toBe('over')
+  })
+
+  it('reads the floor first when a band is stated at both ends', () => {
+    // Under the floor by one year, inside the relaxation.
+    expect(scoreRole({ ...junior, yearsExperience: 2 }, inBengaluru, range(3, 8)).experience)
+      .toBe('short')
+    // Under it by three, past the relaxation.
+    expect(scoreRole({ ...junior, yearsExperience: 0 }, inBengaluru, range(3, 8)).experience)
+      .toBe('far_short')
+    // Inside the band.
+    expect(scoreRole({ ...junior, yearsExperience: 5 }, inBengaluru, range(3, 8)).experience)
+      .toBe('meets')
+  })
+})

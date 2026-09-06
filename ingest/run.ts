@@ -117,6 +117,20 @@ export async function runIngest() {
   const started = Date.now()
   await syncRegistry()
 
+  // One cheap probe, once per run. max_years arrives with migration 0018, and
+  // migrations here are applied by hand in the Supabase SQL editor — so there
+  // is a real window where this code is deployed and the column is not there.
+  // PostgREST rejects an entire insert batch for one unknown column, which
+  // would stop the whole index updating, so the field is written only once the
+  // column exists and the run says plainly which mode it is in.
+  const hasMaxYears = !(await db.from('role_requirements').select('max_years').limit(1)).error
+  if (!hasMaxYears) {
+    console.warn(
+      '  role_requirements.max_years is missing — run supabase/migrations/0018_requirement_max_years.sql. ' +
+      'Experience ceilings are not being stored, so over-qualification is not scored.'
+    )
+  }
+
   // Least-recently-ingested first, so a run that runs out of budget resumes
   // where it stopped instead of re-fetching the same head of the list.
   const { data: boards, error: bErr } = await db
@@ -200,6 +214,10 @@ export async function runIngest() {
             role_id: rid,
             kind: q.kind,
             min_years: q.minYears ?? null,
+            // Omitted entirely until migration 0018 is applied — PostgREST
+            // rejects the whole batch for one unknown column, and a broken
+            // ingest is a broken supply. See hasMaxYears above.
+            ...(hasMaxYears ? { max_years: q.maxYears ?? null } : {}),
             credential: q.credential ?? null,
             value_text: q.valueText ?? null,
             source_quote: q.sourceQuote.slice(0, 500),

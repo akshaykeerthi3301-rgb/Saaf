@@ -140,6 +140,26 @@ function scoreFor(_p: CandidateProfile, reqs: TypedRequirement[], gapYears: numb
  * in strategic GTM", the latter scored higher on its framing, and substituting
  * it cleared the role for a two-year candidate.
  */
+/**
+ * The top of a stated experience band, when the posting drew one.
+ *
+ * Undefined is the common answer and it is a real answer: "5+ years" states a
+ * floor and no ceiling, so there is nothing to be over-qualified against.
+ *
+ * Where several ranges are stated, the HIGHEST ceiling wins — the opposite of
+ * experienceFloor(), which takes the strictest floor, and for the same reason.
+ * The floor decides whether a candidate falls short, so the safer error is to
+ * read it high. The ceiling decides whether they are too senior, so the safer
+ * error is to read it generously and not push a role down over an upper bound
+ * the posting only half stated.
+ */
+export function experienceCeiling(confident: TypedRequirement[]): number | undefined {
+  const tops = confident
+    .filter((r) => r.kind === 'experience_years' && r.maxYears !== undefined)
+    .map((r) => r.maxYears!)
+  return tops.length ? Math.max(...tops) : undefined
+}
+
 export function experienceFloor(
   confident: TypedRequirement[]
 ): { required: number; fromTitle: boolean } {

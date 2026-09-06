@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; eight stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; nine stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -467,6 +467,46 @@ stay under RLS and it cannot see more than a signed-in user can.
 Note the coupling: the bench needs `/api/dev-signin` to get a local session, and
 `docs/HANDOFF.md` still lists that route for deletion once magic-link sign-in is
 confirmed. Deleting it removes local access to the bench too.
+
+### Stage I — the experience ceiling, and over-qualification (2026-09-07)
+
+`extractExperienceYears` had always matched the top of a range — it is group 2
+of its own regex — and then dropped it. So `1 - 5 years` and `1+ years` were
+stored identically as a floor of 1, and over-qualification could not be read at
+all. Migration **0018** adds `role_requirements.max_years`.
+
+**Measured on the live index: 355 roles state an experience floor confidently,
+and 212 of those also state a ceiling.** Sixty per cent of that information was
+being thrown away at extraction.
+
+- **A trailing plus cancels the ceiling.** `6-8+ years` names two numbers and
+  means eight *or more*; reading 8 as an upper bound would invent a limit the
+  posting explicitly disclaims. Group 3 of the regex catches it.
+- **The `held > required + 8` guess is deleted.** That was the old
+  over-qualification rule, and it scored a twenty-year candidate down against a
+  `5+ years` posting — an upper bound nobody had written. Where a posting states
+  no ceiling we now assert none, which is the honest reading of "or more".
+- **Symmetric tolerance, asymmetric consequence.** The same `STRETCH_YEARS`
+  applies above the ceiling as below the floor. But over the ceiling never
+  becomes *out of range*: under the floor an employer may reject you, whereas
+  over it the only question is whether you want the role. So there is a sixth
+  bucket, **"Good match, more experience than asked for"**, and no far-over
+  equivalent.
+
+⚠️ **This is the first migration in a while that a session cannot apply.** There
+is no direct database URL in `.env.local` — only the PostgREST endpoint and the
+keys, and PostgREST does not do DDL. So the code had to be correct on both sides
+of the migration, and is:
+
+| Surface | Before 0018 | After |
+|---|---|---|
+| Reads (`/today`, `score-candidate`) | `role_requirements(*)` rather than a column list — naming `max_years` would fail the query outright and take the shortlist down | picks the column up automatically |
+| Ingest write | one probe per run; the field is omitted and the run warns | writes the ceiling |
+| Scoring | absent `max_years` reads as "no ceiling stated", which is what a `5+ years` posting means anyway | scores over-qualification |
+
+Verified live with the column still absent: `/today` renders all 229 roles and
+five buckets, and no role is scored over-qualified — correct, because no
+ceilings are stored yet.
 
 ### Deliberate residue — do not "tidy" these away
 

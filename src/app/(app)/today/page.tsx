@@ -30,6 +30,7 @@ const CARDS_PER_BUCKET = 20
 type RoleRequirement = {
   kind: string
   min_years: number | null
+  max_years?: number | null
   credential: string | null
   value_text: string | null
   source_quote: string
@@ -84,8 +85,7 @@ export default async function TodayPage({
     .from('gate_results')
     .select(`
       id, role_id, reason, score, score_breakdown,
-      roles(title, city, apply_url, company_name,
-        role_requirements(kind, min_years, credential, value_text, source_quote, confidence))
+      roles(title, city, apply_url, company_name, role_requirements(*))
     `)
     .eq('user_id', user.id)
     .order('score', { ascending: false, nullsFirst: false })

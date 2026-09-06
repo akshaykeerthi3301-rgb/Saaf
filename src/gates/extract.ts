@@ -97,8 +97,12 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
   // hyphenated form is almost always a noun phrase — the fixture contains
   // "Meesho's most visible 2-year bets", which is not a requirement and which
   // previously produced a 2-year minimum that suppressed a correct title gate.
+  // Group 2 is the top of a range, group 3 the "+" that cancels it: "6-8+
+  // years" reads as eight OR MORE, so it has no ceiling despite naming two
+  // numbers. Group 2 was matched and discarded until 2026-09-07, which is why
+  // over-qualification could not be read.
   const re = new RegExp(
-    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*\\+?\\s*(?:years?|yrs?)\\b`,
+    `(\\d{1,2})\\s*(?:\\+|plus)?\\s*(?:${DASH}|to)?\\s*(\\d{1,2})?\\s*(\\+)?\\s*(?:years?|yrs?)\\b`,
     'gi'
   )
   /** "a 2-year bet", "the 3-year plan" — adjectival, never a requirement. */
@@ -122,9 +126,17 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
       if (COMPANY_TENURE_RE.test(clause)) continue
 
       // "1-2 years" → the floor is what gates. "5+ years" → 5.
+      const hi = m[2] === undefined ? undefined : Number(m[2])
+      const openEnded = m[3] === '+'
       out.push({
         kind: 'experience_years',
         minYears: lo,
+        // A ceiling only when the posting actually drew one: a second number,
+        // not cancelled by a trailing "+", and above the floor.
+        maxYears:
+          hi !== undefined && !openEnded && Number.isFinite(hi) && hi >= lo && hi <= 40
+            ? hi
+            : undefined,
         sourceQuote: s.slice(0, 300),
         confidence: confidenceFor(clause),
       })

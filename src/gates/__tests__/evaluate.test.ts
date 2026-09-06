@@ -103,6 +103,29 @@ describe('extraction against real posting prose', () => {
     // "1‐2 years’ experience" — not an ASCII hyphen.
     const [r] = extractExperienceYears('Required: 1‐2 years’ experience in business development.')
     expect(r.minYears).toBe(1)
+    expect(r.maxYears).toBe(2)
+  })
+
+  it('reads the top of a range, and no ceiling where none is stated', () => {
+    // The second number was matched and thrown away until 2026-09-07, which is
+    // why over-qualification could not be scored at all.
+    const range = extractExperienceYears('We are looking for 1 - 5 years of experience.')[0]
+    expect([range.minYears, range.maxYears]).toEqual([1, 5])
+
+    const floorOnly = extractExperienceYears('Must have 5+ years of experience.')[0]
+    expect(floorOnly.minYears).toBe(5)
+    expect(floorOnly.maxYears).toBeUndefined()
+
+    const plain = extractExperienceYears('This role requires 10 years of experience.')[0]
+    expect(plain.maxYears).toBeUndefined()
+  })
+
+  it('treats a trailing plus as cancelling the ceiling', () => {
+    // "6-8+ years" means eight OR MORE. Two numbers, but no upper bound —
+    // reading 8 as a ceiling would invent a limit the posting disclaims.
+    const [r] = extractExperienceYears('Ideally 6-8+ years of experience in a technical role.')
+    expect(r.minYears).toBe(6)
+    expect(r.maxYears).toBeUndefined()
   })
 
   it('DOES NOT gate on a credential offered as optional', () => {

@@ -65,7 +65,13 @@ export async function scoreAgainstIndex(
     // ONE string literal, deliberately long. Supabase infers the row type by
     // parsing this argument statically; splitting it with `+` defeats that and
     // every field below degrades to `GenericStringError`.
-    .select('id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
+    // role_requirements(*) rather than a column list, deliberately. max_years
+    // arrives with migration 0018, and a query naming it fails outright until
+    // that migration is run — which would take the shortlist down in the window
+    // between this deploying and the founder pasting the SQL. Selecting the
+    // whole embedded row is valid on both sides of that. The extra columns are
+    // id, role_id and created_at.
+    .select('id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention, role_requirements(*)')
     .eq('in_india', true)
 
   // The ternary picks the tsquery SHAPE only. Ordering and the cap are applied
@@ -87,6 +93,10 @@ export async function scoreAgainstIndex(
     const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
       kind: q.kind,
       minYears: q.min_years ?? undefined,
+      // Absent until migration 0018 lands, which reads as "no ceiling stated" —
+      // the same thing a "5+ years" posting means, so the fallback is correct
+      // rather than merely safe.
+      maxYears: q.max_years ?? undefined,
       credential: q.credential ?? undefined,
       valueText: q.value_text ?? undefined,
       sourceQuote: q.source_quote,

@@ -83,7 +83,8 @@ describe('bucketFor', () => {
   it('has display copy for every bucket it can return', () => {
     const keys = BUCKET_META.map((b) => b.key).sort()
     expect(keys).toEqual([
-      'experience_out', 'experience_short', 'location_out', 'matches', 'worth_a_look',
+      'experience_out', 'experience_over', 'experience_short',
+      'location_out', 'matches', 'worth_a_look',
     ])
   })
 })
@@ -149,5 +150,18 @@ describe('locationRank', () => {
 
   it('leaves a pre-standings row where it already was', () => {
     expect(locationRank(legacy({ location: [10, 10] }))).toBe(2)
+  })
+})
+
+describe('over the top of a stated band', () => {
+  it('gets its own bucket, and never becomes out of range', () => {
+    // Asymmetric on purpose: under the floor an employer may reject you, over
+    // the ceiling the only question is whether you want the role.
+    expect(bucketFor(build({}, 'high', { experience: 'over' }))).toBe('experience_over')
+  })
+
+  it('still loses to the city the candidate asked for', () => {
+    expect(bucketFor(build({}, 'high', { experience: 'over', location: 'elsewhere' })))
+      .toBe('location_out')
   })
 })
