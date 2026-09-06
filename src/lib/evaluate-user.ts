@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
-import { scoreRole, summarise } from '@/match/score'
-import type { CandidateProfile, TypedRequirement } from '@/gates/types'
+import { scoreAgainstIndex } from '@/lib/score-candidate'
+import type { CandidateProfile } from '@/gates/types'
 
 /**
  * Recompute match scores for one candidate and store them.
@@ -18,16 +18,6 @@ import type { CandidateProfile, TypedRequirement } from '@/gates/types'
  * SUPABASE_SERVICE_ROLE_KEY, which is never exposed to the browser, and an
  * ESLint rule blocks src/app and src/components from importing it.
  */
-/**
- * Most recent roles scored per candidate.
- *
- * Descriptions are now pulled for skill matching, so an unbounded query is
- * both a memory and a time cost. A broad preferred role already matches 228 of
- * 650 roles; at Stage B's target index size it would match thousands. Freshest
- * first, because a stale posting is the least useful thing to rank.
- */
-const MAX_ROLES_PER_CANDIDATE = 500
-
 export async function evaluateUser(userId: string): Promise<{ written: number }> {
   const db = createServiceClient()
 
@@ -68,74 +58,27 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // match against — return rather than run an unfiltered/all-roles query.
   if (!profile.preferred_role?.trim()) return { written: 0 }
 
-  // Strict by default, and that default is the product decision: a candidate
-  // who asked for "Product Manager" is not shown a credit analyst role unless
-  // they said they wanted adjacent ones. websearch_to_tsquery ANDs the terms,
-  // so every word must appear in the title. Opting in switches to an OR of the
-  // same terms, which widens the net and costs precision — the candidate makes
-  // that trade knowingly. See supabase/migrations/0012_open_to_adjacent.sql.
-  const terms = profile.preferred_role
-    .toLowerCase()
-    .replace(/[^a-z0-9&+ ]+/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-
-  const query = db
-    .from('roles')
-    .select('id, title, description, location_raw, city, unread_experience_mention, role_requirements(kind, min_years, credential, value_text, source_quote, confidence)')
-    .eq('in_india', true)
-
-  // The ternary picks the tsquery SHAPE only. Ordering and the cap are applied
-  // to whichever branch wins, deliberately outside it: they used to chain off
-  // the else-expression alone, so an `open_to_adjacent` candidate ran an
-  // unbounded, unordered query that pulled every matching role's full
-  // description into memory. At 650 roles that was survivable; it is the
-  // fastest path to an OOM as the index grows.
-  const scoped = profile.open_to_adjacent && terms.length > 1
-    ? query.textSearch('title_tsv', terms.join(' | '))
-    : query.textSearch('title_tsv', profile.preferred_role, { type: 'websearch', config: 'english' })
-
-  const { data: roles, error: rErr } = await scoped
-    .order('last_seen_at', { ascending: false })
-    .limit(MAX_ROLES_PER_CANDIDATE)
-  if (rErr) throw rErr
+  // Scoping and scoring live in scoreAgainstIndex() so the developer bench can
+  // run this exact pipeline without writing anything. See src/lib/score-candidate.ts.
+  const scored = await scoreAgainstIndex(db, candidate, {
+    openToAdjacent: profile.open_to_adjacent === true,
+  })
 
   const computedAt = new Date().toISOString()
-  const rows = (roles ?? []).map((role) => {
-    const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
-      kind: q.kind,
-      minYears: q.min_years ?? undefined,
-      credential: q.credential ?? undefined,
-      valueText: q.value_text ?? undefined,
-      sourceQuote: q.source_quote,
-      confidence: Number(q.confidence),
-    }))
-    const breakdown = scoreRole(
-      candidate,
-      {
-        title: role.title,
-        description: role.description ?? undefined,
-        locationRaw: role.location_raw ?? undefined,
-        city: role.city ?? undefined,
-        unreadExperienceMention: role.unread_experience_mention === true,
-      },
-      reqs
-    )
-    return {
-      user_id: userId,
-      role_id: role.id,
-      // Nothing is withheld any more — every scoped role is ranked. The
-      // outcome column survives only so older rows stay readable until the
-      // recompute sweeps them. See migration 0013.
-      outcome: 'ranked',
-      refused_on: null,
-      reason: summarise(breakdown),
-      score: breakdown.total,
-      gap_years: null,
-      score_breakdown: breakdown,
-      computed_at: computedAt,
-    }
-  })
+  const rows = scored.map((r) => ({
+    user_id: userId,
+    role_id: r.roleId,
+    // Nothing is withheld any more — every scoped role is ranked. The
+    // outcome column survives only so older rows stay readable until the
+    // recompute sweeps them. See migration 0013.
+    outcome: 'ranked',
+    refused_on: null,
+    reason: r.reason,
+    score: r.score,
+    gap_years: null,
+    score_breakdown: r.breakdown,
+    computed_at: computedAt,
+  }))
 
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await db

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
-  BriefcaseBusiness, Grid2X2, Menu, Settings, ShieldCheck, Sparkles, X,
+  BriefcaseBusiness, FlaskConical, Grid2X2, Menu, Settings, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
 
 /**
@@ -24,6 +24,12 @@ const NAV = [
   { label: 'Jobs', href: '/today', icon: BriefcaseBusiness },
   { label: 'Applications', href: '/applications', icon: Grid2X2 },
   { label: 'Index audit', href: '/audit', icon: ShieldCheck },
+  // The bench 404s outside development and this link goes with it. NODE_ENV is
+  // inlined into the client bundle at build time, so the entry is not merely
+  // hidden in production — it is not in the shipped array at all.
+  ...(process.env.NODE_ENV === 'production'
+    ? []
+    : [{ label: 'Bench', href: '/dev/bench', icon: FlaskConical }]),
 ]
 
 export function AppShell({

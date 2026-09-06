@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; seven stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; eight stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -431,6 +431,42 @@ stored identically as a floor of 1. That is invisible for the under-the-bar case
 this stage fixes, and it is exactly what a proper over-qualification rule would
 need. Adding it means a `max_years` column, so it needs a migration and the
 founder.
+
+### Stage H — the developer bench (2026-09-07)
+
+`/dev/bench` takes several résumés at once, parses each with the real parser,
+scores each with the real pipeline, and shows the buckets and the top 40 roles
+with every score component and the sentence it was read from. Every parsed field
+is editable, so the same résumé can be re-run at two years and at six, or asking
+for "Product Manager" instead of "manager", without re-uploading.
+
+**It writes nothing.** No profile, no `gate_results`, no `role_first_shown`. A
+run cannot disturb the shortlist of the account you are signed into, which is
+what makes it usable on the founder's own live account.
+
+**It runs the real pipeline, not a lookalike.** The scoping-and-scoring half of
+`evaluateUser` moved to `src/lib/score-candidate.ts`; `evaluateUser` now calls it
+and persists the rows, the bench calls it and displays them. That mattered more
+than the usual argument for sharing code — a bench that scores through its own
+copy of the query can only ever tell you about the copy. The refactor was
+verified behaviour-preserving by snapshotting `gate_results`, recomputing, and
+diffing: **481 rows, 0 changed.**
+
+**Three things keep it out of production**, and all three were checked against a
+real production build rather than assumed:
+
+| Guard | Verified |
+|---|---|
+| The page calls `notFound()` when `NODE_ENV === 'production'` | signed-in request to `/dev/bench` returns **404** |
+| The nav entry is spliced out of `NAV` at build time | `dev/bench` and `FlaskConical` appear in **no** client bundle |
+| The server action repeats the check — an action is its own entry point, reachable without the page ever rendering | guard present in `bench.ts` |
+
+It reads through the **request** client, not the service client, so its queries
+stay under RLS and it cannot see more than a signed-in user can.
+
+Note the coupling: the bench needs `/api/dev-signin` to get a local session, and
+`docs/HANDOFF.md` still lists that route for deletion once magic-link sign-in is
+confirmed. Deleting it removes local access to the bench too.
 
 ### Deliberate residue — do not "tidy" these away
 

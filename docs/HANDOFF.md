@@ -142,6 +142,11 @@ npm run db:load-fixture   # reload roles into Supabase
 npm run db:seed-test-user # recreate the test profile
 ```
 
+**The developer bench:** `/dev/bench` (development only — it 404s in any
+production build, including Vercel previews). Drop in several résumés, edit the
+parsed fields, and score each against the live index with the real pipeline. It
+writes nothing, so it is safe to run while signed in as yourself.
+
 **Signed-in local testing:** visit `/api/dev-signin`. It signs in the seeded
 fixture account, refuses to run in production, and **must be deleted** once A2 is
 confirmed and real magic-link sign-in works.
