@@ -25,38 +25,35 @@ const CTA = 'Upload Résumé & Get True-Fit Match'
 const valueProps = [
   {
     icon: CircleCheck,
-    eyebrow: '01 / Signal over volume',
+    eyebrow: '01',
     title: 'True-Fit Scoring',
-    description:
-      'Hard skills, industry context, and career trajectory combined into one honest score.',
+    description: 'Skills, industry and trajectory in one honest score.',
   },
   {
     icon: ShieldCheck,
-    eyebrow: '02 / Your call, always',
+    eyebrow: '02',
     title: 'Review & Approve',
-    description:
-      'You approve every application before submission; no black-box auto-spamming.',
+    description: 'You approve every application. No auto-spamming.',
   },
   {
     icon: MessageCircle,
-    eyebrow: '03 / Stay in the loop',
+    eyebrow: '03',
     title: 'WhatsApp Nudges',
-    description:
-      'High-signal updates on 85%+ matched roles directly on WhatsApp.',
+    description: 'Updates on your strongest matches, on WhatsApp.',
   },
 ]
 
 const howItWorks = [
-  ['We read your résumé once', 'Parsed to fill your profile, then deleted. You confirm every field before anything runs.'],
-  ['We read the posting the same way', 'The experience floor, the credential, the location — pulled out of the job description itself, quoted, in plain code with no model guessing.'],
-  ['We rank, and we show the arithmetic', 'Every role gets a score built from role match, experience, location, work mode and credential. Open any score to see each part and the sentence it came from.'],
+  ['We read your résumé once', 'Then delete it. You confirm every field.'],
+  ['We read the posting the same way', 'Experience, credential, location — quoted from the job description.'],
+  ['We rank, and show the arithmetic', 'Open any score to see each part and the line it came from.'],
 ]
 
 const faqs = [
-  ['Naukri already says it matches me. Why is this different?', 'Because our number breaks into parts you can check against the job description in thirty seconds. A portal shows you a badge and no working.'],
-  ['Can my employer find out I’m looking?', 'No. No employer is ever contacted, nothing here is public or sold, and no recruiter can search this. Delete your account in one click, no email required.'],
-  ['What happens to my résumé?', 'It’s parsed once to fill your profile, then the file is deleted. Only the fields you confirm are stored.'],
-  ['Why isn’t LinkedIn or Naukri in here?', 'Their terms don’t allow it. We pull from company hiring boards directly — which is why some roles you see elsewhere won’t appear here, and why we tell you how many we indexed.'],
+  ['Naukri already says it matches me. Why is this different?', 'Our number breaks into parts you can check against the posting. A portal shows a badge and no working.'],
+  ['Can my employer find out I’m looking?', 'No. No employer is contacted, nothing is public or sold, and no recruiter can search this.'],
+  ['What happens to my résumé?', 'Parsed once, then deleted. Only the fields you confirm are stored.'],
+  ['Why isn’t LinkedIn or Naukri in here?', 'Their terms don’t allow it. We pull from company hiring boards — which is why we publish how many we indexed.'],
 ]
 
 function Cta({ className = '' }: { className?: string }) {
@@ -152,9 +149,8 @@ export default function Landing() {
             100% Tailored.
           </h1>
 
-          <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Saaf AI matches you with high-precision roles that actually fit your skills, context,
-            and next move — so you spend less time applying and more time moving forward.
+          <p className="mt-7 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            Roles that fit, each with the arithmetic behind the score.
           </p>
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -213,9 +209,6 @@ export default function Landing() {
               </p>
               <SectionHeading>Fewer applications. Better conversations.</SectionHeading>
             </div>
-            <p className="max-w-xs text-sm leading-6 text-muted-foreground">
-              Your career deserves a system that respects your time, intent, and ambition.
-            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -244,11 +237,9 @@ export default function Landing() {
         {/* The problem */}
         <section className="py-16 sm:py-20">
           <SectionHeading>The match wasn’t missing. It was unexplained.</SectionHeading>
-          <p className="mt-6 max-w-3xl text-base leading-7 text-muted-foreground">
+          <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
             A portal called you a Top Applicant for a role asking fifteen years. You have two. You
-            spent the forty minutes anyway, and heard nothing — same as the last thirty
-            applications. Eight months in, you still don’t know whether it was the résumé, the fit,
-            or the timing.
+            spent the forty minutes anyway, and heard nothing.
           </p>
           <blockquote className="mt-8 rounded-2xl border border-border bg-card p-6">
             <p className="text-lg font-medium tracking-[-0.02em] text-primary">
@@ -269,18 +260,17 @@ export default function Landing() {
           <SectionHeading>What you get</SectionHeading>
           <Rows
             items={[
-              ['Scored against you, not the posting', 'Two candidates never get the same number on the same role. Your years, city, work mode and credential all move it.'],
-              ['Every score opens up', 'Role match 35/35, Experience 2/30 — asks for 8 years, you have 2. Each part is shown, with the line from the posting it was read from.'],
-              ['Nobody can find you here', 'Your file is deleted after parsing. No employer is contacted. Delete your account in one click, no email required.'],
+              ['Scored against you, not the posting', 'Your years, city, work mode and credential all move the number.'],
+              ['Every score opens up', 'Each part, with the line from the posting it was read from.'],
+              ['Nobody can find you here', 'File deleted after parsing. No employer contacted. Delete in one click.'],
             ]}
           />
         </section>
 
         <section className="border-t border-border py-16 sm:py-20">
           <SectionHeading>Free. Not free-for-now.</SectionHeading>
-          <p className="mt-6 max-w-3xl text-base leading-7 text-muted-foreground">
-            No card, no ads, and no paid tier hiding behind a feature you already use. Saaf is a
-            portfolio project built to real-product standards, and it stays at ₹0.
+          <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
+            No card, no ads, no paid tier. It stays at ₹0.
           </p>
         </section>
 
@@ -303,16 +293,16 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">Saaf AI</span>
-            <span>Career clarity, without the noise.</span>
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/profile" className="transition-colors hover:text-foreground">Delete your account</Link>
           </div>
-          <p className="mt-6 max-w-3xl text-xs leading-6 text-muted-foreground">
+          {/* Kept, shortened. Saying what we have NOT earned is the point of the
+              line, so the clause naming the certifications survives the cut. */}
+          <p className="mt-6 max-w-2xl text-xs leading-6 text-muted-foreground">
             No compliance badges: we hold no SOC 2 or GDPR certification and will not display marks
-            we have not earned. Consent at upload, stated retention, deletion path; the source file
-            is destroyed after parsing.
+            we have not earned.
           </p>
         </div>
       </footer>

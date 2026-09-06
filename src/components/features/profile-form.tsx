@@ -62,7 +62,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <RoleInput
           label="Preferred job role"
           value={f.preferredRole}
-          helper="What you're matched against. e.g. 'Product Manager', not just 'Manager'."
+          helper="Be specific — 'Product Manager', not 'Manager'."
           onChange={(v) => setF({ ...f, preferredRole: v })}
         />
 
@@ -72,8 +72,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
             className="mt-0.5 size-4 accent-accent" />
           <span>
             <span className="block text-sm font-semibold text-primary">Also show me adjacent roles</span>
-            <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-              Off keeps your list strictly on the role above. On widens it, at the cost of precision.
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Wider list, less precision.
             </span>
           </span>
         </label>
@@ -100,14 +100,14 @@ export function ProfileForm({ initial }: { initial: Initial }) {
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Never withholds a role — only moves a better-matching one higher on your list.
+          <p className="mt-2 text-xs text-muted-foreground">
+            Never withholds a role — only reorders.
           </p>
         </div>
 
         <Input label="Salary expectation" value={f.salaryExpectation}
           onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}
-          helper="No role we index states a salary, so this can't filter your list yet — it's here so it's ready if that changes." />
+          helper="No role we index states a salary, so this can't filter yet." />
 
         {error ? (
           <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</p>
@@ -123,9 +123,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">
           Start again with a different résumé
         </h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Runs onboarding from the top. Your current list stays up until the new profile is
-          confirmed, so you are never left staring at nothing.
+        <p className="mt-2 text-sm text-muted-foreground">
+          Your current list stays up until you confirm the new profile.
         </p>
         <form action={restartOnboarding} className="mt-4">
           <Button type="submit" variant="ghost">Upload a different résumé</Button>
@@ -134,9 +133,10 @@ export function ProfileForm({ initial }: { initial: Initial }) {
 
       <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">Delete your account</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Everything goes: your profile, your lists, your reports. One click, no email, and we
-          can&apos;t undo it.
+        {/* Shortened but not softened — "can't be undone" is the fact that has
+            to survive any cut on a destructive control. */}
+        <p className="mt-2 text-sm text-muted-foreground">
+          Profile, lists and reports. Can&apos;t be undone.
         </p>
 
         {confirming ? (

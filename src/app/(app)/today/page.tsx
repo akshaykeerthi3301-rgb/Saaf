@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ChevronRight, ShieldCheck, Target, Wallet } from 'lucide-react'
+import { ChevronRight, Eye, ShieldCheck, Target, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
@@ -143,16 +143,13 @@ export default async function TodayPage({
 
       <div className="mx-auto grid max-w-[1500px] gap-6 p-5 sm:p-8 xl:grid-cols-[minmax(0,1fr)_300px]">
         <section className="min-w-0">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">{today}</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-primary sm:text-3xl">
-                Sorted by what fits, and what doesn&apos;t.
-              </h2>
-            </div>
+          {/* The headline used to read "Sorted by what fits, and what doesn't."
+              The bucket headings below say that by existing, so it went. */}
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">{today}</p>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <Target className="size-3.5 text-accent" />
-              {rows.length} matching your search
+              <strong className="font-mono tabular-nums text-primary">{rows.length}</strong> matches
             </span>
           </div>
 
@@ -175,9 +172,13 @@ export default async function TodayPage({
               const visible = expanded ? inBucket : inBucket.slice(0, CARDS_PER_BUCKET)
               return (
                 <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
-                  <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                  {/* The blurb was a sentence under every heading. It is on the
+                      heading's title now — still there for anyone who wants it,
+                      no longer four lines of prose between them and the roles. */}
+                  <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-border pb-3">
                     <h3
                       id={`bucket-${key}`}
+                      title={blurb}
                       className="text-xs font-bold uppercase tracking-[0.16em] text-primary"
                     >
                       {title}
@@ -186,7 +187,6 @@ export default async function TodayPage({
                       {inBucket.length}
                     </span>
                   </div>
-                  <p className="mb-4 max-w-2xl text-xs leading-5 text-muted-foreground">{blurb}</p>
 
                   <div className="space-y-4">
                     {visible.map((r) => (
@@ -216,7 +216,7 @@ export default async function TodayPage({
                       href={`/today?show=${key}#bucket-${key}`}
                       className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent"
                     >
-                      Showing {visible.length} of {inBucket.length} — show all {inBucket.length}
+                      Show all {inBucket.length}
                       <ChevronRight className="size-3.5" />
                     </Link>
                   ) : null}
@@ -232,57 +232,56 @@ export default async function TodayPage({
             employer access is parked, so none of the three ship. */}
         <aside className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Today&apos;s index
-            </p>
-            <p className="mt-3 font-mono text-sm leading-6 tabular-nums text-muted-foreground">
-              <strong className="text-2xl font-semibold tracking-[-0.04em] text-primary">
-                {(indexed ?? 0).toLocaleString('en-IN')}
-              </strong>
-              <br />
-              roles indexed
-            </p>
-            <div className="mt-4 space-y-1 border-t border-border pt-4 text-xs text-muted-foreground">
-              <p>
-                <strong className="font-mono tabular-nums text-primary">{rows.length}</strong> matched your search
+            <dl className="space-y-3">
+              {[
+                [(indexed ?? 0).toLocaleString('en-IN'), 'indexed'],
+                [rows.length.toLocaleString('en-IN'), 'matched'],
+                [strong.toLocaleString('en-IN'), 'strong'],
+              ].map(([value, label]) => (
+                <div key={label} className="flex items-baseline justify-between gap-3">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="font-mono text-lg font-semibold tabular-nums tracking-[-0.03em] text-primary">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {/* The honest empty state, and only when it applies. It used to sit
+                here on every visit, including days with 165 matches, where it
+                answered a worry nobody had. */}
+            {rows.length < 10 ? (
+              <p className="mt-4 border-t border-border pt-4 text-[11px] leading-5 text-muted-foreground">
+                A thin day is our coverage, not a verdict on you.
               </p>
-              <p>
-                <strong className="font-mono tabular-nums text-primary">{strong}</strong> scored 75 or above
-              </p>
-            </div>
-            <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
-              A thin day is our coverage, not a verdict on you.
-            </p>
+            ) : null}
           </div>
 
-          <div className="flex gap-3 rounded-2xl border border-border bg-secondary/60 p-4">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p className="text-[11px] leading-5 text-muted-foreground">
-              <strong className="font-semibold text-primary">We never apply for you.</strong> Every score
-              opens to show its working, and no employer is contacted about you.
+          {/* Three standing promises, one line each. They were three paragraphs.
+              Nothing is withdrawn — the clauses that went were restatements:
+              "every score opens to show its working" is what the working button
+              on every card already does, and what a salary-less index means for
+              ranking follows from the sentence that remains. */}
+          <div className="space-y-3 rounded-2xl border border-border bg-secondary/60 p-4 text-[11px] leading-5 text-muted-foreground">
+            <p className="flex items-center gap-2.5">
+              <ShieldCheck className="size-4 shrink-0" />
+              <span className="font-semibold text-primary">We never apply for you.</span>
             </p>
-          </div>
-
-          <div className="flex gap-3 rounded-2xl border border-border bg-card p-4">
-            <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p className="text-[11px] leading-5 text-muted-foreground">
-              No employer in this index publishes a salary, so nothing here is ranked by pay — and we
-              can&apos;t tell you what a role pays before you open it.
+            <p className="flex items-center gap-2.5">
+              <Wallet className="size-4 shrink-0" />
+              No employer here publishes a salary.
             </p>
-          </div>
-
-          {/* The score presents as complete, so a requirement we don't read has to
-              be named or it reads as one we checked and found nothing on.
-              Attributed to our coverage, never to the candidate. */}
-          {gap ? (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="text-[11px] leading-5 text-muted-foreground">
-                Roles like yours are usually decided by {gap.decidedBy}. We don&apos;t read that from a
-                posting yet, so every score here is built from title, seniority, skills, location and
-                work mode only — a gap in what we read, not a judgement about you.
+            {/* The score presents as complete, so a requirement we don't read has
+                to be named or it reads as one we checked and found nothing on.
+                Attributed to our coverage, never to the candidate. */}
+            {gap ? (
+              <p className="flex items-center gap-2.5">
+                <Eye className="size-4 shrink-0" />
+                <span>
+                  We don&apos;t read {gap.decidedBy} yet.
+                </span>
               </p>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </aside>
       </div>
     </AppShell>

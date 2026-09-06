@@ -44,8 +44,7 @@ export default async function AuditPage() {
     <DocPage eyebrow="Index audit" title="We publish what we read.">
       {!data ? (
         <p className="mt-6 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
-          No run has completed yet. This page will show the day&apos;s figures once one has —
-          it will never show zeros in place of missing data.
+          No run has completed yet. We show nothing rather than zeros.
         </p>
       ) : (
         <>
@@ -55,7 +54,7 @@ export default async function AuditPage() {
 
           <table className="mt-6 w-full border-collapse">
             <caption className="pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Roles stating each requirement, read from the posting
+              Requirements read from postings
             </caption>
             <tbody>
               {reasons.map(([k, v]) => (
@@ -71,9 +70,8 @@ export default async function AuditPage() {
             </tbody>
           </table>
 
-          <p className="mt-6 text-xs leading-5 text-muted-foreground">
-            Figures for {data.day}. Updated daily. Every refusal above names a requirement
-            stated in the posting — open any role and check it.
+          <p className="mt-6 text-xs text-muted-foreground">
+            {data.day} · updated daily
           </p>
         </>
       )}

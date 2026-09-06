@@ -68,11 +68,9 @@ export default function UploadPage() {
         <label className="mb-2 block text-sm font-semibold text-primary" htmlFor="years">
           How many years have you worked full-time?
         </label>
-        <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          Excluding internships. We ask rather than guess — this is the single biggest input to
-          your scores, and a résumé&apos;s dates are ambiguous about contracts, gaps and
-          promotions.
-        </p>
+        {/* The reasoning behind asking rather than parsing is in the comment
+            above and in docs; on screen it only has to say what to exclude. */}
+        <p className="mb-3 text-xs text-muted-foreground">Excluding internships.</p>
         <input
           id="years"
           type="number"
@@ -113,16 +111,14 @@ export default function UploadPage() {
             {busy ? <Loader2 className="size-5 animate-spin" /> : <FileUp className="size-5" />}
           </span>
           <span className="text-sm font-semibold text-primary">
-            {busy ? 'Reading…' : 'Choose a PDF or .docx'}
+            {busy ? 'Reading…' : 'Choose a file, or drop it here'}
           </span>
           <span className="mt-1 text-xs text-muted-foreground">
-            {busy ? 'This takes a few seconds.' : 'Or drop the file here. 5 MB maximum.'}
+            {busy ? '' : 'PDF or DOCX · 5 MB'}
           </span>
         </button>
         {!yearsValid && !busy ? (
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Add your years of experience above first.
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Add your years above first.</p>
         ) : null}
         <input
           ref={input}
@@ -139,21 +135,24 @@ export default function UploadPage() {
         </p>
       ) : null}
 
-      <p className="mt-6 flex gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-xs leading-5 text-muted-foreground">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      {/* SHORTENED, NOT MOVED. The deletion promise has to sit beside the ask
+          rather than behind a link — that is the whole point of putting it on
+          this screen — so what is left still names the three facts that matter
+          (read once, deleted, a third party sees stripped text) and the link
+          carries the detail. */}
+      <p className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-xs leading-5 text-muted-foreground">
+        <ShieldCheck className="size-4 shrink-0" />
         <span>
-          We read it once to fill in your profile, then delete the file. Only the fields you
-          confirm are stored. To read your skills we send the text — with your email, phone and
-          profile links removed — to a third-party model provider, named on our{' '}
+          Read once, then deleted. Stripped text goes to one model provider —{' '}
           <a
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-primary underline underline-offset-4"
           >
-            privacy page
+            details
           </a>
-          . Everything it returns is shown to you before anything is saved.
+          .
         </span>
       </p>
 

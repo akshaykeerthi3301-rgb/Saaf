@@ -77,9 +77,7 @@ export default function ConfirmPage() {
       <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
         Confirm what we read from your résumé
       </h1>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        Nothing runs until you&apos;ve checked every field.
-      </p>
+      <p className="mt-3 text-sm text-muted-foreground">Nothing runs until you check these.</p>
 
       {warnings.length ? (
         <div className="mt-6 flex gap-3 rounded-xl border border-border bg-secondary/50 p-4">
@@ -103,8 +101,8 @@ export default function ConfirmPage() {
           onChange={(e) => setF({ ...f, city: e.target.value })} />
         <RoleInput
           label="What job role are you looking for?"
-          provenance={fields.currentTitle ? "based on your current title — edit if you're looking for something different" : undefined}
-          helper="e.g. 'Product Manager', not just 'Manager' — the more specific this is, the better your matches"
+          provenance={fields.currentTitle ? 'from your current title' : undefined}
+          helper="Be specific — 'Product Manager', not 'Manager'."
           value={f.preferredRole}
           onChange={(v) => setF({ ...f, preferredRole: v })}
         />
@@ -126,9 +124,8 @@ export default function ConfirmPage() {
             <span className="block text-sm font-semibold text-primary">
               Also show me adjacent roles
             </span>
-            <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-              Off by default. Your list stays strictly on the role above — turn this on to widen
-              it, at the cost of some precision.
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Wider list, less precision.
             </span>
           </span>
         </label>

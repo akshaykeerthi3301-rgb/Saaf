@@ -49,17 +49,14 @@ export default async function ApplicationsPage() {
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
-              Application pipeline
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-primary sm:text-3xl">
-              Your applications, at a glance.
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              {rows.length === 0
-                ? 'Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.'
-                : 'Only you can see this — nothing here is shared with an employer.'}
-            </p>
+            {/* The header above already says "Applications". A headline, an
+                eyebrow and a subtitle repeating it were three labels for one
+                page. The empty state stays — it tells you what to do next. */}
+            {rows.length === 0 ? (
+              <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+                Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {due > 0 && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Flag } from 'lucide-react'
 import { reportRefusal } from '@/app/actions/report-refusal'
 import { track } from '@/lib/analytics'
 
@@ -22,14 +23,22 @@ export function ReportScore({ gateResultId }: { gateResultId: string }) {
 
   if (reported) {
     return (
-      <p className="text-xs text-muted-foreground">Reported. We triage these as defects.</p>
+      <span
+        className="flex size-8 items-center justify-center text-accent"
+        title="Reported. We triage these as defects."
+        aria-label="Reported. We triage these as defects."
+      >
+        <Flag className="size-4" fill="currentColor" />
+      </span>
     )
   }
 
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+      title="This score looks wrong"
+      aria-label="This score looks wrong"
+      className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
       onClick={async () => {
         // Optimistic, then reconciled — same reason as TrackRole. The report
         // table's unique constraint is a real one rather than a partial index,
@@ -41,7 +50,7 @@ export function ReportScore({ gateResultId }: { gateResultId: string }) {
         if (!res.ok) setReported(false)
       }}
     >
-      This score looks wrong
+      <Flag className="size-4" />
     </button>
   )
 }

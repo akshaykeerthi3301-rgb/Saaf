@@ -30,9 +30,7 @@ export default function StartPage() {
       <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
         Where are you applying now?
       </h1>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        So we know what you&apos;re comparing us against. Pick any number, or none.
-      </p>
+      <p className="mt-3 text-sm text-muted-foreground">Optional.</p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2" role="group" aria-label="Job portals you use">
         {PORTALS.map((p) => {

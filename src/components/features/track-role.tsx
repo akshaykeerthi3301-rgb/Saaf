@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { trackRole } from '@/app/actions/applications'
 
 /**
@@ -22,25 +23,35 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
   const [tracked, setTracked] = useState(false)
   const [error, setError] = useState<string>()
 
+  // An icon, not a label. It repeated on all 54 cards; the tooltip and the
+  // aria-label carry the same words to anyone who needs them.
   if (tracked) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
-        Tracked ·{' '}
-        <a href="/applications" className="underline underline-offset-4 hover:text-primary">
-          your applications
-        </a>
-      </span>
+      <a
+        href="/applications"
+        title="Tracked — open your applications"
+        aria-label="Tracked. Open your applications"
+        className="flex size-8 items-center justify-center rounded-lg text-accent hover:bg-secondary"
+      >
+        <BookmarkCheck className="size-4" />
+      </a>
     )
   }
 
   if (error) {
-    return <span className="text-xs font-semibold text-muted-foreground">{error}</span>
+    return (
+      <span className="flex size-8 items-center justify-center text-muted-foreground" title={error}>
+        <Bookmark className="size-4" />
+      </span>
+    )
   }
 
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+      title="Track this role"
+      aria-label="Track this role"
+      className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
       onClick={async () => {
         // Optimistic, then RECONCILED. This used to set tracked=true and drop
         // the result on the floor, so a failing write looked exactly like a
@@ -55,7 +66,7 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
         }
       }}
     >
-      Track this
+      <Bookmark className="size-4" />
     </button>
   )
 }

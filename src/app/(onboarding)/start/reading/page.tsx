@@ -20,8 +20,11 @@ import { useDraft } from '@/lib/use-draft'
  * away from a privacy promise we do keep.
  *
  * The shell's bar is a different claim and stays: it measures the five-step
- * flow, is labelled "Step 3 of 5", and 3 of 5 is a fact. The sentence below
- * says "for the read itself" so the two can't be read as one.
+ * flow, is labelled "Step 3 of 5", and 3 of 5 is a fact.
+ *
+ * The paragraph that used to explain all of this on screen is gone. The steps
+ * below are the argument; a paragraph asserting that we show our working, sat
+ * above a list showing the working, was the assertion doing no work.
  *
  * SCOPE OF THE CLAIMS. The parse has already finished by the time this renders
  * — it runs in the server action on the upload screen. So the steps here are
@@ -44,28 +47,23 @@ export default function ReadingPage() {
 
   const steps = useMemo(() => {
     const found = [fields.currentTitle, fields.employer].filter(Boolean).join(' at ')
+    // A title, and at most the one fact the title cannot carry on its own.
+    // "Removed your identifiers" has to name which ones; "Deleted the file"
+    // does not need a sentence explaining what deletion is.
     return [
       {
         title: 'Read your résumé',
-        detail: found
-          ? `Found ${found}${fields.city ? ` in ${fields.city}` : ''}.`
-          : 'Pulled out what the document states.',
+        detail: found ? `${found}${fields.city ? ` · ${fields.city}` : ''}` : undefined,
       },
       {
-        title: 'Removed your direct identifiers',
-        detail: 'Your email, phone number and profile links were stripped before any text left our server.',
+        title: 'Removed your identifiers',
+        detail: 'Email, phone, profile links.',
       },
-      {
-        title: 'Deleted the file',
-        detail: 'Only text was read, and it is already gone. Nothing is stored until you confirm it on the next screen.',
-      },
+      { title: 'Deleted the file' },
       ...(warnings.length
-        ? [{
-            title: `${warnings.length} field${warnings.length === 1 ? '' : 's'} worth checking`,
-            detail: 'We would rather you corrected them than have us guess.',
-          }]
+        ? [{ title: `${warnings.length} field${warnings.length === 1 ? '' : 's'} worth checking` }]
         : []),
-    ]
+    ] as { title: string; detail?: string }[]
   }, [fields.currentTitle, fields.employer, fields.city, warnings.length])
 
   useEffect(() => {
@@ -83,12 +81,8 @@ export default function ReadingPage() {
   return (
     <OnboardingShell step={3}>
       <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
-        We&apos;re building your first shortlist, carefully.
+        Reading your résumé.
       </h1>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        We show our working, because a career match should be checkable. No invented
-        progress bar for the read itself — just the steps we took with your file.
-      </p>
 
       <ol className="mt-8 space-y-5" aria-live="polite">
         {steps.map((s, i) => {
@@ -119,26 +113,25 @@ export default function ReadingPage() {
                     </span>
                   )}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">{s.detail}</p>
+                {s.detail ? (
+                  <p className="mt-1 text-sm text-muted-foreground">{s.detail}</p>
+                ) : null}
               </div>
             </li>
           )
         })}
       </ol>
 
-      <div className="mt-8 flex gap-3 rounded-xl border border-border bg-secondary/60 p-4">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        <p className="text-xs leading-5 text-muted-foreground">
-          The file is deleted the moment parsing finishes, and only the fields you confirm
-          on the next screen are ever stored.
-        </p>
-      </div>
+      <p className="mt-8 flex items-center gap-3 rounded-xl border border-border bg-secondary/60 p-4 text-xs text-muted-foreground">
+        <ShieldCheck className="size-4 shrink-0" />
+        Only the fields you confirm are stored.
+      </p>
 
       {slow && (
-        <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          This is taking longer than it should. If nothing happens shortly,{' '}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Taking longer than it should.{' '}
           <a href="/start/confirm" className="font-semibold text-primary underline underline-offset-4">
-            go straight to your details
+            Skip ahead
           </a>{' '}
           — nothing is lost.
         </p>

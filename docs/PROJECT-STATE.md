@@ -277,6 +277,44 @@ once. Measured on the founder's real list:
 says troubleshooting logs are kept for up to 30 days — it says the account has
 ZDR switched on and names what that stops.
 
+**Then the text came out of it.** The port had carried the export's copy across
+faithfully, and the export writes an eyebrow, a headline and a subtitle for
+every screen. Measured in visible words — collapsed disclosures excluded:
+
+| | Before | After |
+|---|---|---|
+| `/today` | ~1,800 | **545** |
+| `/today`, per role card | 32 words, 9 text rows | **12 words, 4 rows** |
+| `/today` rail | ~90 | **17** |
+| `/` (landing) | 613 | **395** |
+| `/start/upload` | 154 | **55** |
+| `/profile` | 153 | **86** |
+| `/start/confirm` | 114 | **54** |
+| `/start` | 60 | **21** |
+
+The rule applied, and it is now in `docs/DESIGN.md`: **a repeated control becomes
+an icon with a `title` and an `aria-label`; an explanation true of every row
+moves to the rail; a sentence restating the heading above it goes.** So *Track
+this* and *This score looks wrong* are a bookmark and a flag, the *Salary not
+stated* chip is stated once instead of 54 times, and the two score disclosures
+became one.
+
+**What was not cut, and the reason it wasn't:**
+
+- **The reason line** on every card, at full length. A score without its reason
+  is the failure the product exists to correct.
+- **The score components and their source quotes.** They moved into one
+  disclosure instead of two; not a word of the working was removed.
+- **The deletion promise on the upload screen** — shortened, still beside the
+  ask rather than behind a link, still naming that a third party sees stripped
+  text.
+- **The named coverage gap** and the honest empty state. The empty state now
+  only renders when the list is actually thin (under 10), which is the case it
+  was written for; it had been answering a worry nobody has on a 229-role day.
+- **`/privacy` and `/terms`.** These are documents, and cutting a disclosure to
+  save a line is removing the disclosure. One paragraph went, because it
+  restated the preceding one almost verbatim.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

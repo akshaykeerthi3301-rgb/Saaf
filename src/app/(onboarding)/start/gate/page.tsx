@@ -78,7 +78,7 @@ export default function GatePage() {
         })}
       </div>
 
-      <p className="mt-4 text-xs leading-5 text-muted-foreground">{spec.note}</p>
+      <p className="mt-4 text-xs text-muted-foreground">{spec.note}</p>
 
       {error ? (
         <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">

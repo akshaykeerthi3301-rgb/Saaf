@@ -34,7 +34,7 @@ export function SkillsField({ skills, onChange, fromResume }: Props) {
         Skills
         {fromResume ? (
           <span className="ml-2 text-xs font-normal text-muted-foreground">
-            read from your résumé — remove anything that isn&apos;t yours
+            from your résumé — remove anything that isn&apos;t yours
           </span>
         ) : null}
       </label>
@@ -79,9 +79,7 @@ export function SkillsField({ skills, onChange, fromResume }: Props) {
         </button>
       </div>
 
-      <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        Roles naming these score higher on your list.
-      </p>
+      <p className="mt-2 text-xs text-muted-foreground">Roles naming these score higher.</p>
     </div>
   )
 }

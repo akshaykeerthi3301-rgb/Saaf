@@ -21,13 +21,7 @@ import { ShieldCheck, Sparkles } from 'lucide-react'
 
 /** One source of truth for the flow's length and its pacing.
  *  Starts at 10%, never 0 — momentum from screen one. */
-const STEPS = [
-  { pct: 10, lead: 'Where you look today' },
-  { pct: 25, lead: 'Your résumé' },
-  { pct: 45, lead: 'Reading it' },
-  { pct: 60, lead: 'Confirm what we read' },
-  { pct: 80, lead: 'One last question' },
-] as const
+const STEPS = [10, 25, 45, 60, 80] as const
 
 export function OnboardingShell({
   step,
@@ -37,7 +31,7 @@ export function OnboardingShell({
   step: number
   children: React.ReactNode
 }) {
-  const current = STEPS[step - 1]
+  const pct = STEPS[step - 1]
 
   return (
     <main className="min-h-screen bg-card text-foreground lg:grid lg:grid-cols-[minmax(340px,0.8fr)_minmax(600px,1.2fr)]">
@@ -65,21 +59,15 @@ export function OnboardingShell({
           Saaf AI
         </Link>
 
+        {/* Was a badge, a headline and two promises. The badge said what the
+            headline says, and the two promises said the same thing twice. */}
         <div className="relative mt-auto max-w-md pb-2 pt-16 lg:pb-14">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-card/65 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur-sm">
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Setting up your shortlist
-          </div>
           <h2 className="text-balance text-3xl font-semibold leading-[1.08] tracking-[-0.05em] text-primary sm:text-4xl">
-            Five short steps, then your first shortlist.
+            Five steps to your first shortlist.
           </h2>
-          <p className="mt-5 max-w-sm text-pretty text-sm leading-6 text-muted-foreground">
-            Nothing is scored against a detail you haven&apos;t confirmed, and nothing is stored
-            until you say it&apos;s right.
-          </p>
-          <p className="mt-10 hidden items-center gap-2 text-xs font-medium text-primary/60 lg:flex">
-            <ShieldCheck className="size-4 text-accent" />
-            Your résumé file is deleted the moment we&apos;ve read it.
+          <p className="mt-6 flex items-center gap-2 text-xs font-medium text-primary/60">
+            <ShieldCheck className="size-4 shrink-0 text-accent" />
+            Nothing is stored until you confirm it.
           </p>
         </div>
       </section>
@@ -87,21 +75,20 @@ export function OnboardingShell({
       <section className="flex flex-col px-5 py-8 sm:px-10 sm:py-12 lg:min-h-screen lg:px-16 lg:py-14 xl:px-24">
         <div className="mx-auto w-full max-w-xl">
           <div className="mb-9">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-                Step {step} of {STEPS.length}
-              </p>
-              <p className="text-sm text-muted-foreground">{current.lead}</p>
-            </div>
+            {/* The step's own name sat here beside the counter and again as the
+                page's h1 one line below. The counter is enough. */}
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+              Step {step} of {STEPS.length}
+            </p>
             <div
               role="progressbar"
-              aria-valuenow={current.pct}
+              aria-valuenow={pct}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="Onboarding progress"
               className="h-1 w-full overflow-hidden rounded-full bg-secondary"
             >
-              <div className="h-full rounded-full bg-accent" style={{ width: `${current.pct}%` }} />
+              <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
             </div>
           </div>
 

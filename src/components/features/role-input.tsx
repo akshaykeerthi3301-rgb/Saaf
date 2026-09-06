@@ -76,22 +76,20 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
 
       {exact ? (
         <p className="-mt-4 mb-3 text-xs leading-5 text-muted-foreground">
-          {exact.count.toLocaleString('en-IN')} role{exact.count === 1 ? '' : 's'} in
-          today&apos;s index match this.
+          {exact.count.toLocaleString('en-IN')} in today&apos;s index.
         </p>
       ) : null}
 
       {noneFound ? (
         <p className="-mt-4 mb-3 text-xs leading-5 text-muted-foreground">
-          Nothing in today&apos;s index matches that. You can still use it — your list will fill
-          as the registry grows — or try a broader title.
+          Nothing in today&apos;s index matches that. You can still use it, or try a broader title.
         </p>
       ) : null}
 
       {shown.length > 0 ? (
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            In the index right now
+            In the index
           </p>
           <div className="flex flex-wrap gap-2">
             {shown.map((s) => (

@@ -15,6 +15,6 @@
  */
 export const CREDENTIAL_QUESTION = {
   q: 'Which credential do you hold?',
-  note: 'Some roles gate on a professional credential — CA, CFA, or Company Secretary. If none apply, choose "None of these"; it never counts against you.',
+  note: 'If none apply, "None of these" never counts against you.',
   options: ['CA', 'CFA', 'CS', 'None of these'],
 }

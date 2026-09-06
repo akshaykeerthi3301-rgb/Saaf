@@ -1,4 +1,4 @@
-import { ChevronRight, MapPin, Quote } from 'lucide-react'
+import { AlertCircle, ChevronRight, MapPin, Quote } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
 import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
@@ -37,15 +37,21 @@ type Props = {
 }
 
 /**
- * A scored role, in the saaf-ai card design.
+ * A scored role.
  *
- * The score ring is the export's FitScore, wired to the real number and the
- * real components. The export hard-codes "Industry Context 9/10, Trajectory
- * 8/10"; those two components are planned and not built, so the ring shows the
- * two highest-weighted components that actually exist rather than inventing the
- * two that don't.
+ * Four rows of text, down from nine. What went, and why none of it was a fact:
+ * the band tag above the title said what the ring's band already says; the
+ * "Salary not stated" chip was true of all 229 roles and is now stated once on
+ * the page instead of 54 times on it; the two component readouts under the ring
+ * repeated the top of the working; company and city were two rows and two
+ * bordered chips and are now one line. "New" and the unread-experience warning
+ * became a dot and an icon, both with labels for screen readers.
  *
- * Still a server component. The disclosures are native <details>, the only
+ * WHAT DID NOT GO: the reason line. A score without its reason is the exact
+ * failure this product exists to correct, so it stays on the face of the card
+ * at full length even when everything around it is cut.
+ *
+ * Still a server component. The disclosure is a native <details>, the only
  * client code is the two action buttons, and the breakdown is never behind a
  * request — a candidate can check the arithmetic without a round trip.
  */
@@ -55,72 +61,77 @@ export function RoleCard({
 }: Props) {
   const strong = bucket === 'matches' && score >= 75
   const band = score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match'
-
-  // Highest-weighted components first — what most moved this number.
-  const top = (breakdown?.components ?? [])
-    .slice()
-    .sort((a, b) => b.max - a.max)
-    .slice(0, 2)
+  const components = breakdown?.components ?? []
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-      <div className="grid gap-5 lg:grid-cols-[1fr_230px]">
-        <div className="flex min-h-[190px] min-w-0 flex-col">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-accent/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
-              {strong ? 'High-precision match' : band}
-            </span>
+      <div className="grid gap-5 sm:grid-cols-[1fr_150px]">
+        <div className="flex min-w-0 flex-col">
+          <div className="flex min-w-0 items-start gap-2">
             {isNew && (
-              <span className="rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
-                New
-              </span>
+              <span
+                className="mt-2 size-1.5 shrink-0 rounded-full bg-accent"
+                title="First shown in the last 7 days"
+                aria-label="New"
+              />
             )}
-            {breakdown?.confidence === 'low' && (
-              <span className="rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
-                Experience bar unread
-              </span>
-            )}
+            <div className="min-w-0">
+              {applyUrl ? (
+                <a
+                  href={applyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary hover:underline sm:text-xl"
+                >
+                  {title}
+                </a>
+              ) : (
+                <h3 className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary sm:text-xl">
+                  {title}
+                </h3>
+              )}
+              {/* Company and city on one line. They were two rows and two
+                  bordered chips; neither fact needs a box around it. */}
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
+                {company}
+                {city ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <MapPin className="size-3" aria-hidden="true" />
+                    {city}
+                  </>
+                ) : null}
+                {breakdown?.confidence === 'low' ? (
+                  <AlertCircle
+                    className="size-3.5 text-muted-foreground"
+                    aria-label="The posting states an experience bar we could not read confidently"
+                  />
+                ) : null}
+              </p>
+            </div>
           </div>
 
-          {applyUrl ? (
-            <a
-              href={applyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl font-semibold tracking-[-0.045em] text-primary hover:underline sm:text-2xl"
-            >
-              {title}
-            </a>
-          ) : (
-            <h3 className="text-xl font-semibold tracking-[-0.045em] text-primary sm:text-2xl">{title}</h3>
-          )}
-          <p className="mt-1 text-sm font-medium text-muted-foreground">{company}</p>
+          {/* The one line explaining the number. Never removed: a score without
+              its reason is the exact failure this product exists to correct. */}
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{reason}</p>
 
-          <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
-            {city && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5">
-                <MapPin className="size-3" />
-                {city}
-              </span>
-            )}
-            {/* Stated on every card rather than discovered after the click. No
-                board in the registry publishes pay, so this is true of all. */}
-            <span className="rounded-lg border border-border px-2.5 py-1.5">Salary not stated</span>
-          </div>
-
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">{reason}</p>
-
-          {breakdown && (
-            <>
-              {/* data-breakdown is how BreakdownEngaged tells this disclosure
-                  from the evidence one below it — `toggle` carries no other signal. */}
-              <details className="group mt-4" data-breakdown="score">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-primary hover:text-accent">
+          <div className="mt-auto flex items-center gap-1 pt-4">
+            {breakdown && (
+              /* ONE disclosure, not two. The score components and the sentences
+                 they were read from are the same question — "where did this
+                 number come from" — and asking it twice put two more lines of
+                 text on every card. Still inline, still no round trip. */
+              <details className="group min-w-0 flex-1" data-breakdown="score">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
                   <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-                  How this score is built
+                  Working
+                  {requirements?.length ? (
+                    <span className="font-mono tabular-nums">({requirements.length})</span>
+                  ) : null}
                 </summary>
+
                 <dl className="mt-3 space-y-2 rounded-xl border border-border bg-secondary/40 p-4">
-                  {breakdown.components.map((c) => (
+                  {components.map((c) => (
                     <div key={c.key} className="grid gap-1 sm:grid-cols-[140px_1fr]">
                       <dt className="text-xs font-semibold text-primary">
                         {c.label}{' '}
@@ -132,15 +143,9 @@ export function RoleCard({
                     </div>
                   ))}
                 </dl>
-              </details>
 
-              {requirements && requirements.length > 0 && (
-                <details className="group mt-2">
-                  <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-primary hover:text-accent">
-                    <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-                    What we read from this posting ({requirements.length})
-                  </summary>
-                  <div className="mt-3 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
+                {requirements && requirements.length > 0 && (
+                  <div className="mt-2 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
                     {requirements.map((r, i) => (
                       <div key={i}>
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
@@ -157,67 +162,50 @@ export function RoleCard({
                       </div>
                     ))}
                   </div>
-                </details>
-              )}
-            </>
-          )}
+                )}
+              </details>
+            )}
 
-          <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-6 text-sm">
             <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} />
             <ReportScore gateResultId={gateResultId} />
           </div>
         </div>
 
-        <FitScore score={score} band={band} strong={strong} components={top} />
+        <FitScore score={score} band={band} strong={strong} />
       </div>
     </article>
   )
 }
 
-function FitScore({
-  score, band, strong, components,
-}: {
-  score: number
-  band: string
-  strong: boolean
-  components: { key: string; label: string; points: number; max: number }[]
-}) {
+/**
+ * The number and its band, and nothing else.
+ *
+ * The export put two component readouts under the ring and a second band tag
+ * above the title. Both said what the band already says or what the working
+ * already shows, so both are gone — four fewer lines of text on every card, no
+ * fact removed from the page.
+ */
+function FitScore({ score, band, strong }: { score: number; band: string; strong: boolean }) {
   return (
     <div
-      className={`flex min-h-[190px] flex-col items-center justify-center rounded-2xl px-5 py-6 text-center ${
+      className={`flex flex-col items-center justify-center rounded-2xl px-4 py-5 text-center ${
         strong ? 'bg-primary text-primary-foreground' : 'bg-secondary text-primary'
       }`}
     >
       <div
-        className={`flex size-28 items-center justify-center rounded-full border-[7px] ${
+        className={`flex size-20 items-center justify-center rounded-full border-[6px] ${
           strong ? 'border-accent bg-primary/70' : 'border-muted-foreground/30 bg-card'
         }`}
       >
-        <span className="text-4xl font-semibold tabular-nums tracking-[-0.08em]">{score}</span>
+        <span className="text-3xl font-semibold tabular-nums tracking-[-0.06em]">{score}</span>
       </div>
       <p
-        className={`mt-4 text-[10px] font-bold uppercase tracking-[0.18em] ${
+        className={`mt-3 text-[10px] font-bold uppercase tracking-[0.16em] ${
           strong ? 'text-accent' : 'text-muted-foreground'
         }`}
       >
         {band}
       </p>
-      {components.length > 0 && (
-        <div
-          className={`mt-4 flex w-full justify-center gap-4 border-t pt-3 text-[10px] ${
-            strong ? 'border-primary-foreground/10 text-primary-foreground/65' : 'border-border text-muted-foreground'
-          }`}
-        >
-          {components.map((c) => (
-            <span key={c.key}>
-              {c.label}{' '}
-              <strong className={`tabular-nums ${strong ? 'text-primary-foreground' : 'text-primary'}`}>
-                {c.points}/{c.max}
-              </strong>
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

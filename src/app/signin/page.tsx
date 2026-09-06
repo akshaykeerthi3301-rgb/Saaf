@@ -85,9 +85,7 @@ export default function SignInPage() {
         </div>
 
         <form onSubmit={submit}>
-          <p className="mb-5 text-sm leading-6 text-muted-foreground">
-            No password. Enter your email to sign in.
-          </p>
+          <p className="mb-5 text-sm text-muted-foreground">No password.</p>
           <Input
             label="Email"
             type="email"

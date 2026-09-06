@@ -21,12 +21,11 @@ export default async function ProfilePage() {
   return (
     <AppShell title="Profile & settings" initials={initials}>
       <div className="mx-auto max-w-2xl p-5 sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">Your profile</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-primary sm:text-3xl">
-          What we match you against.
-        </h2>
-        <p className="mb-8 mt-2 text-sm leading-6 text-muted-foreground">
-          Changing anything here re-runs the gates against today&apos;s roles.
+        {/* Header says "Profile & settings"; an eyebrow and a headline saying it
+            again were removed. The one line kept is the one a reader could not
+            work out on their own — that saving re-runs the scoring. */}
+        <p className="mb-8 text-sm text-muted-foreground">
+          Saving re-runs your matches against today&apos;s roles.
         </p>
         <ProfileForm initial={{
           currentTitle: profile.current_title ?? '',

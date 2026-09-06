@@ -258,17 +258,26 @@ the message below in `destructive` — the only place chromatic red appears.
 code is the two action buttons, and **the breakdown is never behind a request**
 — a candidate can check the arithmetic without a round trip.
 
-Left column carries band tag, title, company, city and salary chips, the one
-reason line, and two disclosures — *How this score is built* (every component
-with the sentence it was read from) and *What we read from this posting* (every
-extracted requirement with its source quote). Right column is the score ring:
-the number in `text-4xl tabular-nums`, the band beneath, and the two
-highest-weighted components under a rule. A strong match (≥75, in the `matches`
-bucket) inverts to ink-on-primary with an accent ring.
+**Four rows of text, and that is the budget.** Left column: title, then
+`company · city` on one line, then the reason line, then a single *Working*
+disclosure sitting beside two icon buttons. Right column is the score ring — the
+number in `text-3xl tabular-nums` and its band, nothing else. A strong match
+(≥75, in the `matches` bucket) inverts to ink-on-primary with an accent ring.
 
-**The breakdown is not decoration.** The score it replaced was
-`70 + posting verbosity` and never read the candidate at all; a bare number would
-hide exactly that class of defect again.
+It carried nine rows until 2026-09-07. What went, and why none of it was a fact
+leaving the page: the band tag above the title said what the ring's band says;
+the *Salary not stated* chip was true of all 229 roles and is stated once in the
+rail instead of 54 times in the list; the two component readouts under the ring
+repeated the top of the working; company and city were two rows in two bordered
+chips; *How this score is built* and *What we read from this posting* were two
+disclosures answering one question and are now one. `New` is a dot and the
+unread-experience warning is an icon, both with labels for assistive tech.
+
+**Two things on this card are not negotiable.** The **reason line** stays at
+full length on the face of the card — a score without its reason is the exact
+failure this product exists to correct. And **the breakdown is not decoration**:
+the score it replaced was `70 + posting verbosity` and never read the candidate
+at all, so a bare number would hide that class of defect again.
 
 ### Option card
 
@@ -297,6 +306,10 @@ argument.
 - Set every comparable number in `font-mono tabular-nums`.
 - Keep the reason line adjacent to the score.
 - Reach for an existing shell before inventing a layout.
+- Cut a line before adding one. A repeated control is an icon with a `title` and
+  an `aria-label`, not a text label repeated down the page; an explanation that
+  applies to every row belongs once in the rail, not once per row; and a
+  sentence restating the heading above it is not a sentence.
 
 **Don't**
 
@@ -311,6 +324,12 @@ argument.
 - Don't ship a number the database does not hold. If the export has a tile for
   it and we cannot compute it, the tile does not ship.
 - Don't half-add dark mode. All tokens or none.
+- Don't caption a screen three times. An eyebrow, a headline and a subtitle
+  saying the same thing is the default failure mode of the export's copy, and
+  the app header has usually already named the page.
+- Don't cut a reason, a refusal, a deletion promise or a named uncertainty to
+  save a line. Those are the product. Shorten them, move them behind a
+  disclosure or an icon label, but never remove the fact.
 
 ## What was retired, and why
 

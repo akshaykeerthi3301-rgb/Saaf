@@ -74,11 +74,6 @@ export default function PrivacyPage() {
           &ldquo;Type it in instead&rdquo; on the upload screen — nothing is sent
           anywhere, and the only thing you lose is the pre-filling.
         </P>
-        <P>
-          If you would rather no third party saw it at all, use &ldquo;Type it in
-          instead&rdquo; on the upload screen. Nothing is sent anywhere, and you lose
-          only the pre-filling.
-        </P>
       </Section>
 
       <Section>
