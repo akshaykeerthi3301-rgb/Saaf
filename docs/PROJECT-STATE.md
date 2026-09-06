@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; ten stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; eleven stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -607,6 +607,50 @@ The same role, same two years, different background:
 publishes one. What the founder wanted from it — an internship not reading as a
 90 — is a level problem, and level is now read from the title in both
 directions. Pay banding stays parked until there is a real source for it.
+
+### Stage K — walking the product as a user (2026-09-07)
+
+The founder asked to try the real thing end to end. Landing page, sign-in,
+shortlist, opening a score's working, tracking a role, the tracker. It all
+works. Two defects came out of it that no test would have caught, because both
+are about what the product *says* rather than what it computes.
+
+**1 · The landing page published arithmetic the scorer has never produced.**
+The comparison card — the page's single piece of proof, next to a portal
+showing "★ TOP APPLICANT, no number, no reason" — read:
+
+> Staff Engineer · **62** · Role match 35/35 · Experience 2/30 · Location 15/15 · Work mode 10/10
+
+Not one of those denominators exists. The weights are title 28, seniority 25,
+location 10, work mode 7, credential 10. And since Stage J the total is
+impossible too: a candidate six years under the bar is `far_short` and capped at
+50, so 62 cannot happen. **On the one page whose whole argument is that our
+arithmetic can be checked.**
+
+Replaced with the real output of `scoreRole()` for that exact candidate —
+**35**, with the cap named — and pinned by a test in `score.test.ts` that fails
+if `WEIGHTS` or the caps move. Copy that quotes the engine now has to agree with
+the engine.
+
+**2 · Every card gave the same reason.** All 246 read *"You asked for remote."*
+`summarise()` picks the weakest component, and the founder's work-mode
+preference is remote against an index where — measured — **0 of 246** roles are.
+So a 7-point component was the largest miss on nearly every card and became the
+explanation for every score.
+
+The line is true and stays; it was the only thing wrong with those roles. What
+was missing is the fact that makes it actionable, and it belongs on the page
+once rather than on 246 cards. The rail now reads: *"You asked for remote. 0 of
+246 match that — the rest lose those points on every card."* Shown only when the
+preference is actually biting (a quarter of the list or less).
+
+**Not fixed, and the founder's call.** `profiles.preferred_role` on the live
+account is **"manager"** — one word, matching 246 of 742 roles, and stemming
+makes it a *perfect* 28/28 title match against "Vulnerability Management
+Engineer" and "Associate Compliance Manager" alike. The taxonomy picker and the
+live counts in `RoleInput` exist precisely to stop this, and they were built
+after this profile was confirmed. One edit on `/profile` fixes the account; what
+is unfixed is that a single common word can still score 28/28 on title.
 
 ### Deliberate residue — do not "tidy" these away
 

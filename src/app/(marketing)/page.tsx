@@ -187,11 +187,19 @@ export default function Landing() {
               Saaf
             </span>
             <p className="mt-3 text-lg font-medium tracking-[-0.02em] text-primary">
-              Staff Engineer · <span className="font-bold tabular-nums">62</span>
+              Staff Engineer · <span className="font-bold tabular-nums">35</span>
             </p>
+            {/* THESE NUMBERS ARE THE REAL OUTPUT, not an illustration. Produced
+                by scoreRole() for a two-year candidate in Bengaluru against a
+                "Staff Engineer, 8+ years" posting, and checked again whenever
+                WEIGHTS or the caps change — see the test that pins them.
+                They were 35/35, 2/30, 15/15 and 10/10 until 2026-09-07: four
+                denominators the scorer has never used, on the one page whose
+                entire argument is that our arithmetic can be checked. */}
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Role match 35/35 · Experience 2/30 — asks for 8 years, you have 2 · Location 15/15 ·
-              Work mode 10/10
+              Role match 28/28 · Experience 1/25 — asks for 8 years, you have 2 · Location 10/10 ·
+              Work mode 7/7 · Credential 10/10 — then capped at 50, because you are well under the
+              bar this posting states.
             </p>
           </article>
         </div>

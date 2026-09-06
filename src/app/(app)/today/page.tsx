@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ChevronRight, Eye, ShieldCheck, Target, Wallet } from 'lucide-react'
+import { ChevronRight, Eye, Laptop, ShieldCheck, Target, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
@@ -72,7 +72,7 @@ export default async function TodayPage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('preferred_role, confirmed_at, city')
+    .select('preferred_role, confirmed_at, city, work_mode_preference')
     .eq('id', user.id)
     .single()
 
@@ -123,6 +123,20 @@ export default async function TodayPage({
 
   const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
   const gap = functionGap(profile.preferred_role)
+
+  // A work-mode preference is a filter wearing a score component's clothes. Set
+  // to "remote" against this index it fails almost everywhere, which put the
+  // identical line — "You asked for remote." — on all 246 cards as the reason
+  // for every score. The line is true and stays; what was missing is the fact
+  // that makes it actionable, which belongs here once rather than there 246
+  // times. Counted from the stored breakdowns, so it is the real number.
+  const wantsMode = profile.work_mode_preference && profile.work_mode_preference !== 'no_preference'
+  const modeMatches = wantsMode
+    ? rows.filter((r) => {
+        const c = r.score_breakdown?.components?.find((x) => x.key === 'work_mode')
+        return c ? c.points === c.max : false
+      }).length
+    : 0
 
   // Buckets are derived from the stored breakdown, not from a column, so they
   // can never fall out of step with the scorer. See src/match/score.ts.
@@ -283,6 +297,19 @@ export default async function TodayPage({
             {/* The score presents as complete, so a requirement we don't read has
                 to be named or it reads as one we checked and found nothing on.
                 Attributed to our coverage, never to the candidate. */}
+            {/* Only when it is actually biting. A preference that most roles
+                meet needs no announcement. */}
+            {wantsMode && rows.length > 0 && modeMatches <= rows.length / 4 ? (
+              <p className="flex items-start gap-2.5">
+                <Laptop className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  You asked for <strong className="font-semibold text-primary">{profile.work_mode_preference}</strong>.{' '}
+                  <strong className="font-mono tabular-nums text-primary">{modeMatches}</strong> of{' '}
+                  <strong className="font-mono tabular-nums text-primary">{rows.length}</strong>{' '}
+                  match that — the rest lose those points on every card.
+                </span>
+              </p>
+            ) : null}
             {gap ? (
               <p className="flex items-center gap-2.5">
                 <Eye className="size-4 shrink-0" />

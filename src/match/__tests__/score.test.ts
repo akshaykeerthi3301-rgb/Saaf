@@ -309,3 +309,29 @@ describe('entry-level titles are read as a ceiling', () => {
     expect(extractTitleSeniority('Assistant Manager - Product')).toEqual([])
   })
 })
+
+describe('the worked example published on the landing page', () => {
+  // src/app/(marketing)/page.tsx prints these numbers as the product's own
+  // proof that its arithmetic can be checked. They were wrong for months —
+  // 35/35, 2/30, 15/15, 10/10, none of which the scorer has ever used — so
+  // they are pinned here. If this test fails, the landing page is lying.
+  it('still produces exactly what the page claims', () => {
+    const b = scoreRole(
+      { yearsExperience: 2, city: 'Bengaluru', credential: 'none',
+        preferredRole: 'Staff Engineer', workModePreference: 'no_preference', skills: [] },
+      { title: 'Staff Engineer', locationRaw: 'Bengaluru, India', city: 'Bengaluru' },
+      [req({ minYears: 8 })],
+    )
+    expect(b.total).toBe(35)
+    const at = (k: string) => {
+      const c = b.components.find((x) => x.key === k)!
+      return `${c.points}/${c.max}`
+    }
+    expect(at('title')).toBe('28/28')
+    expect(at('seniority')).toBe('1/25')
+    expect(at('location')).toBe('10/10')
+    expect(at('work_mode')).toBe('7/7')
+    expect(at('credential')).toBe('10/10')
+    expect(at('cap')).toBe('35/50')
+  })
+})
