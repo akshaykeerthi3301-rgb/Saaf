@@ -114,8 +114,9 @@ export default async function TodayPage() {
     byBucket.get(b)!.push(r)
   }
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
-  const initials = (profile.preferred_role ?? 'Y')
-    .split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('') || 'YOU'
+  // From the signed-in address, matching /applications — a job title makes for
+  // confusing initials ("PM" is not who you are).
+  const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
 
   return (
     <AppShell title="Jobs" initials={initials}>

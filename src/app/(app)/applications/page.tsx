@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation'
+import { CalendarClock } from 'lucide-react'
+import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationBoard, type Application } from '@/components/features/application-board'
 
@@ -34,45 +36,55 @@ export default async function ApplicationsPage() {
     followUpOn: r.follow_up_on,
   }))
 
+  // From the signed-in address rather than a second query just for two letters.
+  const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
+
   const due = rows.filter(
     (r) => r.followUpOn && r.followUpOn <= new Date().toISOString().slice(0, 10)
       && r.status !== 'closed',
   ).length
 
   return (
-    <main className="measure" style={{ paddingTop: 32, paddingBottom: 64 }}>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'baseline', gap: 'var(--space-md)', flexWrap: 'wrap',
-      }}>
-        <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-          Your applications
-        </h1>
-        <nav style={{ display: 'flex', gap: 'var(--space-md)', fontSize: 'var(--type-label-md-size)' }}>
-          <a href="/today">Today</a>
-          <a href="/profile">Profile</a>
-        </nav>
+    <AppShell title="Applications" initials={initials}>
+      <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
+              Application pipeline
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-primary sm:text-3xl">
+              Your applications, at a glance.
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              {rows.length === 0
+                ? 'Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.'
+                : 'Only you can see this — nothing here is shared with an employer.'}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {due > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent">
+                <CalendarClock className="size-3.5" />
+                {due} to follow up on
+              </span>
+            )}
+            <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+              {rows.length} tracked
+            </span>
+          </div>
+        </div>
+
+        {/* A backend failure must never render as a verdict — an empty board would
+            read as "you have applied to nothing", which is a statement about the
+            candidate rather than about our read. */}
+        {error ? (
+          <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            We couldn&apos;t load your applications. That&apos;s our problem, not a result — try again shortly.
+          </p>
+        ) : (
+          <ApplicationBoard initial={rows} />
+        )}
       </div>
-
-      {/* A backend failure must never render as a verdict — an empty board would
-          read as "you have applied to nothing", which is a statement about the
-          candidate rather than about our read. */}
-      {error ? (
-        <p style={{ color: 'var(--color-on-surface-variant)' }}>
-          We couldn&apos;t load your applications. That&apos;s our problem, not a result — try again shortly.
-        </p>
-      ) : (
-        <p style={{
-          color: 'var(--color-on-surface-variant)',
-          fontSize: 'var(--type-body-sm-size)', margin: '0 0 var(--space-md)',
-        }}>
-          {rows.length === 0
-            ? 'Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.'
-            : `${rows.length} tracked${due > 0 ? ` · ${due} to follow up on` : ''}. Only you can see this — nothing here is shared with an employer.`}
-        </p>
-      )}
-
-      <ApplicationBoard initial={rows} />
-    </main>
+    </AppShell>
   )
 }

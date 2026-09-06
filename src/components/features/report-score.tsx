@@ -31,9 +31,14 @@ export function ReportScore({ gateResultId }: { gateResultId: string }) {
       type="button"
       className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
       onClick={async () => {
+        // Optimistic, then reconciled — same reason as TrackRole. The report
+        // table's unique constraint is a real one rather than a partial index,
+        // so this path works today; it is wired the same way so it cannot
+        // start lying quietly if that ever changes.
         setReported(true)
         track('score_reported', { gate_result_id: gateResultId })
-        await reportRefusal({ gateResultId })
+        const res = await reportRefusal({ gateResultId })
+        if (!res.ok) setReported(false)
       }}
     >
       This score looks wrong
