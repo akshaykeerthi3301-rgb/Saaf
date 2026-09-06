@@ -74,8 +74,9 @@ export default function UploadPage() {
       <p style={{ color: 'var(--color-on-surface-variant)', fontSize: 'var(--type-body-md-size)' }}>
         We read it once to fill in your profile, then delete the file. Only the fields
         you confirm are stored. To read your skills we send the text — with your email,
-        phone and profile links removed — to Google&apos;s Gemini API, which does not
-        train on it. Everything it returns is shown to you before anything is saved.
+        phone and profile links removed — to a third-party model provider, named on our{' '}
+        <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy page</a>.
+        Everything it returns is shown to you before anything is saved.
       </p>
 
       {error ? (

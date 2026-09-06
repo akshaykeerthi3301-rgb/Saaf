@@ -20,7 +20,13 @@ export const metadata = { title: 'Privacy — Saaf' }
  * this is drawn from, and src/app/actions/parse-resume.ts /
  * src/lib/delete-user.ts for where each claim is actually enforced.
  */
+import { activeProvider, PROVIDER_LABEL } from '@/lib/parse/llm'
+
 export default function PrivacyPage() {
+  // Named from the configured provider, never hard-coded. A privacy page that
+  // names the wrong recipient is worse than one that names none.
+  const providerLabel = PROVIDER_LABEL[activeProvider() ?? 'gemini']
+
   return (
     <main className="measure" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
       <h1 style={{ fontSize: 'var(--type-display-lg-size)', fontWeight: 'var(--type-display-lg-weight)', margin: '0 0 var(--space-md)' }}>
@@ -43,11 +49,12 @@ export default function PrivacyPage() {
         <P>
           One third party sees the text. To read your skills and industry, which
           fixed patterns cannot do across arbitrary résumé layouts, we send the
-          extracted text to Google&apos;s Gemini API. Your email address, phone
-          number and profile links are stripped out before it leaves our server,
-          Google does not train on API content, and the file itself is never sent —
-          only text. Everything the model returns is shown to you for confirmation
-          before any of it is stored, and you can delete any of it.
+          extracted text to <strong>{providerLabel}</strong>, the model provider we
+          currently use for this. Your email address, phone number and profile links
+          are stripped out before it leaves our server, and the file itself is never
+          sent — only text. Everything the model returns is shown to you for
+          confirmation before any of it is stored, and you can delete any of it. If
+          we change provider, this sentence changes with it.
         </P>
         <P>
           If you would rather no third party saw it at all, use &ldquo;Type it in
