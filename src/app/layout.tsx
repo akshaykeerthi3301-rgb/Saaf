@@ -24,8 +24,19 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Saaf',
-  description: 'A daily shortlist of roles you can actually get, ranked by honest odds.',
+  title: 'Saaf AI — Precision Career Copilot for India',
+  description: 'Find high-precision career matches in India without the application spam.',
+  // Real icons from the saaf-ai design export, replacing the Next.js scaffold
+  // favicon. icon.svg is the scalable one; the PNGs cover browsers that ignore
+  // SVG favicons, and apple-icon covers an iOS home-screen bookmark.
+  icons: {
+    icon: [
+      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

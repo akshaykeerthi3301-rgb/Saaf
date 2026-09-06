@@ -1,47 +1,48 @@
 import Link from 'next/link'
-import { ArrowUpRight, Check, CircleCheck, FileUp, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowUpRight, Check, CircleCheck, FileUp, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react'
 import { AuditStrip } from '@/components/features/audit-strip'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
 
-const CTA = 'Show me my matches'
+const CTA = 'Upload Résumé & Get True-Fit Match'
 
 /**
- * The landing page, in the saaf-ai design language.
+ * The landing page, in the saaf-ai design language and carrying the saaf-ai copy.
  *
- * COPY IS DELIBERATELY NOT THE KIT'S. The saaf-ai export leads on True-Fit
- * Scoring, Review & Approve and WhatsApp nudges — all three are planned and
- * none of them ship yet. docs/ROADMAP.md TASK-053 reconciled every claim on
- * this page against shipped, tested code, and the standing rule is that a
- * promise the product cannot keep is a defect rather than marketing. So the
- * visual language is the kit's and every sentence below is something the
- * product does today.
+ * ⚠️ THREE CLAIMS HERE RUN AHEAD OF THE BUILD. Kept at the founder's explicit
+ * request, and safe today only because deployment is on hold and nothing here is
+ * public. They must be live — or removed — before the deploy hold lifts, because
+ * the standing rule in this repo is that a promise the product cannot keep is a
+ * defect rather than marketing (docs/ROADMAP.md TASK-053).
  *
- * The kit's three value props switch on as their features land:
- *   True-Fit Scoring   → when the trajectory + industry components ship
- *   Review & Approve   → when the extension and the guardrail ship
- *   WhatsApp nudges    → when the WhatsApp channel ships
+ *   PRE-LAUNCH CHECKLIST — each must be true or the copy comes off:
+ *   [ ] True-Fit Scoring   — needs the trajectory + industry components (P5)
+ *   [ ] Review & Approve   — needs the extension and the guardrail (P10–P12)
+ *   [ ] WhatsApp Nudges    — needs the WhatsApp channel, and a budget (P14)
+ *
+ * Everything below the hero — the comparison, the audit strip, How it works,
+ * What you get, pricing and the FAQ — describes what already ships today.
  */
 const valueProps = [
   {
     icon: CircleCheck,
     eyebrow: '01 / Signal over volume',
-    title: 'Ranked against you',
+    title: 'True-Fit Scoring',
     description:
-      'Every role is scored against your profile, not the posting’s keywords. Two candidates never get the same number on the same job.',
+      'Hard skills, industry context, and career trajectory combined into one honest score.',
   },
   {
     icon: ShieldCheck,
     eyebrow: '02 / Your call, always',
-    title: 'We never apply for you',
+    title: 'Review & Approve',
     description:
-      'Saaf stops before the application. Nothing is submitted on your behalf, and no employer is ever contacted about you.',
+      'You approve every application before submission; no black-box auto-spamming.',
   },
   {
-    icon: Sparkles,
-    eyebrow: '03 / Checkable, not claimed',
-    title: 'Every score opens up',
+    icon: MessageCircle,
+    eyebrow: '03 / Stay in the loop',
+    title: 'WhatsApp Nudges',
     description:
-      'Role match 35/35. Experience 2/30 — asks for 8 years, you have 2. Each part shown, with the line from the posting it was read from.',
+      'High-signal updates on 85%+ matched roles directly on WhatsApp.',
   },
 ]
 
@@ -112,7 +113,7 @@ export default function Landing() {
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" strokeWidth={2.2} />
           </span>
-          <span className="text-base font-semibold tracking-[-0.03em]">Saaf</span>
+          <span className="text-base font-semibold tracking-[-0.03em]">Saaf AI</span>
         </Link>
         <div className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
           <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
@@ -147,20 +148,26 @@ export default function Landing() {
           </div>
 
           <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.05em] text-primary sm:text-6xl lg:text-7xl">
-            Every match arrives with <span className="text-accent">its working.</span>
+            Precision Career Copilot for India. <span className="text-accent">Zero Spam.</span>{' '}
+            100% Tailored.
           </h1>
 
           <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            A free daily shortlist for Indian professionals in their first five years, ranked
-            against your own profile — and every score opens to show how it was built.
+            Saaf AI matches you with high-precision roles that actually fit your skills, context,
+            and next move — so you spend less time applying and more time moving forward.
           </p>
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
             <Cta />
             <span className="flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm">
               <Check className="size-4 text-accent" />
-              Free forever. No card.
+              No spam. No guesswork.
             </span>
+          </div>
+
+          <div className="mt-16 flex items-center gap-3 border-t border-border pt-5 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground sm:mt-20">
+            <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+            A calmer way to find your next role
           </div>
         </div>
 
@@ -295,7 +302,8 @@ export default function Landing() {
       <footer className="border-t border-border bg-secondary/40">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Saaf</span>
+            <span className="font-semibold text-foreground">Saaf AI</span>
+            <span>Career clarity, without the noise.</span>
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
