@@ -2,53 +2,148 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Progress } from '@/components/features/progress'
+import { Check, Loader2, ShieldCheck } from 'lucide-react'
 import { useDraft } from '@/lib/use-draft'
 
 /**
  * Screen 3 — cover parse latency without manufacturing authority.
  *
- * The reference playbook prescribes rotating testimonials and a user count here.
- * This product has zero users and an identity that forbids claims it cannot show
- * its working for, so the lines report real parse telemetry instead.
+ * The reference playbook prescribes rotating testimonials and a user count
+ * here. This product has zero users and an identity that forbids claims it
+ * cannot show its working for, so every line below is a fact about the file
+ * that was just read.
+ *
+ * NO PROGRESS PERCENTAGE, DELIBERATELY. We do not know one. A bar that fills
+ * at a rate unrelated to the work is the smallest possible version of the thing
+ * this product exists to argue against, and it would sit two screens away from
+ * a privacy promise we do keep.
+ *
+ * SCOPE OF THE CLAIMS. The parse has already finished by the time this renders
+ * — it runs in the server action on the upload screen. So the steps here are
+ * about the file: what was read, what was stripped, what was deleted. Scoring
+ * and bucketing happen later, inside confirmProfile, and are not claimed here.
+ * A loading state for that wait belongs on the confirm screen, where the work
+ * actually is.
  */
+
+const REVEAL_MS = 550
+
 export default function ReadingPage() {
   const router = useRouter()
   const draft = useDraft()
   const [step, setStep] = useState(0)
+  const [slow, setSlow] = useState(false)
 
-  // Derived during render — the effect below only schedules the reveal.
   const fields = draft.fields ?? {}
   const warnings = draft.warnings ?? []
-  const lines: string[] = useMemo(() => [
-    fields.employer
-      ? `Found ${fields.employer}${fields.currentTitle ? ` — ${fields.currentTitle}` : ''}.`
-      : 'Read the document.',
-    'Your file is deleted. Only the parsed fields remain, and only in this browser.',
-    ...(warnings.length ? [`${warnings.length} field${warnings.length === 1 ? '' : 's'} to check.`] : []),
-  ], [fields.employer, fields.currentTitle, warnings.length])
+
+  const steps = useMemo(() => {
+    const found = [fields.currentTitle, fields.employer].filter(Boolean).join(' at ')
+    return [
+      {
+        title: 'Read your résumé',
+        detail: found
+          ? `Found ${found}${fields.city ? ` in ${fields.city}` : ''}.`
+          : 'Pulled out what the document states.',
+      },
+      {
+        title: 'Removed your direct identifiers',
+        detail: 'Your email, phone number and profile links were stripped before any text left our server.',
+      },
+      {
+        title: 'Deleted the file',
+        detail: 'Only text was read, and it is already gone. Nothing is stored until you confirm it on the next screen.',
+      },
+      ...(warnings.length
+        ? [{
+            title: `${warnings.length} field${warnings.length === 1 ? '' : 's'} worth checking`,
+            detail: 'We would rather you corrected them than have us guess.',
+          }]
+        : []),
+    ]
+  }, [fields.currentTitle, fields.employer, fields.city, warnings.length])
 
   useEffect(() => {
-    const timers = lines.map((_, i) => setTimeout(() => setStep(i + 1), 600 * (i + 1)))
-    const done = setTimeout(() => router.push('/start/confirm'), 600 * lines.length + 700)
-    return () => { timers.forEach(clearTimeout); clearTimeout(done) }
-  }, [router, lines])
+    const timers = steps.map((_, i) => setTimeout(() => setStep(i + 1), REVEAL_MS * (i + 1)))
+    const done = setTimeout(() => router.push('/start/confirm'), REVEAL_MS * steps.length + 800)
+    // If something has gone wrong we say so rather than spinning silently.
+    const slowTimer = setTimeout(() => setSlow(true), 8000)
+    return () => {
+      timers.forEach(clearTimeout)
+      clearTimeout(done)
+      clearTimeout(slowTimer)
+    }
+  }, [router, steps])
 
   return (
-    <main className="measure" style={{ paddingTop: 32, paddingBottom: 64, maxWidth: 560 }}>
-      <Progress pct={40} />
-      <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 24px' }}>
-        Reading your résumé
-      </h1>
-      <div aria-live="polite">
-        {lines.slice(0, step).map((l, i) => (
-          <p key={i} style={{
-            fontFamily: 'var(--font-mono)', fontSize: 'var(--type-body-sm-size)',
-            color: 'var(--color-on-surface-variant)', margin: '0 0 8px',
-          }}>
-            {l}
+    <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">
+            What is actually happening
           </p>
-        ))}
+          <h1 className="mt-3 text-2xl font-semibold leading-[1.15] tracking-[-0.05em] text-primary sm:text-3xl">
+            We&apos;re building your first shortlist, carefully.
+          </h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            We show our working, because a career match should be checkable. No invented
+            progress percentage — just the steps we took with your file.
+          </p>
+
+          <ol className="mt-8 space-y-5" aria-live="polite">
+            {steps.map((s, i) => {
+              const done = i < step
+              const current = i === step
+              if (!done && !current) return null
+              return (
+                <li key={s.title} className="flex gap-4">
+                  <span
+                    className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border ${
+                      done
+                        ? 'border-accent bg-accent text-accent-foreground'
+                        : 'border-border bg-secondary text-muted-foreground'
+                    }`}
+                  >
+                    {done ? (
+                      <Check className="size-3.5" strokeWidth={3} />
+                    ) : (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-primary">
+                      {s.title}
+                      {current && (
+                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+                          now
+                        </span>
+                      )}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{s.detail}</p>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+
+          <div className="mt-8 flex gap-3 rounded-xl border border-border bg-secondary/60 p-4">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <p className="text-xs leading-5 text-muted-foreground">
+              The file is deleted the moment parsing finishes, and only the fields you confirm
+              on the next screen are ever stored.
+            </p>
+          </div>
+
+          {slow && (
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              This is taking longer than it should. If nothing happens shortly,{' '}
+              <a href="/start/confirm" className="font-semibold text-primary underline underline-offset-4">
+                go straight to your details
+              </a>{' '}
+              — nothing is lost.
+            </p>
+          )}
+        </div>
       </div>
     </main>
   )

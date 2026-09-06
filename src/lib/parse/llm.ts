@@ -42,7 +42,10 @@ const TIMEOUT_MS = 12_000
 /** Enough for any résumé; caps a pathological file's token cost. */
 const MAX_CHARS = 24_000
 
-export type LlmFields = Pick<ParsedFields, 'currentTitle' | 'employer' | 'yearsExperience' | 'city'> & {
+export type LlmFields = Pick<ParsedFields, 'currentTitle' | 'employer' | 'city'> & {
+  /** Never read from the résumé — the candidate types it on the upload screen.
+   *  Kept in the shape so callers do not have to special-case it. */
+  yearsExperience?: number
   skills: string[]
   domain?: string
 }
@@ -60,7 +63,6 @@ const SCHEMA = {
   properties: {
     currentTitle: { type: 'string' },
     employer: { type: 'string' },
-    yearsExperience: { type: 'number' },
     city: { type: 'string' },
     domain: { type: 'string' },
     skills: { type: 'array', items: { type: 'string' } },
@@ -72,7 +74,6 @@ const PROMPT = `Extract facts from this résumé. Report only what the text supp
 
 - currentTitle: their present job title, exactly as written.
 - employer: their present employer.
-- yearsExperience: total years of professional work, excluding internships and education. A number.
 - city: the Indian city they are based in.
 - domain: the industry they have worked in — e.g. fintech, SaaS, consumer, healthcare, logistics, consulting. One or two words.
 - skills: concrete tools, systems, methods and competencies actually named in the résumé. 5 to 20 of them, each 1-3 words, as written. No soft-skill filler like "team player" or "hard working".

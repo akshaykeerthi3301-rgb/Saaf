@@ -57,6 +57,23 @@ export default function PrivacyPage() {
           we change provider, this sentence changes with it.
         </P>
         <P>
+          What that provider may do with it, taken from their own terms rather
+          than from our summary of them. Groq is <em>not permitted to use inputs or
+          outputs to train or fine-tune any model</em> unless we explicitly grant
+          permission, and we have not. Inference requests are <em>not retained by
+          default</em>; logs are created only when troubleshooting an error or
+          investigating suspected abuse, and are kept for up to 30 days unless a law
+          requires longer. You keep the intellectual property in anything you send
+          and anything returned.
+        </P>
+        <P>
+          One thing worth knowing plainly, because it is the part most likely to
+          matter to you: <strong>that processing happens on servers in the United
+          States</strong>, not in India. If that is not acceptable to you, use
+          &ldquo;Type it in instead&rdquo; on the upload screen — nothing is sent
+          anywhere, and the only thing you lose is the pre-filling.
+        </P>
+        <P>
           If you would rather no third party saw it at all, use &ldquo;Type it in
           instead&rdquo; on the upload screen. Nothing is sent anywhere, and you lose
           only the pre-filling.
