@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { suggestRoles, type RoleSuggestion } from '@/app/actions/suggest-roles'
+import { roleCatalogue, type CatalogueDomain } from '@/app/actions/role-catalogue'
 
 type Props = {
   label: string
@@ -31,6 +33,22 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
   const [checked, setChecked] = useState<string>()
   const [busy, setBusy] = useState(false)
   const seq = useRef(0)
+
+  // The domain browser. Loaded on first open rather than on mount: it is one
+  // count query per role and most candidates type a title they already know.
+  const [catalogue, setCatalogue] = useState<CatalogueDomain[]>()
+  const [openDomain, setOpenDomain] = useState<string>()
+  const [browsing, setBrowsing] = useState(false)
+
+  async function openBrowser() {
+    const next = !browsing
+    setBrowsing(next)
+    if (next && !catalogue) {
+      const c = await roleCatalogue()
+      setCatalogue(c)
+      setOpenDomain(c.find((d) => d.total > 0)?.key ?? c[0]?.key)
+    }
+  }
 
   const term = value.trim()
 
@@ -87,7 +105,7 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
       ) : null}
 
       {shown.length > 0 ? (
-        <div>
+        <div className="mb-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             In the index
           </p>
@@ -106,6 +124,68 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
               </button>
             ))}
           </div>
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={openBrowser}
+        aria-expanded={browsing}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary"
+      >
+        Browse by domain
+        <ChevronDown className={`size-3.5 transition-transform ${browsing ? 'rotate-180' : ''}`} />
+      </button>
+
+      {browsing ? (
+        <div className="mt-2 overflow-hidden rounded-xl border border-border bg-card">
+          {!catalogue ? (
+            <p className="p-4 text-xs text-muted-foreground">Counting the index…</p>
+          ) : (
+            <div className="grid max-h-80 grid-cols-[minmax(130px,0.8fr)_minmax(0,1.2fr)]">
+              <div className="overflow-y-auto border-r border-border bg-secondary/35 p-2">
+                {catalogue.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onMouseEnter={() => setOpenDomain(d.key)}
+                    onFocus={() => setOpenDomain(d.key)}
+                    onClick={() => setOpenDomain(d.key)}
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-colors ${
+                      openDomain === d.key
+                        ? 'bg-card text-primary shadow-sm'
+                        : 'text-muted-foreground hover:bg-card/70 hover:text-primary'
+                    }`}
+                  >
+                    {d.label}
+                    <span className="font-mono tabular-nums text-[10px] text-muted-foreground">
+                      {d.total}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="overflow-y-auto p-2">
+                {(catalogue.find((d) => d.key === openDomain)?.roles ?? []).map(({ role, count }) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => { onChange(role); setBrowsing(false) }}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-secondary"
+                  >
+                    <span className={count > 0 ? 'text-primary' : 'text-muted-foreground'}>{role}</span>
+                    {/* A zero is shown, never hidden. It is a fact about our
+                        registry coverage, and a candidate is entitled to pick a
+                        role we hold nothing for today. -1 means the count query
+                        itself failed, which is a different statement. */}
+                    <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                      {count < 0 ? '—' : count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
     </div>

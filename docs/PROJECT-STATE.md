@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; five stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; six stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -314,6 +314,75 @@ became one.
 - **`/privacy` and `/terms`.** These are documents, and cutting a disclosure to
   save a line is removing the disclosure. One paragraph went, because it
   restated the preceding one almost verbatim.
+
+### Stage F — taxonomies for role and location (2026-09-07)
+
+Both of the fields that decide a candidate's shortlist were free text, and both
+were failing quietly.
+
+**Location was a defect, not a preference.** `locationFit` tested whether the
+posting's location string contained the candidate's city, verbatim. The live
+index spells one city two ways:
+
+| Spelling in `roles.city` | Postings |
+|---|---|
+| Bengaluru (+ lowercase, `-VTP`) | 197 |
+| Bangalore (+ `Hybrid in Bangalore`) | 84 |
+
+A candidate who wrote "Bengaluru" scored those 84 roles **3/10 with the note "In
+another city."** Wrong, and unarguable from their side, because the note never
+named the city it had found. `src/lib/taxonomy/locations.ts` carries 53 Indian
+cities with their aliases — every rename since 1995, which is Bangalore,
+Bombay, Calcutta, Madras, Gurgaon, Cochin, Trivandrum, Baroda, Mysore,
+Pondicherry, Allahabad and the rest — and matching goes through it.
+
+Measured against the live index after the change:
+
+| Candidate | Exact matches before → after | Cluster matches gained |
+|---|---|---|
+| Bengaluru | 197 → **281** | 0 |
+| Delhi | 16 → 16 | **+129** |
+| Gurugram | 4 → 4 | **+141** |
+| Mumbai | 55 → 54 | +1 |
+
+**Clusters are the one judgement call.** Delhi/Noida/Gurugram/Ghaziabad is a
+single daily-commute labour market, and so is Mumbai/Navi Mumbai/Thane. A role
+across that line now scores 85% of the location component rather than 30%, and
+the note names the city it actually found — *"In Noida, inside Delhi NCR."* For
+a Delhi candidate that is 129 roles moving out of the *location out of range*
+bucket. Set `LOCATION_CLUSTER_RATIO` in `src/match/score.ts` to `0.3` to switch
+it off.
+
+Mumbai's 55 → 54 is not a loss. It is one Navi Mumbai posting that had been
+claiming to be "In Mumbai"; matching now prefers the most specific city name, so
+it reports Navi Mumbai and takes the cluster tier. Two bugs were found by the
+tests written for this and fixed before commit: shortest-name-first reported the
+wrong city, and single-winner matching lost a posting that genuinely names two
+cities (`"bengaluru, mumbai"`).
+
+**Role is a starting point, not a gate.** `preferred_role` becomes a
+`websearch_to_tsquery` that ANDs every word against a posting's title, so the
+wording decides whether a shortlist exists at all: "Product Manager" returns 56,
+"manager" returns 229 — 35% of the index — and "Founder's Office" returns none.
+`src/lib/taxonomy/roles.ts` gives 11 domains and 79 roles, and
+`role-catalogue.ts` shows **every one with its live count, from the query the
+matcher runs**. Typing something outside the list still works; never turning a
+candidate away is locked.
+
+A domain's own figure is a **distinct** count, not the sum of its roles. Summing
+double-counted every posting matching two entries and printed *Product: 118* for
+a domain that really holds 49. That was caught before commit and is the reason
+each domain runs its own `OR` query.
+
+⚠️ **The taxonomy is not a competitor's.** Jobright's categories are not
+published — they sit behind the app's login and no public page enumerates them,
+so there was nothing to copy. The list is built from the saaf-ai export's own
+eight onboarding domains, the most common title phrases across the 652 live
+Indian postings, and standard occupational groupings for the coverage those
+miss.
+
+No migration. `profiles.city` and `profiles.preferred_role` stay text columns
+holding the canonical value.
 
 ### Deliberate residue — do not "tidy" these away
 

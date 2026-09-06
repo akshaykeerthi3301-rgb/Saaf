@@ -1,5 +1,6 @@
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '@/gates/types'
 import { isRemoteLocation, isHybridLocation } from '@/gates/extract'
+import { matchLocation, CLUSTER_LABEL } from '@/lib/taxonomy/locations'
 import { experienceFloor } from '@/gates/evaluate'
 
 /**
@@ -178,19 +179,51 @@ function seniorityFit(
   return { key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }
 }
 
+/**
+ * Location, through the city taxonomy rather than a raw substring test.
+ *
+ * The old form was `loc.toLowerCase().includes(candidateCity.toLowerCase())`,
+ * which made a candidate's spelling decide their score. On the live index that
+ * cost "Bengaluru" candidates 84 Bangalore-spelled roles, each scored 3/10
+ * instead of 10/10 with the note "In another city" — wrong, and unarguable from
+ * the candidate's side because the note never named the city it had found.
+ *
+ * Three tiers now, and each names the city it actually matched:
+ *   exact   — same city, any spelling            full marks
+ *   cluster — same daily-commute region          85%, and says which city
+ *   other   — somewhere else                     30%, unchanged
+ *
+ * The cluster tier is the one judgement call here. Delhi/Noida/Gurugram is one
+ * labour market and Mumbai/Navi Mumbai/Thane is another; a role across that
+ * line is genuinely relevant but is not the city the candidate asked for, so it
+ * scores below an exact match and is never silent about the difference. Drop
+ * `LOCATION_CLUSTER_RATIO` to 0.3 to switch the behaviour off.
+ */
+const LOCATION_CLUSTER_RATIO = 0.85
+
 function locationFit(candidateCity: string | undefined, role: RoleFacts): ScoreComponent {
   const max = WEIGHTS.location
   const loc = `${role.locationRaw ?? ''} ${role.city ?? ''}`.trim()
+  const label = 'Location'
 
-  if (!loc) return { key: 'location', label: 'Location', points: Math.round(max * 0.5), max, note: 'Location not stated.' }
-  if (isRemoteLocation(loc)) return { key: 'location', label: 'Location', points: max, max, note: 'Remote.' }
-  if (candidateCity && loc.toLowerCase().includes(candidateCity.toLowerCase())) {
-    return { key: 'location', label: 'Location', points: max, max, note: `In ${candidateCity}.` }
+  if (!loc) return { key: 'location', label, points: Math.round(max * 0.5), max, note: 'Location not stated.' }
+  if (isRemoteLocation(loc)) return { key: 'location', label, points: max, max, note: 'Remote.' }
+
+  const hit = matchLocation(candidateCity, loc)
+  if (hit?.kind === 'exact') {
+    return { key: 'location', label, points: max, max, note: `In ${hit.city}.` }
+  }
+  if (hit?.kind === 'cluster') {
+    return {
+      key: 'location', label,
+      points: Math.round(max * LOCATION_CLUSTER_RATIO), max,
+      note: `In ${hit.city}, inside ${CLUSTER_LABEL[hit.cluster]}.`,
+    }
   }
   if (isHybridLocation(loc)) {
-    return { key: 'location', label: 'Location', points: Math.round(max * 0.6), max, note: 'Hybrid, in another city.' }
+    return { key: 'location', label, points: Math.round(max * 0.6), max, note: 'Hybrid, in another city.' }
   }
-  return { key: 'location', label: 'Location', points: Math.round(max * 0.3), max, note: 'In another city.' }
+  return { key: 'location', label, points: Math.round(max * 0.3), max, note: 'In another city.' }
 }
 
 function workModeFit(preference: string | undefined, role: RoleFacts): ScoreComponent {

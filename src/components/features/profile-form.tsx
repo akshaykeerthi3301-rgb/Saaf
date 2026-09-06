@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
+import { LocationInput } from '@/components/features/location-input'
 import { SkillsField } from '@/components/features/skills-field'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
@@ -58,7 +59,11 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <Input label="Employer" value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} />
         <Input label="Years of experience" type="number" min={0} max={50} step={0.5}
           value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
-        <Input label="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
+        <LocationInput
+          label="Where do you want to work?"
+          value={f.city}
+          onChange={(v) => setF({ ...f, city: v })}
+        />
         <RoleInput
           label="Preferred job role"
           value={f.preferredRole}

@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
+import { LocationInput } from '@/components/features/location-input'
 import { SkillsField } from '@/components/features/skills-field'
 import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { writeDraft } from '@/lib/onboarding-store'
@@ -97,8 +98,16 @@ export default function ConfirmPage() {
           onChange={(e) => setF({ ...f, employer: e.target.value })} />
         <Input label="Years of experience" provenance={prov('yearsExperience')} type="number" min={0} max={50} step={0.5}
           value={f.yearsExperience} onChange={(e) => setF({ ...f, yearsExperience: e.target.value })} />
-        <Input label="City" provenance={prov('city')} value={f.city}
-          onChange={(e) => setF({ ...f, city: e.target.value })} />
+        {/* Labelled for what it actually does. This field is the location
+            component of the score, so it is the city they want to work in, not
+            the one their résumé happened to list — that was a silent
+            assumption. The parsed city still prefills it. */}
+        <LocationInput
+          label="Where do you want to work?"
+          provenance={prov('city')}
+          value={f.city}
+          onChange={(v) => setF({ ...f, city: v })}
+        />
         <RoleInput
           label="What job role are you looking for?"
           provenance={fields.currentTitle ? 'from your current title' : undefined}
