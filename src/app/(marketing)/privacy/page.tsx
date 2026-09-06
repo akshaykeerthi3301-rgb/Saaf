@@ -28,7 +28,15 @@ import { activeProvider, PROVIDER_LABEL } from '@/lib/parse/llm'
 export default function PrivacyPage() {
   // Named from the configured provider, never hard-coded. A privacy page that
   // names the wrong recipient is worse than one that names none.
-  const providerLabel = PROVIDER_LABEL[activeProvider() ?? 'gemini']
+  //
+  // NO DEFAULT. This read `activeProvider() ?? 'gemini'`, so an environment with
+  // no key configured — which production was, right up to the first deploy —
+  // published "we send the extracted text to Google's Gemini API" underneath a
+  // paragraph about Groq's retention terms. Two false statements at once, on the
+  // page whose entire job is being checkable. When nothing is configured, the
+  // honest sentence is that nothing is sent.
+  const provider = activeProvider()
+  const providerLabel = provider ? PROVIDER_LABEL[provider] : null
 
   return (
     <DocPage eyebrow="How we handle your data" title="Privacy">
@@ -46,34 +54,48 @@ export default function PrivacyPage() {
           confirm on the next screen — current title, employer, years of experience,
           preferred role, skills, city, credential — are saved to your profile.
         </P>
-        <P>
-          One third party sees the text. To read your skills and industry, which
-          fixed patterns cannot do across arbitrary résumé layouts, we send the
-          extracted text to <strong>{providerLabel}</strong>, the model provider we
-          currently use for this. Your email address, phone number and profile links
-          are stripped out before it leaves our server, and the file itself is never
-          sent — only text. Everything the model returns is shown to you for
-          confirmation before any of it is stored, and you can delete any of it. If
-          we change provider, this sentence changes with it.
-        </P>
-        <P>
-          What that provider may do with it, taken from their own terms rather
-          than from our summary of them. Groq is <em>not permitted to use inputs or
-          outputs to train or fine-tune any model</em> unless we explicitly grant
-          permission, and we have not. Inference requests are <em>not retained by
-          default</em>, and we have additionally switched on{' '}
-          <strong>Zero Data Retention</strong> on our account, which stops the
-          troubleshooting and abuse-investigation logs that would otherwise be kept
-          for up to 30 days. You keep the intellectual property in anything you send
-          and anything returned.
-        </P>
-        <P>
-          One thing worth knowing plainly, because it is the part most likely to
-          matter to you: <strong>that processing happens on servers in the United
-          States</strong>, not in India. If that is not acceptable to you, use
-          &ldquo;Type it in instead&rdquo; on the upload screen — nothing is sent
-          anywhere, and the only thing you lose is the pre-filling.
-        </P>
+        {provider === null ? (
+          <P>
+            <strong>No third party sees any of it.</strong> No model provider is
+            configured on this deployment, so your résumé text is read by our own
+            code and leaves our server for nowhere at all. Skills are the one thing
+            fixed patterns cannot reliably read across arbitrary layouts, so you may
+            need to add yours by hand on the confirmation screen.
+          </P>
+        ) : (
+          <>
+            <P>
+              One third party sees the text. To read your skills and industry, which
+              fixed patterns cannot do across arbitrary résumé layouts, we send the
+              extracted text to <strong>{providerLabel}</strong>, the model provider we
+              currently use for this. Your email address, phone number and profile links
+              are stripped out before it leaves our server, and the file itself is never
+              sent — only text. Everything the model returns is shown to you for
+              confirmation before any of it is stored, and you can delete any of it. If
+              we change provider, this sentence changes with it.
+            </P>
+            {provider === 'groq' ? (
+              <P>
+                What that provider may do with it, taken from their own terms rather
+                than from our summary of them. Groq is <em>not permitted to use inputs or
+                outputs to train or fine-tune any model</em> unless we explicitly grant
+                permission, and we have not. Inference requests are <em>not retained by
+                default</em>, and we have additionally switched on{' '}
+                <strong>Zero Data Retention</strong> on our account, which stops the
+                troubleshooting and abuse-investigation logs that would otherwise be kept
+                for up to 30 days. You keep the intellectual property in anything you send
+                and anything returned.
+              </P>
+            ) : null}
+            <P>
+              One thing worth knowing plainly, because it is the part most likely to
+              matter to you: <strong>that processing happens on servers in the United
+              States</strong>, not in India. If that is not acceptable to you, use
+              &ldquo;Type it in instead&rdquo; on the upload screen — nothing is sent
+              anywhere, and the only thing you lose is the pre-filling.
+            </P>
+          </>
+        )}
       </Section>
 
       <Section>

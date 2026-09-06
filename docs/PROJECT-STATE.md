@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; eleven stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; twelve stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -651,6 +651,41 @@ Engineer" and "Associate Compliance Manager" alike. The taxonomy picker and the
 live counts in `RoleInput` exist precisely to stop this, and they were built
 after this profile was confirmed. One edit on `/profile` fixes the account; what
 is unfixed is that a single common word can still score 28/28 on title.
+
+### Stage L — the deploy hold lifts (2026-09-07)
+
+Deployed to production so a real person could try it on their own device. Two
+things had to be true first, and neither was.
+
+**1 · Three claims came off the landing page.** True-Fit Scoring needs the
+trajectory and industry components, which are unbuilt; Review & Approve is the
+parked co-pilot; WhatsApp Nudges is parked and needs a budget. They were kept on
+the explicit condition that deployment was on hold and nothing was public
+(TASK-053), and that condition just expired. Everything left on the page — the
+comparison, the audit strip, How it works, What you get, pricing, the FAQ —
+describes shipped behaviour.
+
+⚠️ `CTA` still reads **"Upload Résumé & Get True-Fit Match"**. Not a false claim
+— the product does produce a scored match — but "True-Fit" is now an orphaned
+term with nothing on the page defining it. Founder's call.
+
+**2 · The privacy page was about to name the wrong company.** `GROQ_API_KEY` was
+never in the Vercel production environment, and the page read
+`activeProvider() ?? 'gemini'` — so with no key configured it published *"we send
+the extracted text to Google's Gemini API"*, directly above a paragraph about
+**Groq's** retention terms. Two false statements at once, on the page whose whole
+job is being checkable, and it would have gone out to the first real user.
+
+The fallback is deleted. With no provider configured the page now says plainly
+that nothing is sent anywhere; the Groq retention paragraph renders only when
+Groq is actually the provider. The key was then added to the Production
+environment only, so the honest version is also the accurate one — and skills
+are read again, which the 20-point skills component needs.
+
+**Also shipped for this:** sign-out. There was none. The only `signOut()` in the
+codebase sat inside `deleteAccount()`, so the sole way out of a session was to
+destroy the account — discovered while trying to hand the product to a second
+person on a machine already signed in as the founder.
 
 ### Deliberate residue — do not "tidy" these away
 

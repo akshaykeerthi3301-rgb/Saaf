@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowUpRight, Check, CircleCheck, FileUp, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowUpRight, Check, FileUp, Sparkles } from 'lucide-react'
 import { AuditStrip } from '@/components/features/audit-strip'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
 
@@ -8,41 +8,17 @@ const CTA = 'Upload Résumé & Get True-Fit Match'
 /**
  * The landing page, in the saaf-ai design language and carrying the saaf-ai copy.
  *
- * ⚠️ THREE CLAIMS HERE RUN AHEAD OF THE BUILD. Kept at the founder's explicit
- * request, and safe today only because deployment is on hold and nothing here is
- * public. They must be live — or removed — before the deploy hold lifts, because
- * the standing rule in this repo is that a promise the product cannot keep is a
- * defect rather than marketing (docs/ROADMAP.md TASK-053).
+ * EVERY CLAIM ON THIS PAGE DESCRIBES SOMETHING THAT SHIPS. It did not until
+ * 2026-09-07: a three-card section promised True-Fit Scoring (needs the
+ * trajectory and industry components, unbuilt), Review & Approve (the co-pilot,
+ * parked) and WhatsApp Nudges (parked, needs a budget). They were kept on the
+ * explicit understanding that deployment was on hold and nothing was public —
+ * and they came off the moment it was not, which is the condition the founder
+ * set and docs/ROADMAP.md TASK-053 recorded.
  *
- *   PRE-LAUNCH CHECKLIST — each must be true or the copy comes off:
- *   [ ] True-Fit Scoring   — needs the trajectory + industry components (P5)
- *   [ ] Review & Approve   — needs the extension and the guardrail (P10–P12)
- *   [ ] WhatsApp Nudges    — needs the WhatsApp channel, and a budget (P14)
- *
- * Everything below the hero — the comparison, the audit strip, How it works,
- * What you get, pricing and the FAQ — describes what already ships today.
+ * Put them back when the features land, not before. The standing rule is that a
+ * promise the product cannot keep is a defect rather than marketing.
  */
-const valueProps = [
-  {
-    icon: CircleCheck,
-    eyebrow: '01',
-    title: 'True-Fit Scoring',
-    description: 'Skills, industry and trajectory in one honest score.',
-  },
-  {
-    icon: ShieldCheck,
-    eyebrow: '02',
-    title: 'Review & Approve',
-    description: 'You approve every application. No auto-spamming.',
-  },
-  {
-    icon: MessageCircle,
-    eyebrow: '03',
-    title: 'WhatsApp Nudges',
-    description: 'Updates on your strongest matches, on WhatsApp.',
-  },
-]
-
 const howItWorks = [
   ['We read your résumé once', 'Then delete it. You confirm every field.'],
   ['We read the posting the same way', 'Experience, credential, location — quoted from the job description.'],
@@ -208,39 +184,6 @@ export default function Landing() {
       </section>
 
       {/* Value props */}
-      <section id="why" className="border-y border-border bg-secondary/40">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-          <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-            <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                The Saaf difference
-              </p>
-              <SectionHeading>Fewer applications. Better conversations.</SectionHeading>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {valueProps.map(({ icon: Icon, eyebrow, title, description }) => (
-              <article
-                key={title}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-accent/50 hover:shadow-xl hover:shadow-primary/5 sm:p-7"
-              >
-                <div className="mb-10 flex items-center justify-between">
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                    <Icon className="size-5" />
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    {eyebrow}
-                  </span>
-                </div>
-                <h3 className="text-xl font-semibold tracking-[-0.03em] text-primary">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
         {/* The problem */}
         <section className="py-16 sm:py-20">

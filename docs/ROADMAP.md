@@ -304,7 +304,7 @@
 
 - [x] **TASK-053** — Reconcile the landing page against shipped scope
   Files: `productos/design/4a-Landing-Page.md`, `src/app/(marketing)/page.tsx`
-  Notes: Walk every claim on the page against what actually ships. Document generation must be gone (PRD § 14 Q1). The audit strip must show real numbers. The FAQ's thirty-second check must actually be possible. **Any promise the product cannot keep on launch day is a defect, not marketing.** Verify: every page claim traces to a shipped, tested feature.
+  Notes: Walk every claim on the page against what actually ships. Document generation must be gone (PRD § 14 Q1). The audit strip must show real numbers. The FAQ's thirty-second check must actually be possible. **Any promise the product cannot keep on launch day is a defect, not marketing.** Verify: every page claim traces to a shipped, tested feature. **Discharged 2026-09-07 at the first public deploy:** the three-card value-prop section — True-Fit Scoring, Review & Approve, WhatsApp Nudges — was removed, because none of the three is built. Put them back with the features, not before.
 
 - [x] **TASK-054** — Verify all five success criteria and update the roadmap status
   Files: `docs/ROADMAP.md`, `docs/PROJECT-STATE.md`
