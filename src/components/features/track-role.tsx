@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { trackRole } from '@/app/actions/applications'
-import styles from '@/components/ui/row.module.css'
 
 /**
  * "Track this" on a ranked role.
@@ -24,8 +23,11 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
 
   if (tracked) {
     return (
-      <span className={styles.report} style={{ textDecoration: 'none' }}>
-        Tracked · <a href="/applications">your applications</a>
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
+        Tracked ·{' '}
+        <a href="/applications" className="underline underline-offset-4 hover:text-primary">
+          your applications
+        </a>
       </span>
     )
   }
@@ -33,7 +35,7 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
   return (
     <button
       type="button"
-      className={styles.report}
+      className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
       onClick={async () => {
         setTracked(true)
         await trackRole({ roleId, company, title, applyUrl })

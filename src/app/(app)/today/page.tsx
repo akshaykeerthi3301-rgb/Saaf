@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
+import { ShieldCheck, Target, Wallet } from 'lucide-react'
+import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard } from '@/components/ui/role-card'
 import type { EvidenceItem } from '@/components/ui/row'
-import { Arithmetic } from '@/components/ui/arithmetic'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
@@ -113,122 +114,140 @@ export default async function TodayPage() {
     byBucket.get(b)!.push(r)
   }
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
+  const initials = (profile.preferred_role ?? 'Y')
+    .split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('') || 'YOU'
 
   return (
-    <main className="measure" style={{ paddingTop: 32, paddingBottom: 64 }}>
+    <AppShell title="Jobs" initials={initials}>
       <ShortlistViewed cleared={strong} withheld={0} />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: 'var(--type-headline-lg-size)', fontWeight: 400, margin: '0 0 8px' }}>
-          {today}
-        </h1>
-        <nav style={{ display: 'flex', gap: 'var(--space-md)', fontSize: 'var(--type-label-md-size)' }}>
-          <a href="/applications">Applications</a>
-          <a href="/audit">Index audit</a>
-          <a href="/profile">Profile</a>
-        </nav>
-      </div>
+      <div className="mx-auto grid max-w-[1500px] gap-6 p-5 sm:p-8 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <section className="min-w-0">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">{today}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-primary sm:text-3xl">
+                Sorted by what fits, and what doesn&apos;t.
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <Target className="size-3.5 text-accent" />
+              {rows.length} matching your search
+            </span>
+          </div>
 
-      <Arithmetic
-        indexed={indexed ?? 0}
-        matched={rows.length}
-        strong={strong}
-        searchTerm={profile.preferred_role ?? undefined}
-      />
+          {/* A backend failure must never render as a verdict. If the read failed we
+              say so plainly rather than showing an empty list. */}
+          {error ? (
+            <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              We couldn&apos;t load today&apos;s list. That&apos;s our problem, not a result — try again shortly.
+            </p>
+          ) : null}
 
-      <p style={{
-        color: 'var(--color-on-surface-variant)',
-        fontSize: 'var(--type-body-sm-size)',
-        margin: '0 0 var(--space-md)',
-      }}>
-        Sorted into buckets by what fits and what doesn&apos;t — nothing is hidden, and
-        every score opens to show its working. No employer in this index publishes a
-        salary, so nothing here is ranked by pay, and we can&apos;t tell you what a role
-        pays before you open it.
-      </p>
+          <BreakdownEngaged>
+            {BUCKET_META.map(({ key, title, blurb }) => {
+              const inBucket = byBucket.get(key) ?? []
+              if (inBucket.length === 0) return null
+              return (
+                <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
+                  <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                    <h3
+                      id={`bucket-${key}`}
+                      className="text-xs font-bold uppercase tracking-[0.16em] text-primary"
+                    >
+                      {title}
+                    </h3>
+                    <span className="font-mono text-sm tabular-nums text-muted-foreground">
+                      {inBucket.length}
+                    </span>
+                  </div>
+                  <p className="mb-4 max-w-2xl text-xs leading-5 text-muted-foreground">{blurb}</p>
 
-      {/* The score presents as complete, so a requirement we don't read has to be
-          named or it reads as one we checked and found nothing on. Attributed to
-          our coverage, never to the candidate — the same rule as a thin list. */}
-      {gap ? (
-        <p style={{
-          color: 'var(--color-on-surface-variant)',
-          fontSize: 'var(--type-body-sm-size)',
-          borderTop: '1px solid var(--color-outline-variant)',
-          borderBottom: '1px solid var(--color-outline-variant)',
-          padding: 'var(--space-md) 0',
-          margin: '0 0 var(--space-md)',
-        }}>
-          Roles like yours are usually decided by {gap.decidedBy}. We don&apos;t read
-          that from a posting yet, so every score below is built from title,
-          seniority, skills, location and work mode only. That&apos;s a gap in what
-          we read, not a judgement about you — open any score to see exactly what
-          went into it.
-        </p>
-      ) : null}
+                  <div className="space-y-4">
+                    {inBucket.map((r) => (
+                      <RoleCard
+                        key={r.id}
+                        gateResultId={r.id}
+                        roleId={r.role_id}
+                        bucket={key}
+                        title={r.roles?.title ?? ''}
+                        company={r.roles?.company_name ?? ''}
+                        city={r.roles?.city ?? undefined}
+                        score={r.score ?? 0}
+                        breakdown={r.score_breakdown}
+                        reason={r.reason}
+                        applyUrl={r.roles?.apply_url}
+                        isNew={isNew(r)}
+                        requirements={evidence(r)}
+                        profileCity={profile.city ?? undefined}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
+          </BreakdownEngaged>
+        </section>
 
-      {/* A backend failure must never render as a verdict. If the read failed we
-          say so plainly rather than showing an empty list. */}
-      {error ? (
-        <p style={{ color: 'var(--color-on-surface-variant)' }}>
-          We couldn&apos;t load today&apos;s list. That&apos;s our problem, not a result — try again shortly.
-        </p>
-      ) : null}
-
-      <BreakdownEngaged>
-        {BUCKET_META.map(({ key, title, blurb }) => {
-          const inBucket = byBucket.get(key) ?? []
-          if (inBucket.length === 0) return null
-          return (
-            <section key={key} style={{ marginTop: 'var(--space-lg)' }} aria-labelledby={`bucket-${key}`}>
-              <div style={{
-                display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-                gap: 'var(--space-sm)', borderTop: '1px solid var(--color-outline)',
-                paddingTop: 'var(--space-sm)',
-              }}>
-                <h2 id={`bucket-${key}`} style={{
-                  fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
-                  letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
-                  color: 'var(--color-on-surface-variant)', margin: 0,
-                }}>
-                  {title}
-                </h2>
-                <span style={{
-                  fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
-                  fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
-                }}>
-                  {inBucket.length}
-                </span>
-              </div>
-              <p style={{
-                color: 'var(--color-on-surface-variant)',
-                fontSize: 'var(--type-body-sm-size)',
-                margin: '6px 0 var(--space-sm)',
-              }}>
-                {blurb}
+        {/* The rail carries only figures that are real. The saaf-ai export also
+            has a profile-strength meter, a weekly application limit and a B2B
+            discoverability toggle: the first two are invented numbers, and
+            employer access is parked, so none of the three ship. */}
+        <aside className="space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Today&apos;s index
+            </p>
+            <p className="mt-3 font-mono text-sm leading-6 tabular-nums text-muted-foreground">
+              <strong className="text-2xl font-semibold tracking-[-0.04em] text-primary">
+                {(indexed ?? 0).toLocaleString('en-IN')}
+              </strong>
+              <br />
+              roles indexed
+            </p>
+            <div className="mt-4 space-y-1 border-t border-border pt-4 text-xs text-muted-foreground">
+              <p>
+                <strong className="font-mono tabular-nums text-primary">{rows.length}</strong> matched your search
               </p>
+              <p>
+                <strong className="font-mono tabular-nums text-primary">{strong}</strong> scored 75 or above
+              </p>
+            </div>
+            <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
+              A thin day is our coverage, not a verdict on you.
+            </p>
+          </div>
 
-              {inBucket.map((r) => (
-                <RoleCard
-                  key={r.id}
-                  gateResultId={r.id}
-                  roleId={r.role_id}
-                  title={r.roles?.title ?? ''}
-                  company={r.roles?.company_name ?? ''}
-                  city={r.roles?.city ?? undefined}
-                  score={r.score ?? 0}
-                  breakdown={r.score_breakdown}
-                  reason={r.reason}
-                  applyUrl={r.roles?.apply_url}
-                  isNew={isNew(r)}
-                  requirements={evidence(r)}
-                  profileCity={profile.city ?? undefined}
-                />
-              ))}
-            </section>
-          )
-        })}
-      </BreakdownEngaged>
-    </main>
+          <div className="flex gap-3 rounded-2xl border border-border bg-secondary/60 p-4">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              <strong className="font-semibold text-primary">We never apply for you.</strong> Every score
+              opens to show its working, and no employer is contacted about you.
+            </p>
+          </div>
+
+          <div className="flex gap-3 rounded-2xl border border-border bg-card p-4">
+            <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              No employer in this index publishes a salary, so nothing here is ranked by pay — and we
+              can&apos;t tell you what a role pays before you open it.
+            </p>
+          </div>
+
+          {/* The score presents as complete, so a requirement we don't read has to
+              be named or it reads as one we checked and found nothing on.
+              Attributed to our coverage, never to the candidate. */}
+          {gap ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-[11px] leading-5 text-muted-foreground">
+                Roles like yours are usually decided by {gap.decidedBy}. We don&apos;t read that from a
+                posting yet, so every score here is built from title, seniority, skills, location and
+                work mode only — a gap in what we read, not a judgement about you.
+              </p>
+            </div>
+          ) : null}
+        </aside>
+      </div>
+    </AppShell>
   )
 }

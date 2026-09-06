@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { reportRefusal } from '@/app/actions/report-refusal'
 import { track } from '@/lib/analytics'
-import styles from '@/components/ui/row.module.css'
 
 /**
  * "This score looks wrong."
@@ -23,20 +22,14 @@ export function ReportScore({ gateResultId }: { gateResultId: string }) {
 
   if (reported) {
     return (
-      <p style={{
-        fontSize: 'var(--type-body-sm-size)',
-        color: 'var(--color-on-surface-variant)',
-        margin: 'var(--space-xs) 0 0',
-      }}>
-        Reported. We triage these as defects.
-      </p>
+      <p className="text-xs text-muted-foreground">Reported. We triage these as defects.</p>
     )
   }
 
   return (
     <button
       type="button"
-      className={styles.report}
+      className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
       onClick={async () => {
         setReported(true)
         track('score_reported', { gate_result_id: gateResultId })
