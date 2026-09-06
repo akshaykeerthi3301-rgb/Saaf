@@ -508,6 +508,30 @@ Verified live with the column still absent: `/today` renders all 229 roles and
 five buckets, and no role is scored over-qualified — correct, because no
 ceilings are stored yet.
 
+**Applied and ingested 2026-09-07.** 31/31 boards in 18s, index 652 → 742 roles,
+all four profiles recomputed. **266 of 518 experience requirements now carry a
+ceiling.** No live profile shows the new bucket, and that is the right answer —
+all four are 2–2.3 years against a senior-skewed index, so none of them *is*
+over-qualified. Scored against the real index at other experience levels:
+
+| Candidate | matches | short | **over** | out of range |
+|---|---|---|---|---|
+| 2y | 17 | 13 | **0** | 95 |
+| 8y | 57 | 7 | **7** | 5 |
+| 15y | 50 | 0 | **20** | 0 |
+| 25y | 49 | 0 | **21** | 0 |
+
+Reading, verbatim from a card: *"Asks for 8–12 years; you have 15 — 3 over."*
+
+**A defect surfaced in that same run.** `sendDigests` logged `digest sent` for a
+mail Resend had rejected with a 403 — the SDK **returns** its errors rather than
+throwing them, so the `try/catch` never fired. The daily cron has therefore been
+reporting successful digests while delivering nothing. Fixed in the same commit:
+the returned `error` is checked, and the log names the recipient either way. The
+underlying 403 is **D4** — Resend delivers only to the account owner until a
+domain is verified, and the one verified profile is a different address from the
+Resend account's, so no digest has ever reached it.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

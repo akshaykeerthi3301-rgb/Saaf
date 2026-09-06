@@ -78,8 +78,12 @@ export async function sendDigests(): Promise<void> {
       ? `${audit?.roles_indexed ?? 0} roles indexed · ${ranked.length} new since yesterday · ${strong.length} scoring 75 or above.\n\n${lines.join('\n\n')}\n\nSee the full ranked list, with the working behind every score:\n${siteUrl()}/today`
       : `${audit?.roles_indexed ?? 0} roles indexed · nothing new matched your role today.\n\nThat's a thin day for our coverage, not a verdict on you. We'd rather tell you than stay quiet.\n\n${siteUrl()}/today`
 
+    // The SDK RETURNS its errors, it does not throw them. A try/catch alone
+    // logged "digest sent" for a mail Resend had rejected with a 403 — observed
+    // on 2026-09-07, when the daily run reported success while delivering
+    // nothing. A send that cannot be confirmed must not be reported as one.
     try {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: 'Saaf <onboarding@resend.dev>',
         to: email,
         subject: ranked.length
@@ -87,9 +91,13 @@ export async function sendDigests(): Promise<void> {
           : 'Nothing new matched today',
         text: body,
       })
-      console.log(`  digest sent: ${ranked.length} new, ${strong.length} strong`)
+      if (error) {
+        console.error(`  digest NOT sent to ${email}: ${error.message}`)
+      } else {
+        console.log(`  digest sent to ${email}: ${ranked.length} new, ${strong.length} strong`)
+      }
     } catch (e) {
-      console.log(`  digest failed: ${(e as Error).message}`)
+      console.error(`  digest NOT sent to ${email}: ${(e as Error).message}`)
     }
   }
 }
