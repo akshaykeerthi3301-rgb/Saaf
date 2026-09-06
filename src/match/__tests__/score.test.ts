@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreRole, summarise } from '../score'
+import { scoreRole, summarise, bucketFor } from '../score'
 import type { CandidateProfile, TypedRequirement } from '@/gates/types'
 
 const junior: CandidateProfile = {
@@ -127,5 +127,65 @@ describe('skills', () => {
   it('names the matched skills back, rather than asserting a fit', () => {
     const c = scoreRole(withSkills, jd, []).components.find((x) => x.key === 'skills')!
     expect(c.note).toMatch(/SQL/)
+  })
+})
+
+describe('a candidate under the stated bar is never a top choice', () => {
+  // The two cases this was raised on. Both used to score into "Matches you",
+  // because a gap inside the two-year relaxation was absorbed into the number
+  // and nothing on screen said the bar had not been met.
+  const inBengaluru = { title: 'Product Manager', locationRaw: 'Bengaluru, India', city: 'Bengaluru' }
+
+  it('1.5 years against a "2+ years" posting is short, not a match', () => {
+    const candidate: CandidateProfile = { ...junior, yearsExperience: 1.5 }
+    const b = scoreRole(candidate, inBengaluru, [req({ minYears: 2 })])
+    expect(b.experience).toBe('short')
+    expect(bucketFor(b)).toBe('experience_short')
+    // The gap is still named on the card, to the half year.
+    expect(b.components.find((c) => c.key === 'seniority')!.note)
+      .toBe('Asks for 2 years; you have 1.5 — 0.5 short.')
+  })
+
+  it('0 years against a "1 - 5 years" posting is short, not a match', () => {
+    // The extractor stores the floor of a range, so "1 - 5 years" arrives as 1.
+    const candidate: CandidateProfile = { ...junior, yearsExperience: 0 }
+    const b = scoreRole(candidate, inBengaluru, [req({ minYears: 1 })])
+    expect(b.experience).toBe('short')
+    expect(bucketFor(b)).toBe('experience_short')
+  })
+
+  it('meeting the bar exactly is a match', () => {
+    const candidate: CandidateProfile = { ...junior, yearsExperience: 2 }
+    const b = scoreRole(candidate, inBengaluru, [req({ minYears: 2 })])
+    expect(b.experience).toBe('meets')
+    expect(bucketFor(b)).toBe('matches')
+  })
+
+  it('still scores a short candidate above a far-short one', () => {
+    // Separating the bucket must not flatten the ranking inside it.
+    const short = scoreRole({ ...junior, yearsExperience: 1.5 }, inBengaluru, [req({ minYears: 2 })])
+    const far = scoreRole({ ...junior, yearsExperience: 1.5 }, inBengaluru, [req({ minYears: 9 })])
+    expect(short.total).toBeGreaterThan(far.total)
+    expect(bucketFor(far)).toBe('experience_out')
+  })
+})
+
+describe('location standing', () => {
+  it('marks the asked-for city exact and a commute-cluster city as cluster', () => {
+    const delhi: CandidateProfile = { ...junior, city: 'Delhi' }
+    const inDelhi = scoreRole(delhi, { title: 'Product Manager', locationRaw: 'Delhi, India' }, [])
+    const inNoida = scoreRole(delhi, { title: 'Product Manager', locationRaw: 'Noida, Uttar Pradesh' }, [])
+    const inPune = scoreRole(delhi, { title: 'Product Manager', locationRaw: 'Pune, Maharashtra' }, [])
+
+    expect(inDelhi.location).toBe('exact')
+    expect(inNoida.location).toBe('cluster')
+    expect(inPune.location).toBe('elsewhere')
+    expect(inDelhi.total).toBeGreaterThan(inNoida.total)
+  })
+
+  it('does not label the cluster role in its note, only names the city', () => {
+    const delhi: CandidateProfile = { ...junior, city: 'Delhi' }
+    const inNoida = scoreRole(delhi, { title: 'Product Manager', locationRaw: 'Noida, Uttar Pradesh' }, [])
+    expect(inNoida.components.find((c) => c.key === 'location')!.note).toBe('In Noida.')
   })
 })

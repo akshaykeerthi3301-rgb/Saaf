@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; six stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; seven stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -383,6 +383,54 @@ miss.
 
 No migration. `profiles.city` and `profiles.preferred_role` stay text columns
 holding the canonical value.
+
+### Stage G — under the bar is never a top choice (2026-09-07)
+
+Raised by the founder, and both halves were real.
+
+**The relaxation was silent.** Postings state experience two ways — `2+ years`
+and `1 - 5 years` — and the scorer takes the floor from either. A candidate
+under that floor by up to two years still scored 50–70% of the experience
+component, which cleared every bucket threshold, so **a 1.5-year candidate saw a
+"2+ years" role at the top of their list and a candidate with no experience saw
+a "1 - 5 years" role there.** The relaxation is worth keeping; applying it
+without saying so is the rounding-off the buckets exist to prevent.
+
+There is now a fifth bucket, **"Good match, short on experience"**, between
+*Matches you* and *Experience is out of range*. Below the stated bar by any
+amount goes there — half a year under a `2+ years` posting is still under it.
+Beyond the two-year relaxation (`STRETCH_YEARS`) it stays *out of range*.
+
+Measured on the founder's own list, bucketing the identical breakdowns both
+ways: **13 roles moved `matches → experience_short`, and nothing else moved.**
+
+**The card had to stop disagreeing with the heading.** `RoleCard`'s band read
+the score alone, so those 13 roles announced STRONG MATCH two lines under a
+heading saying they were not. The band is keyed by bucket now.
+
+⚠️ **A ratio could not carry this, and that is worth remembering.**
+`seniorityFit` awards 50% of the component both for *you are two years short*
+and for *this posting mentions a bar we could not read* — a fact about the
+candidate and an admission about us, sharing a number. Bucketing off the ratio
+would have labelled the second as the first. `ScoreBreakdown` now carries
+explicit `experience` and `location` standings, both optional so breakdowns
+stored before them still parse; `bucketFor` falls back to the old ratio rules
+for those rows, and `ingest/recompute.ts` empties that path daily.
+
+**Location orders, it does not label.** Cluster matching was right but ranking
+was not: the cluster tier costs 1.5 points out of 100, so a strong Noida role
+outranked a decent Delhi one and a candidate who asked for Delhi got Noida at
+the top. `/today` now sorts each bucket by `locationRank()` before score, so
+every exact-city and remote role sits above every commute-cluster one. The note
+lost its ", inside Delhi NCR" — once ordering does the work the label was
+decoration.
+
+**Known gap, not fixed here.** `extractExperienceYears` captures a range's upper
+bound in its regex and then discards it, so `1 - 5 years` and `1+ years` are
+stored identically as a floor of 1. That is invisible for the under-the-bar case
+this stage fixes, and it is exactly what a proper over-qualification rule would
+need. Adding it means a `max_years` column, so it needs a migration and the
+founder.
 
 ### Deliberate residue — do not "tidy" these away
 

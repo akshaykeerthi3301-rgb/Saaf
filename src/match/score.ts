@@ -1,6 +1,6 @@
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '@/gates/types'
 import { isRemoteLocation, isHybridLocation } from '@/gates/extract'
-import { matchLocation, CLUSTER_LABEL } from '@/lib/taxonomy/locations'
+import { matchLocation } from '@/lib/taxonomy/locations'
 import { experienceFloor } from '@/gates/evaluate'
 
 /**
@@ -30,11 +30,30 @@ export type ScoreComponent = {
   note: string
 }
 
+/**
+ * Where the candidate sits against the experience bar the posting states.
+ *
+ * A SEPARATE FIELD, not a number to be read back off the score, and the reason
+ * is a real collision: seniorityFit awards 50% of the component both for "you
+ * are two years short" and for "this posting mentions a bar we could not read."
+ * Those are opposite statements — one is a fact about the candidate, the other
+ * an admission about us — and any rule that inferred a bucket from the ratio
+ * alone would have labelled the second one as the first.
+ */
+export type ExperienceStanding = 'meets' | 'short' | 'far_short' | 'unstated' | 'unread'
+
+/** Where the role sits against the city the candidate asked for. */
+export type LocationStanding = 'exact' | 'cluster' | 'remote' | 'hybrid' | 'unstated' | 'elsewhere'
+
 export type ScoreBreakdown = {
   total: number
   components: ScoreComponent[]
   /** Low when the posting stated an experience bar we could not read. */
   confidence: 'high' | 'low'
+  /** Optional so breakdowns stored before these existed still parse.
+   *  bucketFor() falls back to the old ratio rules when they are absent. */
+  experience?: ExperienceStanding
+  location?: LocationStanding
 }
 
 export type RoleFacts = {
@@ -140,24 +159,29 @@ function skillsFit(skills: string[], role: RoleFacts): ScoreComponent | null {
  * requirement wins, and a confidently framed statement suppresses the title
  * band because an explicit number beats one inferred from a job title.
  */
+/** The relaxation. A candidate up to this many years under the stated bar is
+ *  still shown as a good match — but in a bucket that says so, never mixed into
+ *  the top of the list. Beyond it, the role is out of range. */
+export const STRETCH_YEARS = 2
+
 function seniorityFit(
   held: number,
   reqs: TypedRequirement[],
   unread: boolean
-): ScoreComponent {
+): [ScoreComponent, ExperienceStanding] {
   const max = WEIGHTS.seniority
   const confident = reqs.filter((r) => r.confidence >= CONFIDENCE_THRESHOLD)
   // Shared with the gate rather than reimplemented — see experienceFloor().
   const { required } = experienceFloor(confident)
 
   if (required === 0) {
-    return {
+    return [{
       key: 'seniority', label: 'Experience', max,
       points: Math.round(max * (unread ? 0.5 : 0.75)),
       note: unread
         ? "This posting mentions an experience bar we couldn't read reliably — check it yourself."
         : 'The posting states no experience floor.',
-    }
+    }, unread ? 'unread' : 'unstated']
   }
 
   const gap = required - held
@@ -176,7 +200,13 @@ function seniorityFit(
     gap <= 0 ? `Asks for ${required} years; you have ${held}.`
     : `Asks for ${required} years; you have ${held} — ${Math.round(gap * 10) / 10} short.`
 
-  return { key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }
+  // Below the bar at all is 'short', however small the gap. Half a year under a
+  // "2+ years" posting is still under it, and the candidate is entitled to be
+  // told that rather than to find the role at the top of their list.
+  const standing: ExperienceStanding =
+    gap <= 0 ? 'meets' : gap <= STRETCH_YEARS ? 'short' : 'far_short'
+
+  return [{ key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }, standing]
 }
 
 /**
@@ -190,40 +220,45 @@ function seniorityFit(
  *
  * Three tiers now, and each names the city it actually matched:
  *   exact   — same city, any spelling            full marks
- *   cluster — same daily-commute region          85%, and says which city
+ *   cluster — same daily-commute region          85%
  *   other   — somewhere else                     30%, unchanged
  *
  * The cluster tier is the one judgement call here. Delhi/Noida/Gurugram is one
  * labour market and Mumbai/Navi Mumbai/Thane is another; a role across that
- * line is genuinely relevant but is not the city the candidate asked for, so it
- * scores below an exact match and is never silent about the difference. Drop
- * `LOCATION_CLUSTER_RATIO` to 0.3 to switch the behaviour off.
+ * line is genuinely relevant but is not the city the candidate asked for. It
+ * scores below an exact match, and `/today` sorts every exact-city role above
+ * every cluster one inside a bucket, so asking for Delhi puts Delhi at the top.
+ * Drop `LOCATION_CLUSTER_RATIO` to 0.3 to switch the behaviour off.
+ *
+ * The note just names the city. It used to add ", inside Delhi NCR", which was
+ * a label on a role that needed no special mention once ordering did the work.
  */
 const LOCATION_CLUSTER_RATIO = 0.85
 
-function locationFit(candidateCity: string | undefined, role: RoleFacts): ScoreComponent {
+function locationFit(
+  candidateCity: string | undefined,
+  role: RoleFacts
+): [ScoreComponent, LocationStanding] {
   const max = WEIGHTS.location
   const loc = `${role.locationRaw ?? ''} ${role.city ?? ''}`.trim()
   const label = 'Location'
+  const at = (points: number, note: string, standing: LocationStanding): [ScoreComponent, LocationStanding] =>
+    [{ key: 'location', label, points, max, note }, standing]
 
-  if (!loc) return { key: 'location', label, points: Math.round(max * 0.5), max, note: 'Location not stated.' }
-  if (isRemoteLocation(loc)) return { key: 'location', label, points: max, max, note: 'Remote.' }
+  if (!loc) return at(Math.round(max * 0.5), 'Location not stated.', 'unstated')
+  if (isRemoteLocation(loc)) return at(max, 'Remote.', 'remote')
 
   const hit = matchLocation(candidateCity, loc)
-  if (hit?.kind === 'exact') {
-    return { key: 'location', label, points: max, max, note: `In ${hit.city}.` }
-  }
+  if (hit?.kind === 'exact') return at(max, `In ${hit.city}.`, 'exact')
   if (hit?.kind === 'cluster') {
-    return {
-      key: 'location', label,
-      points: Math.round(max * LOCATION_CLUSTER_RATIO), max,
-      note: `In ${hit.city}, inside ${CLUSTER_LABEL[hit.cluster]}.`,
-    }
+    return at(
+      Math.round(max * LOCATION_CLUSTER_RATIO),
+      `In ${hit.city}.`,
+      'cluster',
+    )
   }
-  if (isHybridLocation(loc)) {
-    return { key: 'location', label, points: Math.round(max * 0.6), max, note: 'Hybrid, in another city.' }
-  }
-  return { key: 'location', label, points: Math.round(max * 0.3), max, note: 'In another city.' }
+  if (isHybridLocation(loc)) return at(Math.round(max * 0.6), 'Hybrid, in another city.', 'hybrid')
+  return at(Math.round(max * 0.3), 'In another city.', 'elsewhere')
 }
 
 function workModeFit(preference: string | undefined, role: RoleFacts): ScoreComponent {
@@ -276,11 +311,14 @@ export function scoreRole(
 ): ScoreBreakdown {
   const unread = role.unreadExperienceMention === true
 
+  const [seniority, experience] = seniorityFit(candidate.yearsExperience, requirements, unread)
+  const [place, location] = locationFit(candidate.city, role)
+
   const components: ScoreComponent[] = [
     titleAffinity(candidate.preferredRole ?? '', role.title),
     skillsFit(candidate.skills ?? [], role),
-    seniorityFit(candidate.yearsExperience, requirements, unread),
-    locationFit(candidate.city, role),
+    seniority,
+    place,
     workModeFit(candidate.workModePreference, role),
     credentialFit(candidate.credential, requirements),
   ].filter((c): c is ScoreComponent => c !== null)
@@ -296,6 +334,8 @@ export function scoreRole(
     total: available === 0 ? 0 : Math.max(0, Math.min(100, Math.round((earned / available) * 100))),
     components,
     confidence: unread ? 'low' : 'high',
+    experience,
+    location,
   }
 }
 
@@ -331,7 +371,12 @@ export function summarise(breakdown: ScoreBreakdown): string {
  * bucket re-derives correctly on the next render.
  * ------------------------------------------------------------------------- */
 
-export type Bucket = 'matches' | 'experience_out' | 'location_out' | 'worth_a_look'
+export type Bucket =
+  | 'matches'
+  | 'experience_short'
+  | 'experience_out'
+  | 'location_out'
+  | 'worth_a_look'
 
 /** Thresholds are the scorer's own ratios, not new numbers.
  *  Seniority: 1 meets the bar · 0.7 within a year · 0.5 within two · 0.25 within
@@ -359,15 +404,52 @@ const ratioOf = (b: ScoreBreakdown, key: ScoreComponent['key']): number | null =
 export function bucketFor(breakdown: ScoreBreakdown | null | undefined): Bucket {
   if (!breakdown) return 'worth_a_look'
 
-  const seniority = ratioOf(breakdown, 'seniority')
-  if (seniority !== null && seniority <= EXPERIENCE_OUT_AT) return 'experience_out'
+  // Stored breakdowns written before the standings existed. ingest/recompute.ts
+  // re-scores every profile daily and saving a profile does it immediately, so
+  // this path empties on its own; until it does, these rows keep exactly the
+  // behaviour they were written under rather than being guessed at.
+  if (!breakdown.experience || !breakdown.location) {
+    const seniority = ratioOf(breakdown, 'seniority')
+    if (seniority !== null && seniority <= EXPERIENCE_OUT_AT) return 'experience_out'
+    const location = ratioOf(breakdown, 'location')
+    if (location !== null && location <= LOCATION_OUT_AT) return 'location_out'
+    return breakdown.confidence === 'low' ? 'worth_a_look' : 'matches'
+  }
 
-  const location = ratioOf(breakdown, 'location')
-  if (location !== null && location <= LOCATION_OUT_AT) return 'location_out'
+  if (breakdown.experience === 'far_short') return 'experience_out'
+  if (breakdown.location === 'elsewhere') return 'location_out'
+
+  // Checked AFTER location, and that ordering is the claim being protected.
+  // This bucket says "good match"; saying it about a role in a city the
+  // candidate never asked for would make the heading false.
+  if (breakdown.experience === 'short') return 'experience_short'
 
   if (breakdown.confidence === 'low') return 'worth_a_look'
 
   return 'matches'
+}
+
+/**
+ * Order inside a bucket: the city they asked for first, then the rest.
+ *
+ * Score alone did not do this. The cluster tier costs 1.5 points out of 100, so
+ * a strong Noida role outranked a decent Delhi one and a candidate who typed
+ * Delhi got Noida at the top of their list. Ranking by (this, then score) puts
+ * every exact-city and remote role above every commute-cluster one, which is
+ * what "top choices must be from Delhi" means.
+ */
+export function locationRank(breakdown: ScoreBreakdown | null | undefined): number {
+  switch (breakdown?.location) {
+    case 'exact':
+    case 'remote':
+      return 0
+    case 'cluster':
+      return 1
+    default:
+      // Includes rows stored before standings existed, which sort with the
+      // group they were already being shown in rather than jumping to the top.
+      return 2
+  }
 }
 
 /** Display order and copy. Every line states what we know and what we don't —
@@ -377,6 +459,11 @@ export const BUCKET_META: { key: Bucket; title: string; blurb: string }[] = [
     key: 'matches',
     title: 'Matches you',
     blurb: 'The work, the experience and the location all line up.',
+  },
+  {
+    key: 'experience_short',
+    title: 'Good match, short on experience',
+    blurb: `The work and the location line up, but the posting asks for more years than your profile holds — by up to ${STRETCH_YEARS}. Worth applying to on the strength of the rest, which is why these are here and not further down. They are not in "Matches you", because you do not meet the bar this posting states and we are not going to round that off.`,
   },
   {
     key: 'experience_out',

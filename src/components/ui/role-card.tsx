@@ -18,6 +18,15 @@ export type EvidenceItem = {
   confidence: number
 }
 
+/** What the ring calls this role. Keyed by bucket so the card and the heading
+ *  above it can never disagree; 'matches' falls through to the score bands. */
+const BAND: Partial<Record<Bucket, string>> = {
+  experience_short: 'Short on experience',
+  experience_out: 'Experience out of range',
+  location_out: 'Another city',
+  worth_a_look: 'Worth a look',
+}
+
 type Props = {
   /** gate_results.id — what a score report is filed against. */
   gateResultId: string
@@ -60,7 +69,11 @@ export function RoleCard({
   isNew, requirements, profileCity, bucket,
 }: Props) {
   const strong = bucket === 'matches' && score >= 75
-  const band = score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match'
+  // The band follows the BUCKET, not the score alone. It used to read the score
+  // only, so a role sitting under "Good match, short on experience" announced
+  // itself as a STRONG MATCH two lines below the heading saying it wasn't —
+  // the same rounding-off the buckets exist to stop, one level down.
+  const band = BAND[bucket] ?? (score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match')
   const components = breakdown?.components ?? []
 
   return (

@@ -261,7 +261,13 @@ code is the two action buttons, and **the breakdown is never behind a request**
 **Four rows of text, and that is the budget.** Left column: title, then
 `company · city` on one line, then the reason line, then a single *Working*
 disclosure sitting beside two icon buttons. Right column is the score ring — the
-number in `text-3xl tabular-nums` and its band, nothing else. A strong match
+number in `text-3xl tabular-nums` and its band, nothing else.
+
+**The band follows the bucket, not the score.** It read the score alone until
+2026-09-07, so a role sitting under *Good match, short on experience* announced
+itself as a STRONG MATCH two lines under the heading saying it was not. A card
+and the heading above it must never disagree; `BAND` in `role-card.tsx` is
+keyed by bucket, and only `matches` falls through to the score bands. A strong match
 (≥75, in the `matches` bucket) inverts to ink-on-primary with an accent ring.
 
 It carried nine rows until 2026-09-07. What went, and why none of it was a fact

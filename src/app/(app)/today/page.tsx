@@ -7,7 +7,7 @@ import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
-import { bucketFor, BUCKET_META, type Bucket, type ScoreBreakdown } from '@/match/score'
+import { bucketFor, locationRank, BUCKET_META, type Bucket, type ScoreBreakdown } from '@/match/score'
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
@@ -131,6 +131,16 @@ export default async function TodayPage({
     const b = bucketFor(r.score_breakdown)
     if (!byBucket.has(b)) byBucket.set(b, [])
     byBucket.get(b)!.push(r)
+  }
+  // Rows arrive score-ordered from the database. Re-sort each bucket so the
+  // city the candidate actually asked for comes first — a commute-cluster role
+  // is worth showing, but never above an exact-city one. See locationRank().
+  for (const list of byBucket.values()) {
+    list.sort(
+      (a, b) =>
+        locationRank(a.score_breakdown) - locationRank(b.score_breakdown) ||
+        (b.score ?? 0) - (a.score ?? 0),
+    )
   }
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
   // From the signed-in address, matching /applications — a job title makes for
