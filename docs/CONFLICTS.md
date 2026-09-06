@@ -21,6 +21,10 @@ conflicts at once and is now recorded in `docs/PROJECT-STATE.md` § What this is
 | **A14** Autofill vs PRD §13 "applying through Saaf" | **Settled.** Never applying on the candidate's behalf is now an explicit locked decision. Assisted application in scope; automatic never |
 | **B2/B6** Unbuilt promises, undisclosed gaps | **Structurally handled.** The buckets are the disclosure mechanism — the product says what it is unsure about instead of hiding it |
 
+**Parked 2026-09-06 — A3 (employer access) and A11 (WhatsApp) are future plans.**
+Neither is to be built or designed now, which removes both from the open list.
+A3's consent model still has to be designed *before* any B2B work, not after.
+
 **One new flag: "100% accuracy" must not be published.** The ambition is right
 and the product should be built for it, but no matching system is perfectly
 accurate, and this repo's standing rule is that a promise the product cannot

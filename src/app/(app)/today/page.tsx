@@ -6,7 +6,7 @@ import { Arithmetic } from '@/components/ui/arithmetic'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
-import type { ScoreBreakdown } from '@/match/score'
+import { bucketFor, BUCKET_META, type Bucket, type ScoreBreakdown } from '@/match/score'
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
@@ -103,6 +103,15 @@ export default async function TodayPage() {
 
   const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
   const gap = functionGap(profile.preferred_role)
+
+  // Buckets are derived from the stored breakdown, not from a column, so they
+  // can never fall out of step with the scorer. See src/match/score.ts.
+  const byBucket = new Map<Bucket, MatchRow[]>()
+  for (const r of rows) {
+    const b = bucketFor(r.score_breakdown)
+    if (!byBucket.has(b)) byBucket.set(b, [])
+    byBucket.get(b)!.push(r)
+  }
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
@@ -132,9 +141,10 @@ export default async function TodayPage() {
         fontSize: 'var(--type-body-sm-size)',
         margin: '0 0 var(--space-md)',
       }}>
-        Ranked by fit against your profile — every score opens to show its working.
-        No employer in this index publishes a salary, so nothing here is ranked by
-        pay, and we can&apos;t tell you what a role pays before you open it.
+        Sorted into buckets by what fits and what doesn&apos;t — nothing is hidden, and
+        every score opens to show its working. No employer in this index publishes a
+        salary, so nothing here is ranked by pay, and we can&apos;t tell you what a role
+        pays before you open it.
       </p>
 
       {/* The score presents as complete, so a requirement we don't read has to be
@@ -166,23 +176,58 @@ export default async function TodayPage() {
       ) : null}
 
       <BreakdownEngaged>
-      {rows.map((r) => (
-        <RoleCard
-          key={r.id}
-          gateResultId={r.id}
-          roleId={r.role_id}
-          title={r.roles?.title ?? ''}
-          company={r.roles?.company_name ?? ''}
-          city={r.roles?.city ?? undefined}
-          score={r.score ?? 0}
-          breakdown={r.score_breakdown}
-          reason={r.reason}
-          applyUrl={r.roles?.apply_url}
-          isNew={isNew(r)}
-          requirements={evidence(r)}
-          profileCity={profile.city ?? undefined}
-        />
-      ))}
+        {BUCKET_META.map(({ key, title, blurb }) => {
+          const inBucket = byBucket.get(key) ?? []
+          if (inBucket.length === 0) return null
+          return (
+            <section key={key} style={{ marginTop: 'var(--space-lg)' }} aria-labelledby={`bucket-${key}`}>
+              <div style={{
+                display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                gap: 'var(--space-sm)', borderTop: '1px solid var(--color-outline)',
+                paddingTop: 'var(--space-sm)',
+              }}>
+                <h2 id={`bucket-${key}`} style={{
+                  fontSize: 'var(--type-label-sm-size)', fontWeight: 600,
+                  letterSpacing: 'var(--type-label-sm-ls)', textTransform: 'uppercase',
+                  color: 'var(--color-on-surface-variant)', margin: 0,
+                }}>
+                  {title}
+                </h2>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
+                  fontSize: 'var(--type-body-sm-size)', color: 'var(--color-on-surface-variant)',
+                }}>
+                  {inBucket.length}
+                </span>
+              </div>
+              <p style={{
+                color: 'var(--color-on-surface-variant)',
+                fontSize: 'var(--type-body-sm-size)',
+                margin: '6px 0 var(--space-sm)',
+              }}>
+                {blurb}
+              </p>
+
+              {inBucket.map((r) => (
+                <RoleCard
+                  key={r.id}
+                  gateResultId={r.id}
+                  roleId={r.role_id}
+                  title={r.roles?.title ?? ''}
+                  company={r.roles?.company_name ?? ''}
+                  city={r.roles?.city ?? undefined}
+                  score={r.score ?? 0}
+                  breakdown={r.score_breakdown}
+                  reason={r.reason}
+                  applyUrl={r.roles?.apply_url}
+                  isNew={isNew(r)}
+                  requirements={evidence(r)}
+                  profileCity={profile.city ?? undefined}
+                />
+              ))}
+            </section>
+          )
+        })}
       </BreakdownEngaged>
     </main>
   )

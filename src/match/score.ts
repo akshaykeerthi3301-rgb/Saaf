@@ -277,3 +277,87 @@ export function summarise(breakdown: ScoreBreakdown): string {
   }
   return weakest.note
 }
+
+/* ---------------------------------------------------------------------------
+ * Buckets
+ *
+ * The shortlist is not one ranked column. Roles are sorted into buckets so a
+ * candidate can see, without opening anything, WHY a role is not a clean match:
+ * the work fits but the years don't, or the work fits but the city doesn't.
+ *
+ * This settles a question the product has been wrong about twice. The original
+ * design GATED — those roles were removed, and the candidate never learned the
+ * near-miss existed. The Stage A pivot then flattened everything into one list,
+ * which hid the difference between "this fits" and "this fits except the years"
+ * inside a single number. Buckets keep every role visible and name the reason.
+ *
+ * DERIVED, NEVER STORED. The bucket is a pure function of a breakdown that is
+ * already persisted in gate_results.score_breakdown, so there is no column to
+ * migrate, no backfill, and — the real reason — no way for a stored bucket to
+ * drift out of step with the scorer that produced it. Change a weight and every
+ * bucket re-derives correctly on the next render.
+ * ------------------------------------------------------------------------- */
+
+export type Bucket = 'matches' | 'experience_out' | 'location_out' | 'worth_a_look'
+
+/** Thresholds are the scorer's own ratios, not new numbers.
+ *  Seniority: 1 meets the bar · 0.7 within a year · 0.5 within two · 0.25 within
+ *  four · 0.05 beyond. At or below 0.25 the posting asks for more than two years
+ *  beyond what the candidate holds, which is the point it stops being a stretch.
+ *  Location: 1 remote or in-city · 0.6 hybrid elsewhere · 0.5 unstated · 0.3 a
+ *  different city outright. */
+const EXPERIENCE_OUT_AT = 0.25
+const LOCATION_OUT_AT = 0.3
+
+const ratioOf = (b: ScoreBreakdown, key: ScoreComponent['key']): number | null => {
+  const c = b.components.find((x) => x.key === key)
+  return c && c.max > 0 ? c.points / c.max : null
+}
+
+/**
+ * Which bucket a scored role belongs in.
+ *
+ * Order is precedence, and it is deliberate: a candidate short on years and in
+ * the wrong city is told about the years first, because that is the harder of
+ * the two to change. Low confidence is checked last because it only means we
+ * could not read the bar — that is a weaker statement than a bar we read and
+ * the candidate misses.
+ */
+export function bucketFor(breakdown: ScoreBreakdown | null | undefined): Bucket {
+  if (!breakdown) return 'worth_a_look'
+
+  const seniority = ratioOf(breakdown, 'seniority')
+  if (seniority !== null && seniority <= EXPERIENCE_OUT_AT) return 'experience_out'
+
+  const location = ratioOf(breakdown, 'location')
+  if (location !== null && location <= LOCATION_OUT_AT) return 'location_out'
+
+  if (breakdown.confidence === 'low') return 'worth_a_look'
+
+  return 'matches'
+}
+
+/** Display order and copy. Every line states what we know and what we don't —
+ *  a bucket heading that hedges would defeat the point of having buckets. */
+export const BUCKET_META: { key: Bucket; title: string; blurb: string }[] = [
+  {
+    key: 'matches',
+    title: 'Matches you',
+    blurb: 'The work, the experience and the location all line up.',
+  },
+  {
+    key: 'experience_out',
+    title: 'Experience is out of range',
+    blurb: 'The work matches. The posting asks for more years than your profile holds — shown anyway, because that is your call and not ours.',
+  },
+  {
+    key: 'location_out',
+    title: 'Location is out of range',
+    blurb: 'The work matches. The role is in a city you have not told us you work in, and it is not remote.',
+  },
+  {
+    key: 'worth_a_look',
+    title: 'Worth a look',
+    blurb: 'The work matches, but the posting did not state enough for us to be sure about the rest. We would rather show you than guess.',
+  },
+]

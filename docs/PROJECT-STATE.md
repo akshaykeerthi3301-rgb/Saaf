@@ -66,6 +66,19 @@ The personal automation in `derivatives-bot` **continues running unchanged**. It
 
 ---
 
+## Parked — future plans, nothing built or designed now
+
+*Set 2026-09-06. These are real intentions, deliberately not in the current
+build. Nothing in the codebase, the schema, the roadmap or any screen should
+anticipate them, because half-built optionality is the most expensive kind.*
+
+| Parked | Why it is parked, not cancelled |
+|---|---|
+| **Employer access / B2B portal** | A later phase. **Do not build or design anything toward it** — no schema, no consent surface, no discoverability flag, no UI. When it returns, the opt-in consent model has to be designed first, because four of the five personas are employed and hiding their search. |
+| **WhatsApp channel** | A later phase, and the right channel for India. **Do not build or design it now.** It also bills per conversation, so it needs a budget decision before any work starts. ⚠️ The landing page currently carries a "WhatsApp Nudges" card at the founder's request — that copy must go live or come off before the deploy hold lifts. |
+
+---
+
 ## Locked decisions — do not re-litigate
 
 | Decision | Detail |
