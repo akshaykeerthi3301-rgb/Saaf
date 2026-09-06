@@ -23,22 +23,21 @@ export async function AuditStrip() {
     .limit(1)
     .maybeSingle()
 
-  if (!data || data.roles_indexed === 0) return <div style={{ height: 44 }} />
+  if (!data || data.roles_indexed === 0) return <div className="h-11" />
 
   const fmt = (n: number) => n.toLocaleString('en-IN')
   const today = new Date().toISOString().slice(0, 10)
   const when = data.day === today ? 'today' : `on ${data.day}`
 
   return (
-    <p style={{
-      fontFamily: 'var(--font-mono)', fontSize: 'var(--type-body-sm-size)',
-      fontVariantNumeric: 'tabular-nums', color: 'var(--color-on-surface-variant)',
-      borderTop: '1px solid var(--color-outline-variant)',
-      borderBottom: '1px solid var(--color-outline-variant)',
-      padding: 'var(--space-md) 0', textAlign: 'center', margin: 'var(--space-xl) 0 0',
-    }}>
-      {fmt(data.roles_indexed)} roles indexed {when} &middot;{' '}
-      {fmt(data.boards_active)} company boards &middot; every score shows its working
-    </p>
+    <div className="mt-12 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-6 py-4 text-center">
+      <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+      <p className="font-mono text-sm tabular-nums text-muted-foreground">
+        <strong className="font-semibold text-foreground">{fmt(data.roles_indexed)}</strong>{' '}
+        roles indexed {when} &middot;{' '}
+        <strong className="font-semibold text-foreground">{fmt(data.boards_active)}</strong>{' '}
+        company boards &middot; every score shows its working
+      </p>
+    </div>
   )
 }

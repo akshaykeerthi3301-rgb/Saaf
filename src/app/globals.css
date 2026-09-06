@@ -174,26 +174,38 @@
   body { @apply bg-background text-foreground; }
 }
 
-/* ---- LEGACY globals. Still required by unported screens. ----------------- */
+/* ---- LEGACY globals. Still required by unported screens. -----------------
+   These MUST stay inside @layer base, and the reason is not stylistic.
 
-* { box-sizing: border-box; }
+   In the CSS cascade, unlayered rules beat layered ones outright — specificity
+   never enters into it. Tailwind emits its utilities into a layer, so an
+   unlayered `a { color: … }` here silently overrode `text-primary-foreground`
+   on every link in every ported screen. It cost the landing page's primary
+   call to action its text: dark ink on a dark button, present in the DOM and
+   invisible on screen, with a green build.
 
-html, body { padding: 0; margin: 0; }
+   Anything added below goes in this layer, or it will outrank Tailwind. */
 
-body {
-  font-family: var(--font-sans);
-  font-size: var(--type-body-lg-size);
-  font-weight: var(--type-body-lg-weight);
-  line-height: var(--type-body-lg-lh);
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  * { box-sizing: border-box; }
+
+  html, body { padding: 0; margin: 0; }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--type-body-lg-size);
+    font-weight: var(--type-body-lg-weight);
+    line-height: var(--type-body-lg-lh);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .measure { max-width: var(--measure); margin: 0 auto; padding: 0 var(--space-md); }
+  @media (min-width: 768px) { .measure { padding: 0 var(--space-margin); } }
+
+  .rule { border: 0; border-top: 1px solid var(--color-outline-variant); margin: 0; }
+
+  a { color: var(--color-on-surface); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  :focus-visible { outline: 2px solid var(--legacy-ink); outline-offset: 2px; }
 }
-
-.measure { max-width: var(--measure); margin: 0 auto; padding: 0 var(--space-md); }
-@media (min-width: 768px) { .measure { padding: 0 var(--space-margin); } }
-
-.rule { border: 0; border-top: 1px solid var(--color-outline-variant); margin: 0; }
-
-a { color: var(--color-on-surface); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-:focus-visible { outline: 2px solid var(--legacy-ink); outline-offset: 2px; }
