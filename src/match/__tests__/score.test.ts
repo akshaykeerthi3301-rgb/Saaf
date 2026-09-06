@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { scoreRole, summarise, bucketFor } from '../score'
+import { extractTitleSeniority } from '@/gates/title'
 import type { CandidateProfile, TypedRequirement } from '@/gates/types'
 
 const junior: CandidateProfile = {
@@ -236,5 +237,75 @@ describe('over-qualification, against a stated ceiling only', () => {
     // Inside the band.
     expect(scoreRole({ ...junior, yearsExperience: 5 }, inBengaluru, range(3, 8)).experience)
       .toBe('meets')
+  })
+})
+
+describe('years asked for in a function the candidate has not worked in', () => {
+  const inBengaluru = { title: 'Product Manager', locationRaw: 'Bengaluru, India', city: 'Bengaluru' }
+  // Two years in HR, searching for product management. The exact case raised.
+  const changer: CandidateProfile = {
+    ...junior, yearsExperience: 2, currentTitle: 'HR Business Partner',
+    preferredRole: 'Product Manager',
+  }
+
+  it('does not count HR years toward "2 years of product management experience"', () => {
+    const b = scoreRole(changer, inBengaluru,
+      [req({ minYears: 2, valueText: 'product management' })])
+    expect(b.experience).toBe('short')
+    expect(bucketFor(b)).toBe('experience_short')
+    expect(b.components.find((c) => c.key === 'seniority')!.note)
+      .toBe('Asks for 2 years of Product experience; your 2 years are in HR & People.')
+  })
+
+  it('scores an UNQUALIFIED years requirement normally — the stated rule', () => {
+    // "2 years of experience required" asks for two years of anything, and the
+    // candidate has two years. It is suggested with its respective score.
+    const b = scoreRole(changer, inBengaluru, [req({ minYears: 2 })])
+    expect(b.experience).toBe('meets')
+    expect(bucketFor(b)).toBe('matches')
+  })
+
+  it('counts the years when the function does match', () => {
+    const pm: CandidateProfile = { ...changer, currentTitle: 'Associate Product Manager' }
+    const b = scoreRole(pm, inBengaluru, [req({ minYears: 2, valueText: 'product management' })])
+    expect(b.experience).toBe('meets')
+  })
+
+  it('stays silent when either side names no function', () => {
+    // A requirement whose qualifier is not a function...
+    expect(scoreRole(changer, inBengaluru,
+      [req({ minYears: 2, valueText: 'fast-paced environment' })]).experience).toBe('meets')
+    // ...and a candidate title we cannot place.
+    const unknown: CandidateProfile = { ...changer, currentTitle: 'Chief Vibes Officer' }
+    expect(scoreRole(unknown, inBengaluru,
+      [req({ minYears: 2, valueText: 'product management' })]).experience).toBe('meets')
+  })
+
+  it('caps the score rather than hiding the role', () => {
+    const b = scoreRole(changer, inBengaluru,
+      [req({ minYears: 2, valueText: 'product management' })])
+    expect(b.total).toBeLessThanOrEqual(65)
+    expect(b.components.some((c) => c.key === 'cap')).toBe(true)
+  })
+})
+
+describe('entry-level titles are read as a ceiling', () => {
+  it('drops an internship for a candidate with real experience', () => {
+    const b = scoreRole(
+      { ...junior, yearsExperience: 2 },
+      { title: 'Product Management Intern - Insurance', locationRaw: 'Bengaluru, India', city: 'Bengaluru' },
+      extractTitleSeniority('Product Management Intern - Insurance'),
+    )
+    expect(b.experience).toBe('over')
+    expect(bucketFor(b)).toBe('experience_over')
+    expect(b.total).toBeLessThan(60)
+    expect(b.components.find((c) => c.key === 'seniority')!.note)
+      .toBe('This is an internship; you have 2 years.')
+  })
+
+  it('leaves an ordinary Indian mid-level title alone', () => {
+    // "Assistant Manager" and "Associate Director" are mid-level here. Reading
+    // them as entry-level would push down exactly what should be shown.
+    expect(extractTitleSeniority('Assistant Manager - Product')).toEqual([])
   })
 })

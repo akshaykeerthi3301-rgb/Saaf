@@ -1,6 +1,7 @@
 import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } from '@/gates/types'
 import { isRemoteLocation, isHybridLocation } from '@/gates/extract'
 import { matchLocation } from '@/lib/taxonomy/locations'
+import { domainOf, DOMAIN_LABEL } from '@/lib/taxonomy/roles'
 import { experienceFloor, experienceCeiling } from '@/gates/evaluate'
 
 /**
@@ -22,7 +23,9 @@ import { experienceFloor, experienceCeiling } from '@/gates/evaluate'
  */
 
 export type ScoreComponent = {
-  key: 'title' | 'skills' | 'seniority' | 'location' | 'work_mode' | 'credential'
+  /** 'cap' is not a scored component — it is the ceiling applied to the others,
+   *  listed alongside them so the arithmetic on the card still adds up. */
+  key: 'title' | 'skills' | 'seniority' | 'location' | 'work_mode' | 'credential' | 'cap'
   label: string
   points: number
   max: number
@@ -67,6 +70,37 @@ export type RoleFacts = {
 }
 
 const WEIGHTS = { title: 28, skills: 20, seniority: 25, location: 10, work_mode: 7, credential: 10 }
+
+/**
+ * Ceilings on the total, by how the candidate sits against the experience bar.
+ *
+ * WHY A CAP AND NOT A WEIGHT. The score is a weighted average, and an average
+ * cannot express a disqualifier. Four components — title 28, location 10, work
+ * mode 7, credential 10 — are at or near full marks for any in-city role that
+ * requires no credential from a candidate with no work-mode preference. That is
+ * 55 points before anything is known about whether the person can do the job,
+ * which is how a role asking four years scored 76 for a two-year candidate:
+ * everything else was perfect and the one decisive component was worth 25.
+ *
+ * Reweighting cannot fix that. Even at a seniority weight of 40, sixty points
+ * still come from elsewhere. A ceiling can, and it is also how a person reads
+ * a CV: below the stated bar caps how good the rest is allowed to make you look.
+ *
+ * Nothing is hidden. The role keeps its bucket, keeps its place in the list and
+ * keeps every component of its working — see docs/PROJECT-STATE.md's locked
+ * "ranks, does not gate".
+ */
+const CAPS: Partial<Record<ExperienceStanding, number>> = {
+  short: 65,
+  far_short: 50,
+  over: 65,
+}
+
+const CAP_REASON: Record<string, string> = {
+  short: 'You are under the experience bar this posting states.',
+  far_short: 'You are well under the experience bar this posting states.',
+  over: 'You are past the top of the band this posting states.',
+}
 
 /**
  * Crude suffix stripping — enough to match "engineering" to "engineer" and
@@ -164,10 +198,43 @@ function skillsFit(skills: string[], role: RoleFacts): ScoreComponent | null {
  *  the top of the list. Beyond it, the role is out of range. */
 export const STRETCH_YEARS = 2
 
+/**
+ * A requirement that asks for years IN A FUNCTION the candidate has not worked in.
+ *
+ * "2 years of product management experience" and "2 years of experience" are
+ * different requirements, and a candidate whose two years are in HR meets the
+ * second and none of the first. Read against their CONFIRMED CURRENT TITLE —
+ * their background — never against the role they are searching for, which is
+ * the thing they are trying to move into.
+ *
+ * Silent unless BOTH sides resolve. A posting asking for "experience in a
+ * fast-paced environment" names no function, a title we cannot place names no
+ * function, and in either case the candidate keeps every year they have. A
+ * wrong penalty here is far worse than a missed one: it would tell a career
+ * changer they are unqualified on our guess rather than on the posting's words.
+ */
+function functionMismatch(
+  confident: TypedRequirement[],
+  currentTitle: string | undefined,
+): { required: number; wants: string; mine: string } | null {
+  const mine = domainOf(currentTitle)
+  if (!mine) return null
+
+  let worst: { required: number; wants: string } | null = null
+  for (const r of confident) {
+    if (r.kind !== 'experience_years' || r.minYears === undefined || !r.valueText) continue
+    const wants = domainOf(r.valueText)
+    if (!wants || wants === mine) continue
+    if (!worst || r.minYears > worst.required) worst = { required: r.minYears, wants }
+  }
+  return worst ? { ...worst, mine } : null
+}
+
 function seniorityFit(
   held: number,
   reqs: TypedRequirement[],
-  unread: boolean
+  unread: boolean,
+  currentTitle?: string,
 ): [ScoreComponent, ExperienceStanding] {
   const max = WEIGHTS.seniority
   const confident = reqs.filter((r) => r.confidence >= CONFIDENCE_THRESHOLD)
@@ -175,53 +242,76 @@ function seniorityFit(
   const { required } = experienceFloor(confident)
   const ceiling = experienceCeiling(confident)
 
-  if (required === 0) {
+  // Years the candidate can actually count toward this posting. Zero when the
+  // posting asks for them in a function they have not worked in.
+  const mismatch = functionMismatch(confident, currentTitle)
+  if (mismatch) {
+    const need = Math.max(required, mismatch.required)
+    const ratio = need <= 1 ? 0.7 : need <= 2 ? 0.5 : need <= 4 ? 0.25 : 0.05
     return [{
-      key: 'seniority', label: 'Experience', max,
-      points: Math.round(max * (unread ? 0.5 : 0.75)),
-      note: unread
+      key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max,
+      note: `Asks for ${need} years of ${DOMAIN_LABEL[mismatch.wants] ?? mismatch.wants} experience; your ${held} years are in ${DOMAIN_LABEL[mismatch.mine] ?? mismatch.mine}.`,
+    }, need <= STRETCH_YEARS ? 'short' : 'far_short']
+  }
+  const at = (ratio: number, note: string, standing: ExperienceStanding): [ScoreComponent, ExperienceStanding] =>
+    [{ key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }, standing]
+
+  // Nothing stated at either end.
+  if (required === 0 && ceiling === undefined) {
+    return at(
+      unread ? 0.5 : 0.75,
+      unread
         ? "This posting mentions an experience bar we couldn't read reliably — check it yourself."
         : 'The posting states no experience floor.',
-    }, unread ? 'unread' : 'unstated']
+      unread ? 'unread' : 'unstated',
+    )
   }
 
   const gap = required - held
-  // Over the top of a STATED band. `over` stays 0 when the posting drew no
-  // ceiling — "5+ years" is open-ended, and the old code guessed one anyway
-  // (held > required + 8 scored a candidate down against an upper bound nobody
-  // had written). Inventing a requirement to penalise someone on is the one
-  // thing this scorer is not allowed to do, so that guess is gone.
-  const over = ceiling !== undefined && held > ceiling ? held - ceiling : 0
 
-  const band = required === ceiling || ceiling === undefined
-    ? `${required} years`
-    : `${required}–${ceiling} years`
+  if (gap > 0) {
+    const ratio = gap <= 1 ? 0.7 : gap <= 2 ? 0.5 : gap <= 4 ? 0.25 : 0.05
+    const band = ceiling && ceiling.years > required && !ceiling.fromTitle
+      ? `${required}–${ceiling.years} years`
+      : `${required} years`
+    return at(
+      ratio,
+      `Asks for ${band}; you have ${held} — ${Math.round(gap * 10) / 10} short.`,
+      gap <= STRETCH_YEARS ? 'short' : 'far_short',
+    )
+  }
 
-  // Falling short decays fast — a five-year gap is a poor match, though still
-  // shown and still ranked. Standing over the ceiling decays gently: it is a
-  // mismatch of fit, not of eligibility, and the candidate can still apply.
-  const ratio =
-    gap > 0 ? (gap <= 1 ? 0.7 : gap <= 2 ? 0.5 : gap <= 4 ? 0.25 : 0.05)
-    : over <= STRETCH_YEARS ? 1
-    : over <= 5 ? 0.7
-    : over <= 10 ? 0.55
-    : 0.4
+  if (ceiling === undefined) {
+    return at(1, `Asks for ${required} years; you have ${held}.`, 'meets')
+  }
 
-  const note =
-    gap > 0 ? `Asks for ${band}; you have ${held} — ${Math.round(gap * 10) / 10} short.`
-    : over > STRETCH_YEARS ? `Asks for ${band}; you have ${held} — ${Math.round(over * 10) / 10} over.`
-    : `Asks for ${band}; you have ${held}.`
+  const over = held > ceiling.years ? held - ceiling.years : 0
 
-  // Outside the band at all is called, however small the gap — half a year
-  // under a "2+ years" posting is still under it. The same ±STRETCH_YEARS
-  // tolerance applies on both sides, and beyond it each side gets its own
-  // bucket rather than being absorbed into the number.
-  const standing: ExperienceStanding =
-    gap > 0 ? (gap <= STRETCH_YEARS ? 'short' : 'far_short')
-    : over > STRETCH_YEARS ? 'over'
-    : 'meets'
+  // A STATED band gets the same ±STRETCH_YEARS tolerance as the floor. A band
+  // read off the TITLE gets none, and the difference is not arbitrary: "1 - 5
+  // years" is a number the employer wrote and two either side of it is
+  // rounding, whereas "Intern" is a categorical statement about what kind of
+  // engagement this is. Two years of full-time work is not an internship
+  // rounded up, so the numeric tolerance does not apply to it.
+  const tolerance = ceiling.fromTitle ? 0 : STRETCH_YEARS
 
-  return [{ key: 'seniority', label: 'Experience', points: Math.round(max * ratio), max, note }, standing]
+  if (over <= tolerance) {
+    const band = ceiling.fromTitle ? `${required} years` : `${required}–${ceiling.years} years`
+    return at(1, `Asks for ${band}; you have ${held}.`, 'meets')
+  }
+
+  // Title-derived: the drop is sharp, because the mismatch is of kind rather
+  // than of degree. A stated band decays gently — being past the top of one is
+  // a question of fit, not of eligibility.
+  const ratio = ceiling.fromTitle
+    ? (over <= 1 ? 0.5 : over <= 3 ? 0.3 : 0.15)
+    : over <= 5 ? 0.7 : over <= 10 ? 0.55 : 0.4
+
+  const note = ceiling.fromTitle
+    ? `This is ${ceiling.label ?? 'an entry-level role'}; you have ${held} years.`
+    : `Asks for ${required}–${ceiling.years} years; you have ${held} — ${Math.round(over * 10) / 10} over.`
+
+  return at(ratio, note, 'over')
 }
 
 /**
@@ -326,7 +416,7 @@ export function scoreRole(
 ): ScoreBreakdown {
   const unread = role.unreadExperienceMention === true
 
-  const [seniority, experience] = seniorityFit(candidate.yearsExperience, requirements, unread)
+  const [seniority, experience] = seniorityFit(candidate.yearsExperience, requirements, unread, candidate.currentTitle)
   const [place, location] = locationFit(candidate.city, role)
 
   const components: ScoreComponent[] = [
@@ -344,9 +434,34 @@ export function scoreRole(
   // would sit 20 below an identical candidate who had uploaded a résumé.
   const earned = components.reduce((sum, c) => sum + c.points, 0)
   const available = components.reduce((sum, c) => sum + c.max, 0)
+  const average = available === 0 ? 0 : Math.round((earned / available) * 100)
+
+  // Scaled into the capped band, not clipped at it. `Math.min(average, cap)`
+  // was the first attempt and it flattened the group: every role whose parts
+  // averaged above the cap came out at exactly the cap, so a strong one and a
+  // weak one became indistinguishable and the ordering inside the bucket went
+  // to chance. Scaling is monotonic — nothing in the class can exceed the cap,
+  // and everything in it keeps its place.
+  const cap = CAPS[experience]
+  const total = Math.max(0, Math.min(100,
+    cap === undefined ? average : Math.round((average * cap) / 100)))
+
+  // The cap earns its own line in the working. A number held down without
+  // saying so is exactly the unexplained score this product was built to
+  // replace — and the candidate can otherwise add the components up and get a
+  // different answer from the one on the card.
+  if (cap !== undefined) {
+    components.push({
+      key: 'cap',
+      label: 'Capped',
+      points: total,
+      max: cap,
+      note: `${CAP_REASON[experience]} The rest of the fit averages ${average} out of 100 — but a role you are outside the stated band for is scored out of ${cap}, not out of 100.`,
+    })
+  }
 
   return {
-    total: available === 0 ? 0 : Math.max(0, Math.min(100, Math.round((earned / available) * 100))),
+    total,
     components,
     confidence: unread ? 'low' : 'high',
     experience,
@@ -357,7 +472,10 @@ export function scoreRole(
 /** The single line shown under the title. Retrieved from the components, never generated. */
 export function summarise(breakdown: ScoreBreakdown): string {
   const weakest = [...breakdown.components]
-    .filter((c) => c.max > 0)
+    // 'cap' is a ceiling on the others, not one of them. Ranking it alongside
+    // them would let it become the reason line, which would explain the score
+    // with its own consequence.
+    .filter((c) => c.max > 0 && c.key !== 'cap')
     .sort((a, b) => a.points / a.max - b.points / b.max)[0]
 
   if (!weakest || weakest.points === weakest.max) {

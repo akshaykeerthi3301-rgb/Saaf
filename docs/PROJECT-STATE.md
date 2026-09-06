@@ -1,6 +1,6 @@
 # Saaf — Project State
 
-**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; nine stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
+**Last updated:** 2026-09-07 · **Phase:** Post-MVP. Develop closed at 53/53 and deployed; ten stages have landed since — see **[The pivot](#the-pivot--stages-a-b-c-2026-09-04--09-05)**, which reverses a decision the table below still lists as locked. Define 4 of 5 and Design 6 of 7 — both remaining steps are launches, still deferred, and **nothing has yet been shown to a real person.**
 
 > **Resuming? Read [`docs/HANDOFF.md`](HANDOFF.md) first.** It lists the decisions only the founder can make (D1 resolved and D2 moot since it was written — D3, D4 and D5 are live), the actions needing their accounts, and the invariants a fresh session must not undo.
 >
@@ -531,6 +531,82 @@ the returned `error` is checked, and the log names the recipient either way. The
 underlying 403 is **D4** — Resend delivers only to the account owner until a
 domain is verified, and the one verified profile is a different address from the
 Resend account's, so no digest has ever reached it.
+
+### Stage J — the score learns to say no (2026-09-07)
+
+Three defects reported off a real résumé, and they were one problem wearing
+three hats: **the score is a weighted average, and an average cannot express a
+disqualifier.** Four components are at or near full marks for any in-city role
+requiring no credential from a candidate with no work-mode preference —
+title 28, location 10, work mode 7, credential 10. **That is 55 points before
+anything is known about whether the person can do the job.**
+
+| Reported | Was | Now |
+|---|---|---|
+| Internship shown to a 2-year professional | **79** | **45** |
+| Role asking 4 years, candidate has 2 | **76** | **53** |
+| "2 years of product management", candidate has 2 years of HR | **80**, *Matches you* | **55**, *short on experience* |
+
+**1 · Entry-level titles are read as a ceiling.** `extractTitleSeniority` read a
+title as a floor only — "Staff" means 8+ years — so "Product Management Intern"
+produced no requirement at all and scored 28/28 on title against a "Product
+Manager" search. `intern`, `trainee`, `apprentice`, `fresher`, `graduate
+programme` and `junior` now imply a maximum. **`assistant` and `associate`
+deliberately do not**: they are ordinary mid-level titles in Indian corporates,
+and the BANDS table already makes that same judgement in the other direction.
+
+A title-derived ceiling gets **no ±STRETCH_YEARS tolerance**, unlike a stated
+band. "1 - 5 years" is a number an employer wrote and two either side is
+rounding; "Intern" is a categorical statement about the kind of engagement, and
+two years of full-time work is not an internship rounded up.
+
+**2 · The total is capped by the worst structural mismatch** — 65 short, 50 far
+short, 65 over. Reweighting could not have fixed this: even at a seniority
+weight of 40, sixty points still come from elsewhere.
+
+⚠️ **Scaled into the band, not clipped at it.** `Math.min(average, cap)` was the
+first attempt and it flattened the bucket — every role averaging above the cap
+came out at exactly the cap, so ordering inside it went to chance. Scaling is
+monotonic. The cap appears as its own line in the working, because a number held
+down silently is the unexplained score this product exists to replace.
+
+**Nothing is hidden.** The role keeps its bucket, its place and its full
+working. The locked "ranks, does not gate" holds.
+
+**3 · Years asked for in a named function.** "2 years of product management
+experience" and "2 years of experience" are different requirements, and we read
+them identically: a candidate with two years in HR met both. The qualifier is
+now extracted into `role_requirements.value_text` and resolved against a domain
+vocabulary; the candidate's side is their **confirmed current title** — their
+background — never their preferred role, which is the thing they are trying to
+move into.
+
+**Silent unless both sides resolve.** "Experience in a fast-paced environment"
+names no function, and a title we cannot place names none either; in both cases
+the candidate keeps every year they have. A wrong penalty here would tell a
+career changer they are unqualified on our guess rather than on the posting's
+words — and guessing function from a résumé is precisely what misrouted
+candidates before Stage A.
+
+⚠️ **The first pattern set missed the reported role.** It required the word
+"experience", and the posting read *"Exp should be in between 2 - 4 years, out
+of which minimum 2 years **in** product management."* A bare `years in X` pattern
+was added. The lesson is the one this repo keeps relearning: a rule verified
+only against invented examples is not verified.
+
+The same role, same two years, different background:
+
+| Current title | Score | Bucket |
+|---|---|---|
+| Associate Product Manager | **100** | Matches you |
+| HR Business Partner | **55** | Good match, short on experience |
+
+*"Asks for 2 years of Product experience; your 2 years are in HR & People."*
+
+**Salary is still not modelled and cannot be**, because no employer in the index
+publishes one. What the founder wanted from it — an internship not reading as a
+90 — is a level problem, and level is now read from the title in both
+directions. Pay banding stays parked until there is a real source for it.
 
 ### Deliberate residue — do not "tidy" these away
 

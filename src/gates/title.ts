@@ -22,6 +22,35 @@ import type { TypedRequirement } from './types'
 /** Qualifiers that pull a title DOWN the ladder. Checked before the base word. */
 const JUNIOR_QUALIFIER = /\b(assistant|asst\.?|associate|deputy|junior|jr\.?|trainee|intern|graduate|fresher|apprentice)\b/i
 
+/**
+ * Entry-level titles, read as a CEILING.
+ *
+ * The table above reads a title as a floor and nothing else — "Staff Engineer"
+ * sits above a two-year band. Nothing read the other direction, so "Product
+ * Management Intern" produced no requirement at all and scored 28/28 on title
+ * against a "Product Manager" search: a two-year professional was shown an
+ * internship at 79/100.
+ *
+ * DELIBERATELY NARROW. `assistant` and `associate` are NOT here, and that is
+ * the same judgement the BANDS table already makes in the other direction:
+ * "Assistant Manager" and "Associate Director" are ordinary mid-level roles in
+ * Indian corporates, and reading them as entry-level would push down exactly
+ * the roles a candidate should be seeing. Only titles that name a training or
+ * pre-career engagement qualify.
+ */
+const ENTRY_LEVELS: { re: RegExp; years: number; label: string }[] = [
+  { re: /\b(intern|internship)\b/i,                   years: 0, label: 'an internship' },
+  { re: /\b(trainee|apprentice|fresher)\b/i,          years: 1, label: 'a trainee role' },
+  { re: /\bgraduate (?:programme|program|scheme)\b/i, years: 1, label: 'a graduate programme' },
+  { re: /\b(junior|jr\.?)\b/i,                        years: 2, label: 'a junior role' },
+]
+
+/** The entry-level ceiling a title implies, if it names one. */
+export function entryLevelCeiling(title: string): { years: number; label: string } | null {
+  for (const e of ENTRY_LEVELS) if (e.re.test(title)) return { years: e.years, label: e.label }
+  return null
+}
+
 type Band = { re: RegExp; years: number; label: string }
 
 /** Ordered most senior first — the first match wins. */
@@ -55,6 +84,20 @@ const MIN_GATED_BAND = 4
 
 export function extractTitleSeniority(title: string): TypedRequirement[] {
   const junior = JUNIOR_QUALIFIER.test(title)
+
+  // An entry-level title is a statement about the top of the band, and it wins
+  // over the floor reading: "Junior Product Manager" matches \bmanager\b below
+  // and would otherwise be read as a five-year role.
+  const entry = entryLevelCeiling(title)
+  if (entry) {
+    return [{
+      kind: 'title_seniority',
+      maxYears: entry.years,
+      valueText: entry.label,
+      sourceQuote: title,
+      confidence: 0.8,
+    }]
+  }
 
   for (const band of BANDS) {
     if (!band.re.test(title)) continue

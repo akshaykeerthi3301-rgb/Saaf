@@ -13,6 +13,7 @@ type Candidate = {
   warnings: string[]
   /** Everything below is editable — the point of the bench is varying them. */
   yearsExperience: string
+  currentTitle: string
   city: string
   preferredRole: string
   credential: 'CA' | 'CFA' | 'CS' | 'none'
@@ -60,6 +61,7 @@ export function ResumeBench() {
           filename: file.name,
           warnings: res.ok ? res.warnings : [res.error],
           yearsExperience: '',
+          currentTitle: res.ok ? res.fields.currentTitle ?? '' : '',
           city: res.ok ? res.fields.city ?? '' : '',
           preferredRole: res.ok ? res.fields.currentTitle ?? '' : '',
           credential: 'none',
@@ -80,6 +82,7 @@ export function ResumeBench() {
     patch(c.id, { busy: true, result: undefined })
     const result = await benchScore({
       yearsExperience: c.yearsExperience === '' ? 0 : Number(c.yearsExperience),
+      currentTitle: c.currentTitle,
       city: c.city,
       preferredRole: c.preferredRole,
       credential: c.credential,
@@ -152,6 +155,13 @@ export function ResumeBench() {
                 City
                 <input className={`mt-1 ${field}`} value={c.city}
                   onChange={(e) => patch(c.id, { city: e.target.value })} />
+              </label>
+              <label className="text-xs font-semibold text-primary sm:col-span-2">
+                {/* Their background. Read against a posting that asks for years
+                    in a named function — see functionMismatch() in score.ts. */}
+                Current title (background)
+                <input className={`mt-1 ${field}`} value={c.currentTitle}
+                  onChange={(e) => patch(c.id, { currentTitle: e.target.value })} />
               </label>
               <label className="text-xs font-semibold text-primary sm:col-span-2">
                 Preferred role

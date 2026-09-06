@@ -91,6 +91,48 @@ function confidenceFor(sentence: string): number {
 const COMPANY_TENURE_RE =
   /\b(?:founded|established|in business (?:for|since)|been (?:building|around|operating)|years? (?:of )?(?:building|serving|operating|shipping))\b/i
 
+/**
+ * The function a years requirement qualifies itself with.
+ *
+ * "3 years of PRODUCT MANAGEMENT experience" is a different requirement from
+ * "3 years of experience", and we read them identically until 2026-09-07: a
+ * candidate with three years in HR met both. 290 of 518 requirements in the
+ * live index qualify their years this way, so this is the common case rather
+ * than the exception.
+ *
+ * Returns the phrase only. Deciding whether it matches the candidate is not the
+ * gate's business — see domainOf() in src/lib/taxonomy/roles.ts.
+ *
+ * CONSERVATIVE BY DESIGN. Anything generic is rejected outright: "3+ years of
+ * total experience" qualifies nothing, and reading "total" as a function would
+ * invent a mismatch for every candidate alive.
+ */
+const GENERIC_QUALIFIER =
+  /^(?:total|overall|relevant|professional|work|working|industry|corporate|hands on|full time|prior|proven|combined|post qualification)$/i
+
+export function experienceQualifier(after: string): string | undefined {
+  const patterns = [
+    // "…years of hands-on data engineering experience"
+    /^\s*(?:of\s+|in\s+)?(?:hands[- ]on\s+|proven\s+|demonstrable\s+)?([a-z][a-z &/+-]{2,40}?)\s+experience\b/i,
+    // "…years of experience in product management"
+    /^\s*(?:of\s+)?experience\s+(?:in|as|within|with)\s+(?:a\s+|an\s+|the\s+)?([a-z][a-z &/+-]{2,40})/i,
+    // "…years IN product management", with no "experience" anywhere. Taken from
+    // a real posting: "Exp should be in between 2 - 4 years, out of which
+    // minimum 2 years in product management." The two patterns above both
+    // require the word, and missed it — which is how a candidate whose two
+    // years are in HR scored 80 on exactly the role this rule exists for.
+    /^\s*(?:in|as|within)\s+(?:a\s+|an\s+|the\s+)?([a-z][a-z &/+-]{2,40})/i,
+  ]
+  for (const re of patterns) {
+    const m = after.match(re)
+    if (!m) continue
+    const phrase = m[1].trim().replace(/\s+/g, ' ').replace(/[-\s]+$/, '')
+    if (!phrase || GENERIC_QUALIFIER.test(phrase.replace(/[- ]/g, ' '))) continue
+    return phrase.slice(0, 60)
+  }
+  return undefined
+}
+
 export function extractExperienceYears(description: string): TypedRequirement[] {
   const out: TypedRequirement[] = []
   // Plural only. Real requirements say "5+ years" / "6-8+ years"; the singular
@@ -131,6 +173,9 @@ export function extractExperienceYears(description: string): TypedRequirement[] 
       out.push({
         kind: 'experience_years',
         minYears: lo,
+        // The function this requirement qualifies itself with, read from the
+        // text immediately after the years. Undefined for a bare "3+ years".
+        valueText: experienceQualifier(s.slice((m.index ?? 0) + m[0].length)),
         // A ceiling only when the posting actually drew one: a second number,
         // not cancelled by a trailing "+", and above the floor.
         maxYears:

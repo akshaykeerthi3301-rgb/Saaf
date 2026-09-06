@@ -153,11 +153,21 @@ function scoreFor(_p: CandidateProfile, reqs: TypedRequirement[], gapYears: numb
  * error is to read it generously and not push a role down over an upper bound
  * the posting only half stated.
  */
-export function experienceCeiling(confident: TypedRequirement[]): number | undefined {
-  const tops = confident
+export function experienceCeiling(
+  confident: TypedRequirement[]
+): { years: number; fromTitle: boolean; label?: string } | undefined {
+  const stated = confident
     .filter((r) => r.kind === 'experience_years' && r.maxYears !== undefined)
     .map((r) => r.maxYears!)
-  return tops.length ? Math.max(...tops) : undefined
+  if (stated.length) return { years: Math.max(...stated), fromTitle: false }
+
+  // A title-derived ceiling only applies when the description stated no band of
+  // its own. The description is the more specific document, and a posting that
+  // says "3-6 years" on a role titled "Junior Analyst" means the numbers.
+  const titled = confident.filter((r) => r.kind === 'title_seniority' && r.maxYears !== undefined)
+  if (!titled.length) return undefined
+  const lowest = titled.reduce((a, b) => (a.maxYears! <= b.maxYears! ? a : b))
+  return { years: lowest.maxYears!, fromTitle: true, label: lowest.valueText }
 }
 
 export function experienceFloor(

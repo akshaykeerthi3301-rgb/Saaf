@@ -38,6 +38,11 @@ export type TypedRequirement = {
 
 export type CandidateProfile = {
   yearsExperience: number
+  /** The candidate's CONFIRMED current title — their background, not their
+   *  ambition. Read against a requirement that qualifies its years with a
+   *  function ("2 years of product management experience"), because someone
+   *  whose two years are in HR has none of the two that posting asks for. */
+  currentTitle?: string
   city?: string
   credential?: Credential
   workAuthorisation?: string

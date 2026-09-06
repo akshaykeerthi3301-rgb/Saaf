@@ -27,6 +27,7 @@ import type { CandidateProfile } from '@/gates/types'
 
 const schema = z.object({
   yearsExperience: z.coerce.number().min(0).max(50),
+  currentTitle: z.string().max(120).default(''),
   city: z.string().max(80),
   preferredRole: z.string().min(1).max(120),
   credential: z.enum(['CA', 'CFA', 'CS', 'none']).default('none'),
@@ -79,6 +80,7 @@ export async function benchScore(input: BenchInput): Promise<BenchResult> {
 
   const candidate: CandidateProfile = {
     yearsExperience: v.yearsExperience,
+    currentTitle: v.currentTitle || undefined,
     city: v.city || undefined,
     credential: v.credential,
     preferredRole: v.preferredRole,

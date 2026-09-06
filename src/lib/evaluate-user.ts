@@ -34,6 +34,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
 
   const candidate: CandidateProfile = {
     yearsExperience: Number(profile.years_experience ?? 0),
+    currentTitle: profile.current_title ?? undefined,
     city: profile.city ?? undefined,
     credential: profile.credential ?? 'none',
     preferredRole: profile.preferred_role ?? undefined,
