@@ -76,6 +76,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 |---|---|
 | **Employer access / B2B portal** | A later phase. **Do not build or design anything toward it** — no schema, no consent surface, no discoverability flag, no UI. When it returns, the opt-in consent model has to be designed first, because four of the five personas are employed and hiding their search. |
 | **WhatsApp channel** | A later phase, and the right channel for India. **Do not build or design it now.** It also bills per conversation, so it needs a budget decision before any work starts. ⚠️ The landing page currently carries a "WhatsApp Nudges" card at the founder's request — that copy must go live or come off before the deploy hold lifts. |
+| **The daily digest** *(parked 2026-09-08)* | Built and working — `ingest/digest.ts`, wired to a Vercel cron. Parked for THREE reasons, and the weakest one is the one usually given. **(1)** It cannot reach anyone: Resend delivers only to the founder's own address until a domain is verified, and the founder has chosen to stay on Google sign-in with no domain for now. **(2)** At fewer than ten beta users an automated daily email is the wrong tool — a founder's own message beats a cron job at that scale and tells you far more. **(3)** ⚠️ COVERAGE IS TOO UNEVEN TO PROMISE A DAILY ANYTHING. Measured 2026-09-08 against the live index: an HR candidate matches **15 roles total**, marketing 131, consulting 219, engineering 500 (capped). A daily digest would tell an HR candidate "nothing new matched today" almost every day — honest, and indistinguishable from a dead product. **Not parked because volume is thin overall** — 21,813 roles is plenty, and the digest was deliberately built to send on empty days, which is its stated differentiator. Reversal conditions, all three: a verified domain, more users than can be messaged by hand, and a week of post-scale-up data showing the real per-candidate discovery rate. That last one may say **weekly** rather than daily — the board rotation is ~8 days, so the calendar is the wrong cadence to copy. |
 | **The co-pilot — tailored résumés, cover letters, interview prep** *(parked 2026-09-06)* | On hold until the matching itself is trusted. The order is deliberate and worth keeping: a co-pilot that writes beautifully about a badly-chosen role makes the wrong application faster, which is the category failure this product exists to avoid. **Nothing to build or design here yet.** The provider is wired and fast enough for it (Groq, ~1.4s on a résumé), so this is a sequencing decision rather than a capability gap. Reconsider once scores are demonstrably right. ⚠️ The landing page's "Review & Approve" card is part of this and carries the same go-live-or-come-off condition. |
 
 ---
@@ -892,6 +893,42 @@ What works is rsyncing the sources without `.git` and letting Vercel build.
   `AuditStrip` and `/audit` query `audit_daily` directly. A permanently-zero
   "withheld" figure on a public endpoint is worth retiring; it is a known loose
   end, not a live claim.
+
+---
+
+## Index coverage by function — probed live 2026-09-08
+
+*Measured against the live index (21,813 India roles) by scoring four probe
+candidates through the real `scoreAgainstIndex` path. Re-measure rather than
+trusting these numbers; they will move as the registry grows.*
+
+| Candidate's preferred role | Roles matched | Scoring ≥50 |
+|---|---|---|
+| Software Engineer | **500** (hits `MAX_ROLES_PER_CANDIDATE`) | 156 |
+| Business Analyst | 219 | 88 |
+| Marketing Manager | 131 | 26 |
+| **HR Business Partner** | **15** | **5** |
+
+Index composition: engineering 39.2%, consulting 8.3%, finance 4.8%,
+marketing 1.7%, hr 1.5%, **other 44.5%**.
+
+⚠️ **THE MATCHING IS NOT WRONG — IT IS THIN, AND ONLY FOR SOME FUNCTIONS.**
+Checked explicitly: there is no cross-function contamination. `scoreAgainstIndex`
+ANDs every word of the preferred role against the posting title, so a marketing
+candidate is never shown an engineering role. The failure mode is an EMPTY
+SCREEN, not a wrong one — which is a worse first impression, because a wrong
+match at least proves the machine works.
+
+⚠️ **THE MISSING ROLES ARE NOT HIDING IN `other`.** Sampled 400 of the 9,697
+`other` roles: only 7 look HR- or marketing-ish. 22% are classifiable by title
+keyword alone, but they are overwhelmingly **sales** and **operations** —
+two functions `ingest/classify.ts` does not have. HR and marketing coverage is
+genuinely absent from company ATS boards, which skew engineering. Better
+classification will not fix it; a different kind of source would.
+
+**The implication for beta:** recruit engineers and consultants first. That is
+a targeting decision, costs nothing today, and is the difference between a
+first session that works and one that renders five rows.
 
 ---
 
