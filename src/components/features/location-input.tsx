@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown, MapPin } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { REGIONS, CLUSTER_LABEL, resolveCity } from '@/lib/taxonomy/locations'
+import { useMemo } from 'react'
+import { Combobox, type ComboGroup } from '@/components/ui/combobox'
+import { REGIONS, resolveCity } from '@/lib/taxonomy/locations'
 
 type Props = {
   label: string
@@ -12,128 +11,49 @@ type Props = {
   onChange: (value: string) => void
 }
 
-/** The cities that carry most of India's hiring. Saves a candidate opening the
- *  full list for the answer they were going to give anyway. */
-const QUICK = ['Bengaluru', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune', 'Chennai']
-
 /**
- * Where the candidate wants to work, chosen from a taxonomy of Indian cities.
+ * Where the candidate wants to work, chosen from a dropdown of Indian cities.
  *
- * This field decides a real score component, and the free-text version of it
- * was quietly losing roles: matching was a substring test, so "Bengaluru"
- * scored 84 Bangalore-spelled postings as "In another city." Picking from the
- * list resolves to a canonical name that carries its aliases into matching —
- * see src/lib/taxonomy/locations.ts.
+ * ⚠️ THIS WAS A TEXT BOX WITH CHIPS AND A COLLAPSED ACCORDION, AND THAT IS WHY
+ * THE TAXONOMY LOOKED BROKEN. The field is prefilled from the résumé parser,
+ * which produces "Bangalore, India" — correct-looking, so the candidate accepts
+ * it and never opens the accordion. That string is not in the taxonomy, so
+ * resolveCity returned null, matchLocation fell back to a literal substring
+ * test, and "Bengaluru, Karnataka, India" — the commonest location in the whole
+ * index — scored as ANOTHER CITY, at 3/10. Commute-cluster matching was off for
+ * the same reason. Measured on a live profile: 36 roles placed in-city where
+ * the correct figure was 209.
  *
- * TYPING SOMETHING NOT ON THE LIST IS STILL ALLOWED. Never turning a candidate
- * away is a locked decision, and a city we have not got to yet is our gap, not
- * theirs. What they lose is alias and cluster matching, and the panel below
- * tells them that rather than letting them find out from a bad shortlist.
+ * The list was there the entire time. Nobody opened it, because nothing about
+ * the interface said it existed. It is a dropdown now.
+ *
+ * A city we do not carry is still accepted — the Combobox offers it explicitly
+ * once the search finds nothing, and confirmProfile stores it as typed. Never
+ * turning a candidate away is a locked decision; what they lose is alias and
+ * cluster matching, and the note below says so rather than letting them find
+ * out from a thin shortlist.
  */
 export function LocationInput({ label, value, provenance, onChange }: Props) {
-  const resolved = resolveCity(value)
+  const groups: ComboGroup[] = useMemo(
+    () => REGIONS.map((r) => ({ label: r.region, options: r.cities.map((c) => ({ value: c.name })) })),
+    [],
+  )
 
-  /**
-   * The list opens itself when what is in the box is not a city we carry.
-   *
-   * ⚠️ THIS FIELD WAS BEING BYPASSED, NOT IGNORED. It is prefilled from the
-   * résumé parser, which produces "Bangalore, India" — correct-looking, so the
-   * candidate accepts it and never opens the picker. That string is not in the
-   * taxonomy, so alias and commute-cluster matching were silently off and the
-   * commonest location in the index scored as ANOTHER CITY.
-   *
-   * confirmProfile() now canonicalises on save, so the damage is fixed either
-   * way. This is the other half: the candidate should be able to SEE that the
-   * value they were handed is not one we recognise, at the moment they can do
-   * something about it, rather than being quietly corrected behind them.
-   */
-  const [open, setOpen] = useState(() => value.trim().length > 0 && !resolveCity(value))
-  const typed = value.trim()
+  const known = !!resolveCity(value)
 
   return (
-    <div className="mb-6">
-      <Input
-        label={label}
-        provenance={provenance}
-        value={value}
-        autoComplete="address-level2"
-        onChange={(e) => onChange(e.target.value)}
-      />
-
-      <div className="-mt-4 mb-3 flex flex-wrap items-center gap-2">
-        {QUICK.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => onChange(c)}
-            className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-              resolved?.name === c
-                ? 'border-accent bg-accent/5 text-primary'
-                : 'border-border bg-card text-primary hover:border-accent/60 hover:bg-accent/5'
-            }`}
-          >
-            {c}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
-        >
-          All cities
-          <ChevronDown className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-
-      {open ? (
-        <div className="mb-3 max-h-72 overflow-y-auto rounded-xl border border-border bg-card p-3">
-          {REGIONS.map(({ region, cities }) => (
-            <div key={region} className="mb-3 last:mb-0">
-              <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {region}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {cities.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => { onChange(c.name); setOpen(false) }}
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
-                      resolved?.name === c.name
-                        ? 'border-accent bg-accent/5 font-semibold text-primary'
-                        : 'border-transparent text-primary hover:bg-secondary'
-                    }`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      {/* Show the working: which spellings this choice will actually match. */}
-      {resolved ? (
-        <p className="mb-3 flex items-start gap-1.5 text-xs leading-5 text-muted-foreground">
-          <MapPin className="mt-0.5 size-3 shrink-0 text-accent" />
-          <span>
-            {resolved.state}
-            {resolved.aliases?.length
-              ? ` · also matches postings saying ${resolved.aliases.join(', ')}`
-              : ''}
-            {resolved.cluster
-              ? `. Roles elsewhere in ${CLUSTER_LABEL[resolved.cluster]} count, one tier below an exact match.`
-              : ''}
-          </span>
-        </p>
-      ) : typed.length > 1 ? (
-        <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          Not a city we hold yet — you can still use it, but we can only match that exact
-          spelling in a posting.
-        </p>
-      ) : null}
-    </div>
+    <Combobox
+      label={label}
+      value={value}
+      groups={groups}
+      placeholder="Choose a city"
+      provenance={provenance}
+      onChange={onChange}
+      helper={
+        value && !known
+          ? `We don't carry ${value} yet, so we can't match its other spellings or its commute belt. Your shortlist still works — pick a city from the list if one is closer.`
+          : 'Matching knows the other spellings — Bangalore and Bengaluru are the same city — and nearby cities people commute from.'
+      }
+    />
   )
 }
