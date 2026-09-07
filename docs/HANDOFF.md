@@ -28,9 +28,20 @@ scored row, ordered by score; the only bound is upstream, at the 500 roles
 **Blocks:** nothing. Revisit after the first cohort.
 
 **D3 · Which companies go in the registry.**
-Phase 3 needs 30–40 Indian company ATS boards. A session can seed plausible ones
-from public sources, but you may have opinions about which employers your
-candidates actually want. **Blocks:** TASK-031 quality, not its existence.
+*Revised 2026-09-07 (Stage M). The question changed shape.* It is no longer "can
+we find 30–40 boards" — `scripts/harvest-common-crawl.ts` reads Common Crawl's
+URL index for ATS host patterns and `scripts/qualify-boards.ts` admits a board
+only when its own public API returns a live India role. That found roughly 1,500
+qualifying employers without a slug being typed.
+
+What is left for you is narrower and real: **a staffing agency's ATS board is
+technically a company board.** The first sweep surfaced "Endeavor IT Solution"
+with 8,476 India roles and "Squircle It Consulting Services" with 1,782, against
+a median of 5 — reposters, not employers, and admitting them would reverse the
+locked "no aggregators" decision by accident. A volume rule alone cannot separate
+them from Bosch (546) or AECOM (340), so boards above 250 India roles are held in
+`registry/needs-review.json` instead of the registry. **Deciding those is yours.**
+**Blocks:** nothing; the registry works without them.
 
 **D5 · The ingest scheduler holds the service key. ~~And has a 60-second ceiling.~~**
 *Revised 2026-09-05: Stage B removed the deadline; the key placement is what's left.*
@@ -133,13 +144,20 @@ Say **"continue"**. A session should then:
 
 ```
 npm run dev              # localhost:3000
-npm test                 # 130 tests
+npm test                 # 203 tests
 npm run verify:rls       # proves RLS denies, by seeding a row first
 npm run gates:demo       # requirement extraction against 211 real postings.
                          # The ONLY live caller of src/gates/evaluate.ts's
                          # verdict path — no app code reaches it any more
 npm run db:load-fixture   # reload roles into Supabase
 npm run db:seed-test-user # recreate the test profile
+
+npm run registry:harvest              # Common Crawl -> registry/candidates.json.
+                                      # Reads a URL index; touches no employer
+npm run registry:qualify -- --limit N # probe candidates against their own ATS
+                                      # API; admits only boards with India roles
+npm run registry:qualify -- --regate  # re-apply the review threshold
+npm run registry:qualify -- --rename  # re-derive Workday display names, offline
 ```
 
 **The developer bench:** `/dev/bench` (development only — it 404s in any
@@ -191,6 +209,23 @@ Written down because each was reached deliberately and against an obvious defaul
 - **A thin list must never read as a verdict on the candidate.** The arithmetic
   attributes the shortfall to registry coverage. That principle predates the
   pivot and survived it intact — it is the one thing both products share.
+- **⚠️ THE PRUNE IS SCOPED TO BOARDS INGESTED IN THE CURRENT RUN, and that is
+  not an optimisation.** `ingest/run.ts` deletes stale roles only for boards that
+  came back **complete** this run. The obvious simplification — one global
+  `delete where last_seen_at < cutoff` — is what the code used to do, and it is
+  catastrophic at any registry too large to sweep in one 52-second function:
+  rotation *means* most boards are legitimately unvisited for 30+ days, so the
+  global delete reads normal operation as "these jobs are gone" and empties the
+  index. Related and equally load-bearing: `fetchAll` returns
+  `{ roles, complete }`, and a board that came back incomplete is neither pruned
+  nor deactivated. If you find yourself deleting the `complete` flag because
+  nothing seems to read it, read this paragraph again.
+- **A board is deactivated only on a COMPLETE fetch that found no India roles.**
+  A timeout, a 404 or a short read is not evidence about an employer.
+- **`registry/boards.json` only ever grows from qualification.** Nothing
+  auto-removes; deactivation is the daily ingest's decision, recorded in the
+  database, and `syncRegistry()` must never write `active` for a row that already
+  exists — doing so resurrects every board the ingest has retired.
 - **Copy ships in the same commit as the behaviour it describes.** Stage C
   rewrote the privacy page in its own commit because the old text became false the
   moment the code merged. The deploy order matters for the same reason: Stage C's

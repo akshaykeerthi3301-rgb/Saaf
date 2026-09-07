@@ -66,7 +66,7 @@ commit hash and breaks the remote. Open decision.
 |---|---|---|---|
 | B1 | **`/audit` published wrong numbers** | Every figure ~⅓ low on the one page whose purpose is "check our work" | ✅ |
 | B2 | **Kit landing sells unbuilt features** | True-Fit Scoring, Review & Approve, WhatsApp — all planned, none shipped. Your rule: an unkeepable promise is *"a defect, not marketing"* | ✅ copy kept honest |
-| B3 | **"No employer in this index publishes a salary"** | On `/today` today. Becomes **false** the day an aggregator lands | 🟡 must change in the same commit |
+| B3 | **"No employer in this index publishes a salary"** | On `/today`. It did not need an aggregator to become false — **measured 2026-09-07 it already was**: 12 of 799 live postings state a figure ("15 LPA" at Apna, "₹50,000" at CRED). It also asserted something the product never checks, since nothing extracts salary | ✅ replaced with a claim about our own behaviour — *"We don't read salaries, so pay never moves a score"* — on `/today` and in the profile form. True, and true at any index size |
 | B4 | **`PRODUCT.md` "Why this works"** | Argued Saaf gates where others weigh. Saaf now weighs too — self-flagged known-stale | 🟡 |
 | B5 | **Skills scoring is dead for every user** | All 4 profiles have no skills/domain because `GEMINI_API_KEY` is set nowhere. Everyone scored out of **80, not 100** | 🔴 set the key |
 | B6 | **Function-typed matching promised, absent** | Marketing/consulting/HR requirement kinds are extracted by nothing and scored by nothing | 🟡 currently disclosed on-screen |
@@ -125,18 +125,24 @@ commit hash and breaks the remote. Open decision.
 
 ## F. Ceilings — not conflicts yet, guaranteed conflicts as you grow
 
-| # | Ceiling | Breaks at | Consequence |
-|---|---|---|---|
-| F1 | **Rotation vs 30-day deletion** | ~80 boards | Boards not revisited within 30 days have their **live jobs deleted**. Total data loss, not degradation |
-| F2 | **Workday pagination vs deletion** | First Workday board | A company timing out mid-fetch deletes **97% of its jobs** in one run. Guaranteed, not probabilistic |
-| F3 | **500-role cap, freshest-first** | ~10k roles | The candidate's genuine best match becomes invisible because it's the 501st *newest*. Silent — no error |
-| F4 | **Nightly rescoring loop** | ~1,000 users | Cannot finish in the 60-second window. Independent of job count |
-| F5 | **Vercel 60-second limit** | ~80 boards | The whole ingest is one function call |
-| F6 | **India detection** | Now | 20 hardcoded city names. Silently drops Kochi, Indore, Coimbatore, Chandigarh, most states |
-| F7 | **`/today` renders every row** | Any growth | No limit on the shortlist page |
-| F8 | **Free storage tier** | ~120k roles today, ~350k after planned changes | Supabase free tier is 500 MB |
-| F9 | **SmartRecruiters pagination** | Now | Pinned at 100 results — jobs 101+ are invisible today |
-| F10 | **Board reactivation** | Every run | Registry sync re-activates boards the previous run disabled |
+*Addressed 2026-09-07, in the scale-up that took the registry off its 31-board
+ceiling. Every ✅ below was fixed **before** any new volume landed — F1, F2 and
+F10 destroy data the moment the registry grows, so growing first would have
+turned three latent defects into silent deletion.*
+
+| # | Ceiling | Breaks at | Consequence | Status |
+|---|---|---|---|---|
+| F1 | **Rotation vs 30-day deletion** | ~80 boards | Boards not revisited within 30 days have their **live jobs deleted**. Total data loss, not degradation | ✅ prune scoped to boards actually ingested in the run |
+| F2 | **Workday pagination vs deletion** | First Workday board | A company timing out mid-fetch deletes **97% of its jobs** in one run. Guaranteed, not probabilistic | ✅ `fetchAll` returns `{roles, complete}`; an incomplete board is never pruned and never deactivated |
+| F3 | **500-role cap, freshest-first** | ~10k roles | The candidate's genuine best match becomes invisible because it's the 501st *newest*. Silent — no error | ✅ ranked by `ts_rank_cd` in the database before the cap — migration 0020 |
+| F4 | **Nightly rescoring loop** | ~1,000 users | Cannot finish in the 60-second window. Independent of job count | 🟡 own cron path and own 60s budget; the ~1,000-user curve itself is untouched |
+| F5 | **Vercel 60-second limit** | ~80 boards | The whole ingest is one function call | ✅ four cron paths, and the budget now degrades into rotation rather than loss |
+| F6 | **India detection** | Now | 20 hardcoded city names. Silently drops Kochi, Indore, Coimbatore, Chandigarh, most states | ✅ delegates to the 54-city taxonomy + 40 states. Also ended the reverse bug: `'india'.includes` called **Indianapolis** Indian |
+| F7 | **`/today` renders every row** | Any growth | No limit on the shortlist page | ✅ **overstated when written.** `gate_results` is bounded at 500 rows a user by the scoring cap, and the page renders `CARDS_PER_BUCKET = 20` of each bucket with the full count stated above it. Rendering a bucket whole needs `?show=<bucket>`, which is a deliberate click. Verified 2026-09-07 |
+| F8 | **Free storage tier** | ~120k roles today, ~350k after planned changes | Supabase free tier is 500 MB | 🟡 `description` capped at 6,000 chars (p95 of the live distribution), which roughly halves the worst case. A board-count ceiling still has to be set from a real measurement |
+| F9 | **SmartRecruiters pagination** | Now | Pinned at 100 results — jobs 101+ are invisible today | ✅ offset paging against `totalFound` |
+| F10 | **Board reactivation** | Every run | Registry sync re-activates boards the previous run disabled | ✅ `active` written only for rows that did not exist |
+| F11 | **A board bigger than the whole budget** | First large Workday tenant | **Found 2026-09-07, not in the original register.** A tenant with thousands of India postings pages for longer than the 52-second function, and each kept role costs a further detail fetch. The function is killed *before* the upsert, so `last_ingested_at` is never stamped — the board sorts first again tomorrow, is killed again, and **the entire registry behind it is never fetched.** Latent at 31 boards; the default outcome at 1,500 | ✅ `fetchAll` takes a deadline and returns `complete: false`; description hydration stops at the deadline and leaves those roles ranking on title, which is an already-tolerated state |
 
 ---
 

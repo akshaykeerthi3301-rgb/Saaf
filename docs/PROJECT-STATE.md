@@ -716,6 +716,100 @@ morning was stamped yesterday, and `/api/audit/today` compared it against a UTC
 `istDay()` in `src/lib/day.ts` now serves the audit writer, the audit route, the
 landing strip and both follow-up-due comparisons in the tracker.
 
+### Stage M — the registry stops being typed by hand (2026-09-07)
+
+The index held **742 India roles from 31 companies**. The stated ambition was
+tens of thousands. The gap had two causes and only one of them was fixable.
+
+**Cause one is structural and stays.** The aggregators that advertise millions
+of jobs are fed by LinkedIn, Indeed and ZipRecruiter, which are exactly the
+sources locked off on ToS grounds. That volume is not available to this product
+and never will be. Nothing in this stage touches that lock.
+
+**Cause two was self-inflicted.** `scripts/discover-boards.ts` probes **219
+hand-typed company slugs**. The sourcing method was never the bottleneck — the
+same public ATS APIs this repo already had adapters for serve over a million
+postings across twenty thousand companies. The bottleneck was that a human had
+to think of each company's name.
+
+Common Crawl's URL index knows who they are. `scripts/harvest-common-crawl.ts`
+reads it — the index, not the boards; no employer's server is touched — and
+regexes company slugs out of the ATS host patterns. Five crawl snapshots
+produced **27,888 candidates**. `scripts/qualify-boards.ts` then calls each
+company's own public ATS API, through the same `ADAPTERS` the daily ingest uses,
+and keeps a board only if it returns a live India role.
+
+**This is also the Big-4 / big-tech answer.** A Workday board is addressed by two
+unguessable strings, host and site. `discover-workday.ts` brute-forced an 8 × 12
+grid per tenant and found 2 of 31 candidates. The harvest returns the real pairs,
+and with them Hitachi, Novartis, DXC, Guidewire, Trane, Pernod Ricard and
+Columbia Sportswear — none of which slug-guessing could ever have reached.
+
+**⚠️ THREE DEFECTS HAD TO BE FIXED BEFORE ANY OF IT LANDED**, because each one
+destroys data the moment the registry outgrows a single run. Growing first would
+have turned all three from latent into active, silently.
+
+| | The defect | What growth would have done |
+|---|---|---|
+| **F1** | The prune deleted every role unseen for 30 days, globally | Rotation *is* boards going unvisited for 30 days. The prune would have deleted the index it was rotating through |
+| **F2** | A paging adapter that stopped short upserted a partial list as complete | One Workday timeout deletes ~97% of that company's roles |
+| **F10** | `syncRegistry()` wrote `active: true` for every board every run | Every board the ingest had retired came back, forever |
+
+The prune is now scoped to boards **actually ingested in this run**; `fetchAll`
+returns `{ roles, complete }` and an incomplete board is neither pruned nor
+deactivated; `active` is written only for rows that did not already exist.
+Verified live: a run in which all 31 boards were skipped for time pruned **zero**
+roles, and a board returning HTTP 404 recorded its error and kept a role that was
+60 days stale — both of which the old code would have deleted.
+
+**India detection was the other precondition.** `resolveInIndia` was twenty
+hardcoded substrings, and it was wrong in both directions. It missed Kochi,
+Indore, Coimbatore, Chandigarh, Bhubaneswar, Ludhiana and every state but seven —
+while `'india'` was tested with `String.includes`, so **"Indianapolis, Indiana"
+was an Indian posting.** It now delegates to `src/lib/taxonomy/locations.ts`, the
+54-city, 40-state taxonomy Stage F had already built and the ingest had never
+used. That alone took the existing 31 boards from 742 roles to 792, with no
+regressions across all 71 location strings in the live index.
+
+It had to come first because qualification accepts or rejects a whole company on
+this function: a weak filter would have discarded good employers permanently.
+
+**Four other ceilings went with them.** SmartRecruiters' listing was pinned at
+`limit=100` with no offset, so postings 101+ were invisible — Swiggy gained 23
+roles the moment it paged (**F9**). The four pipeline stages shared one 60-second
+Vercel function, so the last of them silently did not happen on a slow night;
+they are now four cron paths with a budget each (**F4/F5**). The shortlist
+selected its 500 roles by recency, which hides the best match once more than 500
+match — it now ranks by `ts_rank_cd` in the database first (**F3**, migration
+0020). `roles.description` is capped at 6,000 characters, the 95th percentile of
+the live distribution, because it is the column that decides when the 500 MB free
+tier runs out (**F8**).
+
+**Two bugs were found by reviewing this work rather than by planning it.**
+`WD_MAX_PAGES` was a module-level constant, so the qualifier setting it to 1 ran
+*after* the import had already read the default — ES module evaluation order —
+and the sweep was paging every Workday tenant in full while looking like it was
+doing one request. And `recompute.ts` and `digest.ts` both selected profiles
+unbounded: past a thousand confirmed users, user 1,001 onward would never be
+rescored or emailed again, with no error anywhere. Both are fixed; the first was
+caught by a test written for the completeness contract.
+
+**Lever is deliberately absent from the harvest.** `jobs.lever.co` now publishes
+a robots.txt carrying Content-Signal directives and Common Crawl has stopped
+indexing it. Older snapshots still hold Lever URLs and could be mined; they were
+not. Reading an archived copy to get around a current refusal is the same act
+with an extra step, and it sits badly beside this repo's own LinkedIn/Naukri
+lock. The ten Lever boards stay hand-curated, and Lever's public postings API —
+which the company publishes and the ingest calls — is unaffected.
+
+**One Vercel project, and it was not cosmetic.** The founder reported the site
+living on two domains. `saaf-i9` turned out to be a two-day-old deployment of the
+`saaf-ai` v0 export under the Saaf name, in `iad1` rather than `bom1`, with no
+`/signin` and no `/start` — and it answered `/today`, `/applications` and
+`/profile` with **HTTP 200 to anonymous visitors**, rendering a real shortlist to
+the open internet. It was deleted. The surviving app enforces auth server-side on
+every route, above RLS.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

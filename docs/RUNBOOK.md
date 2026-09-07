@@ -104,6 +104,52 @@ After the first deploy, set the Supabase **Site URL** to the deployed origin and
 add `https://<project>.vercel.app/**` to Redirect URLs, or the magic link will
 bounce back to localhost.
 
+**⚠️ ONE PROJECT, ONE DOMAIN — `saaf` → `https://saaf-ten.vercel.app`.**
+On 2026-09-07 a second Vercel project, `saaf-i9`, was found serving the v0
+design export under the Saaf name. It had no `/signin` and no `/start`, and it
+answered `/today`, `/applications` and `/profile` with **200 to anonymous
+visitors** — a shortlist rendered to the open internet. It also ran in `iad1`
+rather than `bom1`. It was deleted. Deploying this repo anywhere but the `saaf`
+project recreates the split, and the split is what produced the exposure: two
+origins, one of which nobody was maintaining. `saaf-ai/` is a design reference,
+is in `.vercelignore`, and is not deployable.
+
+### Cron
+
+Four separate daily crons, one per pipeline stage — see `vercel.json`. JSON
+carries no comments, so the schedule reasoning lives here.
+
+| Path | UTC | IST | Why here |
+|---|---|---|---|
+| `/api/cron/ingest` | `0 21 * * *` | ~02:30 | Fetches boards. Owns 52s of its own 60s function |
+| `/api/cron/recompute` | `0 23 * * *` | ~04:30 | Rescores every profile against what the ingest just wrote |
+| `/api/cron/audit` | `0 1 * * *` | ~06:30 | Publishes the figures on `/audit`, after scoring is settled |
+| `/api/cron/digest` | `0 3 * * *` | ~08:30 | The only stage a person experiences; scheduled for the Indian morning |
+
+**Why split.** They were one call to `runAll()` inside a single 60-second
+function, so the four stages competed for one budget and the last of them
+silently did not happen on a slow night. Hobby allows **100 cron jobs per
+project**, each limited to once a day with ±59 minutes of scheduling jitter —
+hence the two-hour gaps, which are jitter margin rather than an estimate of
+stage duration.
+
+`npm run ingest` still runs all four in sequence locally, and that is the
+verification path.
+
+### Growing the registry
+
+```bash
+npm run registry:harvest                      # Common Crawl → registry/candidates.json
+npm run registry:qualify -- --limit 2000      # probe candidates → registry/boards.json
+git diff registry/boards.json                 # read this before committing
+npm run ingest
+```
+
+The harvest reads Common Crawl's URL index; it touches no employer's server.
+Qualification calls each company's own public ATS API and keeps a board only if
+it returns a live India role. Nothing is ever auto-removed — deactivation is the
+daily ingest's decision, made on its own evidence.
+
 ---
 
 ## GitHub
