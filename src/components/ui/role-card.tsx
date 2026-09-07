@@ -2,7 +2,7 @@ import { AlertCircle, ChevronRight, MapPin, Quote } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
 import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
-import type { Bucket, ScoreBreakdown } from '@/match/score'
+import type { ScoreBreakdown } from '@/match/score'
 
 /** One requirement the extractor read out of a posting, with the sentence it
  *  came from. Lived in the retired `row.tsx` alongside the three-outcome role
@@ -18,14 +18,33 @@ export type EvidenceItem = {
   confidence: number
 }
 
-/** What the ring calls this role. Keyed by bucket so the card and the heading
+/** What the ring calls this role.
  *  above it can never disagree; 'matches' falls through to the score bands. */
-const BAND: Partial<Record<Bucket, string>> = {
-  experience_short: 'Short on experience',
-  experience_over: 'More experience than asked',
-  experience_out: 'Experience out of range',
-  location_out: 'Another city',
-  worth_a_look: 'Worth a look',
+/**
+ * The band reads the SCORE again, and that is safe now for a reason.
+ *
+ * It used to read the score, then was changed to read the bucket, because a
+ * role sitting under "Good match, short on experience" announced itself as a
+ * STRONG MATCH two lines below the heading saying it was not.
+ *
+ * ⚠️ WHAT CHANGED IS THE CAP, NOT THE STANDARD. Every experience standing that
+ * used to need a contradicting label now holds the score down instead: short
+ * caps at 65, far_short at 50, over at 65, and — added 2026-09-07 — an unread
+ * bar at 74. `score >= 75` is therefore unreachable for any role we have a
+ * reservation about, so the score can carry the band honestly on its own.
+ *
+ * This matters because the alternative labelled almost every card with what was
+ * wrong with it. A candidate opening a list where every row says "Experience
+ * out of range" or "Another city" reads a verdict on themselves, which is the
+ * one thing this product must never do. The reservation has not been removed —
+ * it is on the reason line and inside the breakdown, both of which are on the
+ * face of the card. It is no longer the headline.
+ */
+function bandFor(score: number): string {
+  if (score >= 75) return 'Strong match'
+  if (score >= 60) return 'Good match'
+  if (score >= 45) return 'Worth a look'
+  return 'Long shot'
 }
 
 type Props = {
@@ -43,7 +62,6 @@ type Props = {
   isNew?: boolean
   requirements?: EvidenceItem[]
   profileCity?: string
-  bucket: Bucket
 }
 
 /**
@@ -67,14 +85,39 @@ type Props = {
  */
 export function RoleCard({
   gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity, bucket,
+  isNew, requirements, profileCity,
 }: Props) {
-  const strong = bucket === 'matches' && score >= 75
-  // The band follows the BUCKET, not the score alone. It used to read the score
-  // only, so a role sitting under "Good match, short on experience" announced
-  // itself as a STRONG MATCH two lines below the heading saying it wasn't —
-  // the same rounding-off the buckets exist to stop, one level down.
-  const band = BAND[bucket] ?? (score >= 75 ? 'Strong match' : score >= 50 ? 'Worth a look' : 'Weak match')
+  const strong = score >= 75
+  const band = bandFor(score)
+
+  /**
+   * One quote, shown once.
+   *
+   * A single sentence often yields two legitimate readings — "Exp should be in
+   * between 2 - 4 years, out of which minimum 2 years in product management"
+   * produces both a 2–4 band and a bare 2-year floor. Both are correct, and the
+   * card displays only the quote, so they render as the identical line twice.
+   * A candidate reads that as a bug in the product that is telling them it
+   * shows its working, which is the worst possible place to look sloppy.
+   *
+   * Keeps the better-informed reading of each quote: higher confidence first,
+   * then the one that also captured a ceiling. Nothing is lost that the
+   * candidate could have acted on — the discarded row quotes the same sentence.
+   */
+  const shownRequirements = Object.values(
+    (requirements ?? []).reduce<Record<string, EvidenceItem>>((acc, r) => {
+      const key = `${r.kind}||${r.sourceQuote}`
+      const prev = acc[key]
+      if (
+        !prev ||
+        r.confidence > prev.confidence ||
+        (r.confidence === prev.confidence && r.minYears !== undefined && prev.minYears === undefined)
+      ) {
+        acc[key] = r
+      }
+      return acc
+    }, {}),
+  )
   const components = breakdown?.components ?? []
 
   return (
@@ -139,8 +182,8 @@ export function RoleCard({
                 <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
                   <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
                   Insights
-                  {requirements?.length ? (
-                    <span className="font-mono tabular-nums">({requirements.length})</span>
+                  {shownRequirements.length ? (
+                    <span className="font-mono tabular-nums">({shownRequirements.length})</span>
                   ) : null}
                 </summary>
 
@@ -159,9 +202,9 @@ export function RoleCard({
                   ))}
                 </ul>
 
-                {requirements && requirements.length > 0 && (
+                {shownRequirements.length > 0 && (
                   <div className="mt-2 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
-                    {requirements.map((r, i) => (
+                    {shownRequirements.map((r, i) => (
                       <div key={i}>
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                           {r.kind}

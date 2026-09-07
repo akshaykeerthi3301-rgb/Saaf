@@ -7,7 +7,8 @@ import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
-import { bucketFor, locationRank, BUCKET_META, type Bucket, type ScoreBreakdown } from '@/match/score'
+import { locationRank, type ScoreBreakdown } from '@/match/score'
+import { resolveCity } from '@/lib/taxonomy/locations'
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
@@ -63,9 +64,11 @@ type MatchRow = {
 export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; tab?: string }>
+  searchParams: Promise<{ show?: string; tab?: string; sort?: string; fit?: string }>
 }) {
-  const { show, tab } = await searchParams
+  const { show, tab, sort, fit } = await searchParams
+  const byNewest = sort === 'new'
+  const clearsOnly = fit === 'clears'
   // Everything we hold for this candidate is the default view. "New" is the
   // narrower question — what has appeared since they last looked — and it is a
   // tab rather than the whole page, which is what it used to be by framing: the
@@ -149,22 +152,72 @@ export default async function TodayPage({
   const newCount = rows.filter(isNew).length
   const visibleRows = onlyNew ? rows.filter(isNew) : rows
 
-  const byBucket = new Map<Bucket, MatchRow[]>()
-  for (const r of visibleRows) {
-    const b = bucketFor(r.score_breakdown)
-    if (!byBucket.has(b)) byBucket.set(b, [])
-    byBucket.get(b)!.push(r)
-  }
-  // Rows arrive score-ordered from the database. Re-sort each bucket so the
-  // city the candidate actually asked for comes first — a commute-cluster role
-  // is worth showing, but never above an exact-city one. See locationRank().
-  for (const list of byBucket.values()) {
-    list.sort(
-      (a, b) =>
-        locationRank(a.score_breakdown) - locationRank(b.score_breakdown) ||
-        (b.score ?? 0) - (a.score ?? 0),
+  /**
+   * Two sections, split on location and nothing else.
+   *
+   * WHY THIS REPLACED SIX BUCKETS. The buckets were named after what was wrong
+   * with a role — "Experience is out of range", "Location is out of range",
+   * "Good match, short on experience". Every heading on the page was a
+   * negative, so a candidate scrolling their own shortlist read a running
+   * commentary on their shortcomings. That is the opposite of the intent: the
+   * buckets existed to state uncertainty honestly, and honesty about a role
+   * turned into a verdict on the person.
+   *
+   * ⚠️ NOTHING IS HIDDEN AND NOTHING IS SOFTENED. Every reservation the buckets
+   * carried is still on the card — in the reason line, in the capped score, and
+   * in the breakdown that shows the arithmetic. What changed is that it is
+   * stated per role instead of used as a section heading. The locked decision
+   * in docs/PROJECT-STATE.md is "rank everything, withhold nothing"; ranking is
+   * exactly what this does, and the caps in src/match/score.ts are what stop a
+   * ranked list from overclaiming.
+   *
+   * Location is the split because it is the one hard constraint a candidate
+   * cannot negotiate — you can stretch two years of experience, you cannot
+   * commute to another state. Remote and the commute cluster count as near:
+   * both are reachable from where the candidate said they are.
+   */
+  const cityLabel = resolveCity(profile.city)?.name ?? profile.city?.trim()
+  const near = visibleRows.filter((r) => locationRank(r.score_breakdown) <= 1)
+  const far = visibleRows.filter((r) => locationRank(r.score_breakdown) > 1)
+
+  /** Best match first, or newest first — the candidate's choice, both sections.
+   *  Within equal scores the exact city still beats the commute cluster. */
+  const order = (list: MatchRow[]) =>
+    [...list].sort((a, b) =>
+      byNewest
+        ? (firstShownAt.get(b.role_id) ?? '').localeCompare(firstShownAt.get(a.role_id) ?? '') ||
+          (b.score ?? 0) - (a.score ?? 0)
+        : (b.score ?? 0) - (a.score ?? 0) ||
+          locationRank(a.score_breakdown) - locationRank(b.score_breakdown),
     )
+
+  /** "Clears the bar" is the experience standing the scorer already computed —
+   *  a filter, never a gate. The count it hides is stated next to the control. */
+  const clears = (r: MatchRow) => {
+    const e = r.score_breakdown?.experience
+    return e === 'meets' || e === 'unstated'
   }
+  const apply = (list: MatchRow[]) => order(clearsOnly ? list.filter(clears) : list)
+
+  const sections: { key: string; title: string; blurb: string; rows: MatchRow[]; all: number }[] = [
+    {
+      key: 'near',
+      // The canonical name, not the raw profile string — a heading reading
+      // "In Bangalore, India" is the stored value leaking onto the page.
+      title: cityLabel ? `In ${cityLabel}` : 'Where you work',
+      blurb: 'In the city you gave us, its commute belt, or fully remote.',
+      rows: apply(near),
+      all: near.length,
+    },
+    {
+      key: 'far',
+      title: 'Worth a move',
+      blurb:
+        'Strong matches on the work itself, in other Indian cities. Ranked the same way — the only thing separating these from the list above is where they are.',
+      rows: apply(far),
+      all: far.length,
+    },
+  ]
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
   // From the signed-in address, matching /applications — a job title makes for
   // confusing initials ("PM" is not who you are).
@@ -219,32 +272,151 @@ export default async function TodayPage({
             </p>
           ) : null}
 
+          {/* Sort and filter. Plain links, so the whole control set costs no
+              client JavaScript and every view is its own shareable URL — the
+              same reason "show all" is a link. Both controls apply to both
+              sections: they are one list split by location, and a candidate
+              sorting one half by newest while the other stays on best-match
+              would be comparing two different things. */}
+          {visibleRows.length > 0 ? (
+            <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Sort</span>
+                {[
+                  { k: 'best', label: 'Best match' },
+                  { k: 'new', label: 'Newest' },
+                ].map(({ k, label }) => {
+                  const active = (k === 'new') === byNewest
+                  const params = new URLSearchParams()
+                  if (onlyNew) params.set('tab', 'new')
+                  if (k === 'new') params.set('sort', 'new')
+                  if (clearsOnly) params.set('fit', 'clears')
+                  return (
+                    <Link
+                      key={k}
+                      href={`/today${params.size ? `?${params}` : ''}`}
+                      aria-current={active ? 'true' : undefined}
+                      className={`font-medium transition-colors ${
+                        active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Show</span>
+                {[
+                  { k: 'all', label: 'Everything' },
+                  { k: 'clears', label: 'Clears the stated bar' },
+                ].map(({ k, label }) => {
+                  const active = (k === 'clears') === clearsOnly
+                  const params = new URLSearchParams()
+                  if (onlyNew) params.set('tab', 'new')
+                  if (byNewest) params.set('sort', 'new')
+                  if (k === 'clears') params.set('fit', 'clears')
+                  return (
+                    <Link
+                      key={k}
+                      href={`/today${params.size ? `?${params}` : ''}`}
+                      aria-current={active ? 'true' : undefined}
+                      className={`font-medium transition-colors ${
+                        active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ) : null}
+
           <BreakdownEngaged>
-            {BUCKET_META.map(({ key, title, blurb }) => {
-              const inBucket = byBucket.get(key) ?? []
-              if (inBucket.length === 0) return null
-              // ?show=<bucket> renders that bucket whole. A plain link, so this
-              // costs no client JavaScript and the expanded view is its own
-              // shareable URL.
+            {sections.map(({ key, title, blurb, rows: inSection, all }) => {
+              /**
+               * A section with nothing in it still gets its heading — for the
+               * near one, at least.
+               *
+               * Returning null for an empty "In Bengaluru" made the section
+               * vanish, so a candidate with matches only in other cities saw a
+               * page that never mentioned the city they gave us. That reads as
+               * though we lost it, or worse, as a silent verdict. The heading
+               * stays and says plainly that the gap is our coverage.
+               *
+               * "Worth a move" empty is not the same thing and needs no
+               * apology: it means everything we found is already local, which
+               * is the outcome the candidate wanted.
+               */
+              if (all === 0) {
+                if (key !== 'near' || far.length === 0) return null
+                return (
+                  <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
+                    <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                      <h3 id={`bucket-${key}`} className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                        {title}
+                      </h3>
+                      <span className="font-mono text-sm tabular-nums text-muted-foreground">0</span>
+                    </div>
+                    <p className="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
+                      No matches{cityLabel ? ` in ${cityLabel}` : ' where you work'} today — that is our
+                      coverage of employers there, not a verdict on you. The {far.length}{' '}
+                      {far.length === 1 ? 'role' : 'roles'} below {far.length === 1 ? 'is' : 'are'} the
+                      same work, elsewhere in India.
+                    </p>
+                  </section>
+                )
+              }
+              // ?show=<section> renders it whole. A plain link, so this costs no
+              // client JavaScript and the expanded view is its own shareable URL.
               const expanded = show === key || show === 'all'
-              const visible = expanded ? inBucket : inBucket.slice(0, CARDS_PER_BUCKET)
+              const visible = expanded ? inSection : inSection.slice(0, CARDS_PER_BUCKET)
+              const hiddenByFilter = all - inSection.length
               return (
                 <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
-                  {/* The blurb was a sentence under every heading. It is on the
-                      heading's title now — still there for anyone who wants it,
-                      no longer four lines of prose between them and the roles. */}
-                  <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                  <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
                     <h3
                       id={`bucket-${key}`}
-                      title={blurb}
                       className="text-xs font-bold uppercase tracking-[0.16em] text-primary"
                     >
                       {title}
                     </h3>
                     <span className="font-mono text-sm tabular-nums text-muted-foreground">
-                      {inBucket.length}
+                      {inSection.length}
                     </span>
                   </div>
+                  <p className="mb-4 text-xs leading-5 text-muted-foreground">
+                    {blurb}
+                    {/* A filter that removes rows says how many, always. A count
+                        that silently shrinks is indistinguishable from a thin
+                        day, and this product does not let the candidate mistake
+                        our filter for the market's answer. */}
+                    {hiddenByFilter > 0 ? (
+                      <>
+                        {' '}
+                        <Link
+                          href={`/today${onlyNew ? '?tab=new' : ''}`}
+                          className="font-semibold text-primary underline underline-offset-4"
+                        >
+                          {hiddenByFilter} more hidden by your filter
+                        </Link>
+                        .
+                      </>
+                    ) : null}
+                  </p>
+
+                  {inSection.length === 0 ? (
+                    <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+                      Nothing here clears the stated bar today. The {all} we found are still
+                      listed under{' '}
+                      <Link href={`/today${onlyNew ? '?tab=new' : ''}`} className="font-semibold text-primary underline underline-offset-4">
+                        Everything
+                      </Link>
+                      .
+                    </p>
+                  ) : null}
 
                   <div className="space-y-4">
                     {visible.map((r) => (
@@ -252,7 +424,6 @@ export default async function TodayPage({
                         key={r.id}
                         gateResultId={r.id}
                         roleId={r.role_id}
-                        bucket={key}
                         title={r.roles?.title ?? ''}
                         company={r.roles?.company_name ?? ''}
                         city={r.roles?.city ?? undefined}
@@ -267,14 +438,14 @@ export default async function TodayPage({
                     ))}
                   </div>
 
-                  {/* The count above is always the whole bucket, so this reads
-                      as "there is more", never as "there was a cut". */}
-                  {visible.length < inBucket.length ? (
+                  {/* The count above is the whole section, so this reads as
+                      "there is more", never as "there was a cut". */}
+                  {visible.length < inSection.length ? (
                     <Link
-                      href={`/today?show=${key}${onlyNew ? '&tab=new' : ''}#bucket-${key}`}
+                      href={`/today?show=${key}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}#bucket-${key}`}
                       className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent"
                     >
-                      Show all {inBucket.length}
+                      Show all {inSection.length}
                       <ChevronRight className="size-3.5" />
                     </Link>
                   ) : null}
@@ -324,9 +495,18 @@ export default async function TodayPage({
               <ShieldCheck className="size-4 shrink-0" />
               <span className="font-semibold text-primary">We never apply for you.</span>
             </p>
+            {/* WAS: "No employer here publishes a salary." Measured against the
+                live index on 2026-09-07 and it was false — 12 of 799 postings
+                state a figure ("15 LPA" at Apna, "₹50,000" at CRED), and the
+                registry was about to grow forty-fold. It also asserted
+                something we never check: nothing extracts salary, so we have no
+                standing to say what employers publish.
+
+                The replacement is about our own behaviour, which is the part we
+                can actually keep. See docs/CONFLICTS.md B3. */}
             <p className="flex items-center gap-2.5">
               <Wallet className="size-4 shrink-0" />
-              No employer here publishes a salary.
+              We don&apos;t read salaries, so pay never moves a score.
             </p>
             {/* The score presents as complete, so a requirement we don't read has
                 to be named or it reads as one we checked and found nothing on.

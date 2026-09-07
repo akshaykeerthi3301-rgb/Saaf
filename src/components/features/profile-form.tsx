@@ -112,7 +112,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
 
         <Input label="Salary expectation" value={f.salaryExpectation}
           onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}
-          helper="No role we index states a salary, so this can't filter yet." />
+          helper="We don’t read salaries off postings, so this can’t filter yet." />
 
         {error ? (
           <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</p>
