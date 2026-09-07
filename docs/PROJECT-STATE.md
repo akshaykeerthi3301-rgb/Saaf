@@ -810,6 +810,43 @@ living on two domains. `saaf-i9` turned out to be a two-day-old deployment of th
 the open internet. It was deleted. The surviving app enforces auth server-side on
 every route, above RLS.
 
+### Stage N — the application co-pilot, as a framework (2026-09-07)
+
+Review & Approve is built, and **what it deliberately does not do is the
+product decision.** Recorded here because it looks like an unfinished feature
+and is not one.
+
+**The shape, as the founder set it.** The drawer suggests a *few* curated résumé
+pointers as a comparison, and Apply then redirects to the employer's own site.
+That is the whole loop. It is deliberately thin: curating a résumé per job is
+where this product is expected to charge, so the free tier shows enough to prove
+the mechanism works and stops there. A future session that finds three bullets
+and concludes the generator is broken, or "improves" it into a full résumé
+rewrite, is removing the thing the business runs on.
+
+**What is already load-bearing under it.** `src/lib/tailor.ts` generates and then
+*filters*: an invented metric, a company that is neither the candidate's nor the
+posting's, a tenure above the profile, or a credential not held gets the line
+dropped, and what was dropped is shown with its reason. The badge in the drawer
+is that filter, not a caption. When the paid tier lands and the volume of
+generated material goes up, the filter is what keeps it defensible — so it
+should get stricter as the feature grows, never looser.
+
+**Saaf still never submits.** "Approve & stage" files the role on the candidate's
+board; Apply opens the employer's site. Assisted application is in scope,
+automatic application never is (`docs/CONFLICTS.md` A14). A paid tier does not
+change that line.
+
+⚠️ **The comparison is one-sided today, and it is worth knowing why.** The drawer
+shows what we would write, not a before-and-after against the candidate's own
+bullets — because the résumé file is deleted after parsing and the original
+bullets are never stored. A true side-by-side needs source material this product
+deliberately does not keep. The options, none of them taken yet: compare against
+the profile fields we do hold (weak), start storing résumé text (breaks the
+deletion promise on the upload screen), or let the candidate paste their current
+bullet in the drawer for a live comparison (no new storage, and the only one of
+the three that costs nothing).
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~
