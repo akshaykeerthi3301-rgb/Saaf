@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { istDay } from '@/lib/day'
+import { getLatestAudit } from '@/lib/services/audit'
 
 /**
  * The public gate audit. Unauthenticated by design — the landing page renders
@@ -17,31 +17,24 @@ import { istDay } from '@/lib/day'
 export const revalidate = 3600
 
 export async function GET() {
-  const db = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  )
+  const audit = await getLatestAudit()
 
-  const { data, error } = await db
-    .from('audit_daily')
-    .select('day, roles_indexed, boards_active, by_reason')
-    .order('day', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (error || !data) {
+  // getLatestAudit() returns null for BOTH no-rows and query-failed, which is
+  // the same 503 this returned before — a reader cannot act differently on
+  // "the table is empty" than on "we could not read it", and either way the
+  // honest answer is that there is no figure to publish yet.
+  if (!audit) {
     return NextResponse.json({ error: 'No audit data yet' }, { status: 503 })
   }
 
   const today = istDay()
   return NextResponse.json(
     {
-      day: data.day,
-      stale: data.day !== today,
-      rolesIndexed: data.roles_indexed,
-      boardsActive: data.boards_active,
-      byReason: data.by_reason,
+      day: audit.day,
+      stale: audit.day !== today,
+      rolesIndexed: audit.rolesIndexed,
+      boardsActive: audit.boardsActive,
+      byReason: audit.byReason,
     },
     { headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400' } }
   )

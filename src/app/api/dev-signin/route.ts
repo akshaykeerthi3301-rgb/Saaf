@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { createDevSessionTokens } from '@/lib/services/auth'
 
 /**
  * DEVELOPMENT ONLY — sign in as the founder without sending an email.
@@ -15,12 +16,26 @@ import { NextResponse } from 'next/server'
  *
  *  1. It refuses outside development. `NODE_ENV` is 'production' on every
  *     Vercel deployment, so this route 404s there — including on preview
- *     deployments, which are also built in production mode.
+ *     deployments, which are also built in production mode. The service in
+ *     @/lib/services/auth repeats the check, so the privilege is not guarded
+ *     by this file alone.
  *  2. It signs in exactly ONE hard-coded address. There is no email parameter,
- *     so it cannot be pointed at another account by editing the URL.
+ *     so it cannot be pointed at another account by editing the URL. That
+ *     policy lives HERE, next to the thing it protects, rather than inside the
+ *     service — which deliberately does not decide who may sign in.
  *  3. It mints a real Supabase session through the admin API rather than
  *     faking one. Nothing about auth is bypassed or weakened — the same
  *     session a magic link would produce, without the email round trip.
+ *
+ * ⚠️ THE ADMIN CALLS MOVED TO @/lib/services/auth ON 2026-09-08, AND THAT WAS
+ * A SECURITY FIX, NOT TIDYING. This route used to reach the service-role
+ * client by importing `@supabase/supabase-js` directly — which sidestepped the
+ * `no-restricted-imports` rule that forbids `src/app/` from importing
+ * `@/lib/supabase/service`. The guarantee had quietly become procedural (a
+ * runtime check inside one file) instead of structural (a lint rule that
+ * cannot be forgotten). `eslint.config.mjs` now restricts the upstream package
+ * in `src/app/**` and `src/components/**` as well, so no route can hand-roll
+ * an admin client again.
  *
  * Google OAuth is deliberately NOT wired up yet; that lands after the build.
  *
@@ -38,38 +53,14 @@ export async function GET() {
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !serviceKey || !anonKey) {
+  if (!url || !anonKey) {
     return NextResponse.json({ error: 'Credentials missing' }, { status: 500 })
   }
 
-  const { createClient: createAdmin } = await import('@supabase/supabase-js')
-  const admin = createAdmin(url, serviceKey, { auth: { persistSession: false } })
-
-  // Create the account on first use so this works against a fresh database.
-  // Already-registered is the expected case and is not an error.
-  const { error: cErr } = await admin.auth.admin.createUser({
-    email: DEV_EMAIL,
-    email_confirm: true,
-  })
-  if (cErr && !/already/i.test(cErr.message)) {
-    return NextResponse.json({ error: cErr.message }, { status: 500 })
-  }
-
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: DEV_EMAIL,
-    options: { redirectTo: 'http://localhost:3000/auth/callback' },
-  })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  const linkRes = await fetch(data.properties!.action_link, { redirect: 'manual' })
-  const frag = new URLSearchParams((linkRes.headers.get('location') ?? '').split('#')[1] ?? '')
-  const access_token = frag.get('access_token')
-  const refresh_token = frag.get('refresh_token')
-  if (!access_token || !refresh_token) {
-    return NextResponse.json({ error: 'No tokens in redirect' }, { status: 500 })
+  const tokens = await createDevSessionTokens(DEV_EMAIL, 'http://localhost:3000/auth/callback')
+  if ('error' in tokens) {
+    return NextResponse.json({ error: tokens.error }, { status: 500 })
   }
 
   const response = NextResponse.redirect('http://localhost:3000/today')
@@ -81,7 +72,10 @@ export async function GET() {
         toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
     },
   })
-  const { error: sErr } = await supabase.auth.setSession({ access_token, refresh_token })
+  const { error: sErr } = await supabase.auth.setSession({
+    access_token: tokens.accessToken,
+    refresh_token: tokens.refreshToken,
+  })
   if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 })
 
   return response

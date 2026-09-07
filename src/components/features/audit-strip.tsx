@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { getLatestAudit } from '@/lib/services/audit'
 import { istDay } from '@/lib/day'
 
 /**
@@ -10,35 +10,30 @@ import { istDay } from '@/lib/day'
  *
  * Never renders zeros. If no run has completed it renders nothing at all —
  * a zero would read as a result rather than as missing data.
+ *
+ * The query lives in @/lib/services/audit. This component builds no database
+ * client of its own: it was the only component in the codebase that did, and
+ * the same question was being asked here, on /audit and in the JSON endpoint
+ * with three subtly different column lists.
  */
 export async function AuditStrip() {
-  const db = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  )
-  const { data } = await db
-    .from('audit_daily')
-    .select('day, roles_indexed, boards_active')
-    .order('day', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const audit = await getLatestAudit()
 
-  if (!data || data.roles_indexed === 0) return <div className="h-11" />
+  if (!audit || audit.rolesIndexed === 0) return <div className="h-11" />
 
   const fmt = (n: number) => n.toLocaleString('en-IN')
   // IST, not UTC — this strip is on the public landing page and called its
   // own freshest figures stale for 21.5 hours out of every 24.
   const today = istDay()
-  const when = data.day === today ? 'today' : `on ${data.day}`
+  const when = audit.day === today ? 'today' : `on ${audit.day}`
 
   return (
     <div className="mt-12 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-6 py-4 text-center">
       <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
       <p className="font-mono text-sm tabular-nums text-muted-foreground">
-        <strong className="font-semibold text-foreground">{fmt(data.roles_indexed)}</strong>{' '}
+        <strong className="font-semibold text-foreground">{fmt(audit.rolesIndexed)}</strong>{' '}
         roles indexed {when} &middot;{' '}
-        <strong className="font-semibold text-foreground">{fmt(data.boards_active)}</strong>{' '}
+        <strong className="font-semibold text-foreground">{fmt(audit.boardsActive)}</strong>{' '}
         company boards &middot; every score shows its working
       </p>
     </div>

@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { DocPage } from '@/components/features/doc-page'
+import { getLatestAudit } from '@/lib/services/audit'
 
 export const revalidate = 3600
 
@@ -23,33 +23,23 @@ const LABEL: Record<string, string> = {
  * the credibility comes from it being checkable, not from it being designed.
  */
 export default async function AuditPage() {
-  const db = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  )
-  const { data } = await db
-    .from('audit_daily')
-    .select('day, roles_indexed, boards_active, by_reason')
-    .order('day', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const audit = await getLatestAudit()
 
   const fmt = (n: number) => n.toLocaleString('en-IN')
-  const reasons = Object.entries((data?.by_reason ?? {}) as Record<string, number>)
+  const reasons = Object.entries(audit?.byReason ?? {})
     .sort((a, b) => b[1] - a[1])
 
 
   return (
     <DocPage eyebrow="Index audit" title="We publish what we read.">
-      {!data ? (
+      {!audit ? (
         <p className="mt-6 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
           No run has completed yet. We show nothing rather than zeros.
         </p>
       ) : (
         <>
           <p className="mt-6 border-b border-border pb-4 font-mono text-sm tabular-nums text-primary">
-            {fmt(data.roles_indexed)} roles indexed · {fmt(data.boards_active)} company boards
+            {fmt(audit.rolesIndexed)} roles indexed · {fmt(audit.boardsActive)} company boards
           </p>
 
           <table className="mt-6 w-full border-collapse">
@@ -71,7 +61,7 @@ export default async function AuditPage() {
           </table>
 
           <p className="mt-6 text-xs text-muted-foreground">
-            {data.day} · updated daily
+            {audit.day} · updated daily
           </p>
         </>
       )}
