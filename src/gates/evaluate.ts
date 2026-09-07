@@ -15,6 +15,17 @@ import { isRemoteLocation } from './extract'
  * when it should gate, which is exactly how "Top Applicant on a fifteen-year
  * role" is born. This is plain code, and it is the reason that failure is
  * structurally impossible here.
+ *
+ * ONE FUNCTION, NOT ONE PER FUNCTION. There were once `evaluateEngineering()`
+ * and `evaluateFinance()` wrappers in their own files. Both had the identical
+ * body — `return evaluate(profile, requirements)` — because the per-function
+ * difference is not in the evaluation at all: it is in WHICH KIND of
+ * requirement the extractor reads out of the posting. The gates below are
+ * already typed per kind, so the split bought two names and no behaviour.
+ * `docs/PROJECT-STATE.md`'s "gates typed per function" is honoured by the
+ * requirement kinds, not by a function per vertical. See the per-kind notes
+ * at each block. (Deleted 2026-09-08; the domain knowledge they carried is
+ * folded in below.)
  */
 export function evaluate(
   profile: CandidateProfile,
@@ -26,6 +37,18 @@ export function evaluate(
   const confident = requirements.filter((r) => r.confidence >= CONFIDENCE_THRESHOLD)
 
   // --- Credential: binary, and never stretchable. -------------------------
+  //
+  // THIS IS THE FINANCE GATE. Finance turns on a CREDENTIAL, not on years —
+  // CA, CFA or company secretary — and it is the cleanest demonstration of
+  // gates-not-weights in the product: a credential is genuinely binary, and
+  // one you do not hold can never be stretched, however well everything else
+  // scores. That is why this block returns before the experience block, which
+  // is the only one that can stretch.
+  //
+  // The care is in EXTRACTION, not here. Real postings say things like
+  // "CA/FRM/CFA/MBA is a plus" — optional, and gating on it would be a false
+  // refusal. src/gates/extract.ts scores those below CONFIDENCE_THRESHOLD so
+  // they never reach this block as hard requirements at all.
   const credReqs = confident.filter((r) => r.kind === 'credential' && r.credential)
   const heldCred = profile.credential && profile.credential !== 'none' ? profile.credential : null
   const unmetCred = credReqs.find((r) => r.credential !== heldCred)
@@ -54,6 +77,12 @@ export function evaluate(
   }
 
   // --- Experience: the only gate that can be stretched. --------------------
+  //
+  // THIS IS THE ENGINEERING GATE. Engineering turns on an experience band,
+  // increasingly with a data-structures screen attached. The band is the part
+  // a job description actually STATES, so it is the part that can be gated on
+  // honestly — the screen is not, which is why nothing here tries to.
+  //
   // An explicit statement in the description beats the title band. The
   // description is more specific, and a posting that says "3+ years" on a
   // Senior Engineer role means it.

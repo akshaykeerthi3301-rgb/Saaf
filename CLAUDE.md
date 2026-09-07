@@ -17,6 +17,159 @@ This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio a
 - Full system orientation: `productos/AGENTS.md`.
 <!-- END PRODUCTOS -->
 
+<!-- BEGIN ARCHITECTURE -->
+## Architecture invariants
+
+Five rules. Breaking one is a defect, not a style preference. Each says how it is
+enforced — where enforcement is partial, that is stated rather than implied, so a
+fresh session can trust the rule instead of discovering it is aspirational.
+
+Full reasoning, with the defects that motivated each: `docs/ARCHITECTURE-AUDIT.md`.
+
+**Counts below were measured on 2026-09-08** (24 legacy query sites, 11 server
+actions, 8 of 11 re-authenticating, 0 `any` types). They will drift. If one
+disagrees with the codebase, the codebase is right — re-measure and correct this
+file rather than working around it. The *rules* do not drift; only the numbers.
+
+### 1. Application code lives in `src/`, imported with `@/*`
+
+`tsconfig.json` maps `@/*` → `./src/*`. Use it. There is no `app/`, `lib/` or
+`components/` at the repo root, and nothing should be added there.
+
+⚠️ **`src/` is not the whole repo.** These are deliberately outside it and are
+normal places to work:
+
+| Path | What it is |
+|---|---|
+| `ingest/` | The daily pipeline. Separate runtime — runs under the service role, not in a request. |
+| `scripts/` | One-off and scheduled CLI tools (`npm run registry:*`, `verify:rls`, seeds). |
+| `supabase/migrations/` | Schema. Applied by hand in the Supabase SQL editor. |
+| `registry/` | The curated board registry (`boards.json` tracked; `candidates.json` is not). |
+
+The four `src/app/api/cron/*` routes import `ingest/` through five levels of
+`../`. That is ugly and known; do not "fix" it by moving `ingest/` into `src/` —
+it runs under the service role and must stay outside the web app's import graph.
+
+### 2. Server Actions in `src/app/actions/`. Route handlers are the exception
+
+**Mutations are Server Actions.** All 11 live in `src/app/actions/`. Do not move
+them to route handlers: an action is invoked as a function and Next generates the
+endpoint, so there is no hand-written public URL to guess or fuzz. Converting 11
+actions to routes means 11 public URLs each needing its own hand-written auth
+check — trading a structural guarantee for a procedural one.
+
+**`src/app/api/` is reserved for requests that arrive without a session**, which
+today is exactly three kinds:
+
+| Group | Route | Guard |
+|---|---|---|
+| Cron | `api/cron/{ingest,recompute,audit,digest}` | `CRON_SECRET` bearer, via `lib/cron-route.ts` |
+| Public read | `api/audit/today` | None by design — it is the landing page's proof |
+| Dev tool | `api/dev-signin` | 404s unless `NODE_ENV !== 'production'` |
+
+There are **no webhooks in this repo yet**. When one lands it belongs here, and
+its signature must be verified before the payload is trusted.
+
+**Every action that touches user data re-authenticates itself** — 8 of the 11
+call `supabase.auth.getUser()` rather than trusting the page that called them.
+Keep that: an exported function is its own entry point, reachable without the
+page that renders it ever running. `src/app/actions/bench.ts` repeats its own
+`NODE_ENV` check for the same reason.
+
+The three without a `getUser()` call, and why:
+
+| Action | Why it is exempt |
+|---|---|
+| `sign-out.ts` | Calls `signOut()`; there is nothing to authorise. |
+| `role-catalogue.ts` | Reads `roles` only, whose RLS policy is `authenticated read roles` — an unauthenticated caller gets zero rows from the database, not from a check here. |
+| `parse-resume.ts` | Touches no table. Parses bytes in memory and returns fields. |
+
+⚠️ `parse-resume.ts` is the one worth watching. It reads no data, but it is an
+unauthenticated entry point that does **LLM work**, so it is a cost surface
+rather than a data surface. Today only `src/proxy.ts` gates it, via the
+`/start/:path*` matcher — and proxy is UX, not security. If résumé parsing ever
+gets expensive or rate-limited, that is the gap to close first.
+
+### 3. No `supabase.from()` in `src/components/` or `src/app/`
+
+All database access routes through `src/lib/services/`. A component must render
+without a database; a page asks a named question and renders the answer.
+
+Enforced by `no-restricted-syntax` in `eslint.config.mjs`:
+
+| Scope | Severity | Violations |
+|---|---|---|
+| `src/components/**` | **error** | **0 — clean, keep it that way** |
+| `src/app/**` | **warn** | **24 legacy sites across 14 files** |
+
+⚠️ **The 24 are known, authorised, and mid-migration.** Every one predates the
+rule, calls `getUser()` first, and runs under RLS — none is a security defect.
+They warn rather than error so `npm run lint` stays green while they are absorbed
+into `src/lib/services/`. **Do not add a 25th, and do not bulk-migrate them
+unasked.** Order (cheapest first): `auth/callback` + `instant-signin` → the
+single-profile reads → `applications` → `today/page.tsx` **last, with tests** —
+it is the core surface and has none of its own. When the count reaches 0, raise
+`src/app/**` to `error` and collapse the two ESLint blocks into one.
+
+`no-restricted-imports` additionally bans `@supabase/supabase-js` and
+`@/lib/supabase/service` in `src/app/` and `src/components/`. `@supabase/ssr` is
+allowed — `src/proxy.ts` and the auth routes need `createServerClient`.
+Privileged operations get a **named function** in `src/lib/services/`, never an
+exported admin client: re-exporting one through an unguarded path launders the
+privilege instead of removing it.
+
+### 4. Single-sided. Do not create `app/(employer)/`
+
+Saaf is a candidate copilot. Employers are **scraped data, not users** — the
+`boards` table holds hiring boards, and no employer ever signs in. There is no
+employer identity table and no employer RLS policy anywhere.
+
+Creating `app/(employer)/` before the following exist produces a folder with
+nothing lawful to put in it. All four are prerequisites, and (2) is where a
+dual-sided product leaks if rushed:
+
+1. An employer/recruiter identity table plus an account-type discriminator.
+2. **A second RLS policy set.** Every current policy assumes `auth.uid()` is a
+   candidate. An employer reading candidate data needs its own explicitly scoped
+   policies — inheriting the candidate ones exposes profiles.
+3. A consent model. `docs/PROJECT-STATE.md` parks "B2B discoverability" pending
+   exactly this, and the third product guarantee is that nothing about a
+   candidate's search is shared.
+4. Side-aware routing in `src/proxy.ts`.
+
+Equally: **do not rename the existing routes to `app/(candidate)/`.** Every route
+is already the candidate side; the group would wrap the whole app to distinguish
+it from something that does not exist.
+
+### 5. No `any`. Zod at the boundary, strict types out of `src/lib/types/`
+
+`tsconfig.json` is `strict: true`. **There are currently zero `any` types in
+`src/` or `ingest/`** — that is the baseline to hold. Where a Supabase response
+genuinely cannot be inferred, the codebase uses a named row type plus a single
+`as unknown as RowType` at the query, not `any` and not a cast per field.
+
+**Zod validates every untrusted input.** In practice that is 7 of the 11 server
+actions — the four without a schema (`sign-out`, `delete-account`,
+`restart-onboarding`, `role-catalogue`) take no caller-supplied data. Do not add
+ceremonial schemas to those; do not omit one from anything that takes input.
+
+**`src/lib/types/` does not exist yet.** Create it for the first genuinely
+cross-cutting type and put shared interfaces there. Two carve-outs that are
+correct and must not be swept into it:
+
+- **`src/gates/types.ts` stays put.** `src/gates/` is the open-source half of the
+  moat and an ESLint rule keeps it free of registry, ingest and database imports
+  so publishing it is a directory move. Relocating its types to `src/lib/` would
+  re-couple it to the app and defeat that.
+- **Module-owned types stay with their module.** `AuditSnapshot` belongs in
+  `lib/services/audit.ts`; `ScoreBreakdown` in `match/score.ts`. `src/lib/types/`
+  is for types crossing module boundaries, not a dumping ground that turns every
+  import into a two-file read.
+
+(`src/types/` is a different thing — ambient `.d.ts` shims for untyped packages.
+Leave it alone.)
+<!-- END ARCHITECTURE -->
+
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.

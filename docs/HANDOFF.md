@@ -131,7 +131,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 
 | # | Action | Needed for | Notes |
 |---|---|---|---|
-| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **`0018` (`role_requirements.max_years`) is pending.** Nothing breaks without it — reads, the ingest and scoring all degrade to "no ceiling stated" — but over-qualification stays unscored until it lands, and the ingest warns on every run |
+| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **No migration is pending as of 2026-09-08** — `0018` (`role_requirements.max_years`) was recorded here as outstanding but is APPLIED; verified by selecting the column against the live database. Over-qualification is scored. Re-check by query rather than by this line, which went stale once already |
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
