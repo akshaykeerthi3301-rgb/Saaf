@@ -15,6 +15,9 @@
     "gates:demo": "tsx scripts/evaluate-fixture.ts",
     "db:seed-test-user": "tsx --env-file=.env.local scripts/seed-test-user.ts",
     "registry:discover": "tsx scripts/discover-boards.ts",
+    "registry:harvest": "tsx scripts/harvest-common-crawl.ts",
+    "registry:qualify": "tsx scripts/qualify-boards.ts",
+    "registry:workday": "tsx scripts/discover-workday.ts",
     "ingest": "tsx --env-file=.env.local ingest/run.ts",
     "audit:security": "bash scripts/security-audit.sh"
   },

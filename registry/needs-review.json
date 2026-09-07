@@ -1,0 +1,34 @@
+[
+  {
+    "provider": "smartrecruiters",
+    "token": "endeavoritsolution",
+    "company_name": "Endeavor IT Solution",
+    "roles": 8478,
+    "india": 8476,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "webleetechnologies",
+    "company_name": "Weblee Technologies",
+    "roles": 3861,
+    "india": 3861,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "squircleitconsultingservicespvtltd",
+    "company_name": "Squircle It Consulting Services Pvt  Ltd",
+    "roles": 1784,
+    "india": 1782,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "jobsforhumanity",
+    "company_name": "Jobs for Humanity",
+    "roles": 3207,
+    "india": 294,
+    "qualifiedAt": "2026-09-07"
+  }
+]

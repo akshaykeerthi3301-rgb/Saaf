@@ -18,3 +18,8 @@ saaf-ai/
 docs/
 scripts/
 *.local.md
+
+# The harvested candidate list is 4 MB+ and is read by nothing at runtime — only
+# by scripts/qualify-boards.ts, which is excluded above. registry/boards.json is
+# NOT excluded and must not be: ingest/run.ts reads it on every cron run.
+registry/candidates.json

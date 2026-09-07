@@ -21,6 +21,7 @@ productos/design/*
 !productos/design/3-Onboarding-Flow.md
 !productos/design/4a-Landing-Page.md
 !productos/design/Design-Prompts.md
+!productos/design/V0-PROMPT-shortlist.md
 !productos/design/onboarding-wireframe.html
 !productos/design/landing-page-wireframe.html
 
@@ -50,3 +51,13 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+# The harvested candidate list — 4 MB+ of Common Crawl output, rewritten whole
+# on every harvest and every qualification run. Regenerate with
+# `npm run registry:harvest`; it touches no employer's server.
+#
+# ⚠️ IT CARRIES THE PROBE RESULTS TOO (probedAt, india, roles). Deleting it does
+# not lose the registry — registry/boards.json is the curated file and IS
+# tracked — but it does throw away tens of thousands of live ATS probes, so the
+# next qualification run redoes all of them. Keep the file; just don't version it.
+registry/candidates.json
