@@ -179,6 +179,57 @@ async function callGemini(prompt: string): Promise<string | undefined> {
 }
 
 /** Trust nothing about the shape or the values that comes back. */
+/**
+ * A job title, with the rest of the résumé line taken off it.
+ *
+ * ⚠️ THE PROMPT ASKS FOR "their present job title, exactly as written" AND THE
+ * MODEL DOES NOT ALWAYS COMPLY. Measured against this repo's own PDF fixture on
+ * 2026-09-08, Groq returned `"Systems Engineer at Infosys Jun 2024 - Present"`
+ * — the whole CV line, employer and date range included. normalise() only
+ * length-capped the field at 80 characters, so 45 characters of that sailed
+ * through.
+ *
+ * ⚠️ IT IS NOT A COSMETIC PROBLEM. That string is pre-filled on the confirm
+ * screen AND suggests `preferred_role`, which src/lib/score-candidate.ts turns
+ * into a websearch tsquery that ANDs every word against a posting's title.
+ * "Systems Engineer at Infosys Jun 2024 Present" matches no posting in the
+ * index, so a brand-new candidate reached /today with an EMPTY SHORTLIST — the
+ * magic moment, failing silently, with no error anywhere. Found by
+ * scripts/verify-onboarding.ts on its first run.
+ *
+ * The deterministic parser is not a fallback here: its "Title at Company"
+ * patterns are line-based and PDF extraction flattens the line structure, so on
+ * a real PDF it returns undefined and the model's value is the only one.
+ *
+ * Deliberately conservative — it removes a trailing date range and an
+ * "at <employer>" tail and nothing else. A title that is already clean passes
+ * through untouched.
+ */
+export function cleanTitle(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  let t = raw.trim()
+
+  // Trailing date range: "Jun 2024 - Present", "2019 - 2021", "2021 – Present".
+  t = t.replace(
+    /[\s,|·-]*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*(?:19|20)\d{2}\s*[-‐‑‒–—]\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*)?(?:(?:19|20)\d{2}|present|current|now)\s*$/i,
+    ''
+  )
+  t = t.replace(/[\s,|·-]*(?:19|20)\d{2}\s*[-‐‑‒–—]\s*(?:(?:19|20)\d{2}|present|current|now)\s*$/i, '')
+
+  // "<Title> at <Employer>" — the model returning the whole line. The title is
+  // the half before "at"; a real job title does not contain it. A leading "at"
+  // means there is no title half at all, and the whole thing is an employer.
+  t = t.replace(/^at\s+/i, '')
+  const atIndex = t.search(/\s+at\s+/i)
+  if (atIndex > 0) t = t.slice(0, atIndex)
+  else if (t.trim().toLowerCase() === raw.trim().toLowerCase().replace(/^at\s+/i, '') && /^at\s+/i.test(raw.trim())) {
+    return undefined
+  }
+
+  t = t.replace(/[\s,;|·–—-]+$/, '').trim()
+  return t.length > 1 ? t : undefined
+}
+
 export function normalise(parsed: unknown): LlmFields | null {
   if (!parsed || typeof parsed !== 'object') return null
   const p = parsed as Record<string, unknown>
@@ -200,7 +251,7 @@ export function normalise(parsed: unknown): LlmFields | null {
     : []
 
   return {
-    currentTitle: text(p.currentTitle, 80),
+    currentTitle: cleanTitle(text(p.currentTitle, 120)),
     employer: text(p.employer, 80),
     // A model reporting 60 years of experience has misread something.
     yearsExperience: years !== undefined && years >= 0 && years <= 50 ? years : undefined,

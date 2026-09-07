@@ -4,6 +4,21 @@
  * An empty table returns [] whether RLS denied the read or there were simply no
  * rows — so this seeds a row with the service role first, then compares what
  * anon can see. Re-run after any migration that touches policies.
+ *
+ * TWO HALVES, AND THE SECOND IS THE ONE THAT MATTERS FOR BETA.
+ *
+ *   1. anon vs service role — can a signed-out visitor read the registry?
+ *   2. USER A vs USER B — can a signed-in candidate read another candidate's
+ *      profile, shortlist, tracker or reports?
+ *
+ * ⚠️ ONLY THE FIRST HALF EXISTED UNTIL 2026-09-08, AND IT PROVES ALMOST
+ * NOTHING ABOUT THE PRODUCT'S ACTUAL PROMISE. Every policy on a candidate table
+ * is `auth.uid() = user_id`, and an anon probe never exercises that expression
+ * at all — anon fails the `to authenticated` role check first and returns empty
+ * for a reason that has nothing to do with ownership. A policy accidentally
+ * written `using (true)` would pass half one and leak every candidate's data to
+ * every other candidate. The product's third guarantee is that nothing about a
+ * candidate's search is shared; half two is the only thing here that tests it.
  */
 const BASE = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -47,7 +62,130 @@ async function main() {
   await svc('boards?token=eq.__rls_probe__', { method: 'DELETE' })
   await svc('audit_daily?day=eq.1999-01-01', { method: 'DELETE' })
 
+  await crossUserIsolation()
+
   console.log(failed === 0 ? '\n  RLS verified.' : `\n  ${failed} CHECK(S) FAILED`)
   process.exit(failed === 0 ? 0 : 1)
 }
+
+/**
+ * Can candidate A reach candidate B's rows? Two real users, two real sessions.
+ *
+ * The requests below carry a genuine user JWT rather than the anon key, so
+ * PostgREST evaluates `auth.uid() = user_id` for real. That is the whole point:
+ * an anon probe short-circuits on the role check and never reaches the
+ * ownership expression it is supposed to be testing.
+ */
+async function crossUserIsolation() {
+  console.log('\n  --- cross-user isolation (a signed-in candidate vs another) ---')
+
+  const { createClient } = await import('@supabase/supabase-js')
+  const admin = createClient(BASE, SVC, { auth: { persistSession: false } })
+  const anonClient = createClient(BASE, ANON, { auth: { persistSession: false } })
+
+  const mk = async (tag: string) => {
+    const email = `rls-probe-${tag}-${Date.now()}@saaf.local`
+    const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: true })
+    if (error) throw error
+    return { id: data.user!.id, email }
+  }
+
+  let a: { id: string; email: string } | undefined
+  let b: { id: string; email: string } | undefined
+
+  try {
+    a = await mk('a')
+    b = await mk('b')
+
+    // A real role to hang the FK-bearing rows off.
+    const roles = await (await svc('roles?select=id&limit=1')).json()
+    const roleId: string | undefined = roles?.[0]?.id
+    if (!roleId) {
+      check('cross-user: a role exists to probe against', false, 'roles table is empty — run the ingest first')
+      return
+    }
+
+    // Seed BOTH users identically, under the service role so RLS is bypassed
+    // for setup. If B has no rows, "A sees nothing of B's" proves nothing.
+    for (const u of [a, b]) {
+      await svc('profiles', { method: 'POST', body: JSON.stringify({ id: u.id, current_title: `probe-${u.id.slice(0, 8)}`, confirmed_at: new Date().toISOString() }) })
+      await svc('gate_results', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId, outcome: 'cleared', reason: 'rls probe', score: 50 }) })
+      await svc('role_first_shown', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId }) })
+      await svc('applications', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId, company: 'Probe Co', title: 'Probe Role' }) })
+    }
+    const bGate = await (await svc(`gate_results?user_id=eq.${b.id}&select=id`)).json()
+    await svc('refusal_reports', { method: 'POST', body: JSON.stringify({ user_id: b.id, gate_result_id: bGate?.[0]?.id }) })
+
+    // A genuine session for A. generateLink then verifyOtp — the same path
+    // src/lib/instant-signin.ts uses, including its note that GoTrue may label
+    // a first-time token 'signup' regardless of the type requested.
+    const { data: link, error: linkErr } = await admin.auth.admin.generateLink({ type: 'magiclink', email: a.email })
+    if (linkErr || !link.properties?.hashed_token) {
+      check('cross-user: can mint a session for user A', false, linkErr?.message ?? 'no token')
+      return
+    }
+    const { data: session, error: otpErr } = await anonClient.auth.verifyOtp({
+      token_hash: link.properties.hashed_token,
+      type: link.properties.verification_type as 'magiclink',
+    })
+    const jwt = session?.session?.access_token
+    if (otpErr || !jwt) {
+      check('cross-user: can mint a session for user A', false, otpErr?.message ?? 'no session')
+      return
+    }
+    check('cross-user: minted a real session for user A', true)
+
+    const asA = (path: string, init: RequestInit = {}) =>
+      fetch(`${BASE}/rest/v1/${path}`, {
+        ...init,
+        headers: { apikey: ANON, Authorization: `Bearer ${jwt}`, 'Content-Type': 'application/json', ...init.headers },
+      })
+
+    // --- reads: A must see its own rows and none of B's ---------------------
+    for (const table of ['profiles', 'gate_results', 'role_first_shown', 'applications'] as const) {
+      const col = table === 'profiles' ? 'id' : 'user_id'
+      const bRows = await (await asA(`${table}?${col}=eq.${b.id}&select=${col}`)).json()
+      check(`${table}: A cannot read B's rows`, Array.isArray(bRows) && bRows.length === 0,
+        Array.isArray(bRows) ? `${bRows.length} row(s) visible` : 'unexpected response')
+
+      const own = await (await asA(`${table}?${col}=eq.${a.id}&select=${col}`)).json()
+      check(`${table}: A CAN read its own rows`, Array.isArray(own) && own.length > 0)
+    }
+
+    const bReports = await (await asA(`refusal_reports?user_id=eq.${b.id}&select=id`)).json()
+    check("refusal_reports: A cannot read B's rows", Array.isArray(bReports) && bReports.length === 0)
+
+    // --- writes: A must not be able to touch B's pipeline -------------------
+    const upd = await asA(`applications?user_id=eq.${b.id}`, {
+      method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ status: 'closed' }),
+    })
+    const updRows = await upd.json()
+    check("applications: A cannot UPDATE B's row", Array.isArray(updRows) && updRows.length === 0,
+      `http ${upd.status}, ${Array.isArray(updRows) ? updRows.length : '?'} row(s) changed`)
+
+    const del = await asA(`applications?user_id=eq.${b.id}`, {
+      method: 'DELETE', headers: { Prefer: 'return=representation' },
+    })
+    const delRows = await del.json()
+    check("applications: A cannot DELETE B's row", Array.isArray(delRows) && delRows.length === 0,
+      `http ${del.status}, ${Array.isArray(delRows) ? delRows.length : '?'} row(s) deleted`)
+
+    // The WITH CHECK half: A must not be able to file a row AS B.
+    const forge = await asA('applications', {
+      method: 'POST', body: JSON.stringify({ user_id: b.id, company: 'Forged', title: 'Forged' }),
+    })
+    check('applications: A cannot INSERT a row owned by B', forge.status >= 400, `http ${forge.status}`)
+
+    // gate_results has deliberately no user-facing insert policy.
+    const insGate = await asA('gate_results', {
+      method: 'POST', body: JSON.stringify({ user_id: a.id, role_id: roleId, outcome: 'cleared', reason: 'forged' }),
+    })
+    check('gate_results: A cannot INSERT even its own row (ingest-written only)', insGate.status >= 400, `http ${insGate.status}`)
+  } finally {
+    // Deleting the auth user cascades through every table above.
+    for (const u of [a, b]) if (u) await admin.auth.admin.deleteUser(u.id).catch(() => {})
+    console.log('  probe users deleted')
+  }
+}
+
 main()

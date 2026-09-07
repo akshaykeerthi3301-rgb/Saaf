@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { stripContactDetails, normalise } from '../llm'
+import { stripContactDetails, normalise, cleanTitle } from '../llm'
 
 describe('stripContactDetails', () => {
   it('removes the contact details a skills reader has no need for', () => {
@@ -52,5 +52,39 @@ describe('normalise', () => {
     const r = normalise({ skills: [] })!
     expect(r.skills).toEqual([])
     expect(r.currentTitle).toBeUndefined()
+  })
+})
+
+describe('cleanTitle', () => {
+  it('strips an employer and date tail the model returned as one line', () => {
+    // The exact string Groq returned for this repo's own PDF fixture, which
+    // reached preferred_role and produced an empty shortlist.
+    expect(cleanTitle('Systems Engineer at Infosys Jun 2024 - Present')).toBe('Systems Engineer')
+  })
+
+  it('leaves an already-clean title alone', () => {
+    for (const t of ['Product Manager', 'Senior Manager, Strategy', 'VP of Engineering', 'Associate Director']) {
+      expect(cleanTitle(t)).toBe(t)
+    }
+  })
+
+  it('strips a bare year range', () => {
+    expect(cleanTitle('Business Analyst 2019 - 2021')).toBe('Business Analyst')
+    expect(cleanTitle('Consultant 2021 – Present')).toBe('Consultant')
+  })
+
+  it('strips an employer with no dates', () => {
+    expect(cleanTitle('Product Manager at Paytm')).toBe('Product Manager')
+  })
+
+  it('returns undefined for nothing usable', () => {
+    expect(cleanTitle(undefined)).toBeUndefined()
+    expect(cleanTitle('   ')).toBeUndefined()
+    expect(cleanTitle('at Infosys')).toBeUndefined()
+  })
+
+  it('is applied by normalise(), not merely exported', () => {
+    const r = normalise({ currentTitle: 'Systems Engineer at Infosys Jun 2024 - Present', skills: ['SQL'] })!
+    expect(r.currentTitle).toBe('Systems Engineer')
   })
 })
