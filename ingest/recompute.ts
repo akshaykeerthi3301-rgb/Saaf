@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { evaluateUser } from '@/lib/evaluate-user'
+import { pageAll } from './paging'
 
 /**
  * Re-evaluate every confirmed profile against the current role set.
@@ -21,10 +22,14 @@ import { evaluateUser } from '@/lib/evaluate-user'
 export async function recomputeAll(): Promise<void> {
   const db = createServiceClient()
 
-  const { data: profiles, error: pErr } = await db
-    .from('profiles').select('id').not('confirmed_at', 'is', null)
-  if (pErr) throw pErr
-  if (!profiles?.length) { console.log('  recompute: no confirmed profiles'); return }
+  // Paged. PostgREST caps a response at 1,000 rows and does not say so, so the
+  // unbounded select silently stopped rescoring at the thousandth confirmed
+  // profile — user 1,001 onward would have a shortlist that quietly never
+  // updated again. `.order('id')` gives the total order paging needs.
+  const profiles = await pageAll<{ id: string }>((from, to) =>
+    db.from('profiles').select('id').not('confirmed_at', 'is', null).order('id').range(from, to)
+  )
+  if (!profiles.length) { console.log('  recompute: no confirmed profiles'); return }
 
   for (const p of profiles) {
     const { written } = await evaluateUser(p.id)

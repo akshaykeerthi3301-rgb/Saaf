@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { pageAll } from './paging'
 
 /**
  * Where a digest link should point.
@@ -42,10 +43,16 @@ export async function sendDigests(): Promise<void> {
   // email_verified excludes instant sign-in (src/lib/instant-signin.ts) — it
   // never confirms the candidate owns the address they typed, so mailing it
   // daily would mean mailing a stranger who never asked for it.
-  const { data: profiles } = await db
-    .from('profiles').select('id, city, function')
-    .not('confirmed_at', 'is', null).eq('email_verified', true)
-  if (!profiles?.length) { console.log('  digest: no verified confirmed profiles'); return }
+  // Paged, for the same reason recompute is: past a thousand verified profiles
+  // the unbounded select would silently stop, and the people it stopped at
+  // would simply never receive a digest again — with no error anywhere.
+  const profiles = await pageAll<{ id: string; city: string | null; function: string | null }>(
+    (from, to) =>
+      db.from('profiles').select('id, city, function')
+        .not('confirmed_at', 'is', null).eq('email_verified', true)
+        .order('id').range(from, to)
+  )
+  if (!profiles.length) { console.log('  digest: no verified confirmed profiles'); return }
 
   const { data: audit } = await db
     .from('audit_daily').select('roles_indexed').order('day', { ascending: false }).limit(1).maybeSingle()

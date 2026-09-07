@@ -11,12 +11,39 @@
  */
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole } from './providers'
+import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult } from './providers'
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
+import { pool } from './pool'
+import { collapseRepeats } from './dedupe'
+import { chunk, pageAll } from './paging'
 
 const PRUNE_DAYS = 30
 const BATCH = 500
+
+/**
+ * Longest job description stored, in characters.
+ *
+ * `roles.description` is the heavy column by a wide margin — measured over the
+ * live index it is 2.5 MB of the table on its own, averaging 3.2 KB a role with
+ * a tail to 12 KB. Supabase's free tier is 500 MB total, so it is the column
+ * that decides how large the registry can get before the product costs money.
+ *
+ * 6,000 is set from the actual distribution rather than a round number: the
+ * 95th percentile is 6,805, so nineteen roles in twenty are stored untouched
+ * and the worst case halves. Only two things read this column — skillsFit's
+ * substring matching and requirement extraction — and both are looking for
+ * material that appears in the requirements and responsibilities near the top,
+ * not in the equal-opportunity boilerplate at the bottom.
+ *
+ * The trade accepted: a skill named only in the last 20% of an unusually long
+ * posting stops being matched. That is a worse outcome than storing everything,
+ * and a better one than the index hitting the storage ceiling at 120k roles.
+ */
+const DESCRIPTION_MAX = 6000
+
+/** Board fetch attempts before the board is recorded as failed for the day. */
+const FETCH_ATTEMPTS = 3
 
 /**
  * Boards fetched at once.
@@ -41,16 +68,47 @@ const DETAIL_CONCURRENCY = 6
  * rather than a hard timeout — boards are ordered least-recently-ingested
  * first, so whatever is skipped today is picked up first tomorrow.
  * Leaves room in the 60s budget for recompute, audit and digests.
+ *
+ * Overridable per invocation because the work is now split across separate
+ * cron entries: the ingest route owns nearly the whole 60s window, while the
+ * CLI has no ceiling at all and should sweep the entire registry.
  */
-const INGEST_BUDGET_MS = 38_000
+const INGEST_BUDGET_MS = Number(process.env.INGEST_BUDGET_MS) || 38_000
 
-/** Bounded-concurrency map. No dependency; the pool is four lines. */
-async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>) {
-  let cursor = 0
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) await worker(items[cursor++])
-  })
-  await Promise.all(runners)
+/** Re-exported so the pool has one definition and callers that do not need a
+ *  database do not have to import this module to get it. See ingest/pool.ts —
+ *  scripts/discover-workday.ts used to carry its own copy of the same lines. */
+export { pool } from './pool'
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * A 404 is an answer; a 503 is a blip.
+ *
+ * Retrying a permanent failure spends the run's budget proving something we
+ * already know, and at 2,000 boards that is the difference between rotating
+ * through the registry and not. So only transport faults, timeouts, rate
+ * limits and 5xx are retried.
+ */
+function isTransient(e: unknown): boolean {
+  const m = (e as Error)?.message ?? ''
+  if (/HTTP (5\d\d|429|408)/.test(m)) return true
+  if (/HTTP \d\d\d/.test(m)) return false
+  return true // fetch failed, timeout, socket reset, non-JSON body
+}
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let last: unknown
+  for (let attempt = 0; attempt < FETCH_ATTEMPTS; attempt++) {
+    try {
+      return await fn()
+    } catch (e) {
+      last = e
+      if (!isTransient(e) || attempt === FETCH_ATTEMPTS - 1) break
+      await sleep(400 * 2 ** attempt)
+    }
+  }
+  throw last
 }
 
 const db = createClient(
@@ -63,31 +121,70 @@ type Board = { provider: string; token: string; company_name: string }
 
 const cityFrom = (loc: string) => loc.split(',')[0]?.trim() || null
 
+/**
+ * Push registry/boards.json into the boards table.
+ *
+ * ⚠️ `active` IS WRITTEN ONLY FOR ROWS THAT DID NOT EXIST. The upsert used to
+ * send `active: true` for every board on every run, which silently re-enabled
+ * every board the previous run had disabled for having no India roles. At 31
+ * boards that was a wasted request a day; at 2,000 it is thousands of dead
+ * boards retried forever, eating the rotation budget that real boards need.
+ * Deactivation is a fact the ingest learned, and the registry file has no
+ * standing to overrule it.
+ */
 async function syncRegistry(): Promise<void> {
   const boards = JSON.parse(readFileSync('registry/boards.json', 'utf8')) as Board[]
-  const { error } = await db.from('boards').upsert(
-    boards.map((b) => ({ provider: b.provider, token: b.token, company_name: b.company_name, active: true })),
-    { onConflict: 'provider,token' }
+
+  const existing = await pageAll<{ provider: string; token: string }>((from, to) =>
+    db.from('boards').select('provider, token').order('provider').order('token').range(from, to)
   )
-  if (error) throw error
-  console.log(`  registry synced: ${boards.length} boards`)
+  const known = new Set(existing.map((b) => `${b.provider}:${b.token}`))
+
+  const fresh = boards.filter((b) => !known.has(`${b.provider}:${b.token}`))
+  const seen = boards.filter((b) => known.has(`${b.provider}:${b.token}`))
+
+  for (const part of chunk(fresh, BATCH)) {
+    const { error } = await db.from('boards').insert(
+      part.map((b) => ({ provider: b.provider, token: b.token, company_name: b.company_name, active: true }))
+    )
+    if (error) throw error
+  }
+
+  // Company names can be corrected in the file; `active` is deliberately not
+  // in this payload, so PostgREST's ON CONFLICT UPDATE leaves it alone.
+  for (const part of chunk(seen, BATCH)) {
+    const { error } = await db.from('boards').upsert(
+      part.map((b) => ({ provider: b.provider, token: b.token, company_name: b.company_name })),
+      { onConflict: 'provider,token' }
+    )
+    if (error) throw error
+  }
+
+  console.log(`  registry synced: ${boards.length} boards (${fresh.length} new)`)
 }
 
-async function fetchBoard(b: { id: string; provider: string; token: string }): Promise<NormalisedRole[]> {
+async function fetchBoard(
+  b: { id: string; provider: string; token: string },
+  deadline: number,
+): Promise<FetchResult> {
   const a = ADAPTERS.find((x) => x.provider === b.provider)
   if (!a) throw new Error(`no adapter for ${b.provider}`)
 
   // A provider whose listing is not one GET brings its own fetching — Workday's
-  // is a POST that pages 20 at a time. See the Adapter type.
-  if (a.fetchAll) return a.fetchAll(b.token)
+  // is a POST that pages 20 at a time. See the Adapter type. It reports whether
+  // it reached the end, because a short read must not be treated as the truth.
+  if (a.fetchAll) return withRetry(() => a.fetchAll!(b.token, { deadline }))
 
-  const res = await fetch(a.url(b.token), {
-    headers: { 'User-Agent': USER_AGENT },
-    signal: AbortSignal.timeout(20000),
+  return withRetry(async () => {
+    const res = await fetch(a.url(b.token), {
+      headers: { 'User-Agent': USER_AGENT },
+      signal: AbortSignal.timeout(20000),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    if (!(res.headers.get('content-type') ?? '').includes('json')) throw new Error('non-JSON response')
+    // One GET returns the whole board, so it is complete by construction.
+    return { roles: a.parse(await res.json(), b.token), complete: true }
   })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  if (!(res.headers.get('content-type') ?? '').includes('json')) throw new Error('non-JSON response')
-  return a.parse(await res.json(), b.token)
 }
 
 /**
@@ -100,11 +197,31 @@ async function fetchBoard(b: { id: string; provider: string; token: string }): P
  * which is exactly the state it was already in, and is never worth failing a
  * whole board over.
  */
-async function fillDescriptions(provider: string, token: string, roles: NormalisedRole[]) {
+async function fillDescriptions(
+  provider: string,
+  token: string,
+  roles: NormalisedRole[],
+  deadline: number,
+) {
   const a = adapterFor(provider)
-  if (!a?.detailUrl || !a.parseDetail) return
+  if (!a?.detailUrl || !a.parseDetail) return 0
 
+  let skipped = 0
   await pool(roles, DETAIL_CONCURRENCY, async (r) => {
+    // ⚠️ THE DEADLINE IS WHAT KEEPS ONE BIG BOARD FROM DEADLOCKING THE RUN.
+    // This is one request per kept role: a Workday tenant with 800 India
+    // postings is 800 requests, minutes of work, inside a 52-second function.
+    // The function would be killed here — before the upsert, so nothing is
+    // written and `last_ingested_at` is never stamped — and the board would
+    // sort first again tomorrow, and every day after, with the rest of the
+    // registry queued behind it forever.
+    //
+    // Abandoning descriptions is a small, already-tolerated loss: the role is
+    // still indexed and still ranks on its title, exactly as it does when a
+    // detail fetch fails. The board gets stamped, rotation moves on, and the
+    // descriptions arrive on a later run that reaches this board earlier in
+    // its budget.
+    if (Date.now() > deadline) { skipped++; return }
     try {
       const res = await fetch(a.detailUrl!(token, r.externalId), {
         headers: { 'User-Agent': USER_AGENT },
@@ -116,10 +233,12 @@ async function fillDescriptions(provider: string, token: string, roles: Normalis
       // Leave the description empty; the role still ranks on its title.
     }
   })
+  return skipped
 }
 
-export async function runIngest() {
+export async function runIngest(opts: { budgetMs?: number } = {}) {
   const started = Date.now()
+  const budgetMs = opts.budgetMs ?? INGEST_BUDGET_MS
   await syncRegistry()
 
   // One cheap probe, once per run. max_years arrives with migration 0018, and
@@ -137,21 +256,55 @@ export async function runIngest() {
   }
 
   // Least-recently-ingested first, so a run that runs out of budget resumes
-  // where it stopped instead of re-fetching the same head of the list.
-  const { data: boards, error: bErr } = await db
-    .from('boards').select('id, provider, token, company_name').eq('active', true)
-    .order('last_ingested_at', { ascending: true, nullsFirst: true })
-  if (bErr) throw bErr
+  // where it stopped instead of re-fetching the same head of the list. Paged,
+  // because the unlimited select silently stopped at 1,000 boards — which is
+  // half the registry Phase 3 builds.
+  //
+  // `id` breaks the tie. last_ingested_at is not unique (a run stamps dozens of
+  // boards within the same millisecond), and paging an unstable order returns
+  // some rows twice and others never.
+  const boards = await pageAll<{ id: string; provider: string; token: string; company_name: string }>(
+    (from, to) =>
+      db.from('boards').select('id, provider, token, company_name').eq('active', true)
+        .order('last_ingested_at', { ascending: true, nullsFirst: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+  )
 
   let indexed = 0
   let ok = 0
   let skipped = 0
-  const seenRoleIds: string[] = []
+  let partial = 0
+  let undescribed = 0
+  let retiredCopies = 0
 
-  await pool(boards ?? [], CONCURRENCY, async (b) => {
-    if (Date.now() - started > INGEST_BUDGET_MS) { skipped++; return }
+  /**
+   * When every board must have stopped fetching.
+   *
+   * Distinct from `budgetMs`, which only decides whether to START a board. A
+   * board already in flight has no ceiling without this, and one large enough
+   * to outlast the whole function is the failure that matters: it is killed
+   * before its upsert, so it is never stamped `last_ingested_at`, so it sorts
+   * first again tomorrow and blocks the registry behind it permanently.
+   */
+  const deadline = started + Math.round(budgetMs * 1.15)
+
+  /**
+   * Boards whose full posting list we actually saw this run.
+   *
+   * ⚠️ THE PRUNE READS THIS AND NOTHING ELSE. A board that was skipped for
+   * time, failed, or returned a short read is absent here, so its roles are
+   * never eligible for deletion. The old prune was global — every role unseen
+   * for 30 days went, whether or not its board had been visited — which at
+   * ~80 boards meant rotation itself deleted the index. See docs/CONFLICTS.md
+   * F1 and F2.
+   */
+  const completedBoardIds: string[] = []
+
+  await pool(boards, CONCURRENCY, async (b) => {
+    if (Date.now() - started > budgetMs) { skipped++; return }
     try {
-      const roles = await fetchBoard(b)
+      const { roles, complete } = await fetchBoard(b, deadline)
       indexed += roles.length
       // Deduplicate on external_id before upserting. Postgres rejects an
       // ON CONFLICT batch that touches the same row twice, and at least one
@@ -169,10 +322,38 @@ export async function runIngest() {
         .map((r) => ({ ...r, title: normaliseTitle(r.title) }))
         .filter((r) => isCorporateRole(r.title) && !isJunkPosting(r.title))
       const droppedGig = indiaRaw.length - kept.length
-      const india = [...new Map(kept.map((r) => [r.externalId, r])).values()]
+
+      /**
+       * Two rounds of deduplication, and they catch different things.
+       *
+       * external_id       Postgres rejects an ON CONFLICT batch that touches the
+       *                   same row twice, and at least one board (apna)
+       *                   publishes the same shortcode more than once — which
+       *                   failed the whole board rather than one role.
+       *
+       * title + location  ⚠️ THE ONE THE CANDIDATE SEES. Large employers post
+       *                   the same vacancy repeatedly under fresh requisition
+       *                   ids: H&M listed "Sales Advisor" 61 times, Solera
+       *                   "Principal Software Engineer" 52 times. Every copy has
+       *                   a distinct external_id, so the round above keeps them
+       *                   all, and the shortlist shows the same card over and
+       *                   over. Measured over the first full-scale ingest this
+       *                   was 2,141 redundant rows.
+       *
+       *                   Location is part of the key on purpose. A role open in
+       *                   Bengaluru AND Pune is two real choices to a candidate
+       *                   — collapsing those would hide a job rather than a
+       *                   duplicate, which is the opposite failure.
+       */
+      const byExternalId = [...new Map(kept.map((r) => [r.externalId, r])).values()]
+
+      // See ingest/dedupe.ts — the rule and the reason it must be stable.
+      const india = collapseRepeats(byExternalId)
+      const droppedDupes = byExternalId.length - india.length
 
       // Fetched only for roles we are actually keeping.
-      await fillDescriptions(b.provider, b.token, india)
+      const noDescription = await fillDescriptions(b.provider, b.token, india, deadline)
+      if (noDescription) undescribed += noDescription
 
       if (india.length) {
         // Extracted once and reused for both the role row and its requirements
@@ -182,36 +363,41 @@ export async function runIngest() {
           india.map((r) => [r.externalId, extractAll(r.description, r.locationRaw, r.title)])
         )
 
-        const { data: up, error } = await db.from('roles').upsert(
-          india.map((r) => ({
-            board_id: b.id,
-            external_id: r.externalId,
-            title: r.title,
-            location_raw: r.locationRaw,
-            in_india: true,
-            city: cityFrom(r.locationRaw),
-            function: classifyFunction(r.title),
-            description: r.description,
-            apply_url: r.applyUrl,
-            posted_at: r.postedAt,
-            company_name: b.company_name,
-            // The posting talks about years of experience but we could not
-            // read a requirement confident enough to gate on. Such a role is
-            // never shown as plainly cleared — see src/app/(app)/today.
-            unread_experience_mention: mentionsUnreadExperience(
-              r.description,
-              extracted.get(r.externalId) ?? []
-            ),
-            last_seen_at: new Date().toISOString(),
-          })),
-          { onConflict: 'board_id,external_id' }
-        ).select('id, external_id')
-        if (error) throw error
+        // Chunked. The returned representation is capped at 1,000 rows, so a
+        // single upsert of a large Workday board came back short and every role
+        // past the cap silently lost its requirements.
+        const idFor = new Map<string, string>()
+        for (const part of chunk(india, BATCH)) {
+          const { data: up, error } = await db.from('roles').upsert(
+            part.map((r) => ({
+              board_id: b.id,
+              external_id: r.externalId,
+              title: r.title,
+              location_raw: r.locationRaw,
+              in_india: true,
+              city: cityFrom(r.locationRaw),
+              function: classifyFunction(r.title),
+              description: r.description.slice(0, DESCRIPTION_MAX),
+              apply_url: r.applyUrl,
+              posted_at: r.postedAt,
+              company_name: b.company_name,
+              // The posting talks about years of experience but we could not
+              // read a requirement confident enough to gate on. Such a role is
+              // never shown as plainly cleared — see src/app/(app)/today.
+              unread_experience_mention: mentionsUnreadExperience(
+                r.description,
+                extracted.get(r.externalId) ?? []
+              ),
+              last_seen_at: new Date().toISOString(),
+            })),
+            { onConflict: 'board_id,external_id' }
+          ).select('id, external_id')
+          if (error) throw error
+          for (const row of up ?? []) idFor.set(row.external_id, row.id)
+        }
 
         // Requirements are re-extracted each run: descriptions change, and the
         // extractor itself improves.
-        const idFor = new Map((up ?? []).map((r) => [r.external_id, r.id]))
-        seenRoleIds.push(...(up ?? []).map((r) => r.id))
         const reqs = india.flatMap((r) => {
           const rid = idFor.get(r.externalId)
           if (!rid) return []
@@ -229,26 +415,83 @@ export async function runIngest() {
             confidence: q.confidence,
           }))
         })
-        await db.from('role_requirements').delete().in('role_id', [...idFor.values()])
-        for (let i = 0; i < reqs.length; i += BATCH) {
-          const { error: qErr } = await db.from('role_requirements').insert(reqs.slice(i, i + BATCH))
+        // Chunked for the same reason every `.in()` here is: a few hundred
+        // uuids in a query string is a URL length no proxy is obliged to serve.
+        for (const part of chunk([...idFor.values()], 100)) {
+          const { error: dErr } = await db.from('role_requirements').delete().in('role_id', part)
+          if (dErr) throw dErr
+        }
+        for (const part of chunk(reqs, BATCH)) {
+          const { error: qErr } = await db.from('role_requirements').insert(part)
           if (qErr) throw qErr
+        }
+
+        /**
+         * Retire this board's stale copies of a posting we just kept.
+         *
+         * ⚠️ WITHOUT THIS, DEDUPLICATION NEVER CONVERGES. collapseRepeats keeps
+         * one row per title+location, chosen deterministically — but only from
+         * what the board publishes TODAY. When the employer adds another
+         * requisition for the same vacancy tomorrow, the winner legitimately
+         * changes, the upsert writes the new one, and yesterday's winner stays
+         * behind as an orphan until the 30-day prune. Measured: cleaning 660
+         * duplicates and re-sweeping produced 301 fresh ones. A stable sort
+         * fixes which copy wins; only this fixes the copies that already lost.
+         *
+         * Scoped as narrowly as it can be: same board, same title and location
+         * as something we just kept, different external_id. It cannot touch a
+         * role the board still publishes, and it cannot touch another board.
+         *
+         * Complete fetches only, for the same reason the prune is — a partial
+         * read is not evidence about what the employer has withdrawn.
+         */
+        if (complete && Date.now() < deadline) {
+          const keptIds = new Set(india.map((r) => r.externalId))
+          const keptKeys = new Set(
+            india.map((r) => `${r.title.toLowerCase()}||${r.locationRaw.toLowerCase()}`)
+          )
+          const existing = await pageAll<{ id: string; external_id: string; title: string; location_raw: string | null }>(
+            (from, to) => db.from('roles').select('id, external_id, title, location_raw')
+              .eq('board_id', b.id).order('id').range(from, to)
+          )
+          const orphans = existing
+            .filter((r) =>
+              !keptIds.has(r.external_id) &&
+              keptKeys.has(`${r.title.toLowerCase()}||${(r.location_raw ?? '').toLowerCase()}`))
+            .map((r) => r.id)
+          for (const part of chunk(orphans, 100)) {
+            const { error: oErr } = await db.from('roles').delete().in('id', part)
+            if (oErr) throw oErr
+          }
+          retiredCopies += orphans.length
         }
       }
 
       await db.from('boards').update({
         last_ingested_at: new Date().toISOString(),
-        last_error: null,
+        last_error: complete ? null : 'partial fetch — board not fully paged; roles kept, prune skipped',
         // A board with no India roles at all is the wrong company. `slice` on
         // Greenhouse is a North Macedonian firm, not the Indian fintech —
         // guessing slugs finds the wrong employer, so stop fetching it daily.
         // Checked against indiaRaw, not the corporate-filtered `india` — a
         // board that's the right company but only posted gig work on a given
         // day was being permanently deactivated by this check before the fix.
-        active: indiaRaw.length > 0,
+        //
+        // ⚠️ Only on a COMPLETE read. A board that timed out on page 3 has not
+        // demonstrated it has no India roles; deactivating it on a partial
+        // fetch retires a real employer over a network blip.
+        ...(complete ? { active: indiaRaw.length > 0 } : {}),
       }).eq('id', b.id)
+
+      // A partial board keeps every role it already had: its unreturned
+      // postings are not gone from the employer's site, we simply did not
+      // reach them. Pruning on that evidence deleted ~97% of a large Workday
+      // company's index in one run. See docs/CONFLICTS.md F2.
+      if (complete) completedBoardIds.push(b.id)
+      else partial++
+
       ok++
-      console.log(`  ✓ ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} non-corporate dropped)` : ''}`)
+      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} non-corporate dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${complete ? '' : '  PARTIAL'}`)
     } catch (e) {
       // One board failing must never halt the run — the registry compounding is
       // the moat, and a provider outage is not a reason to lose a day.
@@ -261,19 +504,88 @@ export async function runIngest() {
   })
 
   // Prune. Load-bearing for the 500 MB free tier, not housekeeping.
+  //
+  // Scoped to boards fully ingested THIS run. Wall-clock alone is the wrong
+  // test the moment the registry is bigger than one run can sweep: rotation
+  // means most boards are legitimately 30+ days unvisited, and the global
+  // delete read that as "these jobs are gone".
   const cutoff = new Date(Date.now() - PRUNE_DAYS * 86400_000).toISOString()
-  const { count: pruned } = await db
-    .from('roles').delete({ count: 'exact' }).lt('last_seen_at', cutoff)
-  console.log(`  pruned ${pruned ?? 0} roles unseen for ${PRUNE_DAYS} days`)
+  let pruned = 0
+  for (const part of chunk(completedBoardIds, 100)) {
+    const { count, error } = await db
+      .from('roles').delete({ count: 'exact' }).in('board_id', part).lt('last_seen_at', cutoff)
+    if (error) throw error
+    pruned += count ?? 0
+  }
+
+  // Retired boards, swept separately.
+  //
+  // Scoping the prune to boards ingested this run fixes the deletion bug, and
+  // introduces a leak in the other direction: a board deactivated for having no
+  // India roles is never fetched again, so it is never in completedBoardIds, so
+  // whatever roles it left behind are immortal. One board is nothing; the
+  // qualification sweep produces thousands, and the 500 MB free tier is the
+  // thing that pays for it.
+  //
+  // Safe because deactivation is not a guess. A board is only deactivated after
+  // a COMPLETE fetch that returned zero India roles — so its stored roles are
+  // known to be gone from the employer's site, not merely unvisited.
+  //
+  // ⚠️ IT CANNOT BE SCOPED TO BOARDS DEACTIVATED IN THIS RUN, which is the
+  // obvious cheaper version. A board deactivated today still has roles seen
+  // today; they only become prunable thirty days later, by which time the board
+  // is long retired and no run would look at it again. So the whole retired set
+  // has to be swept periodically.
+  //
+  // Budget-aware, because it is one request per hundred retired boards and the
+  // retired set grows with the registry — at ten thousand dead boards that is a
+  // hundred round-trips, which is a real share of a 60-second function. Skipping
+  // it costs nothing but a day: these roles are already invisible to the
+  // product (their board is inactive), so this is storage hygiene, not supply.
+  let orphaned = 0
+  let retiredSwept = 0
+  if (Date.now() - started < budgetMs) {
+    const retired = await pageAll<{ id: string }>((from, to) =>
+      db.from('boards').select('id').eq('active', false).order('id').range(from, to)
+    )
+    for (const part of chunk(retired.map((b) => b.id), 100)) {
+      if (Date.now() - started > budgetMs) break
+      const { count, error } = await db
+        .from('roles').delete({ count: 'exact' }).in('board_id', part).lt('last_seen_at', cutoff)
+      if (error) throw error
+      orphaned += count ?? 0
+      retiredSwept += part.length
+    }
+  }
 
   console.log(
-    `  ${ok}/${boards?.length ?? 0} boards ok · ${indexed} roles seen` +
+    `  pruned ${pruned} roles unseen for ${PRUNE_DAYS} days ` +
+    `across ${completedBoardIds.length} fully-ingested boards` +
+    `${orphaned ? ` · ${orphaned} more from ${retiredSwept} retired boards` : ''}`
+  )
+
+  console.log(
+    `  ${ok}/${boards.length} boards ok · ${indexed} roles seen` +
+    `${partial ? ` · ${partial} partial` : ''}` +
+    `${undescribed ? ` · ${undescribed} roles left undescribed for time` : ''}` +
+    `${retiredCopies ? ` · ${retiredCopies} superseded repeat postings retired` : ''}` +
     `${skipped ? ` · ${skipped} skipped for time, first up next run` : ''}` +
     ` · ${Math.round((Date.now() - started) / 1000)}s`
   )
-  return { indexed }
+  return { indexed, boards: boards.length, ok, partial, skipped, pruned: pruned + orphaned }
 }
 
+/**
+ * Every stage, in order. This is the CLI's entry point and the local
+ * verification path — `npm run ingest` runs the whole pipeline end to end.
+ *
+ * ⚠️ IT IS NO LONGER WHAT THE CRON CALLS. Four stages chained inside one
+ * Vercel function shared a single 60-second budget, so ingest starved recompute
+ * and recompute starved the digest; docs/CONFLICTS.md F4 and F5 are both that
+ * one fact. Vercel Hobby allows 100 cron jobs per project (one run per day
+ * each), so the stages are now four separate cron paths with a full function
+ * budget apiece. See vercel.json and src/app/api/cron/.
+ */
 export async function runAll() {
   const { indexed } = await runIngest()
   const { recomputeAll } = await import('./recompute')

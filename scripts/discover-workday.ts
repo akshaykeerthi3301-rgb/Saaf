@@ -12,6 +12,7 @@
  * stranger's company in it.
  */
 import { ADAPTERS } from '../ingest/providers/index'
+import { pool } from '../ingest/pool'
 import { resolveInIndia } from '../src/gates/extract'
 
 const WD_HOSTS = ['wd1', 'wd2', 'wd3', 'wd5', 'wd10', 'wd12', 'wd101', 'wd103']
@@ -55,13 +56,6 @@ async function alive(host: string, tenant: string, site: string): Promise<boolea
   } catch { return false }
 }
 
-async function pool<T>(items: T[], n: number, fn: (t: T) => Promise<void>) {
-  const queue = [...items]
-  await Promise.all(Array.from({ length: n }, async () => {
-    for (let it = queue.shift(); it !== undefined; it = queue.shift()) await fn(it)
-  }))
-}
-
 const found: { token: string; company: string; india: number }[] = []
 
 async function main() {
@@ -72,7 +66,7 @@ await pool(CANDIDATES, 4, async ([tenant, company]) => {
       if (!(await alive(host, tenant, site))) continue
       const token = `${host}/${site}`
       try {
-        const roles = await wd.fetchAll!(token)
+        const { roles } = await wd.fetchAll!(token)
         const india = roles.filter((r) => resolveInIndia(r.locationRaw)).length
         if (india > 0) {
           found.push({ token, company, india })

@@ -8,6 +8,18 @@ export type NormalisedRole = {
   postedAt: string | null
 }
 
+/**
+ * What one board fetch returned, and whether it is the WHOLE board.
+ *
+ * ⚠️ `complete` IS LOAD-BEARING, NOT INFORMATIONAL. ingest/run.ts prunes only
+ * boards that came back complete, and skips the active/inactive judgement for
+ * ones that did not. A paging adapter that times out on page 3 has seen 40 of
+ * 400 postings; upserting that as if it were the board's full list made the
+ * other 360 stop being refreshed, and the 30-day prune then deleted them.
+ * See docs/CONFLICTS.md F2.
+ */
+export type FetchResult = { roles: NormalisedRole[]; complete: boolean }
+
 export type Provider =
   | 'greenhouse' | 'lever' | 'ashby' | 'workable' | 'recruitee' | 'smartrecruiters'
   | 'workday'
@@ -38,8 +50,18 @@ export type Adapter = {
    * Workday's is a POST carrying a JSON body, capped at 20 results a page
    * (measured — 50 and 100 both return nothing), so it has to page. When this
    * is present the ingest calls it instead of `url` + `parse`.
+   *
+   * It must report `complete` honestly: true only when it reached the end of
+   * the listing, false when it stopped on its own page cap. See FetchResult.
+   *
+   * `deadline` is an epoch-ms instant after which the adapter should stop
+   * paging and return what it has, with `complete: false`. It exists because a
+   * large Workday tenant can page for longer than the whole cron budget, and a
+   * board that never finishes is never stamped `last_ingested_at` — so it
+   * sorts first again next run and blocks the rotation behind it forever.
+   * Stopping early is safe precisely because `complete: false` is honest.
    */
-  fetchAll?: (token: string) => Promise<NormalisedRole[]>
+  fetchAll?: (token: string, opts?: { deadline?: number }) => Promise<FetchResult>
 }
 
 export const USER_AGENT =

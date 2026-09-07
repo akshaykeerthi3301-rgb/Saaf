@@ -1,8 +1,14 @@
-import { toText, str, USER_AGENT, type Adapter, type NormalisedRole } from './types'
+import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
 
 type Rec = Record<string, unknown>
 const rec = (v: unknown): Rec => (v && typeof v === 'object' ? (v as Rec) : {})
 const arr = (v: unknown): Rec[] => (Array.isArray(v) ? (v as Rec[]) : [])
+
+const SR_LIST = 'https://api.smartrecruiters.com/v1/companies/'
+/** SmartRecruiters' documented maximum page size. */
+const SR_PAGE = 100
+/** 100 pages = 10,000 postings a board, far past any real employer. */
+const SR_MAX_PAGES = 100
 
 /**
  * One adapter per provider, deliberately. A generic parser looks tempting and
@@ -80,7 +86,9 @@ export const ADAPTERS: Adapter[] = [
   },
   {
     provider: 'smartrecruiters',
-    url: (t) => `https://api.smartrecruiters.com/v1/companies/${t}/postings?limit=100`,
+    /** Kept for the discovery scripts, which only need to know a board exists.
+     *  The ingest goes through fetchAll below, which pages. */
+    url: (t) => `${SR_LIST}${t}/postings?limit=${SR_PAGE}`,
     parse: (raw, token) =>
       arr(rec(raw).content).map<NormalisedRole>((j) => ({
         externalId: str(j.id),
@@ -97,7 +105,46 @@ export const ADAPTERS: Adapter[] = [
         postedAt: (j.releasedDate as string) ?? null,
       })),
 
-    detailUrl: (t, id) => `https://api.smartrecruiters.com/v1/companies/${t}/postings/${id}`,
+    /**
+     * SmartRecruiters pages, and the old adapter did not.
+     *
+     * The listing URL was pinned at `limit=100` with no offset, so **every
+     * posting past the hundredth was invisible** — silently, since the payload
+     * reports `totalFound` and nothing read it. Swiggy holds 67 today so the
+     * bug never showed; a Big-4 or a large product company holds thousands.
+     * docs/CONFLICTS.md F9.
+     *
+     * `totalFound` is reported on every page here (unlike Workday, where only
+     * page 0 carries it), so the loop is a plain offset walk.
+     */
+    fetchAll: async (token, opts): Promise<FetchResult> => {
+      const roles: NormalisedRole[] = []
+      let total = Infinity
+
+      for (let page = 0; page < SR_MAX_PAGES; page++) {
+        // Out of time. Returning incomplete keeps run.ts from pruning what we
+        // did not reach, and lets the board be stamped so rotation moves on.
+        if (opts?.deadline && Date.now() > opts.deadline) return { roles, complete: false }
+        const res = await fetch(`${SR_LIST}${token}/postings?limit=${SR_PAGE}&offset=${page * SR_PAGE}`, {
+          headers: { 'User-Agent': USER_AGENT },
+          signal: AbortSignal.timeout(20000),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const body = rec(await res.json())
+        total = Number(body.totalFound ?? total)
+
+        const batch = ADAPTERS.find((a) => a.provider === 'smartrecruiters')!.parse(body, token)
+        roles.push(...batch)
+        if (batch.length < SR_PAGE || roles.length >= total) {
+          return { roles, complete: true }
+        }
+      }
+      // Ran out of pages before running out of postings. Reporting this
+      // honestly is what stops run.ts pruning the ones we never reached.
+      return { roles, complete: roles.length >= total }
+    },
+
+    detailUrl: (t, id) => `${SR_LIST}${t}/postings/${id}`,
 
     // jobDescription + qualifications only. companyDescription is boilerplate
     // ("Swiggy is India's leading...") and actively harmful here: it is the
@@ -137,8 +184,30 @@ export const ADAPTERS: Adapter[] = [
  * 38-second budget.
  */
 const WD_PAGE = 20
-/** 20 pages = 400 India postings a board. The largest tenant probed holds 244. */
-const WD_MAX_PAGES = 20
+/**
+ * 150 pages = 3,000 India postings a board.
+ *
+ * Was 20 — a 400-role ceiling, chosen when a short read was indistinguishable
+ * from a complete one and therefore dangerous: stopping early upserted a
+ * partial list as if it were the whole board, and the prune deleted the rest.
+ * Now that fetchAll reports `complete` and run.ts refuses to prune an
+ * incomplete board, paging deeper costs requests and nothing else. The largest
+ * tenant probed holds 244; Big-4 and big-tech tenants hold far more.
+ *
+ * Env-overridable for scripts/qualify-boards.ts, which only needs to know
+ * whether a tenant has ANY India role and sets it to 1 — the difference
+ * between two requests per candidate and a hundred, across thousands of them.
+ */
+/**
+ * ⚠️ READ AT CALL TIME, NOT AT MODULE LOAD. As a module-level `const` this was
+ * silently unoverridable: ES imports are evaluated before any statement in the
+ * importing module's body, so scripts/qualify-boards.ts setting
+ * `process.env.WD_MAX_PAGES = '1'` on its first line ran *after* this file had
+ * already read the default. The qualification sweep was paging every Workday
+ * tenant in full — a hundred requests a candidate across thousands of them —
+ * while looking exactly like it was doing one.
+ */
+const wdMaxPages = () => Number(process.env.WD_MAX_PAGES) || 150
 
 const wdParts = (token: string) => {
   const slash = token.indexOf('/')
@@ -227,20 +296,27 @@ ADAPTERS.push({
   // Never called — fetchAll below replaces url+parse for this provider.
   parse: () => [],
 
-  fetchAll: async (token) => {
+  fetchAll: async (token, opts) => {
     const { host, site } = wdParts(token)
     const facet = await wdIndiaFacet(token)
 
     // No India facet means the tenant posts nothing in India. Returning empty
     // is the honest answer and costs one request, rather than paging 400
-    // postings to discover the same thing.
-    if (!facet) return []
+    // postings to discover the same thing. Complete: we asked and got an
+    // answer, so run.ts is entitled to deactivate the board on it.
+    if (!facet) return { roles: [], complete: true }
 
     const [param, id] = facet.split('|')
     const out: NormalisedRole[] = []
     let total = Infinity
+    let complete = false
 
-    for (let page = 0; page < WD_MAX_PAGES; page++) {
+    const maxPages = wdMaxPages()
+    for (let page = 0; page < maxPages; page++) {
+      // Same deadline contract as SmartRecruiters. A tenant with 3,000 India
+      // postings pages for over a minute; the cron function has 52 seconds for
+      // the entire registry.
+      if (opts?.deadline && Date.now() > opts.deadline) return { roles: out, complete: false }
       const body = await wdPost(token, {
         appliedFacets: { [param]: [id] },
         limit: WD_PAGE,
@@ -250,7 +326,8 @@ ADAPTERS.push({
       if (page === 0) total = Number(body.total ?? 0)
 
       const postings = arr(body.jobPostings)
-      if (postings.length === 0) break
+      // An empty page means the listing ended, which is a complete read.
+      if (postings.length === 0) { complete = true; break }
 
       for (const j of postings) {
         const path = str(j.externalPath)
@@ -269,9 +346,11 @@ ADAPTERS.push({
           postedAt: null,
         })
       }
-      if (out.length >= total || postings.length < WD_PAGE) break
+      if (out.length >= total || postings.length < WD_PAGE) { complete = true; break }
     }
-    return out
+    // Falling out of the loop having neither reached `total` nor seen a short
+    // page means the page cap stopped us. run.ts must not prune this board.
+    return { roles: out, complete }
   },
 
   detailUrl: (token, externalId) => `${wdBase(token)}${externalId}`,
