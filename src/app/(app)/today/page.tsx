@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ChevronRight, Eye, Laptop, ShieldCheck, Target, Wallet } from 'lucide-react'
+import { ChevronRight, Eye, Laptop, ShieldCheck, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'

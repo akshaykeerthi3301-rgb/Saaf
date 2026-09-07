@@ -10,6 +10,7 @@ export type NormalisedRole = {
 
 export type Provider =
   | 'greenhouse' | 'lever' | 'ashby' | 'workable' | 'recruitee' | 'smartrecruiters'
+  | 'workday'
 
 export type Adapter = {
   provider: Provider
@@ -29,6 +30,16 @@ export type Adapter = {
   detailUrl?: (token: string, externalId: string) => string
   /** Detail payload → the description text. */
   parseDetail?: (raw: unknown) => string
+
+  /**
+   * For a provider whose listing is not one GET.
+   *
+   * The five original adapters are a single GET returning every posting.
+   * Workday's is a POST carrying a JSON body, capped at 20 results a page
+   * (measured — 50 and 100 both return nothing), so it has to page. When this
+   * is present the ingest calls it instead of `url` + `parse`.
+   */
+  fetchAll?: (token: string) => Promise<NormalisedRole[]>
 }
 
 export const USER_AGENT =

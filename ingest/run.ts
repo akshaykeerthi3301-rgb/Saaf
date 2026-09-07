@@ -76,6 +76,11 @@ async function syncRegistry(): Promise<void> {
 async function fetchBoard(b: { id: string; provider: string; token: string }): Promise<NormalisedRole[]> {
   const a = ADAPTERS.find((x) => x.provider === b.provider)
   if (!a) throw new Error(`no adapter for ${b.provider}`)
+
+  // A provider whose listing is not one GET brings its own fetching — Workday's
+  // is a POST that pages 20 at a time. See the Adapter type.
+  if (a.fetchAll) return a.fetchAll(b.token)
+
   const res = await fetch(a.url(b.token), {
     headers: { 'User-Agent': USER_AGENT },
     signal: AbortSignal.timeout(20000),
