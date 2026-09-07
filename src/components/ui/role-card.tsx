@@ -2,7 +2,7 @@ import { AlertCircle, ChevronRight, MapPin, Quote } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
 import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
-import type { ScoreBreakdown } from '@/match/score'
+import type { ScoreBreakdown, ScoreComponent } from '@/match/score'
 
 /** One requirement the extractor read out of a posting, with the sentence it
  *  came from. Lived in the retired `row.tsx` alongside the three-outcome role
@@ -41,10 +41,30 @@ export type EvidenceItem = {
  * face of the card. It is no longer the headline.
  */
 function bandFor(score: number): string {
-  if (score >= 75) return 'Strong match'
-  if (score >= 60) return 'Good match'
+  if (score >= 75) return 'High-precision match'
+  if (score >= 60) return 'Strong match'
   if (score >= 45) return 'Worth a look'
   return 'Long shot'
+}
+
+/**
+ * The two figures under the ring.
+ *
+ * The design put "Industry Context 9/10" and "Trajectory 8/10" here. Neither
+ * component exists — they were never built and the numbers were mock data — so
+ * printing them would be the product inventing a measurement, which is the one
+ * thing docs/PROJECT-STATE.md forbids outright.
+ *
+ * The shape is kept and filled with components that ARE real: the two carrying
+ * the most weight in this role's actual score, out of the five the scorer
+ * computes. Same information architecture, numbers that survive being checked
+ * against the breakdown one click below.
+ */
+function headlineComponents(components: ScoreComponent[]) {
+  return components
+    .filter((c) => c.key !== 'cap' && c.max > 0)
+    .sort((a, b) => b.max - a.max)
+    .slice(0, 2)
 }
 
 type Props = {
@@ -120,53 +140,71 @@ export function RoleCard({
   )
   const components = breakdown?.components ?? []
 
+  const headline = headlineComponents(components)
+  const strongBand = score >= 75
+
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-      <div className="grid gap-5 sm:grid-cols-[1fr_150px]">
+      <div className="grid gap-5 lg:grid-cols-[1fr_230px]">
         <div className="flex min-w-0 flex-col">
-          <div className="flex min-w-0 items-start gap-2">
-            {isNew && (
+          {/* The badge row. "Early applicant" from the design is gone — we do
+              not track how many people have applied, or when. "New" is a fact
+              we do hold: first shown to this candidate inside seven days. */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${
+                strongBand ? 'bg-accent/10 text-accent' : 'bg-secondary text-muted-foreground'
+              }`}
+            >
+              {band}
+            </span>
+            {isNew ? (
               <span
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-accent"
-                title="First shown in the last 7 days"
-                aria-label="New"
-              />
-            )}
-            <div className="min-w-0">
-              {applyUrl ? (
-                <a
-                  href={applyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary hover:underline sm:text-xl"
-                >
-                  {title}
-                </a>
-              ) : (
-                <h3 className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary sm:text-xl">
-                  {title}
-                </h3>
-              )}
-              {/* Company and city on one line. They were two rows and two
-                  bordered chips; neither fact needs a box around it. */}
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
-                {company}
-                {city ? (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <MapPin className="size-3" aria-hidden="true" />
-                    {city}
-                  </>
-                ) : null}
-                {breakdown?.confidence === 'low' ? (
-                  <AlertCircle
-                    className="size-3.5 text-muted-foreground"
-                    aria-label="The posting states an experience bar we could not read confidently"
-                  />
-                ) : null}
-              </p>
-            </div>
+                className="rounded-md bg-secondary px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+                title="First shown to you in the last 7 days"
+              >
+                New
+              </span>
+            ) : null}
+            {breakdown?.confidence === 'low' ? (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+                title="The posting states an experience bar we could not read confidently"
+              >
+                <AlertCircle className="size-3" aria-hidden="true" />
+                Bar unread
+              </span>
+            ) : null}
           </div>
+
+          {applyUrl ? (
+            <a
+              href={applyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xl font-semibold leading-snug tracking-[-0.035em] text-primary hover:underline sm:text-2xl"
+            >
+              {title}
+            </a>
+          ) : (
+            <h3 className="text-xl font-semibold leading-snug tracking-[-0.035em] text-primary sm:text-2xl">
+              {title}
+            </h3>
+          )}
+          <p className="mt-1 text-sm text-muted-foreground">{company}</p>
+
+          {/* Fact chips. The design also showed "Full-time" and a salary band;
+              we extract neither — employment type is not parsed at all, and 12
+              of 799 postings state pay. A chip is only here when the value
+              behind it was actually read from the posting. */}
+          {city ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1.5 text-xs text-primary">
+                <MapPin className="size-3" aria-hidden="true" />
+                {city}
+              </span>
+            </div>
+          ) : null}
 
           {/* The one line explaining the number. Never removed: a score without
               its reason is the exact failure this product exists to correct. */}
@@ -229,7 +267,7 @@ export function RoleCard({
           </div>
         </div>
 
-        <FitScore score={score} band={band} strong={strong} />
+        <FitScore score={score} band={band} strong={strong} components={headline} />
       </div>
     </article>
   )
@@ -243,27 +281,75 @@ export function RoleCard({
  * already shows, so both are gone — four fewer lines of text on every card, no
  * fact removed from the page.
  */
-function FitScore({ score, band, strong }: { score: number; band: string; strong: boolean }) {
+/**
+ * The score panel: a progress ring over the ink ground, as designed.
+ *
+ * The ring is drawn rather than approximated with a border, so the arc is the
+ * score — a reader can see 88 and 41 differ without reading the number. Same
+ * reason the number is monospace and tabular: it is a measurement.
+ *
+ * The two figures beneath are real components of THIS role's score, not the
+ * mocked "Industry Context" and "Trajectory" the design showed. See
+ * headlineComponents().
+ */
+function FitScore({
+  score, band, strong, components,
+}: {
+  score: number
+  band: string
+  strong: boolean
+  components: ScoreComponent[]
+}) {
+  const r = 34
+  const circumference = 2 * Math.PI * r
+  const filled = Math.max(0, Math.min(100, score)) / 100
+
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-2xl px-4 py-5 text-center ${
+      className={`flex flex-col items-center justify-center rounded-2xl px-4 py-6 text-center ${
         strong ? 'bg-primary text-primary-foreground' : 'bg-secondary text-primary'
       }`}
     >
-      <div
-        className={`flex size-20 items-center justify-center rounded-full border-[6px] ${
-          strong ? 'border-accent bg-primary/70' : 'border-muted-foreground/30 bg-card'
-        }`}
-      >
-        <span className="text-3xl font-semibold tabular-nums tracking-[-0.06em]">{score}</span>
+      <div className="relative flex size-[92px] items-center justify-center">
+        <svg viewBox="0 0 80 80" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+          <circle
+            cx="40" cy="40" r={r} fill="none" strokeWidth="6"
+            className={strong ? 'stroke-primary-foreground/20' : 'stroke-border'}
+          />
+          <circle
+            cx="40" cy="40" r={r} fill="none" strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - filled)}
+            className="stroke-accent"
+          />
+        </svg>
+        <span className="font-mono text-2xl font-semibold tabular-nums tracking-[-0.05em]">{score}%</span>
       </div>
+
       <p
-        className={`mt-3 text-[10px] font-bold uppercase tracking-[0.16em] ${
+        className={`mt-3 text-[10px] font-bold uppercase tracking-[0.14em] ${
           strong ? 'text-accent' : 'text-muted-foreground'
         }`}
       >
         {band}
       </p>
+
+      {components.length ? (
+        <dl
+          className={`mt-4 w-full space-y-1.5 border-t pt-3 text-left text-[11px] ${
+            strong ? 'border-primary-foreground/15' : 'border-border'
+          }`}
+        >
+          {components.map((c) => (
+            <div key={c.key} className="flex items-baseline justify-between gap-2">
+              <dt className={strong ? 'text-primary-foreground/70' : 'text-muted-foreground'}>{c.label}</dt>
+              <dd className="font-mono tabular-nums">
+                {c.points}/{c.max}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ChevronRight, Eye, Laptop, ShieldCheck, Wallet } from 'lucide-react'
+import { ChevronRight, Eye, Laptop, Pencil, ShieldCheck, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard, type EvidenceItem } from '@/components/ui/role-card'
@@ -9,6 +9,13 @@ import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { locationRank, type ScoreBreakdown } from '@/match/score'
 import { resolveCity } from '@/lib/taxonomy/locations'
+
+/** The work-mode preference, in the words the chip row uses. */
+const WORK_MODE_LABEL: Record<string, string> = {
+  remote: 'Remote',
+  hybrid: 'Hybrid',
+  onsite: 'On-site',
+}
 
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
@@ -81,7 +88,7 @@ export default async function TodayPage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('preferred_role, confirmed_at, city, work_mode_preference')
+    .select('preferred_role, confirmed_at, city, work_mode_preference, years_experience')
     .eq('id', user.id)
     .single()
 
@@ -285,6 +292,51 @@ export default async function TodayPage({
               a quiet few days is our coverage, not a verdict on you.
             </p>
           ) : null}
+
+          {/* THE BASELINE, AS CHIPS. The design showed a row of active filters —
+              India, the function, the experience band, the work mode — with an
+              Edit affordance. Every one of those is a real field on the profile
+              and every one is genuinely narrowing the list, so they are read
+              from the profile rather than hardcoded, and Edit goes to the place
+              that changes them. A chip that did not correspond to a stored
+              value would be decoration claiming to be a filter. */}
+          {visibleRows.length > 0 ? (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground">
+                Your baseline
+              </span>
+              {[
+                'India',
+                profile.preferred_role,
+                profile.years_experience !== null && profile.years_experience !== undefined
+                  ? `${profile.years_experience} yrs experience`
+                  : null,
+                cityLabel,
+                wantsMode ? WORK_MODE_LABEL[profile.work_mode_preference as string] : null,
+              ]
+                .filter(Boolean)
+                .map((chip) => (
+                  <span
+                    key={String(chip)}
+                    className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-primary"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
+              >
+                <Pencil className="size-3" />
+                Edit
+              </Link>
+            </div>
+          ) : null}
+
+          <p className="mb-4 text-sm text-muted-foreground">
+            Showing <span className="font-semibold text-primary">{visibleRows.length}</span>{' '}
+            {visibleRows.length === 1 ? 'role' : 'roles'} matched to your baseline.
+          </p>
 
           {/* Sort and filter. Plain links, so the whole control set costs no
               client JavaScript and every view is its own shareable URL — the

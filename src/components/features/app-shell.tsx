@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { signOut } from '@/app/actions/sign-out'
 import {
-  BriefcaseBusiness, FlaskConical, Grid2X2, LogOut, Menu, Settings, ShieldCheck, Sparkles, X,
+  BriefcaseBusiness, Grid2X2, LogOut, Menu, Settings, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
 
 /**
@@ -25,12 +25,12 @@ const NAV = [
   { label: 'Jobs', href: '/today', icon: BriefcaseBusiness },
   { label: 'Applications', href: '/applications', icon: Grid2X2 },
   { label: 'Index audit', href: '/audit', icon: ShieldCheck },
-  // The bench 404s outside development and this link goes with it. NODE_ENV is
-  // inlined into the client bundle at build time, so the entry is not merely
-  // hidden in production — it is not in the shipped array at all.
-  ...(process.env.NODE_ENV === 'production'
-    ? []
-    : [{ label: 'Bench', href: '/dev/bench', icon: FlaskConical }]),
+  // The developer bench is NOT in this nav, deliberately. It 404s outside
+  // development, so it was never a production concern — but in development it
+  // sat one click from every screen, between "Index audit" and the profile
+  // menu, and it is the easiest thing on the page to hit by accident while
+  // reviewing the actual product. It is still there at /dev/bench for anyone
+  // who wants it; it is no longer a button you can land on by mistake.
 ]
 
 export function AppShell({
