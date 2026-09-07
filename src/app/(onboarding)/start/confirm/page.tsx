@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
 import { LocationInput } from '@/components/features/location-input'
+import { resolveCity } from '@/lib/taxonomy/locations'
 import { SkillsField } from '@/components/features/skills-field'
 import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { writeDraft } from '@/lib/onboarding-store'
@@ -18,6 +19,11 @@ import { useDraft } from '@/lib/use-draft'
  * screen is completed. Fields arrive pre-filled and marked with their
  * provenance, which turns typing into checking.
  */
+/** The taxonomy's name for a parsed city, or the parse unchanged when we do
+ *  not carry it — never empty, because that would drop what the résumé said. */
+const canonicalCity = (raw: string | undefined) =>
+  raw ? (resolveCity(raw)?.name ?? raw) : raw
+
 export default function ConfirmPage() {
   const router = useRouter()
   const draft = useDraft()
@@ -41,7 +47,10 @@ export default function ConfirmPage() {
     // candidates). Suggested from their current title instead, and always
     // editable, since "what you do now" and "what you want next" often differ.
     preferredRole: edits.preferredRole ?? fields.currentTitle ?? '',
-    city: edits.city ?? fields.city ?? '',
+    // Normalised at prefill, not just at save: a box reading "Bengaluru"
+    // matches the chip the candidate sees highlighted, and shows the taxonomy
+    // doing its job. The raw parse is what produced "Bangalore, India".
+    city: edits.city ?? canonicalCity(fields.city) ?? '',
     // Strict is the default: a product manager is not shown a credit analyst
     // role unless they say they want adjacent ones. See migration 0012.
     openToAdjacent: edits.openToAdjacent ?? (fields.openToAdjacent ? 'yes' : 'no'),
@@ -69,7 +78,7 @@ export default function ConfirmPage() {
       skills,
       domain: fields.domain,
     } })
-    router.push('/start/gate')
+    router.push('/start/matching')
   }
 
 

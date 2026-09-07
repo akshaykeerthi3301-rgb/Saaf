@@ -15,7 +15,8 @@
  * restores the telling.
  *
  * Read off the candidate's own preferred-role text, because onboarding no
- * longer asks their function: `start/gate` is one unconditional credential
+ * longer asks their function: the credential question was removed from
+ * onboarding entirely on 2026-09-07 and lives only on /profile
  * question. Their words are retrieval; a function inferred from anything else
  * would be the guessing this product refuses to do.
  */

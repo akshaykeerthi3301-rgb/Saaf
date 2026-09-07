@@ -191,11 +191,25 @@ export default async function TodayPage({
           locationRank(a.score_breakdown) - locationRank(b.score_breakdown),
     )
 
-  /** "Clears the bar" is the experience standing the scorer already computed —
-   *  a filter, never a gate. The count it hides is stated next to the control. */
+  /**
+   * "Within reach" — the experience standing the scorer already computed.
+   *
+   * This was "Clears the stated bar", meaning `meets` or `unstated` only, and
+   * it was too sharp to be useful: measured on a live two-year profile it left
+   * 2 roles of 209. A filter that removes 99% of the list is not a filter, it
+   * is a second empty state.
+   *
+   * `short` is the scorer's own word for "under the bar by no more than
+   * STRETCH_YEARS", so including it is not a loosening of the standard — it is
+   * the standard the buckets already used to separate "worth applying for" from
+   * "out of range". `over` is included for the same reason in the other
+   * direction: more experience than asked is a reason to apply, not a bar.
+   *
+   * A filter, never a gate. The count it hides is stated next to the control.
+   */
   const clears = (r: MatchRow) => {
     const e = r.score_breakdown?.experience
-    return e === 'meets' || e === 'unstated'
+    return e === 'meets' || e === 'unstated' || e === 'short' || e === 'over'
   }
   const apply = (list: MatchRow[]) => order(clearsOnly ? list.filter(clears) : list)
 
@@ -310,7 +324,7 @@ export default async function TodayPage({
                 <span className="text-muted-foreground">Show</span>
                 {[
                   { k: 'all', label: 'Everything' },
-                  { k: 'clears', label: 'Clears the stated bar' },
+                  { k: 'clears', label: 'Within reach' },
                 ].map(({ k, label }) => {
                   const active = (k === 'clears') === clearsOnly
                   const params = new URLSearchParams()
@@ -409,7 +423,7 @@ export default async function TodayPage({
 
                   {inSection.length === 0 ? (
                     <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-                      Nothing here clears the stated bar today. The {all} we found are still
+                      Nothing here is within reach today. The {all} we found are still
                       listed under{' '}
                       <Link href={`/today${onlyNew ? '?tab=new' : ''}`} className="font-semibold text-primary underline underline-offset-4">
                         Everything

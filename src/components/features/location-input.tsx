@@ -31,8 +31,23 @@ const QUICK = ['Bengaluru', 'Delhi', 'Mumbai', 'Hyderabad', 'Pune', 'Chennai']
  * tells them that rather than letting them find out from a bad shortlist.
  */
 export function LocationInput({ label, value, provenance, onChange }: Props) {
-  const [open, setOpen] = useState(false)
   const resolved = resolveCity(value)
+
+  /**
+   * The list opens itself when what is in the box is not a city we carry.
+   *
+   * ⚠️ THIS FIELD WAS BEING BYPASSED, NOT IGNORED. It is prefilled from the
+   * résumé parser, which produces "Bangalore, India" — correct-looking, so the
+   * candidate accepts it and never opens the picker. That string is not in the
+   * taxonomy, so alias and commute-cluster matching were silently off and the
+   * commonest location in the index scored as ANOTHER CITY.
+   *
+   * confirmProfile() now canonicalises on save, so the damage is fixed either
+   * way. This is the other half: the candidate should be able to SEE that the
+   * value they were handed is not one we recognise, at the moment they can do
+   * something about it, rather than being quietly corrected behind them.
+   */
+  const [open, setOpen] = useState(() => value.trim().length > 0 && !resolveCity(value))
   const typed = value.trim()
 
   return (

@@ -21,7 +21,15 @@ import { ShieldCheck, Sparkles } from 'lucide-react'
 
 /** One source of truth for the flow's length and its pacing.
  *  Starts at 10%, never 0 — momentum from screen one. */
-const STEPS = [10, 25, 45, 60, 80] as const
+/**
+ * Four steps: choose portals, upload, confirm what we read, and the résumé
+ * reading in between. The fifth was the credential question — CA / CFA / CS —
+ * and it is gone. It asked every candidate to answer for a requirement 3.6% of
+ * the index states (780 roles of 21,806), and it is still editable on /profile
+ * for the finance roles that do state one. A step that serves one candidate in
+ * thirty does not belong in the path to a first shortlist.
+ */
+const STEPS = [12, 30, 55, 80] as const
 
 export function OnboardingShell({
   step,
@@ -63,7 +71,7 @@ export function OnboardingShell({
             headline says, and the two promises said the same thing twice. */}
         <div className="relative mt-auto max-w-md pb-2 pt-16 lg:pb-14">
           <h2 className="text-balance text-3xl font-semibold leading-[1.08] tracking-[-0.05em] text-primary sm:text-4xl">
-            Five steps to your first shortlist.
+            Four steps to your first shortlist.
           </h2>
           <p className="mt-6 flex items-center gap-2 text-xs font-medium text-primary/60">
             <ShieldCheck className="size-4 shrink-0 text-accent" />

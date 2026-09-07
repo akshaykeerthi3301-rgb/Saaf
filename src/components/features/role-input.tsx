@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { suggestRoles, type RoleSuggestion } from '@/app/actions/suggest-roles'
 import { roleCatalogue, type CatalogueDomain } from '@/app/actions/role-catalogue'
+import { ALL_ROLES } from '@/lib/taxonomy/roles'
 
 type Props = {
   label: string
@@ -38,17 +39,47 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
   // count query per role and most candidates type a title they already know.
   const [catalogue, setCatalogue] = useState<CatalogueDomain[]>()
   const [openDomain, setOpenDomain] = useState<string>()
-  const [browsing, setBrowsing] = useState(false)
+  /**
+   * Open unprompted when the prefill is not a role we carry.
+   *
+   * This field is prefilled from the résumé's current title — whatever the
+   * person's employer chose to call them: "Associate Consultant II", "Member of
+   * Technical Staff". Those match the index poorly, and a candidate who accepts
+   * the prefill gets a shortlist built on it without ever being shown that a
+   * taxonomy existed. Computed once, as the initial state, so it opens on
+   * arrival and never reopens a panel the candidate has closed — an interface
+   * that argues with its user is worse than one that stays quiet.
+   */
+  const [browsing, setBrowsing] = useState(() => {
+    const t = value.trim().toLowerCase()
+    return t.length > 0 && !ALL_ROLES.some((r) => r.toLowerCase() === t)
+  })
 
-  async function openBrowser() {
-    const next = !browsing
-    setBrowsing(next)
-    if (next && !catalogue) {
-      const c = await roleCatalogue()
+  function openBrowser() {
+    setBrowsing((b) => !b)
+  }
+
+  /**
+   * Fetch the catalogue when the browser is open and we have not got it.
+   *
+   * Covers the button and the unprompted open above with one path. Loaded on
+   * open rather than on mount because it is a count query per role, and a
+   * candidate who types a title they already know never needs it.
+   *
+   * The state lands in the promise callback rather than the effect body — a
+   * synchronous setState here cascades renders, and the fetch has to be
+   * cancellable anyway if the field unmounts mid-request.
+   */
+  useEffect(() => {
+    if (!browsing || catalogue) return
+    let alive = true
+    roleCatalogue().then((c) => {
+      if (!alive) return
       setCatalogue(c)
       setOpenDomain(c.find((d) => d.total > 0)?.key ?? c[0]?.key)
-    }
-  }
+    })
+    return () => { alive = false }
+  }, [browsing, catalogue])
 
   const term = value.trim()
 

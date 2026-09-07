@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { evaluateUser } from '@/lib/evaluate-user'
+import { resolveCity } from '@/lib/taxonomy/locations'
 
 const schema = z.object({
   currentTitle: z.string().min(1, 'We need your current title.'),
@@ -46,6 +47,27 @@ export async function confirmProfile(input: ConfirmInput) {
   if (!user) return { ok: false as const, error: 'Not signed in.' }
 
   const v = parsed.data
+
+  /**
+   * Store the canonical city, not what happened to be in the box.
+   *
+   * ⚠️ THE PICKER WAS NEVER THE PROBLEM. LocationInput has offered the taxonomy
+   * since Stage F, but the field is prefilled from the résumé parser and accepts
+   * free text, so a candidate who accepts the prefill — which is most of them,
+   * because it is already correct-looking — stores "Bangalore, India".
+   *
+   * That string is not in the taxonomy, so resolveCity returned null,
+   * matchLocation fell back to a literal substring test, and "Bengaluru,
+   * Karnataka, India" — the commonest location in the whole index — scored as
+   * ANOTHER CITY. The taxonomy was present, offered, and bypassed.
+   *
+   * Normalising here rather than in the component fixes it for every path into
+   * this action: onboarding, the /profile edit form, and anything added later.
+   * A city the taxonomy does not carry is stored as typed, exactly as before —
+   * never turning a candidate away is a locked decision.
+   */
+  const city = resolveCity(v.city)?.name ?? v.city.trim()
+
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
     current_title: v.currentTitle,
@@ -55,7 +77,7 @@ export async function confirmProfile(input: ConfirmInput) {
     ...(v.openToAdjacent !== undefined ? { open_to_adjacent: v.openToAdjacent } : {}),
     ...(v.skills !== undefined ? { skills: v.skills } : {}),
     ...(v.domain !== undefined ? { domain: v.domain || null } : {}),
-    city: v.city,
+    city,
     work_authorisation: v.workAuthorisation ?? null,
     credential: v.credential,
     // Only included when this call actually carries them — the onboarding
