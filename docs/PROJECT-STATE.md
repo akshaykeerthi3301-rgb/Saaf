@@ -847,6 +847,34 @@ deletion promise on the upload screen), or let the candidate paste their current
 bullet in the drawer for a live comparison (no new storage, and the only one of
 the three that costs nothing).
 
+### Deployed 2026-09-07 — the scale-up is live
+
+**https://saaf-ten.vercel.app** (also aliased `saaf-akshay-keerthi.vercel.app`),
+region `bom1`, deployment `dpl_GMH6w7y1MvYs4grZHWgHeaHnptyQ`.
+
+Verified against the live site, not the build log:
+
+| Check | Result |
+|---|---|
+| `/audit` | **21,806 roles · 1,396 company boards** — was 742 · 31 |
+| `/today`, `/applications`, `/profile`, `/resume`, `/copilot` signed out | all 307 → `/signin` |
+| `/api/dev-signin` | 404 |
+| `/start/gate` | gone |
+| `/api/cron/ingest` unauthenticated | 401 |
+| Cron jobs registered | 4 — ingest 21:00, recompute 23:00, audit 01:00, digest 03:00 UTC |
+| Security headers | all four present |
+
+Migrations `0020` (relevance-ranking RPC) and `0021` (last_seen_at indexes) were
+applied by hand before the deploy, so the shortlist is ranked by `ts_rank_cd`
+rather than falling back to freshest-first.
+
+⚠️ **The deploy procedure changed and the RUNBOOK now carries it.** A plain
+`vercel deploy --prod` from the repo sat at `UNKNOWN` with a 0 ms build for
+fifteen minutes — the documented symptom of Vercel refusing a commit author it
+does not recognise. `--prebuilt` from a partial staging copy does not work
+either: the traced bundle reaches back into `node_modules` and `.next` by path.
+What works is rsyncing the sources without `.git` and letting Vercel build.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

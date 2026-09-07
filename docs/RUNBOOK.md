@@ -56,10 +56,20 @@ Deployed with the **CLI**, not the GitHub integration — this GitHub account
 cannot authorise third-party OAuth apps.
 
 ```bash
-# Vercel blocks deployments whose Git commit author it does not recognise, and
-# these commits carry a GitHub noreply address that is not on the Vercel account.
-# Moving .git aside attaches no commit metadata:
-mv .git .git-hidden && npx vercel deploy --prebuilt --prod ; mv .git-hidden .git
+# ⚠️ NEVER MOVE THE REPO'S OWN .git. Stage a copy without it and deploy from
+# there. Confirmed again 2026-09-07: a plain `vercel deploy --prod` from the
+# repo sat at status UNKNOWN with a 0 ms build for fifteen minutes; the same
+# tree staged without .git was Ready in under two minutes.
+#
+# --prebuilt does NOT work from a partial copy: the traced bundle reaches back
+# into node_modules and .next by path, so it fails on the first file it cannot
+# find. Copy the sources and let Vercel build.
+SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
+rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
+  --exclude '.claude' --exclude 'productos' --exclude 'saaf-ai' --exclude 'docs' \
+  --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
+  ./ $SP/
+(cd $SP && npx vercel deploy --prod)
 
 # Permanent fix — after this, plain `npx vercel --prod` works:
 #   Vercel → Account Settings → Emails → add
