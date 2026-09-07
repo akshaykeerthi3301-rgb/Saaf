@@ -138,25 +138,26 @@ export function RoleCard({
               <details className="group min-w-0 flex-1" data-breakdown="score">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
                   <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-                  Working
+                  Insights
                   {requirements?.length ? (
                     <span className="font-mono tabular-nums">({requirements.length})</span>
                   ) : null}
                 </summary>
 
-                <dl className="mt-3 space-y-2 rounded-xl border border-border bg-secondary/40 p-4">
+                {/* THE REMARKS, NOT THE SUB-SCORES. Each component's note is the
+                    sentence that explains it; the points behind it were a second
+                    number to reconcile against the one on the ring, and a reader
+                    who wanted the arithmetic had to do the arithmetic. The ring
+                    still carries the score and every note still says what moved
+                    it — what went is the per-component points, not the reason. */}
+                <ul className="mt-3 space-y-2 rounded-xl border border-border bg-secondary/40 p-4">
                   {components.map((c) => (
-                    <div key={c.key} className="grid gap-1 sm:grid-cols-[140px_1fr]">
-                      <dt className="text-xs font-semibold text-primary">
-                        {c.label}{' '}
-                        <span className="font-mono tabular-nums text-muted-foreground">
-                          {c.points}/{c.max}
-                        </span>
-                      </dt>
-                      <dd className="text-xs leading-5 text-muted-foreground">{c.note}</dd>
-                    </div>
+                    <li key={c.key} className="flex gap-2 text-xs leading-5 text-muted-foreground">
+                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                      {c.note}
+                    </li>
                   ))}
-                </dl>
+                </ul>
 
                 {requirements && requirements.length > 0 && (
                   <div className="mt-2 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">

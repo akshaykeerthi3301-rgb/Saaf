@@ -259,7 +259,7 @@ code is the two action buttons, and **the breakdown is never behind a request**
 — a candidate can check the arithmetic without a round trip.
 
 **Four rows of text, and that is the budget.** Left column: title, then
-`company · city` on one line, then the reason line, then a single *Working*
+`company · city` on one line, then the reason line, then a single *Insights*
 disclosure sitting beside two icon buttons. Right column is the score ring — the
 number in `text-3xl tabular-nums` and its band, nothing else.
 
@@ -305,8 +305,16 @@ argument.
 **Do**
 
 - Show the arithmetic. Every count that narrows is displayed as a sequence.
-- Show the working. Every score appears with the components that produced it and
-  the sentence each was read from. A number never appears alone.
+- Show the working, as sentences. Every score opens onto the remark for each
+  component and the line from the posting it was read from. A number never
+  appears without its explanation.
+
+  *Amended 2026-09-07:* the disclosure used to print each component's own points
+  (`Role match 28/28`) beside its remark. That is gone at the founder's call —
+  it put a second set of numbers on screen for the reader to reconcile against
+  the one on the ring, and the remark was always the part that explained
+  anything. The score, the reason line and every source quote all stay. The
+  label changed with it: **Insights**, not *Working*.
 - Attribute thinness to coverage. A short list says "that's a thin day for our
   coverage, not a verdict on you."
 - Set every comparable number in `font-mono tabular-nums`.

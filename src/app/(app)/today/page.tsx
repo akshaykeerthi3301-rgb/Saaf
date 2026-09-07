@@ -63,9 +63,15 @@ type MatchRow = {
 export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>
+  searchParams: Promise<{ show?: string; tab?: string }>
 }) {
-  const { show } = await searchParams
+  const { show, tab } = await searchParams
+  // Everything we hold for this candidate is the default view. "New" is the
+  // narrower question — what has appeared since they last looked — and it is a
+  // tab rather than the whole page, which is what it used to be by framing: the
+  // list was never date-filtered, but a page called Today with a date across
+  // the top reads as though it were.
+  const onlyNew = tab === 'new'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
@@ -140,8 +146,11 @@ export default async function TodayPage({
 
   // Buckets are derived from the stored breakdown, not from a column, so they
   // can never fall out of step with the scorer. See src/match/score.ts.
+  const newCount = rows.filter(isNew).length
+  const visibleRows = onlyNew ? rows.filter(isNew) : rows
+
   const byBucket = new Map<Bucket, MatchRow[]>()
-  for (const r of rows) {
+  for (const r of visibleRows) {
     const b = bucketFor(r.score_breakdown)
     if (!byBucket.has(b)) byBucket.set(b, [])
     byBucket.get(b)!.push(r)
@@ -170,11 +179,28 @@ export default async function TodayPage({
           {/* The headline used to read "Sorted by what fits, and what doesn't."
               The bucket headings below say that by existing, so it went. */}
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
+              {[
+                { key: 'all', label: 'All matches', count: rows.length, href: '/today' },
+                { key: 'new', label: `New in ${NEW_WITHIN_DAYS} days`, count: newCount, href: '/today?tab=new' },
+              ].map((t) => {
+                const active = (t.key === 'new') === onlyNew
+                return (
+                  <Link
+                    key={t.key}
+                    href={t.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                      active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    {t.label}
+                    <span className="font-mono tabular-nums opacity-70">{t.count}</span>
+                  </Link>
+                )
+              })}
+            </div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">{today}</p>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              <Target className="size-3.5 text-accent" />
-              <strong className="font-mono tabular-nums text-primary">{rows.length}</strong> matches
-            </span>
           </div>
 
           {/* A backend failure must never render as a verdict. If the read failed we
@@ -182,6 +208,14 @@ export default async function TodayPage({
           {error ? (
             <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
               We couldn&apos;t load today&apos;s list. That&apos;s our problem, not a result — try again shortly.
+            </p>
+          ) : null}
+
+          {onlyNew && visibleRows.length === 0 ? (
+            <p className="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
+              Nothing new in the last {NEW_WITHIN_DAYS} days. Your {rows.length} matches are all
+              still there under <Link href="/today" className="font-semibold text-primary underline underline-offset-4">All matches</Link> —
+              a quiet few days is our coverage, not a verdict on you.
             </p>
           ) : null}
 
@@ -237,7 +271,7 @@ export default async function TodayPage({
                       as "there is more", never as "there was a cut". */}
                   {visible.length < inBucket.length ? (
                     <Link
-                      href={`/today?show=${key}#bucket-${key}`}
+                      href={`/today?show=${key}${onlyNew ? '&tab=new' : ''}#bucket-${key}`}
                       className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent"
                     >
                       Show all {inBucket.length}
