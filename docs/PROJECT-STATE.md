@@ -687,6 +687,35 @@ codebase sat inside `deleteAccount()`, so the sole way out of a session was to
 destroy the account — discovered while trying to hand the product to a second
 person on a machine already signed in as the founder.
 
+**It is live at https://saaf-akshay-keerthi.vercel.app.** Verified against the
+deployed site: the three claims are gone, the comparison card prints the real
+`scoreRole()` output (35, capped at 50, reason named), `/privacy` names Groq,
+`/api/dev-signin` 404s and `/dev/bench` never reaches a signed-out visitor.
+
+**Two things the deploy itself taught us.**
+
+⚠️ **A `.vercelignore` turns off the `.gitignore` fallback.** Vercel uses
+`.gitignore` only while `.vercelignore` does not exist. Adding one to stop
+shipping the licensed ProductOS material — and a second full checkout of the
+repo that had appeared under `.claude/worktrees/` — silently removed the rule
+keeping `.env.local` out. The env lines in that file are load-bearing and are
+commented as such.
+
+⚠️ **HANDOFF A5 is real and now has a repeatable answer.** `vercel --prod` from
+the repo hung for 14 minutes with the deployment stuck at `UNKNOWN` and a 0 ms
+build. Deploying from a copy staged without `.git` reached "Building" in three
+seconds. Until the noreply address is added to the Vercel account, that is the
+procedure — never move the repo's own `.git` aside to do it.
+
+**And a live defect it exposed.** `ingest/audit.ts` stamped its row with
+`new Date().toISOString().slice(0, 10)` — the UTC date — while the cron fires at
+21:30 UTC, which is 03:00 IST. Every run an Indian reader would call this
+morning was stamped yesterday, and `/api/audit/today` compared it against a UTC
+"today" and called its own freshest data **stale for 21.5 hours out of every
+24**. It was on the public landing page inside ten minutes of going live.
+`istDay()` in `src/lib/day.ts` now serves the audit writer, the audit route, the
+landing strip and both follow-up-due comparisons in the tracker.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

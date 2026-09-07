@@ -75,7 +75,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
-| A5 | ~~Deploy~~ | — | ✅ Done 2026-09-03. **Redeploying needs `.git` moved aside**, because Vercel blocks deployments whose commit author it does not recognise. Permanent fix: add `275312729+akshaykeerthi3301-rgb@users.noreply.github.com` as a secondary email on the Vercel account |
+| A5 | ~~Deploy~~ | — | ✅ Done 2026-09-03, redeployed 2026-09-07. **Deploy from a copy staged without `.git`** — `vercel --prod` from the repo hangs at `UNKNOWN` with a 0 ms build (observed: 14 minutes), because Vercel will not build a commit whose author it does not recognise. Staged without git metadata it reaches "Building" in 3s. Never move the repo's own `.git` aside. Permanent fix: add `275312729+akshaykeerthi3301-rgb@users.noreply.github.com` as a secondary email on the Vercel account |
 | A6 | **Buy and verify a domain in Resend** | beta users | See D4 |
 
 ---
