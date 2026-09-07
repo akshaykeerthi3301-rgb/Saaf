@@ -426,16 +426,38 @@ function credentialFit(held: string | undefined, reqs: TypedRequirement[]): Scor
   }
 }
 
+/**
+ * Components a caller may exclude, for a surface where the input behind one was
+ * never collected.
+ *
+ * ⚠️ THIS IS NOT A TUNING KNOB. It exists for exactly one situation: a
+ * component whose input the candidate was never asked for, where scoring it
+ * would be inventing rather than measuring. The pasted-JD tool
+ * (src/lib/jd-match.ts) omits 'work_mode' on that basis — nobody sets a
+ * work-mode preference when pasting a JD, and workModeFit() awards FULL MARKS
+ * for an absent preference, so including it hands every result 7 free points.
+ *
+ * Omitting is safe because the total is normalised over the components that
+ * apply: dropping one removes its max from the denominator too, so the score
+ * neither rises nor falls — it simply stops counting a question nobody asked.
+ *
+ * Do not reach for this to make scores look better. Every other component
+ * measures something the candidate or the posting actually stated.
+ */
+export type ScoreOptions = { omit?: ScoreComponent['key'][] }
+
 export function scoreRole(
   candidate: CandidateProfile,
   role: RoleFacts,
-  requirements: TypedRequirement[]
+  requirements: TypedRequirement[],
+  options: ScoreOptions = {}
 ): ScoreBreakdown {
   const unread = role.unreadExperienceMention === true
 
   const [seniority, experience] = seniorityFit(candidate.yearsExperience, requirements, unread, candidate.currentTitle)
   const [place, location] = locationFit(candidate.city, role)
 
+  const omit = new Set(options.omit ?? [])
   const components: ScoreComponent[] = [
     titleAffinity(candidate.preferredRole ?? '', role.title),
     skillsFit(candidate.skills ?? [], role),
@@ -443,7 +465,7 @@ export function scoreRole(
     place,
     workModeFit(candidate.workModePreference, role),
     credentialFit(candidate.credential, requirements),
-  ].filter((c): c is ScoreComponent => c !== null)
+  ].filter((c): c is ScoreComponent => c !== null && !omit.has(c.key))
 
   // Normalised over the components that APPLY, not over a fixed 100. A
   // candidate with no skills on file would otherwise lose 20 points to a
