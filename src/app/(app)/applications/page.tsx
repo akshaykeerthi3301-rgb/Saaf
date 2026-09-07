@@ -24,8 +24,26 @@ export default async function ApplicationsPage() {
 
   const { data, error } = await supabase
     .from('applications')
-    .select('id, company, title, apply_url, status, note, follow_up_on')
+    .select('id, company, title, apply_url, status, note, follow_up_on, role_id')
     .order('updated_at', { ascending: false })
+
+  /**
+   * The match score for each tracked role, so a card carries the same number
+   * the shortlist gave it.
+   *
+   * Read separately rather than joined: applications.role_id is nullable —
+   * a role tracked by hand has none — and an inner join would silently drop
+   * exactly those rows. A card without a score simply shows no badge.
+   */
+  const roleIds = [...new Set((data ?? []).map((r) => r.role_id).filter(Boolean))] as string[]
+  const scoreFor = new Map<string, number>()
+  if (roleIds.length) {
+    const { data: scored } = await supabase
+      .from('gate_results')
+      .select('role_id, score')
+      .in('role_id', roleIds)
+    for (const g of scored ?? []) if (g.score !== null) scoreFor.set(g.role_id, g.score)
+  }
 
   const rows: Application[] = (data ?? []).map((r) => ({
     id: r.id,
@@ -35,6 +53,7 @@ export default async function ApplicationsPage() {
     status: r.status,
     note: r.note,
     followUpOn: r.follow_up_on,
+    score: r.role_id ? scoreFor.get(r.role_id) : undefined,
   }))
 
   // From the signed-in address rather than a second query just for two letters.
@@ -46,7 +65,7 @@ export default async function ApplicationsPage() {
   ).length
 
   return (
-    <AppShell title="Applications" initials={initials}>
+    <AppShell title="Kanban Board" initials={initials}>
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>

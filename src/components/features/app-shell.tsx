@@ -4,7 +4,8 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { signOut } from '@/app/actions/sign-out'
 import {
-  BriefcaseBusiness, Grid2X2, LogOut, Menu, Settings, ShieldCheck, Sparkles, X,
+  BriefcaseBusiness, FileText, Gauge, Grid2X2, Lock, LogOut, Menu, MessageCircle,
+  Settings, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
 
 /**
@@ -16,21 +17,30 @@ import {
  * pattern the saaf-ai export could not have: its dashboard is `use client` all
  * the way down, which would have dragged the shortlist query into the browser.
  *
- * NAV CARRIES ONLY ROUTES THAT EXIST. The export's sidebar also lists Résumé,
- * Copilot Diagnostic and Interview Prep. Those are planned, not built, and a
- * nav item that goes nowhere is a worse first impression than a short nav — so
- * they arrive with their features rather than ahead of them.
+ * NAV MATCHES THE DESIGN, AND EVERY ITEM EITHER WORKS OR SAYS IT DOES NOT.
+ * Jobs, Kanban Board, Résumé and Copilot Diagnostic are built and routed.
+ * Interview Prep is not, so it renders with a lock, is not a link, and cannot
+ * be clicked — which is how the design drew it. The earlier rule here was to
+ * omit unbuilt items entirely; a lock is better, because it tells the candidate
+ * what is coming instead of leaving the product looking thinner than it is.
  */
-const NAV = [
+const NAV: {
+  label: string
+  href?: string
+  icon: typeof BriefcaseBusiness
+  /** Designed, not built. Rendered with a lock and not clickable. */
+  locked?: string
+}[] = [
   { label: 'Jobs', href: '/today', icon: BriefcaseBusiness },
-  { label: 'Applications', href: '/applications', icon: Grid2X2 },
+  { label: 'Kanban Board', href: '/applications', icon: Grid2X2 },
+  { label: 'Résumé', href: '/resume', icon: FileText },
+  { label: 'Copilot Diagnostic', href: '/copilot', icon: Gauge },
+  // ⚠️ LOCKED, NOT HIDDEN — and the distinction is the point. An item that
+  // looks available and goes nowhere is a promise the product breaks on click.
+  // A lock says "this is coming and it is not ready", which is true, and is how
+  // the design itself drew it.
+  { label: 'Interview Prep', icon: MessageCircle, locked: 'Not built yet' },
   { label: 'Index audit', href: '/audit', icon: ShieldCheck },
-  // The developer bench is NOT in this nav, deliberately. It 404s outside
-  // development, so it was never a production concern — but in development it
-  // sat one click from every screen, between "Index audit" and the profile
-  // menu, and it is the easiest thing on the page to hit by accident while
-  // reviewing the actual product. It is still there at /dev/bench for anyone
-  // who wants it; it is no longer a button you can land on by mistake.
 ]
 
 export function AppShell({
@@ -68,22 +78,35 @@ export function AppShell({
           </div>
 
           <nav className="mt-10 space-y-1" aria-label="Primary navigation">
-            {NAV.map(({ label, href, icon: Icon }) => (
-              <Link
-                key={label}
-                href={href}
-                onClick={() => setOpen(false)}
-                aria-current={label === title ? 'page' : undefined}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium ${
-                  label === title
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-primary'
-                }`}
-              >
-                <Icon className="size-[18px]" />
-                {label}
-              </Link>
-            ))}
+            {NAV.map(({ label, href, icon: Icon, locked }) =>
+              locked || !href ? (
+                <span
+                  key={label}
+                  title={locked}
+                  aria-disabled="true"
+                  className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-muted-foreground/55"
+                >
+                  <Icon className="size-[18px]" />
+                  <span className="flex-1">{label}</span>
+                  <Lock className="size-3.5" aria-label={locked} />
+                </span>
+              ) : (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  aria-current={label === title ? 'page' : undefined}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium ${
+                    label === title
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-primary'
+                  }`}
+                >
+                  <Icon className="size-[18px]" />
+                  {label}
+                </Link>
+              ),
+            )}
           </nav>
 
           <div className="mt-auto space-y-1 border-t border-border pt-4">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { CalendarClock, Plus, X } from 'lucide-react'
+import { CalendarClock, Lock, Plus, X } from 'lucide-react'
 import {
   setApplicationStatus, setApplicationDetail, removeApplication, trackRole,
   type ApplicationStatus,
@@ -14,6 +14,8 @@ export type Application = {
   title: string
   applyUrl: string | null
   status: ApplicationStatus
+  /** The shortlist's score for this role, when it came from the shortlist. */
+  score?: number
   note: string | null
   followUpOn: string | null
 }
@@ -125,6 +127,18 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
                               </h3>
                             )}
                             <p className="mt-1 text-xs font-medium text-muted-foreground">{r.company}</p>
+                            {/* The same number the shortlist showed. Absent for
+                                a role tracked by hand, rather than guessed. */}
+                            {r.score !== undefined ? (
+                              <span
+                                className={`mt-2 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold tabular-nums ${
+                                  r.score >= 75 ? 'bg-accent/10 text-accent' : 'bg-secondary text-muted-foreground'
+                                }`}
+                                title="Your match score for this role"
+                              >
+                                {r.score}%
+                              </span>
+                            ) : null}
                           </div>
                           <button
                             type="button"
@@ -135,6 +149,17 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
                             <X className="size-3.5" />
                           </button>
                         </div>
+
+                        {/* Interview prep, where the design put it. It is not
+                            built, so this states that instead of opening an
+                            empty sheet — the alternative was a button that
+                            teaches the candidate our buttons do not work. */}
+                        {r.status === 'interviewing' ? (
+                          <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-2 text-[11px] leading-4 text-muted-foreground">
+                            <Lock className="size-3 shrink-0" aria-hidden="true" />
+                            Interview prep sheet — not built yet
+                          </p>
+                        ) : null}
 
                         {/* A follow-up in the past is stated, never coloured red.
                             Error red is for system failures; being late on a
