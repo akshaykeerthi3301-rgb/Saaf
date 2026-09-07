@@ -1,5 +1,6 @@
 import { AlertCircle, ChevronRight, MapPin, Quote } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
+import { ReviewDrawer } from '@/components/features/review-drawer'
 import { TrackRole } from '@/components/features/track-role'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import type { ScoreBreakdown, ScoreComponent } from '@/match/score'
@@ -264,6 +265,7 @@ export function RoleCard({
 
             <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} />
             <ReportScore gateResultId={gateResultId} />
+            <ReviewDrawer roleId={roleId} title={title} company={company} applyUrl={applyUrl} />
           </div>
         </div>
 
