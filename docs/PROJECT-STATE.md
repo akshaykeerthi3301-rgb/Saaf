@@ -98,7 +98,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 | **₹0, no paid tier** | Beta at ₹0. Vercel Hobby is non-commercial only — *advertising* a paid product counts as commercial, so even announcing a tier breaks it. |
 | **⛔ Founder's personal job tracker is NOT publishable** | It informed the design (origin of the precision thesis) but is personal data. Must never appear in a landing page, launch post, case study or any public artifact. Flagged in `1-Product-Offer.md` Evidence Sources. |
 | **Name is Saaf** | Decided 2026-09-02. `jobmatch` was killed: Job Match Pro (`jobmatchpro.in`) is an Indian product in the identical wedge. Also killed — Winnow (Winnow Career Concierge sells an "Interview Probability Score"), Yogya (Yogya.ai, Bengaluru), Sirf (active Indian e-commerce app). ⚠️ Registrar/handle availability for Saaf is **unverified** — search presence only. |
-| **Design system is monochrome, flat, square-cornered** | Anchored on live computed styles from `zerodha.tech`: zero shadows, one radius, `#F0F0F0` paper ground. The named anti-reference is `resumly.ai` (196 shadows, 8 radii, 4 gradients, 2 banned fonts). Error red is for system errors only — **never** for a gate outcome. |
+| **Design system is monochrome, flat, square-cornered** | Anchored on live computed styles from `zerodha.tech`: zero shadows, one radius, `#F0F0F0` paper ground. The named anti-reference is the maximalist résumé-tool look (196 shadows, 8 radii, 4 gradients, 2 banned fonts). Error red is for system errors only — **never** for a gate outcome. |
 
 ---
 
@@ -374,7 +374,7 @@ double-counted every posting matching two entries and printed *Product: 118* for
 a domain that really holds 49. That was caught before commit and is the reason
 each domain runs its own `OR` query.
 
-⚠️ **The taxonomy is not a competitor's.** Jobright's categories are not
+⚠️ **The taxonomy is not a competitor's.** the category leader's categories are not
 published — they sit behind the app's login and no public page enumerates them,
 so there was nothing to copy. The list is built from the saaf-ai export's own
 eight onboarding domains, the most common title phrases across the 652 live

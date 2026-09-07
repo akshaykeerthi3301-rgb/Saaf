@@ -61,3 +61,19 @@ npm-debug.log*
 # tracked — but it does throw away tens of thousands of live ATS probes, so the
 # next qualification run redoes all of them. Keep the file; just don't version it.
 registry/candidates.json
+
+# Competitor material — never tracked, at any path.
+#
+# Research that names other firms is useful to us and is not ours to publish.
+# It lives in *.local.md (already ignored above) and in the patterns below.
+# ⚠️ THIS ONLY STOPS FUTURE COMMITS. Names already written into commit MESSAGES
+# are in the history and an ignore rule cannot reach them — see the note in
+# docs/CONFLICTS.md about what removing them would cost.
+# Patterns are deliberately generic and name no firm — a rule that spells a
+# company out is itself the thing being avoided, in a tracked file.
+*COMPETITOR*
+*competitor*
+*ANALYSIS*
+*analysis*
+*PARITY*
+*parity*

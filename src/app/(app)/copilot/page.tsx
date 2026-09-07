@@ -9,7 +9,8 @@ import type { ScoreBreakdown } from '@/match/score'
  * Cookie — the copilot diagnostic.
  *
  * ⚠️ EVERY NUMBER ON THIS PAGE IS COMPUTED FROM THE CANDIDATE'S OWN SCORED
- * SHORTLIST. The reference screens for this (JobRight's, and the v0 mock) show
+ * SHORTLIST. The reference screens for this — a category leader's, and the v0
+ * mock — show
  * a "Profile Strength: 92%" dial, a weekly application allowance and a B2B
  * discoverability toggle. None of those are measurements — the first is a made-up
  * composite, the second is a feature that does not exist, and the third is

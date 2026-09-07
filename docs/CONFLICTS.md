@@ -55,7 +55,7 @@ commit hash and breaks the remote. Open decision.
 | A10 | **Semantic matching** vs *"the scorer is locked"* | The architecture pass deferred embeddings on that basis | Your brief unlocks the scorer, so embeddings become core. Line held: semantic **features**, deterministic **scoring** | ✅ |
 | A11 | **WhatsApp** vs *"free tiers only"* | The Cloud API bills per conversation past a small free tier | First real cost item. Size before building | 🔴 |
 | A12 | **Drag-and-drop Kanban** vs **mobile-first** | Dragging needs a library and is hostile on a phone — I'd built the tracker without it deliberately | Drag on desktop, tap-to-move on touch | 🟡 |
-| A13 | **Full design replacement** vs the monochrome design law | `DESIGN.md` bans shadows, radii, colour, motion — and names `resumly.ai` as the thing to never become | Replacement approved. Risk: landing exactly on the anti-reference. New system must state its own thesis | 🟡 |
+| A13 | **Full design replacement** vs the monochrome design law | `DESIGN.md` bans shadows, radii, colour, motion — and names the maximalist résumé-tool look as the thing to never become | Replacement approved. Risk: landing exactly on the anti-reference. New system must state its own thesis | 🟡 |
 | A14 | **Autofill extension** vs PRD §13 | §13 names *"applying through Saaf"* permanently out of scope | Auto-apply stays excluded; **user-initiated autofill enters scope**. Must be written precisely enough that a future session can't blur them | 🟡 |
 
 ---

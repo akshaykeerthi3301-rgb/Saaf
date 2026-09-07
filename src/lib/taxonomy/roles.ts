@@ -27,7 +27,7 @@
  *      postings, so the common options return something on day one.
  *   3. Standard occupational groupings for the coverage those two miss.
  *
- * It is NOT a competitor's taxonomy. Jobright's is not published — its
+ * It is NOT a competitor's taxonomy. The category leader's is not published — its
  * categories live behind the app's login and no public page enumerates them —
  * so there was nothing to copy even had that been the right thing to do.
  *

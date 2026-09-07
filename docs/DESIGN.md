@@ -127,7 +127,7 @@ actually holds. The saaf-ai export shipped a profile-strength meter, a weekly
 application limit and a B2B discoverability toggle; all three were dropped
 because the first two are made up and the third is parked.
 
-The named anti-reference is still **resumly.ai**, but for its argument rather
+The named anti-reference is still **the maximalist résumé-tool look**, but for its argument rather
 than its shadows: its headline is *"Your Job Search, Fully Automated — applies
 for you while you sleep"*, which is the auto-apply behaviour this product exists
 to argue against.

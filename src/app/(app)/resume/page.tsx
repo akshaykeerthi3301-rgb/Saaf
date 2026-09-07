@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
  * Résumé.
  *
  * ⚠️ THIS IS NOT DOCUMENT STORAGE, AND IT CANNOT BE. The reference for this
- * screen was Simplify's "My Documents" — a table of stored résumé files with
+ * screen was a competitor's "My Documents" — a table of stored résumé files with
  * Edit, Copy and Delete. Saaf cannot build that, because the upload flow tells
  * the candidate in as many words that the file is DELETED once it has been
  * read, and src/app/actions/parse-resume.ts keeps that promise: the bytes are

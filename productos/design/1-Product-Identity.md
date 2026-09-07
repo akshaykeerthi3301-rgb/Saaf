@@ -180,7 +180,7 @@ Live research, September 2026. Re-verify before any public launch — the AI cat
   builder, the most-installed autofill extension, and the India-wedge products —
   is held in `docs/COMPETITOR-ANALYSIS.local.md` and `docs/PARITY.local.md`, both
   untracked. Named companies stay out of the repository.
-- **Naming convention across the set:** job-compounds almost without exception. Teal and Simplify are the only two that read as brands rather than search terms.
+- **Naming convention across the set:** job-compounds almost without exception. the two closest comparables are the only two that read as brands rather than search terms.
 
 **Category visual defaults, 2026** — purple-to-blue gradients, glassmorphism, blurred orbs, monospace accents, rounded-square icon cards above headings, oversized italic-serif heroes. All deliberately excluded above.
 
