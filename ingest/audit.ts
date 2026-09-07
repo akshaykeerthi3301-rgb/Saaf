@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { istDay } from '@/lib/day'
 
 /**
  * Write today's public audit row.
@@ -57,7 +58,7 @@ export async function writeAudit(): Promise<void> {
     (kinds as { kind: string; roles: number }[]).map((k) => [k.kind, Number(k.roles)])
   )
 
-  const day = new Date().toISOString().slice(0, 10)
+  const day = istDay()
   const { error: wErr } = await db.from('audit_daily').upsert({
     day,
     roles_indexed: rolesIndexed ?? 0,

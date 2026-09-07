@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { istDay } from '@/lib/day'
 
 /**
  * Above-the-fold proof, first-party.
@@ -26,7 +27,9 @@ export async function AuditStrip() {
   if (!data || data.roles_indexed === 0) return <div className="h-11" />
 
   const fmt = (n: number) => n.toLocaleString('en-IN')
-  const today = new Date().toISOString().slice(0, 10)
+  // IST, not UTC — this strip is on the public landing page and called its
+  // own freshest figures stale for 21.5 hours out of every 24.
+  const today = istDay()
   const when = data.day === today ? 'today' : `on ${data.day}`
 
   return (

@@ -6,6 +6,7 @@ import {
   setApplicationStatus, setApplicationDetail, removeApplication, trackRole,
   type ApplicationStatus,
 } from '@/app/actions/applications'
+import { istDay } from '@/lib/day'
 
 export type Application = {
   id: string
@@ -69,7 +70,8 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
     startTransition(() => { void removeApplication({ id }) })
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  // IST, not UTC: a follow-up due today is due on the candidate's calendar.
+  const today = istDay()
   const inputCls =
     'w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20'
 

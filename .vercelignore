@@ -1,0 +1,20 @@
+# What does NOT get uploaded to Vercel.
+#
+# ⚠️ THE ENV LINES ARE LOAD-BEARING. Vercel falls back to .gitignore only while
+# this file does not exist. The moment it does, every .gitignore rule stops
+# applying — including the one keeping .env.local out — so the secrets would be
+# uploaded into the deployment. Anything secret must be named here explicitly.
+.env
+.env.*
+!.env.local.example
+
+# Not imported by the app, and some of it is not ours to ship: the ProductOS
+# material is licensed, the design export is a reference, and since worktrees
+# started landing under .claude/ a deploy was carrying a second full checkout
+# of the repo.
+.claude/
+productos/
+saaf-ai/
+docs/
+scripts/
+*.local.md

@@ -3,6 +3,7 @@ import { CalendarClock } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationBoard, type Application } from '@/components/features/application-board'
+import { istDay } from '@/lib/day'
 
 /**
  * The tracker.
@@ -40,7 +41,7 @@ export default async function ApplicationsPage() {
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
 
   const due = rows.filter(
-    (r) => r.followUpOn && r.followUpOn <= new Date().toISOString().slice(0, 10)
+    (r) => r.followUpOn && r.followUpOn <= istDay()
       && r.status !== 'closed',
   ).length
 

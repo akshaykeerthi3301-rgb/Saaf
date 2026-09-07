@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { istDay } from '@/lib/day'
 
 /**
  * The public gate audit. Unauthenticated by design — the landing page renders
@@ -33,7 +34,7 @@ export async function GET() {
     return NextResponse.json({ error: 'No audit data yet' }, { status: 503 })
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = istDay()
   return NextResponse.json(
     {
       day: data.day,
