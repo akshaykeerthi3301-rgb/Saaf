@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { cronRoute } from '@/lib/cron-route'
 
 /**
  * Daily ingest, triggered by Vercel Cron.
@@ -7,33 +7,25 @@ import { NextResponse, type NextRequest } from 'next/server'
  * out to be disabled on this GitHub account — push and repo work, Actions do
  * not — so the trigger moved here. The ingest code itself is unchanged.
  *
- * ⚠️ CEILING: Vercel Hobby caps a function at 60 seconds, and Hobby cron fires
- * once per day so the work cannot be chunked across invocations. The run takes
- * ~34s at 20 boards, so roughly 1.7s per board. **Past about 30 boards this will
- * time out.** Since the registry compounding is the moat, that is a when and not
- * an if — migrate to a Supabase Edge Function on pg_cron (150s, no Vercel
- * ceiling) before the registry passes 30. The adapters and gate code are
- * runtime-agnostic; only the trigger and the Supabase client import move.
+ * THIS ROUTE NOW RUNS THE INGEST AND NOTHING ELSE. It used to call runAll(),
+ * which chained ingest → recompute → audit → digests inside one 60-second
+ * function; the four stages competed for one budget and the last of them
+ * simply did not happen on a slow night. Recompute, audit and digest are
+ * separate cron paths with their own budget — see vercel.json.
+ *
+ * ⚠️ THE 60-SECOND CEILING IS NOW A ROTATION, NOT A FAILURE. Boards are ordered
+ * least-recently-ingested first and the run stops STARTING new ones at the
+ * budget, so a registry larger than one window is swept over several days.
+ * That is only safe because the prune is scoped to boards actually ingested in
+ * the run — an unvisited board keeps every role it has. If that scoping is ever
+ * removed, this rotation starts deleting the index. See ingest/run.ts and
+ * docs/CONFLICTS.md F1.
+ *
+ * 52s of the 60s budget, leaving the rest for cold start and the response.
  */
 export const maxDuration = 60
 
-export async function GET(request: NextRequest) {
-  // Vercel signs cron requests with CRON_SECRET. Without this check the
-  // endpoint is a public button that hammers six third-party ATS providers.
-  const auth = request.headers.get('authorization')
-  if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const started = Date.now()
-  try {
-    const { runAll } = await import('../../../../../ingest/run')
-    const result = await runAll()
-    return NextResponse.json({ ok: true, ...result, ms: Date.now() - started })
-  } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: (e as Error).message, ms: Date.now() - started },
-      { status: 500 }
-    )
-  }
-}
+export const GET = cronRoute('ingest', async () => {
+  const { runIngest } = await import('../../../../../ingest/run')
+  return runIngest({ budgetMs: 52_000 })
+})
