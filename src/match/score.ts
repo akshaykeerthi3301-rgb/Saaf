@@ -94,12 +94,29 @@ const CAPS: Partial<Record<ExperienceStanding, number>> = {
   short: 65,
   far_short: 50,
   over: 65,
+  /**
+   * ⚠️ 'unread' HAD NO CAP, AND THAT WAS THE HOLE. When a posting mentions an
+   * experience bar the extractor could not read confidently, seniorityFit
+   * awards half the component and moves on — so the other four components,
+   * which are at or near full marks for any in-city role needing no credential,
+   * carried the total to 85. A two-year candidate was shown a posting asking
+   * for 7–10 years as a **Strong match**, with the words "we couldn't read this
+   * reliably" sitting inside the same card.
+   *
+   * 74 is exact, not round: role-card.tsx calls 75 and above a "Strong match",
+   * so this is the highest score that cannot claim confidence we do not have.
+   * It sits ABOVE `short` (65) on purpose — "we could not read the bar" is a
+   * weaker signal than "we read it and you are under it", and must not be
+   * punished harder than a known shortfall.
+   */
+  unread: 74,
 }
 
 const CAP_REASON: Record<string, string> = {
   short: 'You are under the experience bar this posting states.',
   far_short: 'You are well under the experience bar this posting states.',
   over: 'You are past the top of the band this posting states.',
+  unread: 'This posting states an experience bar we could not read reliably.',
 }
 
 /**
@@ -456,7 +473,14 @@ export function scoreRole(
       label: 'Capped',
       points: total,
       max: cap,
-      note: `${CAP_REASON[experience]} The rest of the fit averages ${average} out of 100 — but a role you are outside the stated band for is scored out of ${cap}, not out of 100.`,
+      // The clause has to differ for 'unread'. "A role you are outside the
+      // stated band for" is a claim about the candidate, and for an unread bar
+      // we have not made that finding — we could not read the bar at all.
+      // Saying it anyway would be the product asserting something it does not
+      // know, inside the very component that exists to be honest about limits.
+      note: experience === 'unread'
+        ? `${CAP_REASON[experience]} The rest of the fit averages ${average} out of 100 — but a bar we could not read is scored out of ${cap}, not out of 100, because we cannot tell you that you clear it.`
+        : `${CAP_REASON[experience]} The rest of the fit averages ${average} out of 100 — but a role you are outside the stated band for is scored out of ${cap}, not out of 100.`,
     })
   }
 

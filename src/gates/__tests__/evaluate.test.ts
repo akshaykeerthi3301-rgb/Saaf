@@ -374,3 +374,45 @@ describe('false clearances found in production (2026-09-05)', () => {
     expect(mentionsUnreadExperience(d, extractAll(d, 'Bengaluru, India', 'Analyst'))).toBe(false)
   })
 })
+
+/**
+ * A section heading that runs into the paragraph above it.
+ *
+ * ATS descriptions arrive with markup stripped, so "…7 to 10 years of relevant
+ * experience" is immediately followed by the next heading, "Preferred Knowledge
+ * / exposure:". confidenceFor() saw "Preferred" in the same clause and dropped a
+ * firm requirement to 0.3 — below CONFIDENCE_THRESHOLD, so the scorer stopped
+ * gating on it. That is how a posting asking 7–10 years reached 85 for a
+ * two-year candidate, observed live on 2026-09-07.
+ */
+describe('a following section header does not soften a requirement', () => {
+  const years = (text: string) =>
+    extractAll(text, 'Bengaluru, India', 'Manager').find((r) => r.kind === 'experience_years')
+
+  it('binds when the preference word begins the NEXT section', () => {
+    const r = years('(Marketing) with 7 to 10 years of relevant experience Preferred Knowledge / exposure: SAP')
+    expect(r?.minYears).toBe(7)
+    expect(r!.confidence).toBeGreaterThanOrEqual(CONFIDENCE_THRESHOLD)
+  })
+
+  it('binds for other heading shapes too', () => {
+    for (const t of [
+      'Candidate must have 8 years of experience in sales Preferred Skills: Python',
+      'Experience: - 10 -15 years of experience in handling facility management',
+      'Requirements: 5+ years of professional experience in backend development',
+    ]) {
+      expect(years(t)!.confidence, t).toBeGreaterThanOrEqual(CONFIDENCE_THRESHOLD)
+    }
+  })
+
+  it('still ignores a genuine preference, which is prose and has no colon', () => {
+    expect(years('5+ years of experience preferred for this role')!.confidence)
+      .toBeLessThan(CONFIDENCE_THRESHOLD)
+  })
+
+  it('still ignores years stated under a preferred-qualifications heading', () => {
+    // Here the preference genuinely leads the requirement.
+    expect(years('Project Management PREFERRED QUALIFICATIONS 5-8 years of relevant experience')!.confidence)
+      .toBeLessThan(CONFIDENCE_THRESHOLD)
+  })
+})

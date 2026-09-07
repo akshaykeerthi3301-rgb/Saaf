@@ -335,3 +335,43 @@ describe('the worked example published on the landing page', () => {
     expect(at('cap')).toBe('35/50')
   })
 })
+
+/**
+ * An experience bar we could not read must never present as a strong match.
+ *
+ * CAPS had entries for short, far_short and over, and none for 'unread'. So a
+ * posting whose bar the extractor could not read confidently kept an uncapped
+ * total: the four components that are near full marks for any in-city role
+ * needing no credential carried it to 85, and the card said "Strong match"
+ * directly above the words "we couldn't read this reliably". Observed live
+ * 2026-09-07 on a 7–10 year posting shown to a two-year candidate.
+ */
+describe('an unread experience bar is capped', () => {
+  const candidate: CandidateProfile = {
+    yearsExperience: 2, city: 'Bengaluru', preferredRole: 'Manager', credential: 'none',
+  } as CandidateProfile
+
+  const role = { title: 'Manager', locationRaw: 'Bengaluru, India', city: 'Bengaluru', unreadExperienceMention: true }
+
+  it('cannot reach the Strong match band', () => {
+    const b = scoreRole(candidate, role, [])
+    expect(b.total).toBeLessThan(75)
+  })
+
+  it('still ranks above a known shortfall, which is the stronger negative', () => {
+    const unread = scoreRole(candidate, role, []).total
+    const shortfall = scoreRole(candidate, { ...role, unreadExperienceMention: false }, [
+      { kind: 'experience_years', minYears: 6, sourceQuote: '6 years required', confidence: 0.95 },
+    ]).total
+    expect(unread).toBeGreaterThan(shortfall)
+  })
+
+  it('says why, in its own component, rather than silently holding the number down', () => {
+    const b = scoreRole(candidate, role, [])
+    const cap = b.components.find((c) => c.key === 'cap')
+    expect(cap).toBeDefined()
+    // It must not claim the candidate is outside a band — we never read one.
+    expect(cap!.note).not.toMatch(/you are outside/i)
+    expect(cap!.note).toMatch(/could not read/i)
+  })
+})

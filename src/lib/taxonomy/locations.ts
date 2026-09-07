@@ -168,7 +168,35 @@ for (const c of CITIES) {
  */
 export function resolveCity(input: string | null | undefined): City | null {
   if (!input) return null
-  return byLower.get(input.trim().toLowerCase()) ?? null
+  const whole = byLower.get(input.trim().toLowerCase())
+  if (whole) return whole
+
+  /**
+   * ⚠️ FALL BACK TO THE PARTS, BECAUSE REAL PROFILE CITIES ARE NOT BARE NAMES.
+   *
+   * The résumé parser and the location picker both produce strings like
+   * "Bangalore, India", "Mumbai, Maharashtra, India" and "New Delhi, India" —
+   * that is what a CV actually says. An exact lookup missed every one of them
+   * and returned null, which does not fail loudly: matchLocation() treats null
+   * as "a city we do not carry" and falls back to a literal substring test of
+   * the candidate's whole string.
+   *
+   * So a candidate whose city read "Bangalore, India" matched only postings
+   * whose location contained that exact phrase. "Bengaluru, Karnataka, India" —
+   * the single commonest location in the index — scored as ANOTHER CITY, at
+   * 3/10 on location, and landed in the out-of-town bucket. Measured on the
+   * founder's own profile on 2026-09-07: 36 roles were placed in their city and
+   * 385 elsewhere, almost all of which were in Bengaluru.
+   *
+   * Taking the first resolvable comma-separated part fixes it without loosening
+   * anything: each part is still matched exactly against the taxonomy, so a
+   * city we do not carry still returns null and still gets the literal fallback.
+   */
+  for (const part of input.split(',')) {
+    const hit = byLower.get(part.trim().toLowerCase())
+    if (hit) return hit
+  }
+  return null
 }
 
 export type LocationMatch =
@@ -219,6 +247,93 @@ function citiesInText(locationText: string): Set<City> {
     rest = rest.replace(new RegExp(`(^|[^a-z])${escaped}([^a-z]|$)`, 'gi'), ' ')
   }
   return found
+}
+
+/**
+ * States and union territories, official name first with former names as
+ * aliases — postings use both indefinitely, exactly as with cities.
+ *
+ * These matter more than they look. `Sonipat, Haryana` and `Bhilai,
+ * Chhattisgarh` name no city this taxonomy carries, and the only thing marking
+ * them as Indian postings is the state.
+ */
+export const INDIAN_STATES: string[] = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Chattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Orissa', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Tamilnadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'Uttaranchal', 'West Bengal',
+  // Union territories.
+  'Andaman and Nicobar', 'Chandigarh', 'Dadra and Nagar Haveli', 'Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry', 'Pondicherry',
+]
+
+/**
+ * Countries whose place names collide with Indian ones.
+ *
+ * There is a Hyderabad in Sindh, a Punjab in Pakistan, a Delhi in Ontario and
+ * another in New York. A pure allow-list of Indian names calls all four Indian.
+ * So a location naming a country that is not India is rejected — unless it
+ * names India too, because a posting listing "Bengaluru / Singapore" is
+ * genuinely an India posting and the India rule wins first.
+ *
+ * Not exhaustive and does not need to be: it only has to cover the countries a
+ * colliding name actually appears in.
+ */
+const FOREIGN_MARKERS = [
+  'pakistan', 'bangladesh', 'nepal', 'sri lanka', 'bhutan', 'afghanistan',
+  'united states', 'usa', 'u.s.a', 'canada', 'mexico', 'brazil',
+  'united kingdom', 'england', 'scotland', 'ireland', 'france', 'germany',
+  'spain', 'italy', 'netherlands', 'poland', 'portugal', 'sweden', 'switzerland',
+  'singapore', 'malaysia', 'indonesia', 'philippines', 'thailand', 'vietnam',
+  'china', 'japan', 'korea', 'taiwan', 'hong kong', 'australia', 'new zealand',
+  'united arab emirates', 'saudi arabia', 'qatar', 'kuwait', 'bahrain', 'oman',
+  'egypt', 'nigeria', 'kenya', 'south africa', 'israel', 'turkey',
+]
+
+/** Every Indian place name this taxonomy knows: canonical cities, their
+ *  aliases, and the states. Longest first for the same masking reason NAMES is. */
+const INDIAN_PLACE_NAMES: string[] = [
+  ...CITIES.flatMap((c) => [c.name, ...(c.aliases ?? [])]),
+  ...INDIAN_STATES,
+].sort((a, b) => b.length - a.length)
+
+/**
+ * Is this posting located in India?
+ *
+ * ⚠️ THIS IS THE INGEST'S ONLY GATE ON SUPPLY. Every role the ATS boards
+ * return is tested here; a name this misses is a role the product never sees,
+ * and — since scripts/qualify-boards.ts accepts or rejects a whole company on
+ * the same test — a board this misses is an employer permanently discarded.
+ *
+ * It replaced twenty hardcoded substrings in src/gates/extract.ts, which was
+ * wrong in both directions:
+ *
+ *   MISSED   Kochi, Indore, Coimbatore, Chandigarh, Bhubaneswar, Ludhiana and
+ *            every state but seven. `Sonipat, Haryana` survived only because
+ *            Haryana happened to be on the list; `Bhilai, Chhattisgarh` did not.
+ *   INVENTED `'india'` was tested with String.includes, so **"Indianapolis,
+ *            Indiana" was an Indian posting** — as was any Indiana address.
+ *            Word boundaries end that.
+ *
+ * Order is the substance. India named explicitly wins outright, so a
+ * multi-country posting that includes India still counts. Otherwise an Indian
+ * place name counts only if no foreign country is named beside it.
+ */
+export function isIndianLocation(locationText: string): boolean {
+  if (!locationText) return false
+  const text = locationText.toLowerCase()
+
+  if (mentions(text, 'india')) return true
+  // Bharat, and the ISO country code as a trailing comma-separated token —
+  // SmartRecruiters writes "Chennai, in", and a bare `in` anywhere else is the
+  // commonest word in English, so it is only read in that one position.
+  if (mentions(text, 'bharat')) return true
+  if (/,\s*in\s*$/.test(text)) return true
+
+  if (FOREIGN_MARKERS.some((c) => mentions(text, c))) return false
+
+  return INDIAN_PLACE_NAMES.some((n) => mentions(text, n))
 }
 
 export function matchLocation(candidateCity: string | undefined, locationText: string): LocationMatch {

@@ -27,9 +27,31 @@ const REQUIRED_RE =
 const PREFERRED_RE =
   /\b(a plus|is a plus|plus point|preferred|preferably|nice to have|good to have|bonus|desirable|advantage|ideally|would be great|not required|optional)\b/i
 
+/**
+ * A section header: a capitalised phrase ending in a colon.
+ *
+ * ⚠️ SPLITTING ON THESE IS A CORRECTNESS FIX, NOT FORMATTING. ATS descriptions
+ * arrive with their markup stripped, so a heading runs straight into the
+ * paragraph above it:
+ *
+ *     "…with 7 to 10 years of relevant experience Preferred Knowledge / exposure: SAP"
+ *
+ * The word "Preferred" there begins the NEXT section. It says nothing about the
+ * seven years — but confidenceFor() saw a preference in the same clause and
+ * dropped a firm requirement to 0.3, below CONFIDENCE_THRESHOLD, so the scorer
+ * stopped gating on it and awarded the role most of its experience points. That
+ * is how a posting asking for 7–10 years reached 85 for a two-year candidate.
+ *
+ * Only Capitalised-phrase-then-colon counts. A genuine qualifier is prose —
+ * "5+ years of experience preferred for this role" has no colon and still
+ * scores 0.3, which is correct and must stay correct.
+ */
+const SECTION_HEADER = /(?=[A-Z][A-Za-z][A-Za-z/&' -]{0,34}:)/
+
 function sentences(text: string): string[] {
   return text
     .split(/(?<=[.!?;])\s+|\s*•\s*|\n+/)
+    .flatMap((s) => s.split(SECTION_HEADER))
     .map((s) => s.trim())
     .filter((s) => s.length > 0 && s.length < 400)
 }
@@ -246,17 +268,18 @@ export function extractCredential(description: string): TypedRequirement[] {
   return out
 }
 
-const INDIA_TOKENS = [
-  'india', 'bengaluru', 'bangalore', 'mumbai', 'delhi', 'gurgaon', 'gurugram',
-  'noida', 'hyderabad', 'pune', 'chennai', 'kolkata', 'ahmedabad', 'jaipur',
-  'karnataka', 'maharashtra', 'telangana', 'tamil nadu', 'haryana', 'remote - india',
-]
-
-/** ATS boards are global. The 2026-09-02 probe found 137 of 233 roles in India. */
-export function resolveInIndia(locationRaw: string): boolean {
-  const l = locationRaw.toLowerCase()
-  return INDIA_TOKENS.some((t) => l.includes(t))
-}
+/**
+ * ATS boards are global. The 2026-09-02 probe found 137 of 233 roles in India.
+ *
+ * The twenty hardcoded substrings that used to live here are gone. They named
+ * fourteen cities and six states out of the fifty-four cities and forty states
+ * the taxonomy already carried, and they matched by bare substring, so
+ * "Indianapolis, Indiana" was an Indian posting. src/lib/taxonomy/locations.ts
+ * is the one definition now — the same file the location SCORING already went
+ * through, so the ingest and the scorer can no longer disagree about what
+ * counts as Bangalore.
+ */
+export { isIndianLocation as resolveInIndia } from '@/lib/taxonomy/locations'
 
 /** Shared with src/gates/evaluate.ts's location gate, and with the work-mode
  *  preference sort on /today — one definition so the two can't drift apart. */
