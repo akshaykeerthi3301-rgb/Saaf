@@ -1,5 +1,54 @@
 # Handoff — what Saaf still needs from you
 
+---
+
+## ⚡ Resuming after 2026-09-07? Read this block first.
+
+**The scale-up shipped.** Live at **https://saaf-ten.vercel.app** with **21,806
+India roles from 1,396 company boards**, up from 742 from 31. Migrations `0020`
+and `0021` are applied. All four crons are registered and running.
+
+**State of the repository**
+
+| | |
+|---|---|
+| Branch | `main`, working tree clean |
+| Unpushed | **63 commits, none pushed to GitHub.** `git push origin main` when wanted — the remote is a backup only and does not deploy |
+| Deployed from | `main`, deployment `dpl_GMH6w7y1MvYs4grZHWgHeaHnptyQ` |
+
+**⚠️ Three things a fresh session will get wrong without reading them**
+
+1. **The prune scoping in `ingest/run.ts` is not an optimisation.** See §5 of this
+   file. Reverting it to a global delete empties the index at this registry size.
+2. **The deploy procedure in `docs/RUNBOOK.md` is the one that works.** Do not
+   move the repo's own `.git`, and do not use `--prebuilt`. Both were tried on
+   2026-09-07; the first hangs at `UNKNOWN`, the second cannot resolve its own
+   traced paths.
+3. **The Review & Approve drawer is deliberately thin.** `docs/PROJECT-STATE.md`
+   Stage N. It is the monetisation surface, not an unfinished generator.
+
+**⚠️ Beta users can only sign in with Google.** Resend delivers only to the
+founder's own address until a domain is verified, so email magic links reach
+nobody else — a candidate who types their email gets "check your inbox" and
+nothing arrives. Verified 2026-09-07 that Google OAuth returns a clean 302 with
+the production callback, so that path works. Buying a `.in` and verifying it on
+Resend fixes both sign-in and the daily digest, which currently reaches only the
+founder.
+
+**Where the volume comes from now.** `npm run registry:harvest` reads Common
+Crawl's URL index for ATS host patterns; `npm run registry:qualify` probes each
+candidate against its own public ATS API and admits only boards with live India
+roles. 27,888 candidates are on disk (gitignored, 4 MB) with their probe results,
+so a re-run does not redo them. Four high-volume boards are held in
+`registry/needs-review.json` as suspected reposters — admitting one is a
+deliberate act.
+
+**The one thing that will look broken and is not.** The daily cron sweeps ~180
+boards of 1,396 per 52-second window, so the registry is covered every ~8 days.
+That rotation is the design, and it is only safe because of point 1 above.
+
+---
+
 *Written 2026-09-03, **revised 2026-09-05** for the Stage A–C pivot. The MVP is built and deployed at https://saaf-akshay-keerthi.vercel.app; **Stage C is committed but not yet deployed.** Read alongside `docs/PROJECT-STATE.md` — its **The pivot** section is the substance, this file is only what still needs you.*
 
 > ⚠️ **Saaf ranks; it does not gate.** Stage A reversed that on 2026-09-04. Two entries in §5 below described the pre-pivot product and have been corrected in place rather than deleted, so the reversal stays visible.
