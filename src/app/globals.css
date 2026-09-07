@@ -96,6 +96,10 @@
   --sidebar-border: oklch(0.89 0.018 235);
   --sidebar-ring: oklch(0.54 0.12 163);
 
+  /* Glass reads as the card colour at partial opacity, so the .glass utility
+     works in both themes without either one naming a colour of its own. */
+  --glass: oklch(1 0 0 / 72%);
+
   /* The only raw variables any screen reads. Tailwind v4's font-sans and
      font-mono utilities resolve through these names, so setting them here is
      what points those utilities at the two self-hosted faces wired up in
@@ -104,22 +108,91 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
 }
 
-/* DARK MODE IS OFF, DELIBERATELY, AND THIS IS NOT AN OVERSIGHT.
+/* DARK MODE — ADDED 2026-09-08, OPT-IN, AND LIGHT IS STILL THE DEFAULT.
    ---------------------------------------------------------------------------
-   `color-scheme: light` above is the whole of it. The saaf-ai export declares a
-   `dark` variant but never defines values for it, so there is no dark palette
-   to switch to.
+   The note that stood here said dark mode was off deliberately, because the
+   saaf-ai export declared a `dark` variant and never defined values for it. The
+   defect it described was real: on a machine set to dark, ink flipped to
+   near-white while --background stayed light, so the landing page's primary
+   call to action rendered as pale text on a pale button. Invisible, green
+   build. Half a dark mode is worse than none.
 
-   The retired system did have one, and running it against a light-only new
-   system produced a real, visible defect the moment Tailwind landed: on a
-   machine set to dark mode its ink flipped to near-white while --background
-   stayed light, so the landing page's primary call to action rendered as pale
-   text on a pale button. Invisible, with a green build. Half a dark mode is
-   worse than none.
+   ⚠️ THAT WARNING IS WHY THE BLOCK BELOW DEFINES EVERY TOKEN :root DEFINES, IN
+   ONE PASS — all 33, not the handful a given screen happens to read. A parity
+   check enforces it; if you add a token to :root, add it here in the same edit.
 
-   TO ADD ONE: define dark values for every shadcn token under `.dark` in a
-   single pass. A partial palette is the exact shape of the defect above.
+   ⚠️ NOTHING APPLIES `.dark` YET. This is a palette, not a switch: no screen
+   changes appearance until something sets the class on <html>. That is
+   deliberate — it lets the palette land and be reviewed without restyling a
+   product that is live and whose light system is the one documented in
+   docs/DESIGN.md and verified in a browser.
+
+   THE LOOK: a true OLED ground (#000) with surfaces lifted just off it, and
+   hairlines carried as low-alpha WHITE rather than as a grey. `--border` is
+   `oklch(1 0 0 / 8%)`, so `border-border` composites over whatever sits
+   beneath it — which is what makes a 1px edge read as a micro-border on black
+   instead of as a grey line drawn on top of it. Screens get this for free:
+   every one of the 35 files that render UI already reads these tokens and not
+   one hardcodes a colour, so there is nothing to convert.
    --------------------------------------------------------------------------- */
+
+.dark {
+  color-scheme: dark;
+
+  /* Ground and surfaces. Pure black is the page; cards are lifted, not tinted,
+     so an OLED panel keeps the ground genuinely unlit. */
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0.004 240);
+  --card: oklch(0.16 0.006 250);
+  --card-foreground: oklch(0.97 0.004 240);
+  --popover: oklch(0.19 0.007 250);
+  --popover-foreground: oklch(0.97 0.004 240);
+
+  /* --primary is the INK in this system — headings, and the fill of a solid
+     button. It inverts wholesale: light ink on dark ground, dark label on a
+     light button. Getting this pair backwards is precisely the pale-on-pale
+     failure recorded above. */
+  --primary: oklch(0.97 0.004 240);
+  --primary-foreground: oklch(0.17 0.02 250);
+
+  --secondary: oklch(0.23 0.008 250);
+  --secondary-foreground: oklch(0.93 0.006 240);
+  --muted: oklch(0.23 0.008 250);
+  /* Lifted well above the 0.5 the light theme uses: the same lightness that
+     reads as quiet on #F1F4F8 is unreadable on #000. */
+  --muted-foreground: oklch(0.72 0.014 245);
+
+  /* The one chromatic value, raised for a dark ground. The light theme's
+     0.54 lightness is a hole on black. */
+  --accent: oklch(0.76 0.15 163);
+  --accent-foreground: oklch(0.17 0.03 160);
+  --destructive: oklch(0.68 0.19 25);
+
+  /* Hairlines as low-alpha white — the micro-border. Alpha, not a grey, so it
+     composites over the surface beneath and stays correct on both the pure
+     black ground and a lifted card. */
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.76 0.15 163);
+
+  --chart-1: oklch(0.76 0.15 163);
+  --chart-2: oklch(0.97 0.004 240);
+  --chart-3: oklch(0.72 0.014 245);
+  --chart-4: oklch(0.5 0.02 245);
+  --chart-5: oklch(1 0 0 / 14%);
+
+  --sidebar: oklch(0.13 0.005 250);
+  --sidebar-foreground: oklch(0.97 0.004 240);
+  --sidebar-primary: oklch(0.97 0.004 240);
+  --sidebar-primary-foreground: oklch(0.17 0.02 250);
+  --sidebar-accent: oklch(0.23 0.008 250);
+  --sidebar-accent-foreground: oklch(0.93 0.006 240);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.76 0.15 163);
+
+  /* Glass reads as the card colour at partial opacity; see the .glass utility. */
+  --glass: oklch(0.16 0.006 250 / 68%);
+}
 
 @layer base {
   * { @apply border-border outline-ring/50; }
@@ -128,5 +201,52 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Motion and glass, as utilities rather than as values typed into components.
+   ---------------------------------------------------------------------------
+   ⚠️ SPRING FEEL WITHOUT A SPRING LIBRARY, ON PURPOSE. Framer Motion is ~34 KB
+   gzipped and requires 'use client' on anything it animates. This app defers
+   PostHog (87 KB) and Sentry (140 KB) to idle in writing, for a candidate on
+   mobile data at 11pm, and several animated surfaces here are deliberately
+   SERVER components — src/app/(app)/today/page.tsx records measuring 4.27 MB of
+   HTML when its list rendered in full, and converting cards to client
+   components to animate them walks straight back into that.
+
+   `--ease-spring` is a cubic-bezier whose control points overshoot past 1, so
+   it settles with the small bounce a spring gives. It is not interruptible
+   physics; it is the 90% of the feel that costs nothing. Reach for a real
+   spring library only when something genuinely needs to be interrupted
+   mid-flight — a drag, a gesture — which nothing here does.
+   --------------------------------------------------------------------------- */
+@theme {
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer utilities {
+  /* Glassmorphic surface. Reads --glass, which each theme defines as its own
+     card colour at partial opacity — so this utility names no colour itself
+     and inverts with the theme for free.
+
+     backdrop-filter is progressively enhanced: a browser without it simply
+     renders the translucent background, which is legible rather than broken. */
+  .glass {
+    background-color: var(--glass);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  /* Respect the platform setting. A candidate who has asked their OS to reduce
+     motion has asked every product on it, including this one. */
+  @media (prefers-reduced-motion: reduce) {
+    .glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

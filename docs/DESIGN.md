@@ -29,6 +29,69 @@ colors:
   border:                "oklch(0.89 0.018 235)"    # ~#D6DCE6 — every hairline
   input:                 "oklch(0.89 0.018 235)"    # field borders
   ring:                  "oklch(0.54 0.12 163)"     # focus ring == accent
+colors-dark:
+  # Added 2026-09-08. OPT-IN AND NOT YET THE DEFAULT: these live under `.dark`
+  # in src/app/globals.css and nothing sets that class, so no shipped screen
+  # changes appearance until something does. The light palette above remains
+  # the shipped system.
+  #
+  # ⚠️ EVERY LIGHT TOKEN HAS A VALUE HERE, IN ONE PASS. A partial palette is a
+  # real defect this project has already had: a declared `dark` variant with no
+  # values flipped ink to near-white while the ground stayed light, rendering
+  # the landing page's call to action as pale text on a pale button — invisible,
+  # with a green build. src/app/__tests__/theme-tokens.test.ts now fails if a
+  # token is added to one palette and not the other.
+  #
+  # THE GROUND IS TRUE BLACK, not a near-black grey, so an OLED panel keeps it
+  # genuinely unlit. Surfaces are lifted off it rather than tinted.
+  background:            "oklch(0 0 0)"             # #000000 — OLED ground
+  foreground:            "oklch(0.97 0.004 240)"
+  card:                  "oklch(0.16 0.006 250)"    # lifted, not tinted
+  card-foreground:       "oklch(0.97 0.004 240)"
+  popover:               "oklch(0.19 0.007 250)"
+  popover-foreground:    "oklch(0.97 0.004 240)"
+  primary:               "oklch(0.97 0.004 240)"    # ink inverts wholesale
+  primary-foreground:    "oklch(0.17 0.02 250)"     # dark label on a light button
+  secondary:             "oklch(0.23 0.008 250)"
+  secondary-foreground:  "oklch(0.93 0.006 240)"
+  muted:                 "oklch(0.23 0.008 250)"
+  muted-foreground:      "oklch(0.72 0.014 245)"    # lifted from 0.5; 0.5 is unreadable on #000
+  accent:                "oklch(0.76 0.15 163)"     # raised from 0.54, which is a hole on black
+  accent-foreground:     "oklch(0.17 0.03 160)"
+  destructive:           "oklch(0.68 0.19 25)"
+  border:                "oklch(1 0 0 / 8%)"        # MICRO-BORDER: low-alpha white, not a grey
+  input:                 "oklch(1 0 0 / 14%)"
+  ring:                  "oklch(0.76 0.15 163)"
+surfaces:
+  # `--glass` is each theme's card colour at partial opacity, so the .glass
+  # utility names no colour of its own and inverts for free.
+  glass:
+    token-light: "oklch(1 0 0 / 72%)"
+    token-dark:  "oklch(0.16 0.006 250 / 68%)"
+    utility: ".glass — backdrop-filter: blur(16px) saturate(180%)"
+    note: >
+      backdrop-filter is progressively enhanced. A browser without it renders
+      the translucent background, which is legible rather than broken. The blur
+      is dropped entirely under prefers-reduced-motion.
+motion:
+  # ⚠️ NO ANIMATION LIBRARY, DELIBERATELY. Framer Motion is ~34 KB gzipped and
+  # requires 'use client' on anything it animates. This app defers PostHog
+  # (87 KB) and Sentry (140 KB) to idle in writing, for a candidate on mobile
+  # data at 11pm — and several animated surfaces are deliberately SERVER
+  # components. src/app/(app)/today/page.tsx records measuring 4.27 MB of HTML
+  # with its list fully rendered; converting cards to client components in
+  # order to animate them walks straight back into that.
+  #
+  # Reach for a spring library only when something must be interruptible
+  # mid-flight — a drag, a gesture. Nothing here is.
+  library: none (tw-animate-css, already installed, plus native CSS)
+  easing:
+    ease-spring:    "cubic-bezier(0.34, 1.56, 0.64, 1)"  # overshoots past 1 — settles with a small bounce
+    ease-out-quint: "cubic-bezier(0.22, 1, 0.36, 1)"
+  reduced-motion: >
+    prefers-reduced-motion collapses all animation and transition durations to
+    0.01ms and removes the glass blur. A candidate who asked their OS to reduce
+    motion asked this product too.
 typography:
   # Two faces, self-hosted at build time by next/font (src/app/layout.tsx).
   # Tailwind's font-sans / font-mono resolve through --font-sans / --font-mono
