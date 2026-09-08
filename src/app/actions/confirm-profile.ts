@@ -10,6 +10,14 @@ const schema = z.object({
   employer: z.string().min(1, 'We need your employer.'),
   yearsExperience: z.coerce.number().min(0).max(50),
   preferredRole: z.string().min(1, 'We need this to match you against roles.'),
+  /**
+   * Additional roles the candidate will also consider, most wanted first.
+   * `preferredRole` stays the first one and is still written on its own, so a
+   * profile is readable whether or not migration 0022 has been applied.
+   */
+  preferredRoles: z.array(z.string().min(1).max(120)).max(5).optional(),
+  /** Their own words for what they care about. Boost only — never a filter. */
+  keywords: z.array(z.string().min(1).max(40)).max(20).optional(),
   openToAdjacent: z.boolean().optional(),
   // Read from the résumé by a model, then confirmed on screen. Capped here as
   // well as in the parser — this action is reachable independently of it.
@@ -68,6 +76,21 @@ export async function confirmProfile(input: ConfirmInput) {
    */
   const city = resolveCity(v.city)?.name ?? v.city.trim()
 
+  /**
+   * ⚠️ THE ARRAY COLUMNS ARE WRITTEN SEPARATELY, AND THE FAILURE IS EXPECTED.
+   *
+   * Migration 0022 adds preferred_roles and keywords, and migrations here are
+   * pasted into the Supabase SQL editor by hand — so there is a real window
+   * where this code is deployed and the columns do not exist. Including them in
+   * the main upsert would make that window fail EVERY profile save, taking
+   * onboarding down for a feature nobody had asked for yet.
+   *
+   * So the core write happens first and must succeed; the arrays are a second,
+   * best-effort write whose failure is logged and swallowed. The singular
+   * preferred_role is always written, and scoreAgainstIndex reads both — so
+   * until the migration lands, a candidate simply gets the single-role
+   * behaviour they had before, with no error and no data loss.
+   */
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
     current_title: v.currentTitle,
@@ -96,6 +119,29 @@ export async function confirmProfile(input: ConfirmInput) {
     updated_at: new Date().toISOString(),
   })
   if (error) return { ok: false as const, error: 'Could not save that. Try again.' }
+
+  if (v.preferredRoles !== undefined || v.keywords !== undefined) {
+    const { error: arrErr } = await supabase
+      .from('profiles')
+      .update({
+        ...(v.preferredRoles !== undefined
+          ? { preferred_roles: v.preferredRoles.length ? v.preferredRoles : [v.preferredRole] }
+          : {}),
+        ...(v.keywords !== undefined ? { keywords: v.keywords } : {}),
+      })
+      .eq('id', user.id)
+
+    if (arrErr) {
+      // Not surfaced to the candidate: their profile saved, their shortlist will
+      // rebuild, and the only thing missing is a feature the database cannot
+      // hold yet. Telling them "could not save" about a successful save would
+      // be the worse lie.
+      console.warn(
+        'preferred_roles/keywords not written — run supabase/migrations/0022_multi_role_and_keywords.sql. ' +
+        `Falling back to the single preferred_role. (${arrErr.message})`,
+      )
+    }
+  }
 
   const { written } = await evaluateUser(user.id)
   return { ok: true as const, resultsReady: written > 0 }

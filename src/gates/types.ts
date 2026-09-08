@@ -49,6 +49,26 @@ export type CandidateProfile = {
   /** The role the candidate asked for, in their own words. Scored against the
    *  posting's title by src/match/score.ts — the gate itself never reads it. */
   preferredRole?: string
+  /**
+   * Every role the candidate will consider, most wanted first.
+   *
+   * ⚠️ `preferredRole` IS KEPT ALONGSIDE IT AND IS STILL WRITTEN. Migration 0022
+   * adds the array; migrations here are applied by hand, so there is always a
+   * window where this code is deployed against a database without the column.
+   * Both are read, deduped, and merged — see src/lib/score-candidate.ts.
+   *
+   * titleAffinity scores the BEST of these, never their union: a union would
+   * penalise every role for not matching the other four.
+   */
+  preferredRoles?: string[]
+  /**
+   * The candidate's own words for what they care about — "payments", "B2B SaaS".
+   *
+   * They BOOST ranking and hide nothing. A role matching none still appears,
+   * which is the Stage A lock ("never gate users out") applied to a feature
+   * that would otherwise be a filter.
+   */
+  keywords?: string[]
   /** 'remote' | 'hybrid' | 'onsite' | 'no_preference'. Scored, never gated. */
   workModePreference?: string
   /** Confirmed by the candidate, read from the résumé by a model. */

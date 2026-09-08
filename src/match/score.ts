@@ -25,7 +25,7 @@ import { experienceFloor, experienceCeiling } from '@/gates/evaluate'
 export type ScoreComponent = {
   /** 'cap' is not a scored component — it is the ceiling applied to the others,
    *  listed alongside them so the arithmetic on the card still adds up. */
-  key: 'title' | 'skills' | 'seniority' | 'location' | 'work_mode' | 'credential' | 'cap'
+  key: 'title' | 'skills' | 'seniority' | 'location' | 'work_mode' | 'credential' | 'keywords' | 'cap'
   label: string
   points: number
   max: number
@@ -69,7 +69,18 @@ export type RoleFacts = {
   unreadExperienceMention?: boolean
 }
 
-const WEIGHTS = { title: 28, skills: 20, seniority: 25, location: 10, work_mode: 7, credential: 10 }
+/**
+ * ⚠️ `keywords` IS WEIGHTED BELOW EVERY MEASURED COMPONENT, ON PURPOSE. The
+ * others read what a posting STATES — a stated bar, a stated credential, a
+ * stated location. Keywords are what the candidate says they care about, which
+ * is a preference rather than a requirement, and weighting it like evidence
+ * would let a candidate move their own score by typing more words.
+ *
+ * It is also OPTIONAL: with no keywords the component returns null and
+ * scoreRole normalises over what applied, so a candidate who sets none is not
+ * scored out of a larger denominator than one who did. See skillsFit.
+ */
+const WEIGHTS = { title: 28, skills: 20, seniority: 25, location: 10, work_mode: 7, credential: 10, keywords: 8 }
 
 /**
  * Ceilings on the total, by how the candidate sits against the experience bar.
@@ -151,26 +162,75 @@ function tokens(text: string): string[] {
     .map(stem)
 }
 
-/** How much of what the candidate asked for actually appears in the title. */
-function titleAffinity(preferredRole: string, title: string): ScoreComponent {
-  const want = [...new Set(tokens(preferredRole))]
-  const have = new Set(tokens(title))
+/**
+ * How well the posting's title matches what the candidate asked for.
+ *
+ * ⚠️ WITH SEVERAL PREFERRED ROLES IT SCORES THE BEST ONE, NEVER THEIR UNION.
+ * A union would pool the words of every role and then penalise each posting for
+ * not containing the others': a candidate open to "Product Manager" and "Data
+ * Analyst" would score every product role down for saying nothing about data,
+ * and vice versa — so adding a second role they would happily take would LOWER
+ * every score on the list. Taking the best match is the only reading that makes
+ * "I would consider these" mean what a candidate means by it.
+ *
+ * The note names which role won, so a candidate with several can see which of
+ * their choices a posting answered.
+ */
+function titleAffinity(preferredRoles: string[], title: string): ScoreComponent {
   const max = WEIGHTS.title
+  const have = new Set(tokens(title))
+  const candidates = preferredRoles.map((r) => r.trim()).filter(Boolean)
 
-  if (want.length === 0) {
+  if (candidates.length === 0) {
     return { key: 'title', label: 'Role match', points: max * 0.5, max, note: 'No preferred role set.' }
   }
 
-  const hits = want.filter((w) => have.has(w))
-  const coverage = hits.length / want.length
-  const points = Math.round(max * coverage)
+  let best = { coverage: 0, hits: 0, want: 0, role: candidates[0] }
+  for (const role of candidates) {
+    const want = [...new Set(tokens(role))]
+    if (want.length === 0) continue
+    const hits = want.filter((w) => have.has(w)).length
+    const coverage = hits / want.length
+    if (coverage > best.coverage) best = { coverage, hits, want: want.length, role }
+  }
 
+  if (best.want === 0) {
+    return { key: 'title', label: 'Role match', points: max * 0.5, max, note: 'No preferred role set.' }
+  }
+
+  const points = Math.round(max * best.coverage)
+  const which = candidates.length > 1 ? ` (${best.role})` : ''
   const note =
-    coverage === 1 ? 'Title matches every word of the role you asked for.'
-    : coverage > 0 ? `Title matches ${hits.length} of ${want.length} words in the role you asked for.`
-    : 'Title shares no words with the role you asked for.'
+    best.coverage === 1 ? `Title matches every word of the role you asked for${which}.`
+    : best.coverage > 0 ? `Title matches ${best.hits} of ${best.want} words in the role you asked for${which}.`
+    : 'Title shares no words with any role you asked for.'
 
   return { key: 'title', label: 'Role match', points, max, note }
+}
+
+/**
+ * The candidate's own keywords, found in the posting.
+ *
+ * Deliberately the same shape as skillsFit — substring match against the
+ * posting's text, null when there is nothing to score. The difference is what
+ * they are: skills are read off a résumé, keywords are typed by the candidate
+ * to say what they care about. Both BOOST and neither hides anything.
+ */
+function keywordsFit(keywords: string[], role: RoleFacts): ScoreComponent | null {
+  const max = WEIGHTS.keywords
+  const text = `${role.title} ${role.description ?? ''}`.toLowerCase()
+  const wanted = keywords.map((k) => k.trim()).filter((k) => k.length > 1)
+  if (wanted.length === 0 || text.length < 50) return null
+
+  const hits = wanted.filter((k) => text.includes(k.toLowerCase()))
+  // Full marks at three, for the same reason skillsFit stops at five: no
+  // posting names them all, and requiring that makes the component unreachable.
+  const ratio = Math.min(1, hits.length / Math.min(3, wanted.length))
+  const note = hits.length
+    ? `Mentions ${hits.length} of your keywords: ${hits.slice(0, 4).join(', ')}${hits.length > 4 ? '…' : ''}.`
+    : 'Names none of the keywords you added.'
+
+  return { key: 'keywords', label: 'Your keywords', points: Math.round(max * ratio), max, note }
 }
 
 /**
@@ -459,12 +519,18 @@ export function scoreRole(
 
   const omit = new Set(options.omit ?? [])
   const components: ScoreComponent[] = [
-    titleAffinity(candidate.preferredRole ?? '', role.title),
+    titleAffinity(
+      // Both sources, deduped — see CandidateProfile.preferredRoles for why the
+      // singular column is still read.
+      [...new Set([...(candidate.preferredRoles ?? []), ...(candidate.preferredRole ? [candidate.preferredRole] : [])])],
+      role.title,
+    ),
     skillsFit(candidate.skills ?? [], role),
     seniority,
     place,
     workModeFit(candidate.workModePreference, role),
     credentialFit(candidate.credential, requirements),
+    keywordsFit(candidate.keywords ?? [], role),
   ].filter((c): c is ScoreComponent => c !== null && !omit.has(c.key))
 
   // Normalised over the components that APPLY, not over a fixed 100. A

@@ -375,3 +375,86 @@ describe('an unread experience bar is capped', () => {
     expect(cap!.note).toMatch(/could not read/i)
   })
 })
+
+describe('several preferred roles', () => {
+  const role = {
+    title: 'Senior Product Manager',
+    description: 'Own the payments platform roadmap. SQL and experimentation.',
+  }
+  const base = { yearsExperience: 5, city: 'Bengaluru', skills: ['SQL'] }
+
+  const titleOf = (c: Parameters<typeof scoreRole>[0]) =>
+    scoreRole(c, role, []).components.find((x) => x.key === 'title')!
+
+  it('scores the BEST role, not the union of them', () => {
+    // ⚠️ THE REGRESSION THIS PINS IS BACKWARDS-FEELING AND REAL. A union pools
+    // the words of every role, so adding a second role the candidate would
+    // happily take LOWERS the score of every posting that answers the first.
+    const one = titleOf({ ...base, preferredRoles: ['Product Manager'] })
+    const two = titleOf({ ...base, preferredRoles: ['Product Manager', 'Data Analyst'] })
+    expect(two.points).toBe(one.points)
+    expect(two.points).toBe(two.max)
+  })
+
+  it('names which of the roles matched, when there is more than one', () => {
+    const c = titleOf({ ...base, preferredRoles: ['Data Analyst', 'Product Manager'] })
+    expect(c.note).toMatch(/Product Manager/)
+  })
+
+  it('does not name a role when there is only one', () => {
+    const c = titleOf({ ...base, preferredRoles: ['Product Manager'] })
+    expect(c.note).not.toMatch(/\(/)
+  })
+
+  it('still reads the singular column, so an unmigrated profile works', () => {
+    const legacy = titleOf({ ...base, preferredRole: 'Product Manager' })
+    const modern = titleOf({ ...base, preferredRoles: ['Product Manager'] })
+    expect(legacy.points).toBe(modern.points)
+  })
+
+  it('merges both sources without double-counting', () => {
+    const both = titleOf({
+      ...base,
+      preferredRole: 'Product Manager',
+      preferredRoles: ['Product Manager'],
+    })
+    expect(both.points).toBe(both.max)
+  })
+})
+
+describe('the candidate’s own keywords', () => {
+  const role = {
+    title: 'Senior Product Manager',
+    description: 'Own the payments platform roadmap for our fintech business.',
+  }
+  const base = { yearsExperience: 5, preferredRoles: ['Product Manager'], skills: ['SQL'] }
+  const kw = (c: Parameters<typeof scoreRole>[0]) =>
+    scoreRole(c, role, []).components.find((x) => x.key === 'keywords')
+
+  it('is absent when the candidate set none, so they are not scored out of more', () => {
+    expect(kw(base)).toBeUndefined()
+  })
+
+  it('boosts a role that names them', () => {
+    const c = kw({ ...base, keywords: ['payments', 'fintech'] })!
+    expect(c.points).toBeGreaterThan(0)
+    expect(c.note).toMatch(/payments/)
+  })
+
+  it('scores zero — not absent — when the role names none of them', () => {
+    // Absent and zero mean different things: absent is "not asked", zero is
+    // "asked and the answer was no". The candidate must be able to tell.
+    const c = kw({ ...base, keywords: ['kubernetes', 'devops'] })!
+    expect(c.points).toBe(0)
+    expect(c.note).toMatch(/none of the keywords/i)
+  })
+
+  it('never hides a role — only reorders', () => {
+    // The Stage A lock. A role matching no keyword still scores and still
+    // appears; it simply ranks lower than one that matches.
+    const without = scoreRole({ ...base, keywords: ['kubernetes'] }, role, []).total
+    const with_ = scoreRole({ ...base, keywords: ['payments'] }, role, []).total
+    expect(without).toBeGreaterThan(0)
+    expect(with_).toBeGreaterThan(without)
+  })
+})

@@ -10,7 +10,20 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('current_title, employer, years_experience, preferred_role, open_to_adjacent, skills, city, credential, work_mode_preference, salary_expectation')
+    /**
+     * ⚠️ `*`, NOT A NAMED LIST, AND THAT IS LOAD-BEARING HERE.
+     *
+     * preferred_roles and keywords arrive with migration 0022, which is applied
+     * by hand. Naming them made this select fail on an unmigrated database, the
+     * profile came back null, and the page redirected to /start — so adding an
+     * optional feature took the whole profile screen down and made it look like
+     * the candidate's data had been lost. Observed immediately after wiring it.
+     *
+     * With `*` a missing column is simply an absent key, and the form falls back
+     * to the single-role behaviour. Same reason src/lib/evaluate-user.ts selects
+     * `*` — this codebase's migrations are always ahead of its database.
+     */
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -32,6 +45,11 @@ export default async function ProfilePage() {
           employer: profile.employer ?? '',
           yearsExperience: String(profile.years_experience ?? ''),
           preferredRole: profile.preferred_role ?? '',
+          // The stored array leads with the primary, so the extras are the tail.
+          extraRoles: (profile.preferred_roles ?? []).filter(
+            (r: string) => r.toLowerCase() !== (profile.preferred_role ?? '').toLowerCase(),
+          ),
+          keywords: profile.keywords ?? [],
           openToAdjacent: profile.open_to_adjacent === true,
           skills: profile.skills ?? [],
           city: profile.city ?? '',

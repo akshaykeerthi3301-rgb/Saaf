@@ -38,6 +38,14 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     city: profile.city ?? undefined,
     credential: profile.credential ?? 'none',
     preferredRole: profile.preferred_role ?? undefined,
+    /**
+     * Added by migration 0022. The select above is `*`, so an unmigrated
+     * database simply returns no such key and these stay undefined — the
+     * candidate gets the single-role behaviour they had before, with no error.
+     * scoreAgainstIndex reads both and dedupes.
+     */
+    preferredRoles: profile.preferred_roles ?? undefined,
+    keywords: profile.keywords ?? undefined,
     workModePreference: profile.work_mode_preference ?? undefined,
     skills: profile.skills ?? undefined,
   }

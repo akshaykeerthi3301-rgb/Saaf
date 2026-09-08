@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
 import { LocationInput } from '@/components/features/location-input'
 import { SkillsField } from '@/components/features/skills-field'
+import { ExtraRolesField } from '@/components/features/extra-roles-field'
+import { KeywordsField } from '@/components/features/keywords-field'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
@@ -13,6 +15,8 @@ import { restartOnboarding } from '@/app/actions/restart-onboarding'
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
   preferredRole: string; openToAdjacent: boolean; skills: string[]; city: string; credential: string
+  /** Extras beyond the primary role, and the candidate's own keywords (0022). */
+  extraRoles: string[]; keywords: string[]
   workModePreference: string; salaryExpectation: string
 }
 
@@ -36,6 +40,10 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       currentTitle: f.currentTitle, employer: f.employer,
       yearsExperience: Number(f.yearsExperience),
       preferredRole: f.preferredRole, openToAdjacent: f.openToAdjacent,
+      // The primary always leads the array, so the singular column and the
+      // first element never disagree.
+      preferredRoles: [f.preferredRole, ...f.extraRoles].filter(Boolean),
+      keywords: f.keywords,
       skills: f.skills, city: f.city,
       credential: f.credential as 'CA' | 'CFA' | 'CS' | 'none',
       // Always sent from this screen (unlike onboarding, which never asks) —
@@ -82,6 +90,17 @@ export function ProfileForm({ initial }: { initial: Initial }) {
             </span>
           </span>
         </label>
+
+        <div className="border-t border-border pt-6">
+          <ExtraRolesField
+            roles={f.extraRoles}
+            onChange={(extraRoles) => setF({ ...f, extraRoles })}
+          />
+        </div>
+
+        <div className="border-t border-border pt-6">
+          <KeywordsField keywords={f.keywords} onChange={(keywords) => setF({ ...f, keywords })} />
+        </div>
 
         <SkillsField skills={f.skills} onChange={(skills) => setF({ ...f, skills })} />
 
