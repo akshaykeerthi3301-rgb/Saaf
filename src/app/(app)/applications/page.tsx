@@ -65,7 +65,7 @@ export default async function ApplicationsPage() {
   ).length
 
   return (
-    <AppShell title="Kanban Board" initials={initials}>
+    <AppShell title="Job Tracker" initials={initials}>
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>

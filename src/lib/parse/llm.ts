@@ -92,8 +92,15 @@ type OpenAiResponse = {
 
 export type Provider = 'groq' | 'gemini'
 
-/** Which provider is configured, or null. Exported so the UI can name the
- *  actual recipient of a résumé rather than a hard-coded company. */
+/**
+ * The provider that will be TRIED FIRST, or null when none is configured.
+ *
+ * ⚠️ ON A FAILOVER THIS IS NO LONGER THE ONE THAT ANSWERED. Callers use it to
+ * name the recipient of a résumé on screen, which stays accurate in the normal
+ * case and would be wrong in the rare one. If that attribution ever has to be
+ * exact, readResumeWithModel must return which provider replied — see the
+ * chain in providerChain().
+ */
 export function activeProvider(): Provider | null {
   if (process.env.GROQ_API_KEY) return 'groq'
   if (process.env.GEMINI_API_KEY) return 'gemini'
@@ -106,24 +113,56 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
 }
 
 /**
- * Returns null whenever anything is not perfect — no key, bad response,
- * timeout, malformed JSON. The caller keeps its deterministic result.
+ * Every provider that has a key, in preference order.
+ *
+ * ⚠️ THIS IS A FALLBACK CHAIN, AND IT WAS NOT ONE UNTIL 2026-09-08. The old
+ * behaviour picked ONE provider by key presence and returned null the moment it
+ * failed — so with both keys configured, a Groq outage silently degraded every
+ * résumé read to regex-only while a working Gemini key sat unused. Nothing
+ * errored; onboarding just quietly stopped reading skills, and the only symptom
+ * was a shortlist scored out of 80 instead of 100.
+ *
+ * Order is deliberate: Groq first because it is measurably faster on this
+ * workload (~1.4s against Gemini's ~3s on a résumé), Gemini second because it
+ * is a different vendor on different infrastructure — a fallback to the same
+ * provider's second model would share the outage it exists to survive.
+ */
+function providerChain(): Provider[] {
+  const chain: Provider[] = []
+  if (process.env.GROQ_API_KEY) chain.push('groq')
+  if (process.env.GEMINI_API_KEY) chain.push('gemini')
+  return chain
+}
+
+/**
+ * Returns null whenever no provider could answer — no key, bad response,
+ * timeout, malformed JSON, everywhere. The caller keeps its deterministic
+ * result.
+ *
+ * Failing over costs at most one extra round trip on a surface that already
+ * budgets 12 seconds per attempt, and only when the first provider is actually
+ * down. The alternative is what this replaced: silently worse output, with no
+ * error anywhere and a paid key idle.
  */
 export async function readResumeWithModel(text: string): Promise<LlmFields | null> {
-  const provider = activeProvider()
-  if (!provider || !text.trim()) return null
+  const chain = providerChain()
+  if (!chain.length || !text.trim()) return null
 
   const prompt = PROMPT + stripContactDetails(text).slice(0, MAX_CHARS)
 
-  try {
-    const raw = provider === 'groq' ? await callGroq(prompt) : await callGemini(prompt)
-    if (!raw) return null
-    return normalise(JSON.parse(raw))
-  } catch {
-    // Deliberately silent: the regex parser's result stands, and the candidate
-    // confirms every field regardless. A model outage is not a failed upload.
-    return null
+  for (const provider of chain) {
+    try {
+      const raw = provider === 'groq' ? await callGroq(prompt) : await callGemini(prompt)
+      if (!raw) continue
+      const fields = normalise(JSON.parse(raw))
+      if (fields) return fields
+    } catch {
+      // Deliberately silent per provider: the regex parser's result stands, and
+      // the candidate confirms every field regardless. A model outage is not a
+      // failed upload. Try the next one before giving up on the whole chain.
+    }
   }
+  return null
 }
 
 /** Groq speaks the OpenAI chat API. json_object mode plus the schema described

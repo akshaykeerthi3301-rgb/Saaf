@@ -18,7 +18,7 @@ import {
  * the way down, which would have dragged the shortlist query into the browser.
  *
  * NAV MATCHES THE DESIGN, AND EVERY ITEM EITHER WORKS OR SAYS IT DOES NOT.
- * Jobs, Kanban Board, Résumé and Copilot Diagnostic are built and routed.
+ * Jobs, Job Tracker, Résumé and Copilot Diagnostic are built and routed.
  * Interview Prep is not, so it renders with a lock, is not a link, and cannot
  * be clicked — which is how the design drew it. The earlier rule here was to
  * omit unbuilt items entirely; a lock is better, because it tells the candidate
@@ -32,7 +32,7 @@ const NAV: {
   locked?: string
 }[] = [
   { label: 'Jobs', href: '/today', icon: BriefcaseBusiness },
-  { label: 'Kanban Board', href: '/applications', icon: Grid2X2 },
+  { label: 'Job Tracker', href: '/applications', icon: Grid2X2 },
   { label: 'Résumé', href: '/resume', icon: FileText },
   { label: 'Copilot Diagnostic', href: '/copilot', icon: Gauge },
   // ⚠️ LOCKED, NOT HIDDEN — and the distinction is the point. An item that

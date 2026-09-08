@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { stripContactDetails, normalise, cleanTitle } from '../llm'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { stripContactDetails, normalise, cleanTitle, readResumeWithModel } from '../llm'
 
 describe('stripContactDetails', () => {
   it('removes the contact details a skills reader has no need for', () => {
@@ -86,5 +86,64 @@ describe('cleanTitle', () => {
   it('is applied by normalise(), not merely exported', () => {
     const r = normalise({ currentTitle: 'Systems Engineer at Infosys Jun 2024 - Present', skills: ['SQL'] })!
     expect(r.currentTitle).toBe('Systems Engineer')
+  })
+})
+
+describe('the provider fallback chain', () => {
+  const KEYS = ['GROQ_API_KEY', 'GEMINI_API_KEY'] as const
+  const saved: Record<string, string | undefined> = {}
+  beforeEach(() => { for (const k of KEYS) { saved[k] = process.env[k]; delete process.env[k] } })
+  afterEach(() => { for (const k of KEYS) { if (saved[k]) process.env[k] = saved[k]; else delete process.env[k] } })
+
+  it('returns null with no key at all, without calling out', async () => {
+    expect(await readResumeWithModel('Priya Iyer, Product Manager at Paytm.')).toBeNull()
+  })
+
+  it('falls over to the second provider when the first throws', async () => {
+    // The regression this pins: the old code picked ONE provider and returned
+    // null the moment it failed, so a Groq outage silently degraded every
+    // résumé read to regex-only while a working Gemini key sat unused.
+    process.env.GROQ_API_KEY = 'test-groq'
+    process.env.GEMINI_API_KEY = 'test-gemini'
+
+    const calls: string[] = []
+    const original = globalThis.fetch
+    globalThis.fetch = (async (url: RequestInfo | URL) => {
+      const u = String(url)
+      if (u.includes('groq.com')) { calls.push('groq'); throw new TypeError('groq is down') }
+      calls.push('gemini')
+      return new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({ skills: ['SQL'], currentTitle: 'Product Manager' }) }] } }],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      )
+    }) as typeof fetch
+
+    try {
+      const out = await readResumeWithModel('Priya Iyer, Product Manager at Paytm.')
+      expect(calls).toEqual(['groq', 'gemini'])
+      expect(out?.currentTitle).toBe('Product Manager')
+      expect(out?.skills).toContain('SQL')
+    } finally {
+      globalThis.fetch = original
+    }
+  })
+
+  it('returns null only after every provider has failed', async () => {
+    process.env.GROQ_API_KEY = 'test-groq'
+    process.env.GEMINI_API_KEY = 'test-gemini'
+    const calls: string[] = []
+    const original = globalThis.fetch
+    globalThis.fetch = (async (url: RequestInfo | URL) => {
+      calls.push(String(url).includes('groq.com') ? 'groq' : 'gemini')
+      throw new TypeError('both down')
+    }) as typeof fetch
+    try {
+      expect(await readResumeWithModel('Priya Iyer, Product Manager at Paytm.')).toBeNull()
+      expect(calls).toEqual(['groq', 'gemini'])
+    } finally {
+      globalThis.fetch = original
+    }
   })
 })

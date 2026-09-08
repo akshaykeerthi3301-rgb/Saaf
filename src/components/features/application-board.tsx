@@ -164,6 +164,13 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
         </p>
       )}
 
+      {/* ⚠️ ABOVE THE BOARD, NOT BELOW IT. This sat under all five columns,
+          which on a phone means scrolling past the entire pipeline to reach the
+          one control that puts something into it — and past an empty board on
+          the very first visit, when it is the only thing a new candidate can
+          actually do. */}
+      <AddByHand onAdded={(row) => setRows((rs) => [row, ...rs])} inputCls={inputCls} />
+
       {/* Horizontal snap-scroll on a phone, a five-column grid from xl. No
           breakpoint to maintain beyond that one switch. */}
       <div className="flex snap-x gap-4 overflow-x-auto pb-4 xl:grid xl:grid-cols-5 xl:overflow-visible">
@@ -312,7 +319,6 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
         })}
       </div>
 
-      <AddByHand onAdded={(row) => setRows((rs) => [row, ...rs])} inputCls={inputCls} />
     </>
   )
 }
@@ -331,22 +337,40 @@ function AddByHand({
 }) {
   const [company, setCompany] = useState('')
   const [title, setTitle] = useState('')
+  const [applyUrl, setApplyUrl] = useState('')
+  const [status, setStatus] = useState<ApplicationStatus>('saved')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
 
   async function add() {
     if (!company.trim() || !title.trim()) return
     setBusy(true); setError(undefined)
-    const res = await trackRole({ company: company.trim(), title: title.trim() })
+    const url = applyUrl.trim()
+    // ⚠️ ONE WRITE, WITH THE COLUMN ON THE INSERT. This briefly inserted and
+    // then called setApplicationStatus with a client-generated UUID — which did
+    // nothing at all, silently, because that id does not exist server-side and
+    // the update matched zero rows. The row appeared in Saved regardless of the
+    // column chosen, with no error. Only a row the database created has an id
+    // worth writing against; this file's own comment said so.
+    const res = await trackRole({
+      company: company.trim(),
+      title: title.trim(),
+      // trackRole has always accepted a URL and this form never sent one, so a
+      // hand-added row had no way back to the posting — the one thing a
+      // candidate needs when they return to it days later.
+      ...(url ? { applyUrl: url } : {}),
+      ...(status !== 'saved' ? { status } : {}),
+    })
     setBusy(false)
     if (!res.ok) { setError(res.error); return }
+
     // The server row is authoritative; this id only has to be unique until the
     // revalidate lands, and any write against it would be rejected by RLS.
     onAdded({
       id: crypto.randomUUID(), company: company.trim(), title: title.trim(),
-      applyUrl: null, status: 'saved', note: null, followUpOn: null,
+      applyUrl: url || null, status, note: null, followUpOn: null,
     })
-    setCompany(''); setTitle('')
+    setCompany(''); setTitle(''); setApplyUrl(''); setStatus('saved')
   }
 
   return (
@@ -354,21 +378,44 @@ function AddByHand({
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         Add a job from anywhere
       </p>
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        A referral, a forward, a board we do not crawl. It lands in the same
+        pipeline as everything else.
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <input
-          className={`${inputCls} sm:max-w-56`}
+          className={`${inputCls} sm:max-w-52`}
           aria-label="Company"
           placeholder="Company"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
         />
         <input
-          className={`${inputCls} sm:max-w-72`}
+          className={`${inputCls} sm:max-w-60`}
           aria-label="Role title"
           placeholder="Role title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+        <input
+          className={`${inputCls} sm:max-w-64`}
+          aria-label="Link to the posting"
+          type="url"
+          inputMode="url"
+          placeholder="Link to the posting (optional)"
+          value={applyUrl}
+          onChange={(e) => setApplyUrl(e.target.value)}
+        />
+        <select
+          className={`${inputCls} sm:max-w-40`}
+          aria-label="Which column"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+        >
+          {COLUMNS.map((c) => (
+            <option key={c.status} value={c.status}>{c.label}</option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={add}

@@ -35,6 +35,17 @@ const trackSchema = z.object({
   company: z.string().min(1).max(200),
   title: z.string().min(1).max(300),
   applyUrl: z.string().url().max(2000).optional(),
+  /**
+   * Which column it lands in. Defaults to 'saved' at the database level.
+   *
+   * ⚠️ IT IS SET ON THE INSERT RATHER THAN BY A FOLLOW-UP UPDATE. The board's
+   * add-by-hand form briefly did the latter — insert, then call
+   * setApplicationStatus with the id it had optimistically generated — which
+   * silently did nothing, because that id does not exist server-side and the
+   * update matched zero rows. Only a row the database created has an id worth
+   * writing against.
+   */
+  status: z.enum(STATUSES).optional(),
 })
 
 /**
@@ -49,12 +60,15 @@ export async function trackRole(input: z.input<typeof trackSchema>) {
   const { supabase, user } = await currentUser()
   if (!user) return failed('Not signed in.')
 
-  const { roleId, company, title, applyUrl } = parsed.data
+  const { roleId, company, title, applyUrl, status } = parsed.data
   const row = {
     user_id: user.id,
     role_id: roleId ?? null,
     company, title,
     apply_url: applyUrl ?? null,
+    // Omitted rather than defaulted here, so the column default in
+    // migration 0015 stays the single source of truth for "where new work lands".
+    ...(status ? { status } : {}),
   }
 
   // The unique index covers (user_id, role_id) only where role_id is not null,
