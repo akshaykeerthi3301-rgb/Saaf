@@ -89,6 +89,12 @@ export default function Landing() {
           <span className="text-base font-semibold tracking-[-0.03em]">Saaf AI</span>
         </Link>
         <div className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
+          {/* ⚠️ THE TOOLS WERE ORPHANS UNTIL 2026-09-08 — zero inbound links from
+              anywhere, reachable only by typing the URL, on the two pages whose
+              entire purpose is to be useful before anybody signs up. This is the
+              first of them, and it is deliberately in the primary nav rather
+              than the footer. */}
+          <Link href="/tools" className="transition-colors hover:text-foreground">Free tools</Link>
           <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
           <Link href="/audit" className="transition-colors hover:text-foreground">Index audit</Link>
           <a href="#faq" className="transition-colors hover:text-foreground">FAQ</a>
@@ -131,11 +137,25 @@ export default function Landing() {
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
             <Cta />
-            <span className="flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm">
-              <Check className="size-4 text-accent" />
-              No spam. No guesswork.
-            </span>
+            {/* ⚠️ A SECOND, LOWER-COMMITMENT WAY IN, AND IT IS NOT DECORATION.
+                The only path off this page was "upload your résumé and sign in",
+                which is a large ask of someone who arrived thirty seconds ago.
+                The ATS check asks for nothing, proves the product can do
+                something useful, and is the page most organic search traffic
+                will land on anyway — so the landing page should acknowledge it
+                exists rather than pretending sign-in is the only door. */}
+            <Link
+              href="/tools/ats-checker"
+              className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold text-primary shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/30 hover:bg-secondary/60"
+            >
+              Check your ATS score — free
+            </Link>
           </div>
+
+          <p className="mt-4 flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm">
+            <Check className="size-4 text-accent" />
+            No spam. No guesswork. The free tools need no account.
+          </p>
 
           <div className="mt-16 flex items-center gap-3 border-t border-border pt-5 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground sm:mt-20">
             <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
@@ -245,6 +265,8 @@ export default function Landing() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">Saaf AI</span>
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
+            <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">Free ATS checker</Link>
+            <Link href="/tools/paste-jd" className="transition-colors hover:text-foreground">Should I apply?</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/profile" className="transition-colors hover:text-foreground">Delete your account</Link>

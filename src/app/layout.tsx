@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Public_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { AnalyticsProvider } from '@/components/features/analytics-provider'
+import { siteUrl } from '@/lib/site'
 
 /**
  * Self-hosted at build time by next/font — no request reaches Google from a
@@ -24,6 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
+  /**
+   * ⚠️ REQUIRED FOR THE SOCIAL CARD TO RESOLVE. Open Graph URLs must be
+   * absolute; without metadataBase, Next emits relative ones and every
+   * WhatsApp or LinkedIn share renders as bare text. Resolved from the same
+   * chain as the sitemap — see src/lib/site.ts.
+   */
+  metadataBase: new URL(siteUrl()),
   title: 'Saaf AI — Precision Career Copilot for India',
   description: 'Find high-precision career matches in India without the application spam.',
   // Real icons from the saaf-ai design export, replacing the Next.js scaffold

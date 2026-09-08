@@ -70,11 +70,25 @@ describe('no colour is hardcoded outside the token layer', () => {
     const offenders: string[] = []
     const banned = /#[0-9a-fA-F]{6}\b|\b(?:bg|text|border)-(?:zinc|slate|gray|neutral|stone)-\d{2,3}\b/
 
+    /**
+     * ⚠️ ONE EXEMPTION, AND IT IS A CAPABILITY LIMIT RATHER THAN A CONCESSION.
+     *
+     * next/og renders through satori, which resolves NO CSS variables and NO
+     * Tailwind — it accepts inline styles only. There is no mechanism by which
+     * a design token can reach these files, so the alternative to literal hex
+     * is no social card at all. The values in them are copied from :root in
+     * globals.css and the file says so.
+     *
+     * Widen this list only for another satori surface (twitter-image). Any
+     * other .tsx reaching for a hex is the drift this test exists to catch.
+     */
+    const SATORI = /^(opengraph|twitter)-image\.tsx$|^og-card\.tsx$/
+
     const walk = (dir: string): void => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = join(dir, entry.name)
         if (entry.isDirectory()) walk(full)
-        else if (entry.name.endsWith('.tsx')) {
+        else if (entry.name.endsWith('.tsx') && !SATORI.test(entry.name)) {
           readFileSync(full, 'utf8').split('\n').forEach((line, i) => {
             if (banned.test(line)) offenders.push(`${full}:${i + 1}  ${line.trim()}`)
           })
@@ -84,5 +98,30 @@ describe('no colour is hardcoded outside the token layer', () => {
     walk(join(__dirname, '..', '..'))
 
     expect(offenders).toEqual([])
+  })
+
+  it('exempts only satori surfaces, and only one of them holds colour', () => {
+    // ⚠️ THE EXEMPTION IS BOUNDED BY SHAPE, NOT BY COUNT. There are four
+    // opengraph-image.tsx route files, and they are thin — each just calls
+    // ogCard(). Exactly ONE file carries the literal colours, and route files
+    // must stay free of them, or the exemption becomes a hole four files wide.
+    const withColour: string[] = []
+    const routeCards: string[] = []
+    const banned = /#[0-9a-fA-F]{6}\b/
+
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name)
+        if (entry.isDirectory()) walk(full)
+        else if (/^(opengraph|twitter)-image\.tsx$/.test(entry.name)) {
+          routeCards.push(full)
+          if (banned.test(readFileSync(full, 'utf8'))) withColour.push(full)
+        }
+      }
+    }
+    walk(join(__dirname, '..', '..'))
+
+    expect(routeCards.length).toBeGreaterThan(0)
+    expect(withColour).toEqual([])
   })
 })

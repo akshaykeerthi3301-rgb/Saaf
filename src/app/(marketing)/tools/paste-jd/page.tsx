@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { DocPage } from '@/components/features/doc-page'
+import { ToolPage } from '@/components/features/tool-page'
 import { JdMatchForm } from '@/components/features/jd-match-form'
 
 /**
@@ -24,49 +24,68 @@ import { JdMatchForm } from '@/components/features/jd-match-form'
  * /tools, so no session is required and none is created. That is the point: the
  * tool has to be useful before anybody signs up, which is also why it stores
  * nothing — see src/app/actions/jd-match.ts for what makes that safe.
+ *
+ * Moved off DocPage on 2026-09-08 — see src/components/features/tool-page.tsx.
  */
 export const metadata: Metadata = {
-  title: 'Should I apply? — Saaf',
+  title: 'Should I Apply? — Free Job Match Score for Any Posting | Saaf',
   description:
-    'Paste any job description and your résumé. Get the same match score Saaf uses, with the working shown. Free, no sign-up, nothing stored.',
+    'Paste any job description and your resume. Get a match score broken into its parts, with the sentences we read it out of — so you can check the number rather than take it. Free, no sign-up, nothing stored.',
+  keywords: [
+    'job match score',
+    'should I apply',
+    'resume job description match',
+    'JD match checker',
+    'job fit score',
+  ],
+  alternates: { canonical: '/tools/paste-jd' },
+  openGraph: {
+    title: 'Should I Apply? — Free Job Match Score for Any Posting',
+    description:
+      'Paste a job description and your resume. Get a match score that shows its working.',
+    url: '/tools/paste-jd',
+    type: 'website',
+  },
 }
 
 export default function PasteJdPage() {
   return (
-    <DocPage eyebrow="Paste a JD" title="Should I apply?">
-      <p className="mt-6 text-sm leading-6 text-muted-foreground">
-        Paste any posting and your résumé. You get the same score the shortlist
-        uses, broken into its parts, the one line explaining it, and the
-        sentences we read it out of — so you can check the number rather than
-        take it.
-      </p>
-
-      {/* The three promises, said once, before anything is typed rather than
-          after. A résumé box on a public page is the moment a visitor decides
-          whether to trust this, and the answer has to be above the box. */}
-      <ul className="mt-5 space-y-2 border-l-2 border-accent/30 pl-4 text-sm leading-6 text-muted-foreground">
-        <li>No sign-up, no email, ₹0.</li>
-        <li>
-          Nothing is stored. Your résumé is read in the request and dropped when it
-          ends — contact details are stripped before any of it is read.
-        </li>
-        <li>Every number opens to show where it came from, including what we could not read.</li>
-      </ul>
-
+    <ToolPage
+      eyebrow="Free match score"
+      title="Should I apply?"
+      standfirst="Paste any posting and your résumé. You get the same score the shortlist uses, broken into its parts, the one line explaining it, and the sentences we read it out of."
+      promises={
+        <>
+          <li>No sign-up, no email, ₹0.</li>
+          <li>
+            Nothing is stored. Your résumé is read in the request and dropped when it
+            ends — contact details are stripped before any of it is read.
+          </li>
+          <li>Every number opens to show where it came from, including what we could not read.</li>
+        </>
+      }
+      footer={
+        <p className="text-sm leading-6 text-muted-foreground">
+          Before you apply anywhere, check that a machine can read your résumé at all —{' '}
+          <Link
+            href="/tools/ats-checker"
+            className="font-semibold text-primary underline underline-offset-4"
+          >
+            run the free ATS check
+          </Link>
+          . To get scored roles daily without hunting for them,{' '}
+          <Link href="/" className="font-semibold text-primary underline underline-offset-4">
+            see what Saaf does
+          </Link>
+          . How we read postings is published on the{' '}
+          <Link href="/audit" className="font-semibold text-primary underline underline-offset-4">
+            index audit
+          </Link>
+          .
+        </p>
+      }
+    >
       <JdMatchForm />
-
-      <p className="mt-10 border-t border-border pt-6 text-xs leading-5 text-muted-foreground">
-        This scores one posting you already found. To get scored roles daily
-        without hunting for them,{' '}
-        <Link href="/" className="font-semibold text-primary hover:underline">
-          see what Saaf does
-        </Link>
-        . How we read postings is published on the{' '}
-        <Link href="/audit" className="font-semibold text-primary hover:underline">
-          index audit
-        </Link>
-        .
-      </p>
-    </DocPage>
+    </ToolPage>
   )
 }
