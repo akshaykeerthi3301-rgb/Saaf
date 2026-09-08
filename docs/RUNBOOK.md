@@ -76,6 +76,46 @@ rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
 #   275312729+akshaykeerthi3301-rgb@users.noreply.github.com
 ```
 
+### ⚠️ "Not authorized" does not mean what it says
+
+Observed 2026-09-08. `vercel deploy --prod` returned:
+
+```
+{ "status": "error", "reason": "deploy_failed", "message": "Not authorized" }
+```
+
+…while `npx vercel whoami` succeeded and `npx vercel project ls` listed `saaf`
+at its correct production URL. It is **not** a scope or account problem — the
+message sends you looking for one. Re-linking proved it: the refreshed
+`.vercel/project.json` carried the SAME `projectId` and the SAME `orgId` as the
+one already on disk. What actually changed was the credential.
+
+**The fix is to re-link, which downloads a fresh `VERCEL_OIDC_TOKEN`:**
+
+```bash
+cd /tmp/saaf-deploy && rm -rf .vercel && npx vercel link --yes --project saaf
+```
+
+Then retry the deploy. It succeeded on the first attempt afterwards.
+
+Do NOT respond to this error by creating or linking a second project. `saaf` →
+`https://saaf-ten.vercel.app` is the only one; a second would split the domain
+and the environment variables.
+
+### ⚠️ `vercel link` writes a token into the staged copy — delete it
+
+`vercel link` creates a `.env.local` containing a freshly downloaded
+`VERCEL_OIDC_TOKEN`. The rsync above excludes `.env.*`, but the link step runs
+**after** the copy, so following these steps in order stages a credential file
+for upload. Remove it before deploying:
+
+```bash
+rm -f /tmp/saaf-deploy/.env.local
+```
+
+Deployment env vars come from the Vercel project, never from a staged file, so
+nothing needs it.
+
 **Deployment Protection is OFF.** `ssoProtection` was `all_except_custom_domains`,
 forcing a Vercel login on every visitor. Set to `null` on 2026-09-03 via the
 projects API so the site is publicly reachable — which a landing page has to be.
