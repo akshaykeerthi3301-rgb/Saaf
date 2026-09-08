@@ -192,3 +192,21 @@ about a candidate's search is shared; replaying their screen while they read a
 shortlist of employers would contradict it. Request bodies are stripped in
 `beforeSend` on both client and server so résumé text cannot reach an error
 report.
+
+## The digest cron is deliberately absent
+
+`/api/cron/digest` was removed from `vercel.json` on 2026-09-08, when the daily
+digest was parked (`docs/PROJECT-STATE.md` → Parked). The route still exists and
+still works; nothing about the feature was deleted.
+
+⚠️ **IT WAS REMOVED SO A PARKED FEATURE DOES NOT FAIL NIGHTLY.** With no verified
+Resend domain, a send to anyone but the founder is rejected. The moment the first
+Google beta user signs up they are marked `email_verified` and become a digest
+recipient, so the cron would have started reporting a failed send every night —
+for something deliberately switched off. A red cron that is expected to be red
+trains you to ignore the ones that are not.
+
+**To turn the digest back on:** restore the entry with schedule `0 3 * * *`, after
+the three reversal conditions in PROJECT-STATE are met — a verified domain, more
+users than can be messaged by hand, and a week of real per-candidate discovery
+data. That data may say weekly rather than daily; the board rotation is ~8 days.
