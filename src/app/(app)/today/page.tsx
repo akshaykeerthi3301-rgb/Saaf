@@ -35,6 +35,25 @@ const NEW_WITHIN_DAYS = 7
  *  narrow their search instead of scrolling further. */
 const CARDS_PER_BUCKET = 20
 
+/**
+ * The True-Fit line: where high-probability applications stop and long shots
+ * begin.
+ *
+ * ⚠️ IT IS A MARK ON THE LIST, NOT A FILTER, AND THAT DISTINCTION IS THE WHOLE
+ * DECISION. Stage A (2026-09-04) reversed gating and `docs/PROJECT-STATE.md`
+ * locks "never gate users out" — so nothing below this line is hidden, removed,
+ * or collapsed. Every role stays exactly where its score puts it and keeps its
+ * full working. The line only tells the candidate where to spend their next
+ * forty minutes.
+ *
+ * ⚠️ DO NOT TURN THIS INTO `WHERE score >= 50`. That was proposed, considered,
+ * and rejected: it would empty the feed for exactly the candidates the index
+ * serves worst. An HR candidate matches 15 roles in total and 5 at or above 50
+ * — a filter leaves them a screen that looks broken, while a line leaves them
+ * a screen that is honest about a thin market.
+ */
+const TRUE_FIT = 50
+
 type RoleRequirement = {
   kind: string
   min_years: number | null
@@ -485,22 +504,41 @@ export default async function TodayPage({
                   ) : null}
 
                   <div className="space-y-4">
-                    {visible.map((r) => (
-                      <RoleCard
-                        key={r.id}
-                        gateResultId={r.id}
-                        roleId={r.role_id}
-                        title={r.roles?.title ?? ''}
-                        company={r.roles?.company_name ?? ''}
-                        city={r.roles?.city ?? undefined}
-                        score={r.score ?? 0}
-                        breakdown={r.score_breakdown}
-                        reason={r.reason}
-                        applyUrl={r.roles?.apply_url}
-                        isNew={isNew(r)}
-                        requirements={evidence(r)}
-                        profileCity={profile.city ?? undefined}
-                      />
+                    {visible.map((r, i) => (
+                      <div key={r.id}>
+                        {/* The line is drawn between two cards, at the first
+                            role that falls below the benchmark — so it marks a
+                            boundary in a list the candidate is already reading,
+                            rather than adding a section they have to navigate.
+                            Rendered only when there is something on BOTH sides:
+                            a line under nothing, or above everything, tells a
+                            candidate nothing and just looks like a verdict. */}
+                        {(r.score ?? 0) < TRUE_FIT &&
+                        i > 0 &&
+                        (visible[i - 1].score ?? 0) >= TRUE_FIT ? (
+                          <div className="mb-4 mt-8 flex items-center gap-3">
+                            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                              Below {TRUE_FIT}% — still worth reading, longer odds
+                            </span>
+                            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+                          </div>
+                        ) : null}
+                        <RoleCard
+                          gateResultId={r.id}
+                          roleId={r.role_id}
+                          title={r.roles?.title ?? ''}
+                          company={r.roles?.company_name ?? ''}
+                          city={r.roles?.city ?? undefined}
+                          score={r.score ?? 0}
+                          breakdown={r.score_breakdown}
+                          reason={r.reason}
+                          applyUrl={r.roles?.apply_url}
+                          isNew={isNew(r)}
+                          requirements={evidence(r)}
+                          profileCity={profile.city ?? undefined}
+                        />
+                      </div>
                     ))}
                   </div>
 
