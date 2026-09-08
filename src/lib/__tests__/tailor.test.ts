@@ -109,3 +109,28 @@ describe('groundingFailure with the posting in scope', () => {
     ).toMatch(/figure/)
   })
 })
+
+describe('possessive forms of an allowed company', () => {
+  const me = {
+    currentTitle: 'Product Manager', employer: 'Paytm', yearsExperience: 5,
+    skills: ['SQL', 'A/B Testing'], domain: 'fintech', credential: null,
+  }
+  const role = { title: 'Senior Product Manager', company: 'Razorpay', description: 'Payments platform.' }
+
+  it('accepts the posting company in its possessive form', () => {
+    // ⚠️ THE REGRESSION THIS PINS DROPPED AN ENTIRE COVER NOTE. Stripping
+    // non-letters turned "Razorpay's" into "Razorpays", which matched nothing,
+    // so the company being applied to was read as a fabrication.
+    expect(groundingFailure('Keen to join Razorpay’s payments platform team.', me, role)).toBeNull()
+    expect(groundingFailure("Keen to join Razorpay's payments platform team.", me, role)).toBeNull()
+  })
+
+  it('accepts the candidate’s own employer in its possessive form', () => {
+    expect(groundingFailure('Owned Paytm’s merchant payments funnel.', me, role)).toBeNull()
+  })
+
+  it('still rejects a stranger’s company, possessive or not', () => {
+    expect(groundingFailure('Led delivery at Infosys.', me, role)).not.toBeNull()
+    expect(groundingFailure('Led Infosys’s delivery team.', me, role)).not.toBeNull()
+  })
+})

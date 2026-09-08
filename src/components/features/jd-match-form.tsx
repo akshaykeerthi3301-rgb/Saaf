@@ -12,6 +12,7 @@ import {
   MIN_RESUME_CHARS,
 } from '@/lib/jd-match-constants'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
+import { TailorPanel } from '@/components/features/tailor-panel'
 
 /**
  * TASK-060 step 3 — the paste-a-JD surface.
@@ -197,7 +198,14 @@ export function JdMatchForm() {
         </p>
       ) : null}
 
-      {result ? <JdResult result={result} /> : null}
+      {result ? (
+        <>
+          <JdResult result={result} />
+          {/* The conversion step, at the moment the candidate has just been told
+              how they score against this posting. */}
+          <TailorPanel jdText={jdText} resumeText={resumeText} jdTitle={jdTitle} />
+        </>
+      ) : null}
     </div>
   )
 }

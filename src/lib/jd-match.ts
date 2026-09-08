@@ -1,6 +1,7 @@
 import { extractAll } from '@/gates/extract'
 import type { CandidateProfile, TypedRequirement } from '@/gates/types'
 import { scoreRole, summarise, type ScoreBreakdown } from '@/match/score'
+import type { CandidateFacts } from '@/lib/tailor'
 import { extractFields, type ParsedFields } from '@/lib/parse/extract'
 import { readResumeWithModel, activeProvider, type Provider } from '@/lib/parse/llm'
 import {
@@ -79,6 +80,11 @@ export type JdMatchResult = {
   requirements: TypedRequirement[]
   /** What we read out of the résumé, after the model pass. */
   profile: CandidateProfile
+  /**
+   * The same reading in tailor.ts's shape — it carries `employer` and `domain`,
+   * which CandidateProfile does not and the fabrication guard needs.
+   */
+  facts: CandidateFacts
   /** Everything we could not read, in the candidate's words. Never silent. */
   warnings: string[]
   /** Which model read the résumé, or null when none did. */
@@ -154,7 +160,12 @@ function keepStillTrue(warnings: string[], fields: ParsedFields): string[] {
  */
 async function buildProfile(
   input: JdMatchInput
-): Promise<{ profile: CandidateProfile; warnings: string[]; provider: Provider | null }> {
+): Promise<{
+  profile: CandidateProfile
+  facts: CandidateFacts
+  warnings: string[]
+  provider: Provider | null
+}> {
   const deterministic = extractFields(input.resumeText)
   const model = await readResumeWithModel(input.resumeText)
 
@@ -211,10 +222,33 @@ async function buildProfile(
     warnings.push('We could not read your city, so the location component is scored as unstated.')
   }
 
+  /**
+   * The same reading, in the shape a tailored draft needs.
+   *
+   * ⚠️ `employer` AND `domain` ARE THE WHOLE REASON THIS EXISTS. CandidateProfile
+   * carries neither — the scorer has no use for them — so they were parsed and
+   * then dropped. src/lib/tailor.ts's groundingFailure() rejects any capitalised
+   * word that is not in the posting, the candidate's employer, their skills,
+   * title or domain. With `employer: null` the comparison set is nearly empty,
+   * so a JD-driven draft would have had most of its bullets silently removed and
+   * the feature would have looked broken for a reason nothing reported.
+   *
+   * Nothing new is extracted here. Both values were already read a few lines
+   * above and thrown away.
+   */
+  const facts: CandidateFacts = {
+    currentTitle: fields.currentTitle ?? null,
+    employer: fields.employer ?? null,
+    yearsExperience: years ?? null,
+    skills: fields.skills ?? [],
+    domain: fields.domain ?? null,
+    credential: fields.credential ?? null,
+  }
+
   // activeProvider() reports what is CONFIGURED; `model` reports what actually
   // answered. Only the second is true, so a configured provider that timed out
   // is reported as null rather than credited with a read it did not do.
-  return { profile, warnings, provider: model ? activeProvider() : null }
+  return { profile, facts, warnings, provider: model ? activeProvider() : null }
 }
 
 /**
@@ -233,7 +267,7 @@ export async function matchJdToResume(input: JdMatchInput): Promise<JdMatchResul
     throw new JdMatchError('Paste your full résumé — this looks too short to read.')
   }
 
-  const { profile, warnings, provider } = await buildProfile(input)
+  const { profile, facts, warnings, provider } = await buildProfile(input)
 
   const title = input.jdTitle?.trim() || guessTitle(input.jdText)
   if (!input.jdTitle?.trim()) {
@@ -305,5 +339,5 @@ export async function matchJdToResume(input: JdMatchInput): Promise<JdMatchResul
     )
   }
 
-  return { breakdown, reason: summarise(breakdown), requirements, profile, warnings, provider }
+  return { breakdown, reason: summarise(breakdown), requirements, profile, facts, warnings, provider }
 }

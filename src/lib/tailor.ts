@@ -127,7 +127,21 @@ export function groundingFailure(
   const myFirstWord = mine.split(/\s+/)[0] ?? ''
   const posting = `${role?.title ?? ''} ${role?.company ?? ''}`.toLowerCase()
   for (const word of bullet.split(/\s+/).slice(1)) {
-    const w = word.replace(/[^A-Za-z&]/g, '')
+    /**
+     * ⚠️ THE POSSESSIVE IS STRIPPED FIRST, AND IT HAS TO BE.
+     *
+     * Stripping non-letters turns "Razorpay's" into "Razorpays", which then
+     * matches nothing — not the posting, not the employer, not a skill. So the
+     * most natural sentence a cover note contains, "…to Razorpay's payments
+     * platform team", was rejected for naming the very company being applied
+     * to. Observed live on /tools/paste-jd on 2026-09-08: the entire note was
+     * dropped, and the reason given named a company that does not exist.
+     *
+     * Both apostrophes matter. A model writes the typographic ’ far more often
+     * than the ASCII ', and a fix handling only the ASCII one would have left
+     * the common case broken.
+     */
+    const w = word.replace(/['’]s\b/gi, '').replace(/[^A-Za-z&]/g, '')
     if (w.length < 3 || !/^[A-Z]/.test(w)) continue
     const lower = w.toLowerCase()
     if (NOT_A_COMPANY.has(lower)) continue

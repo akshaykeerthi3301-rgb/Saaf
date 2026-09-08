@@ -327,3 +327,47 @@ describe('the model-resolved warning filter stays wired to the parser', () => {
   })
 })
 
+
+describe('the facts a tailored draft needs', () => {
+  it('carries employer and domain, which CandidateProfile drops', async () => {
+    // ⚠️ THE REGRESSION THIS PINS IS SILENT AND TOTAL. groundingFailure() rejects
+    // any capitalised word not in the posting, the employer, the skills, the
+    // title or the domain. buildProfile() parsed employer and domain and then
+    // threw them away, so a JD-driven draft would have had most of its bullets
+    // removed — with no error, and nothing on screen to say why.
+    const r = await matchJdToResume({ jdText: JD, resumeText: RESUME })
+    expect(r.facts).toBeDefined()
+    expect(r.facts.employer).toBe('Paytm')
+    expect(r.facts.currentTitle).toBe('Product Manager')
+    expect(Array.isArray(r.facts.skills)).toBe(true)
+  })
+
+  it('gives the guard enough to keep a bullet about the candidate’s own work', async () => {
+    const { groundingFailure } = await import('../tailor')
+    const r = await matchJdToResume({ jdText: JD, resumeText: RESUME })
+    const role = { title: 'Senior Product Manager', company: 'Razorpay', description: JD }
+
+    // A bullet built only from what the résumé actually says must survive.
+    expect(groundingFailure('Owned the merchant payments funnel at Paytm.', r.facts, role)).toBeNull()
+
+    // And the guard must still bite on what it exists to stop.
+    expect(groundingFailure('Grew activation 40% at Paytm.', r.facts, role)).not.toBeNull()
+    expect(groundingFailure('Led delivery at Infosys.', r.facts, role)).not.toBeNull()
+  })
+
+  it('a null employer is what breaks the guard — the case this fix removes', async () => {
+    const { groundingFailure } = await import('../tailor')
+    const role = { title: 'Senior Product Manager', company: 'Razorpay', description: JD }
+    const withEmployer = {
+      currentTitle: 'Product Manager', employer: 'Paytm', yearsExperience: 5,
+      skills: ['SQL'], domain: 'fintech', credential: null,
+    }
+    const without = { ...withEmployer, employer: null }
+
+    const bullet = 'Owned the merchant payments funnel at Paytm.'
+    expect(groundingFailure(bullet, withEmployer, role)).toBeNull()
+    // Same sentence, same candidate — rejected purely because we forgot to pass
+    // the employer through.
+    expect(groundingFailure(bullet, without, role)).not.toBeNull()
+  })
+})
