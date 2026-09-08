@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { checkResume, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
+import { checkResume, categoryOf, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
 
 /**
  * TASK-061 — the ATS checker, proved against documents with known defects.
@@ -12,23 +12,50 @@ import { checkResume, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
  * fault its test names.
  */
 
+/**
+ * ⚠️ THIS FIXTURE WAS 80 WORDS AND WAS LENGTHENED ON PURPOSE, not to make a
+ * test pass. Three rules added later — résumé length, quantified impact and a
+ * findable link — are all true of a real document and were all firing on this
+ * one, which meant the fixture no longer represented the thing it is named
+ * after. A "clean résumé" that a real ATS would mark down is a fixture that
+ * has stopped describing the case it tests. The parse facts other tests assert
+ * against it (Product Manager, Paytm, Bengaluru) are unchanged.
+ */
 const CLEAN = `Priya Iyer
-priya.iyer@example.com | +91 98765 43210
+priya.iyer@example.com | +91 98765 43210 | linkedin.com/in/priyaiyer
 Bengaluru, Karnataka, India
+
+Summary
+Product manager with six years in Indian fintech, working on merchant payments
+and onboarding. Comfortable owning a funnel end to end, from the problem
+statement through the experiment design to the rollout and the reporting that
+tells everyone whether it worked.
 
 Experience
 
 Product Manager at Paytm
 Mar 2021 - Present
-Owned the merchant payments funnel. Ran A/B tests on the onboarding flow.
-Wrote SQL against the warehouse for weekly activation reporting.
+Owned the merchant payments funnel end to end, covering onboarding, activation
+and the first transaction. Ran A/B tests on the onboarding flow that lifted
+completion by 14% across 40,000 merchants in the first quarter after launch.
+Wrote SQL against the warehouse for weekly activation reporting, replacing a
+manual spreadsheet that three analysts had been maintaining between them.
+Rebuilt the merchant risk review queue with the operations team, cutting the
+median review time from 3 days to 8 hours without changing headcount.
+Ran the quarterly roadmap process for a group of 4 engineers and 2 designers.
 
 Associate Product Manager at Zeta
 Jul 2019 - Feb 2021
-Shipped the first version of the card controls dashboard.
+Shipped the first version of the card controls dashboard, adopted by 12 banking
+clients in its first year and still the default surface for card management.
+Ran discovery interviews with 25 merchants to size the settlement problem, and
+turned that into the roadmap the team worked through the following year.
+Built the reporting that finance used to close the month, reducing the close
+from 6 days to 2.
 
 Skills
-SQL, Product Roadmapping, A/B Testing, Figma, Amplitude
+SQL, Product Roadmapping, A/B Testing, Figma, Amplitude, Experiment Design,
+Stakeholder Management, Customer Discovery
 
 Education
 B.Tech, Computer Science, VIT Vellore, 2019`
@@ -298,5 +325,202 @@ B.Com, 2018`
   it('still reaches no database with a role selected', () => {
     const src = readFileSync(join(__dirname, '..', 'ats-check.ts'), 'utf8')
     expect(src).not.toMatch(/supabase/i)
+  })
+})
+
+/**
+ * The categories added on 2026-09-08, and the six rules that came with them.
+ *
+ * Written defect-first like everything above: each fixture carries exactly the
+ * fault its test names, and the last test in this block is the one that keeps
+ * the group scores honest.
+ */
+describe('report categories', () => {
+  it('places every finding it raises in a registered category', () => {
+    // A document with as many faults as one file can hold, so the assertion
+    // runs over the widest set of ids the checker can produce in one pass.
+    const broken = `RESUME
+Responsible for the payments team
+Worked on the onboarding flow
+Involved in reporting
+
+Education
+B.Tech VIT 2019
+
+Experience
+Analyst    Zeta    03/2021 - Present
+Analyst at Paytm Jan 2020 - Present
+skills: sql, sql, sql, sql, sql, sql, python, python, python, excel, excel`
+    const r = checkResume(broken)
+    expect(r.findings.length).toBeGreaterThan(2)
+    for (const f of r.findings) {
+      expect(categoryOf(f.id), `${f.id} is missing from RULES`).not.toBeNull()
+      expect(f.category).toBe(categoryOf(f.id))
+    }
+  })
+
+  it('never reports passing more rules than it ran', () => {
+    const r = checkResume(CLEAN)
+    for (const c of r.categories) {
+      expect(c.passed).toBeGreaterThanOrEqual(0)
+      expect(c.passed).toBeLessThanOrEqual(c.total)
+      expect(c.score).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('omits the tailoring group entirely when no role was chosen', () => {
+    const without = checkResume(CLEAN).categories.map((c) => c.key)
+    expect(without).not.toContain('tailoring')
+    // Showing it at 100/100 because no rule ran would be the flattering lie.
+    const withRole = checkResume(CLEAN, 'Product Manager').categories.map((c) => c.key)
+    expect(withRole).toContain('tailoring')
+  })
+})
+
+describe('the six ATS-essentials and content rules', () => {
+  it('flags two date formats in one document', () => {
+    const mixed = `${CLEAN}\n\nConsulting\nAdvisor at Razorpay\n03/2018 - 06/2019\nAdvised on pricing.`
+    expect(ids(mixed)).toContain('date-format-mixed')
+    expect(ids(CLEAN)).not.toContain('date-format-mixed')
+  })
+
+  it('flags a résumé with no findable link, and passes one that has it', () => {
+    expect(ids(CLEAN.replace('| linkedin.com/in/priyaiyer', ''))).toContain('no-links')
+    expect(ids(CLEAN)).not.toContain('no-links')
+  })
+
+  it('flags a résumé too short to rank on', () => {
+    const short = `Ravi Kumar
+ravi@example.com | +91 90000 00000 | linkedin.com/in/ravi
+
+Experience
+Analyst at Zeta
+Jan 2023 - Present
+Built the reporting for 30 clients.
+
+Skills
+SQL, Excel
+
+Education
+B.Com, Christ University, 2022`
+    expect(ids(short)).toContain('resume-length')
+  })
+
+  it('flags education printed above experience — but only for someone who has worked', () => {
+    const eduFirst = `Ravi Kumar
+ravi@example.com | linkedin.com/in/ravi
+
+Education
+B.Tech, VIT Vellore, 2019
+
+Experience
+Product Analyst — Zeta
+Jan 2023 - Present
+• Built the retention report used by 200 merchants`
+    expect(ids(eduFirst)).toContain('section-order')
+
+    const student = `Ravi Kumar
+ravi@example.com | +91 90000 00000 | linkedin.com/in/ravi
+Chennai, Tamil Nadu, India
+
+Education
+B.Tech, Computer Science, VIT Vellore, 2023
+
+Skills
+SQL, Python, Excel, Tableau, Statistics, Data Modelling`
+    // No employment history, so leading with education is correct, not a defect.
+    expect(ids(student)).not.toContain('section-order')
+  })
+
+  it('flags experience lines that carry no figure at all', () => {
+    const noNumbers = `Ravi Kumar
+ravi@example.com | linkedin.com/in/ravi
+
+Experience
+Product Analyst — Zeta
+Jan 2023 - Present
+• Built the retention report for the growth team
+• Ran the migration of the experiment framework
+• Owned the weekly business review with the leadership team
+
+Skills
+SQL, Python
+
+Education
+B.Tech, VIT Vellore, 2019`
+    expect(ids(noNumbers)).toContain('no-quantified-impact')
+    // CLEAN carries real figures in its bullets, so it must not fire.
+    expect(ids(CLEAN)).not.toContain('no-quantified-impact')
+  })
+
+  it('flags duty-shaped openers and over-long lines', () => {
+    const weak = `Ravi Kumar
+ravi@example.com | linkedin.com/in/ravi
+
+Experience
+Product Analyst — Zeta
+Jan 2023 - Present
+• Responsible for the weekly retention report covering 200 merchants
+• Worked on the migration of the experiment framework across 3 teams
+• ${'Owned an unusually long line that keeps going well past the point at which a parser might truncate it, describing 40 different responsibilities in one breath and burying the outcome at the very end where nothing can find it, which is the failure this rule exists to name. '.repeat(2)}
+
+Skills
+SQL
+
+Education
+B.Tech, VIT Vellore, 2019`
+    const found = ids(weak)
+    expect(found).toContain('weak-openers')
+    expect(found).toContain('bullet-too-long')
+  })
+
+  it('still refuses to accuse the writer, on every new rule', () => {
+    const accusatory = /\b(lie|lying|dishonest|inflated|exaggerat|misleading|fake|padding)\b/i
+    for (const text of [CLEAN, CLEAN.replace('linkedin.com/in/priyaiyer', '')]) {
+      for (const f of checkResume(text).findings) {
+        expect(`${f.title} ${f.detail} ${f.fix}`).not.toMatch(accusatory)
+      }
+    }
+  })
+})
+
+describe('a confident wrong answer, which is worse than no answer', () => {
+  const MISREAD = `Rahul Menon
+rahul.menon@example.com | +91 98450 11223 | linkedin.com/in/rahulmenon
+Bengaluru, Karnataka
+
+PROFESSIONAL SUMMARY
+Backend engineer with 4 years building payment and ledger services in fintech.
+
+WORK EXPERIENCE
+Software Engineer II — Razorpay
+Jul 2023 - Present | Bengaluru
+• Cut p99 latency on the payouts API from 1400ms to 320ms by batching writes
+• Migrated the ledger from MySQL to Postgres over 3 months
+
+SKILLS
+Java, Python, SQL, AWS, Docker, Kubernetes, Postgres
+
+EDUCATION
+B.E. Computer Science, PES University, 2021`
+
+  it('flags a title the parser read as a date', () => {
+    // Measured live: extractFields returns "Jul 2023 - Present" here. Before
+    // this rule, nothing fired and the report showed the wrong title with no
+    // explanation beside it.
+    const r = checkResume(MISREAD)
+    const finding = r.findings.find((x) => x.id === 'title-misread')
+    expect(finding).toBeDefined()
+    expect(finding!.evidence).toMatch(/2023|Present/i)
+  })
+
+  it('does not quote the contact line as a role line built from separators', () => {
+    const sep = checkResume(MISREAD).findings.find((x) => x.id === 'separator-header')
+    // Either it does not fire, or it quotes something that is not contact data.
+    if (sep) expect(sep.evidence ?? '').not.toMatch(/@|linkedin\.com/)
+  })
+
+  it('leaves a clean résumé alone', () => {
+    expect(ids(CLEAN)).not.toContain('title-misread')
   })
 })

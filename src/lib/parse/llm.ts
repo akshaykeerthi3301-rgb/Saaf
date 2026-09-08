@@ -165,6 +165,97 @@ export async function readResumeWithModel(text: string): Promise<LlmFields | nul
   return null
 }
 
+/**
+ * The same chain, for a caller that brings its own prompt and JSON shape.
+ *
+ * ⚠️ IT EXISTS SO A SECOND FEATURE DOES NOT GET A SECOND OPINION ABOUT WHICH
+ * PROVIDER IS UP. Provider order, both vendors' request shapes and the failover
+ * are the parts that must not diverge — src/lib/tailor.ts predates this and
+ * carries its own copy of the fetch, which is how a fallback chain landed in
+ * one file and not the other. New callers use this one.
+ *
+ * Returns which provider actually answered, unlike activeProvider(), so a
+ * surface can attribute the work correctly after a failover instead of naming
+ * the provider that was tried first.
+ */
+export async function callJsonModel(opts: {
+  prompt: string
+  /** Groq gets this as a system message; Gemini has no equivalent slot. */
+  system: string
+  /** Gemini's responseSchema. Also serialised into Groq's system message. */
+  schema: object
+  temperature?: number
+  timeoutMs?: number
+}): Promise<{ raw: string; provider: Provider } | null> {
+  const chain = providerChain()
+  const temperature = opts.temperature ?? 0.2
+  const timeout = opts.timeoutMs ?? TIMEOUT_MS
+
+  for (const provider of chain) {
+    try {
+      const raw =
+        provider === 'groq'
+          ? await callGroqJson(opts.prompt, opts.system, opts.schema, temperature, timeout)
+          : await callGeminiJson(opts.prompt, opts.schema, temperature, timeout)
+      if (raw) return { raw, provider }
+    } catch {
+      // Silent per provider, like readResumeWithModel: try the next vendor
+      // before the caller is told nothing could answer.
+    }
+  }
+  return null
+}
+
+async function callGroqJson(
+  prompt: string,
+  system: string,
+  schema: object,
+  temperature: number,
+  timeoutMs: number,
+): Promise<string | undefined> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: `${system} Reply with JSON only, matching: ${JSON.stringify(schema)}` },
+        { role: 'user', content: prompt },
+      ],
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  })
+  if (!res.ok) return undefined
+  return ((await res.json()) as OpenAiResponse).choices?.[0]?.message?.content
+}
+
+async function callGeminiJson(
+  prompt: string,
+  schema: object,
+  temperature: number,
+  timeoutMs: number,
+): Promise<string | undefined> {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY! },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature, responseMimeType: 'application/json', responseSchema: schema },
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    },
+  )
+  if (!res.ok) return undefined
+  return ((await res.json()) as GeminiResponse).candidates?.[0]?.content?.parts?.[0]?.text
+}
+
 /** Groq speaks the OpenAI chat API. json_object mode plus the schema described
  *  in the prompt is what keeps the reply parseable. */
 async function callGroq(prompt: string): Promise<string | undefined> {

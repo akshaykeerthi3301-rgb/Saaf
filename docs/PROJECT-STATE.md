@@ -848,6 +848,62 @@ deletion promise on the upload screen), or let the candidate paste their current
 bullet in the drawer for a live comparison (no new storage, and the only one of
 the three that costs nothing).
 
+### Stage O — the ATS funnel becomes the front door (2026-09-08)
+
+The checker stopped being a text box and became the product's first complete
+loop: **upload → score → rewrite → preview → download**, public, with the wall
+at the file rather than at the work. TASK-064.
+
+**Why the upload matters more than it looks.** The old surface asked a stranger
+to open their PDF, select all and paste. Most of them never do — and the paste
+itself destroys the layout, which is the thing being measured. A two-column
+résumé cannot be diagnosed from text somebody copied out of it. Paste survives
+as the fallback for a file we cannot read, never as the entrance.
+
+**The claim on the page was narrowed, not dropped.** It said "no AI is
+involved" and that was true of everything on it until a rewrite existed. It now
+says **no model decides your score** — true of the upload, the parse, the score
+and every finding, with the one model step labelled where the candidate asks
+for it. Leaving the old sentence up would have been the cheapest possible lie
+on a page whose whole argument is that a number you cannot reproduce is
+worthless.
+
+**The guard had to be re-derived, not reused.** `groundingFailure()` refuses any
+line stating a figure, because a profile holds skills and years rather than
+achievements — so on a résumé it would delete every quantified bullet, which
+are the best lines on the page. `src/lib/resume-rewrite.ts` asks the narrower
+question the surface allows: **is every figure, and every word, in the
+rewritten line already present in the line it came from?** What is grounded is
+masked; what the model ADDED faces the shared guard untouched. Stronger than the
+guard alone, and a refusal reverts to the candidate's own words rather than
+losing the line.
+
+⚠️ **Three defects were found by RUNNING it, and none would have been found by
+reading it.** They are the argument for the live-verification habit:
+
+1. **The rewrite scored 79 → 70** — worse, under a button marked "improve my
+   score". `sectionsToText()` wrote role lines with an em dash, a shape our own
+   checker flags and our own parser misreads. `roleLine()` is now shared by the
+   scorer, the .docx and the preview so the three cannot drift, and a test
+   asserts the round trip introduces no finding the input did not have.
+2. **The guard handed the candidate their own words back as fabrications** —
+   "API" and "European", both in the line being rewritten.
+3. **`separator-header` was quoting the contact line**, so a finding headed "a
+   role line built from separators" pointed at somebody's email address. Fixed,
+   and `title-misread` added alongside it: a parser returning "Jul 2023 -
+   Present" as a job title previously raised nothing, because `title-unreadable`
+   requires an ABSENT title. A confident wrong answer was invisible.
+
+**The template is designed, and restricted to constructs that parse** — founder
+decision. Styling lives in CSS; the document is headings, text and bullets, one
+column, no tables or text boxes. The `--paper-*` tokens are the only ones in the
+system that deliberately do not invert in dark mode: it is a picture of a
+printed page.
+
+**Measured, live, with Groq against a real .docx:** 79 → 92, six lines
+rewritten, and the model's one fabrication — "5 years" against a résumé saying
+four — refused and shown to the candidate.
+
 ### Deployed 2026-09-07 — the scale-up is live
 
 **https://saaf-ten.vercel.app** (also aliased `saaf-akshay-keerthi.vercel.app`),

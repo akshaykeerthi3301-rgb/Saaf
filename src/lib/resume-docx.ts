@@ -1,4 +1,5 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx'
+import { roleLine, type ResumeSections } from '@/lib/parse/sections'
 import type { Draft } from '@/lib/tailor'
 
 /**
@@ -117,4 +118,145 @@ export function docxFilename(roleTitle: string, company?: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
   return `saaf-tailored-${slug || 'resume'}.docx`
+}
+
+/**
+ * The WHOLE résumé, rebuilt — not a section.
+ *
+ * ⚠️ THE CONSTRAINT ABOVE DOES NOT APPLY ON THIS PATH, AND THE DIFFERENCE IS
+ * WORTH BEING PRECISE ABOUT. buildResumeDocx() produces a fragment because on
+ * /today we hold a profile — skills, years, a title — and no document, so a
+ * "complete résumé" would have to invent the contact block, the dates and the
+ * education. Here the candidate uploaded a file minutes ago, it was parsed into
+ * sections in that same request, every section was shown to them on screen, and
+ * they are downloading what they just read. Nothing is invented because nothing
+ * had to be: the education line in this file is the education line in theirs.
+ *
+ * ⚠️ STILL NOT STORED. The sections arrive with the request, are written into a
+ * document, and are handed straight back. Nothing reaches a database and no
+ * file is written to disk — /resume's promise is unchanged.
+ *
+ * ⚠️ THE DESIGN IS THE ATS-SAFE SUBSET, DELIBERATELY. Bold headings, a rule
+ * under each, real bullet lists, one column, real text throughout. No tables,
+ * no text boxes, no columns, no icons, no images, no headers or footers — every
+ * one of those is a finding the checker on the previous screen would raise
+ * against them. The document has to pass the check that sold it.
+ */
+export type FullResumeInput = {
+  sections: ResumeSections
+  /** Printed under the name, so the document announces what it is aimed at. */
+  targetRole: string
+}
+
+export async function buildFullResumeDocx({ sections, targetRole }: FullResumeInput): Promise<Buffer> {
+  const s = sections
+  const children: Paragraph[] = []
+
+  const heading = (text: string) =>
+    new Paragraph({
+      spacing: { before: 260, after: 90 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '888888', space: 2 } },
+      children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 22, characterSpacing: 30 })],
+    })
+
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: 34 })],
+    }),
+  )
+
+  const contactLine = [s.contact.email, s.contact.phone, ...s.contact.links].filter(Boolean).join('  |  ')
+  if (contactLine) {
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 40 },
+        children: [new TextRun({ text: contactLine, size: 19 })],
+      }),
+    )
+  }
+  if (targetRole) {
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+        children: [new TextRun({ text: targetRole, size: 20, color: '444444' })],
+      }),
+    )
+  }
+
+  if (s.summary) {
+    children.push(heading('Professional summary'))
+    children.push(new Paragraph({ children: [new TextRun({ text: s.summary, size: 20 })] }))
+  }
+
+  if (s.experience.length) {
+    children.push(heading('Experience'))
+    for (const e of s.experience) {
+      children.push(
+        new Paragraph({
+          spacing: { before: 140 },
+          // Shared with the scorer and the preview — see roleLine()'s note.
+          children: [new TextRun({ text: roleLine(e), bold: true, size: 21 })],
+        }),
+      )
+      const meta = [e.dates, e.location].filter(Boolean).join('  |  ')
+      if (meta) {
+        children.push(
+          new Paragraph({ children: [new TextRun({ text: meta, size: 19, color: '444444' })] }),
+        )
+      }
+      for (const b of e.bullets) {
+        children.push(
+          new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 20 })] }),
+        )
+      }
+    }
+  }
+
+  if (s.skills.length) {
+    children.push(heading('Skills'))
+    children.push(new Paragraph({ children: [new TextRun({ text: s.skills.join('  ·  '), size: 20 })] }))
+  }
+
+  if (s.education.length) {
+    children.push(heading('Education'))
+    for (const e of s.education) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: e.qualification, bold: true, size: 20 }),
+            new TextRun({
+              text: [e.institution, e.dates].filter(Boolean).length
+                ? `  ·  ${[e.institution, e.dates].filter(Boolean).join('  ·  ')}`
+                : '',
+              size: 20,
+            }),
+          ],
+        }),
+      )
+    }
+  }
+
+  for (const o of s.other) {
+    children.push(heading(o.heading))
+    for (const line of o.lines) {
+      children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: line, size: 20 })] }))
+    }
+  }
+
+  return Packer.toBuffer(new Document({ sections: [{ properties: {}, children }] }))
+}
+
+/** Their own name in the filename, because they will download several. */
+export function fullResumeFilename(name: string | null, targetRole: string): string {
+  const slug = [name, targetRole]
+    .filter(Boolean)
+    .join('-')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+  return `${slug || 'resume'}-saaf.docx`
 }

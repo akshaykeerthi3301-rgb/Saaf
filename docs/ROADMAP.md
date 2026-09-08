@@ -410,8 +410,22 @@ trim and reword only; block, never warn, on an unconfirmed claim.
 - [ ] **TASK-063** — Arsenal Generator: cover letter, recruiter email, LinkedIn message
   Notes: The first LLM-cost feature in this phase, and the first that must sit behind the fabrication guard — a generated document may only reorder, trim and reword facts the candidate already confirmed, and an unconfirmed claim blocks rather than warns. Do this once the guard is built and trusted, not before. Reuses the résumé-reading pattern from Stage C (`src/lib/parse/llm.ts`): read, never decide: the model drafts text, it does not judge eligibility. Verify: a generated document containing any fact not present in the confirmed profile is blocked, not softened.
 
-- [ ] **TASK-064** — Resume Rewrite / Builder
-  Notes: Same fabrication-guard rule as TASK-063, larger surface — a full rewrite has more places to introduce an unconfirmed claim than a three-line message does.
+- [x] **TASK-064** — Resume Rewrite (the *Builder* half is deliberately not built)
+  Files: `src/lib/parse/sections.ts`, `src/lib/resume-rewrite.ts`, `src/app/actions/read-resume-file.ts`, `src/app/actions/optimise-resume.ts`, `src/app/actions/resume-download.ts`, `src/components/features/ats-flow.tsx`, `src/components/features/resume-preview.tsx`, `src/lib/resume-docx.ts`, `src/lib/ats-check.ts`, `src/app/globals.css`
+  Notes: Built as the second half of the ATS funnel rather than a separate screen — upload → score → rewrite → preview → download, with the wall at the FILE and everything before it free and readable. Founder decision 2026-09-08: match the category leader's mechanics, and use a designed template restricted to constructs that parse.
+
+  **The rewrite is not the drafter, and could not be.** `src/lib/tailor.ts` composes NEW text from a profile and drops anything it cannot ground — correct for a cover note, and it would delete every quantified bullet on a résumé, which are the most valuable lines on the page. `src/lib/resume-rewrite.ts` asks a narrower question instead: is every figure in the rewritten line present in the line it came from? Verified figures, and words already in the candidate's own line, are masked before the shared `groundingFailure()` runs, so what reaches the guard is exactly the material the model ADDED. That is stronger than the guard alone, not weaker, and a rejected rewrite reverts to the candidate's own words rather than losing the line.
+
+  **The upload replaced the paste box** (`read-resume-file.ts`, rate limited at 20/10min, no model on that path). Paste survives as the fallback for a file we cannot read. **`parse-resume.ts` was deliberately NOT reused**: it calls a model and returns six fields rather than the text, and an LLM call on the upload path would have made the page's own promise false.
+
+  **The page's "No AI is involved" claim was narrowed rather than dropped** — it is now "no model decides your score", true of the upload, the parse and every finding, with the one model step labelled where it sits.
+
+  **Three defects were found by running it, not by reading it:**
+  1. The rewritten document scored **79 → 70** because `sectionsToText()` wrote role lines with an em dash, which our own checker flags and our own parser misreads. Fixed to `Title at Employer`, and `roleLine()` is now shared by the scorer, the .docx and the preview so they cannot drift. A test asserts the round trip introduces no finding the input did not have.
+  2. The guard rejected the candidate's own words back at them — "API" and "European", both sitting in the line being rewritten.
+  3. `separator-header` was matching the CONTACT line, so a finding headed "a role line built from separators" quoted someone's email address. Fixed, and `title-misread` added: the parser returning "Jul 2023 - Present" as a job title raised nothing at all before, because `title-unreadable` needs an ABSENT title.
+
+  Verify: 404 tests pass (13 new for section parsing, 14 for the rewrite guard, 10 for the new checks); lint 0 errors; build clean; **exercised live in a browser and against a real .docx with Groq** — 79 → 92, six lines rewritten, and the model's one fabrication ("5 years" against a résumé saying 4) refused and shown.
 
 - [ ] **TASK-065** — Skill Gap Analysis, Interview Prep, Salary Negotiation scripts
   Notes: Straightforward LLM features once 063's guard pattern exists. Sequence by what the first cohort actually asks for rather than building all three speculatively.

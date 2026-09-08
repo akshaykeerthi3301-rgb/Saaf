@@ -1,0 +1,217 @@
+import { describe, it, expect } from 'vitest'
+import { parseSections, sectionsToText } from '../sections'
+import { checkResume } from '@/lib/ats-check'
+
+/**
+ * Fixtures are defect-first, like src/lib/__tests__/ats-check.test.ts.
+ *
+ * The interesting cases are not the tidy résumé — they are the shapes that
+ * look fine on screen and collapse when a machine reads them, because those are
+ * exactly the documents this parser exists to be honest about.
+ */
+
+const CLEAN = `Akshay Keerthi
+akshay@example.com | +91 98765 43210 | linkedin.com/in/akshay
+
+PROFESSIONAL SUMMARY
+Product analyst with three years building reporting for fintech teams.
+
+WORK EXPERIENCE
+Product Analyst — Zeta | Bengaluru
+Jan 2023 – Present
+• Built the weekly retention report used by the growth team
+• Ran the experiment framework migration
+
+Business Analyst — Infosys
+Jun 2021 – Dec 2022
+• Wrote SQL models for a banking client
+
+SKILLS
+Languages: SQL, Python
+Tools: Looker, dbt
+
+EDUCATION
+B.Tech Computer Science | VIT Vellore | 2021
+`
+
+describe('parseSections — a well-formed résumé', () => {
+  const s = parseSections(CLEAN)
+
+  it('reads the contact block without a name dictionary', () => {
+    expect(s.contact.name).toBe('Akshay Keerthi')
+    expect(s.contact.email).toBe('akshay@example.com')
+    expect(s.contact.phone).toBeTruthy()
+    expect(s.contact.links[0]).toContain('linkedin.com')
+  })
+
+  it('keeps each job’s bullets under that job', () => {
+    expect(s.experience).toHaveLength(2)
+    expect(s.experience[0].title).toBe('Product Analyst')
+    expect(s.experience[0].employer).toBe('Zeta')
+    expect(s.experience[0].dates).toMatch(/Jan 2023/i)
+    expect(s.experience[0].bullets).toHaveLength(2)
+    expect(s.experience[1].employer).toBe('Infosys')
+    expect(s.experience[1].bullets).toHaveLength(1)
+  })
+
+  it('splits skills off their labels', () => {
+    expect(s.skills).toContain('SQL')
+    expect(s.skills).toContain('Python')
+    expect(s.skills).toContain('Looker')
+    expect(s.skills).not.toContain('Languages')
+  })
+
+  it('reads education', () => {
+    expect(s.education[0].qualification).toContain('B.Tech')
+    expect(s.education[0].institution).toBe('VIT Vellore')
+    expect(s.education[0].dates).toBe('2021')
+  })
+
+  it('records heading order for the section-order check', () => {
+    expect(s.order).toEqual(['summary', 'experience', 'skills', 'education'])
+  })
+
+  it('places almost everything', () => {
+    expect(s.unplaced).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('parseSections — the shapes that fail', () => {
+  it('counts every line as unplaced when the headings are not text', () => {
+    // What a résumé whose headings are images or a coloured sidebar extracts as.
+    const noHeadings = `Akshay Keerthi
+akshay@example.com
+Built the weekly retention report used by the growth team
+Ran the experiment framework migration
+SQL, Python, Looker`
+    const s = parseSections(noHeadings)
+    expect(s.experience).toHaveLength(0)
+    expect(s.unplaced).toBeGreaterThan(3)
+  })
+
+  it('never attaches orphan bullets to the job above them', () => {
+    const orphan = `EXPERIENCE
+• A bullet with no employer above it
+• Another one
+
+Product Analyst — Zeta
+Jan 2023 – Present
+• A bullet that does have one`
+    const s = parseSections(orphan)
+    expect(s.experience).toHaveLength(1)
+    expect(s.experience[0].employer).toBe('Zeta')
+    expect(s.experience[0].bullets).toHaveLength(1)
+    // The two orphans are reported, not silently merged into Zeta.
+    expect(s.unplaced).toBe(2)
+  })
+
+  it('treats an employer on its own line as part of the same job', () => {
+    const twoLine = `EXPERIENCE
+Senior Product Analyst
+Zeta | Jan 2023 – Present
+• Built the retention report`
+    const s = parseSections(twoLine)
+    expect(s.experience).toHaveLength(1)
+    expect(s.experience[0].title).toBe('Senior Product Analyst')
+    expect(s.experience[0].bullets).toHaveLength(1)
+  })
+
+  it('keeps unglyphed prose under the job it sits below', () => {
+    const prose = `EXPERIENCE
+Product Analyst — Zeta | Jan 2023 – Present
+Owned the reporting stack end to end and ran the migration.`
+    const s = parseSections(prose)
+    expect(s.experience[0].bullets).toHaveLength(1)
+    expect(s.unplaced).toBe(0)
+  })
+
+  it('does not read a sentence containing "experience" as a heading', () => {
+    const sentence = `PROFILE
+I have five years of experience in analytics.
+
+EXPERIENCE
+Analyst — Zeta | 2023 – Present
+• Did the work`
+    const s = parseSections(sentence)
+    expect(s.order).toEqual(['summary', 'experience'])
+    expect(s.summary).toContain('five years')
+  })
+
+  it('returns empty structure rather than throwing on junk', () => {
+    expect(() => parseSections('')).not.toThrow()
+    expect(parseSections('').experience).toEqual([])
+  })
+})
+
+describe('sectionsToText', () => {
+  it('round-trips through the parser without losing a job', () => {
+    const once = parseSections(CLEAN)
+    const twice = parseSections(sectionsToText(once))
+    expect(twice.experience).toHaveLength(once.experience.length)
+    expect(twice.experience[0].employer).toBe('Zeta')
+    expect(twice.skills).toContain('SQL')
+  })
+})
+
+/**
+ * ⚠️ THE INVARIANT THAT MATTERS MOST IN THIS FILE.
+ *
+ * The rewritten résumé is rebuilt by sectionsToText() and then re-scored by the
+ * same checker the original went through. If our output format raises findings
+ * the input did not, the product hands someone a WORSE score under a button
+ * marked "improve my score" — which is exactly what happened on 2026-09-08,
+ * measured at 79 → 70 against a real résumé, before the format was changed.
+ *
+ * This test is the guard on that. It is deliberately about NEW findings rather
+ * than about the score: a rewrite legitimately changes wording, and the score
+ * may move for reasons that belong to the content. What must never happen is a
+ * finding caused by the way WE write the document out.
+ */
+describe('the document we generate must pass the check we sell', () => {
+  it('introduces no parsing finding the original did not have', () => {
+    const before = checkResume(CLEAN)
+    const after = checkResume(sectionsToText(parseSections(CLEAN)))
+    const had = new Set(before.findings.map((f) => f.id))
+    const introduced = after.findings.map((f) => f.id).filter((id) => !had.has(id))
+    expect(introduced).toEqual([])
+  })
+
+  it('makes the title and employer readable, where the input was not', () => {
+    /**
+     * Both of these fire on CLEAN, whose role lines are built with an em dash,
+     * and neither fires on the rebuilt document. The rewrite therefore FIXES
+     * two findings by reformatting alone, before a single word is changed —
+     * which is most of the honest value in this feature.
+     */
+    const before = checkResume(CLEAN).findings.map((f) => f.id)
+    const after = checkResume(sectionsToText(parseSections(CLEAN))).findings.map((f) => f.id)
+
+    expect(before).toContain('title-unreadable')
+    expect(before).toContain('employer-unreadable')
+    expect(after).not.toContain('title-unreadable')
+    expect(after).not.toContain('employer-unreadable')
+
+    /**
+     * `separator-header` fired on this fixture's CONTACT line — "email | phone
+     * | linkedin" — until the rule learned to skip contact data on 2026-09-08.
+     * It is asserted here as well as in ats-check.test.ts because this is the
+     * round trip a candidate actually sees: a rewrite that still carried a
+     * finding pointing at their email address would look like the rewrite had
+     * failed to fix anything.
+     */
+    const sep = checkResume(sectionsToText(parseSections(CLEAN))).findings.find(
+      (f) => f.id === 'separator-header',
+    )
+    expect(sep).toBeUndefined()
+  })
+
+  it('writes no doubled separator into a role line', () => {
+    const withLocation = `EXPERIENCE
+Software Engineer II — Razorpay
+Jul 2023 - Present | Bengaluru
+• Cut p99 latency on the payouts API from 1400ms to 320ms`
+    const out = sectionsToText(parseSections(withLocation))
+    expect(out).not.toMatch(/\|\s*\|/)
+    expect(out).toContain('Software Engineer II at Razorpay')
+  })
+})

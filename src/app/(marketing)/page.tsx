@@ -3,7 +3,15 @@ import { ArrowUpRight, Check, FileUp, Sparkles } from 'lucide-react'
 import { AuditStrip } from '@/components/features/audit-strip'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
 
-const CTA = 'Upload Résumé & Get True-Fit Match'
+/**
+ * ⚠️ THE LABEL NAMES THE OUTCOME, NOT THE MECHANIC. It read "Upload Résumé &
+ * Get True-Fit Match", which describes what the product does to a file rather
+ * than what the candidate came for, and it named a score ("True-Fit") that
+ * means nothing to somebody who has not used us yet. The two doors in the hero
+ * are "Find your next job" and "ATS score checker", and every other button on
+ * the page has to agree with them or the page reads as three products.
+ */
+const CTA = 'Find your next job'
 
 /**
  * The landing page, in the saaf-ai design language and carrying the saaf-ai copy.
@@ -135,26 +143,65 @@ export default function Landing() {
             Roles that fit, each with the arithmetic behind the score.
           </p>
 
-          <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Cta />
-            {/* ⚠️ A SECOND, LOWER-COMMITMENT WAY IN, AND IT IS NOT DECORATION.
-                The only path off this page was "upload your résumé and sign in",
-                which is a large ask of someone who arrived thirty seconds ago.
-                The ATS check asks for nothing, proves the product can do
-                something useful, and is the page most organic search traffic
-                will land on anyway — so the landing page should acknowledge it
-                exists rather than pretending sign-in is the only door. */}
+          {/*
+            ⚠️ TWO DOORS, PRESENTED AS EQUALS — founder decision, 2026-09-08.
+            This was one primary button (sign in, upload, get matched) with the
+            ATS check demoted to a link beside it. That ordering described how
+            the product was BUILT rather than how people arrive at it: most
+            organic traffic is somebody searching "ATS score checker" who has
+            never heard of us, and asking them to create an account thirty
+            seconds in is the largest possible ask at the smallest possible
+            moment of trust.
+
+            So the checker is a door, not a footnote. It needs no account, it
+            answers a question they already had, and the rewrite at the end of
+            it is where signing in finally buys something concrete.
+
+            Both cards say plainly what they cost. A "free" badge on the one
+            that needs an account would be the sort of small dishonesty this
+            product exists to argue against.
+          */}
+          <div className="mt-9 grid gap-4 sm:grid-cols-2">
+            <Link
+              href="/signin"
+              className="group flex flex-col rounded-2xl border border-border bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/10 transition-transform hover:-translate-y-0.5"
+            >
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
+                <FileUp className="size-3.5" aria-hidden="true" />
+                Needs an account
+              </span>
+              <span className="mt-3 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
+                Find your next job
+                <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
+              <span className="mt-2 text-sm leading-6 text-primary-foreground/75">
+                Roles from company hiring boards, ranked against your résumé — each score opening
+                into the line it was read from.
+              </span>
+            </Link>
+
             <Link
               href="/tools/ats-checker"
-              className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold text-primary shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/30 hover:bg-secondary/60"
+              className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5 hover:border-foreground/30"
             >
-              Check your ATS score — free
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
+                <Sparkles className="size-3.5" aria-hidden="true" />
+                No account, ₹0
+              </span>
+              <span className="mt-3 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.03em] text-primary">
+                ATS score checker
+                <ArrowUpRight className="size-4 text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
+              <span className="mt-2 text-sm leading-6 text-muted-foreground">
+                Upload your résumé and see what a parser actually reads out of it — then have it
+                rewritten for the role you are after.
+              </span>
             </Link>
           </div>
 
           <p className="mt-4 flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm">
             <Check className="size-4 text-accent" />
-            No spam. No guesswork. The free tools need no account.
+            No spam. No guesswork. The checker needs no account.
           </p>
 
           <div className="mt-16 flex items-center gap-3 border-t border-border pt-5 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground sm:mt-20">
@@ -254,8 +301,16 @@ export default function Landing() {
           <SectionHeading>
             <span className="mx-auto block">See how your matches are scored.</span>
           </SectionHeading>
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex flex-col items-center gap-4">
             <Cta />
+            {/* The second door repeated at the bottom, for a reader who got all
+                the way here and still is not ready to make an account. */}
+            <Link
+              href="/tools/ats-checker"
+              className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors hover:text-primary"
+            >
+              Or check your ATS score first — no account needed
+            </Link>
           </div>
         </section>
       </div>

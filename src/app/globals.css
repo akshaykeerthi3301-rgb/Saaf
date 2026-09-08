@@ -50,6 +50,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-paper-ink: var(--paper-ink);
+  --color-paper-muted: var(--paper-muted);
+  --color-paper-rule: var(--paper-rule);
+  --color-paper: var(--paper);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -67,6 +71,23 @@
   --foreground: oklch(0.22 0.025 250);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.025 250);
+
+  /* ---- paper ------------------------------------------------------------
+     A PRINTED PAGE, AND THE ONE SET OF TOKENS THAT DELIBERATELY DOES NOT
+     INVERT. The résumé preview is a picture of the .docx the candidate is
+     about to download, and that document is black text on white in every
+     theme — a dark-mode "preview" showing white-on-black would misrepresent
+     the file they receive. So these carry identical values in :root and .dark
+     rather than being exempted from the parity rule: a token that is the same
+     in both themes is a decision recorded in the palette, whereas a raw
+     `bg-white` in a component is the same decision hidden in a class list
+     where nobody can find it. src/app/__tests__/theme-tokens.test.ts enforces
+     that distinction, and caught exactly this. */
+  --paper: oklch(1 0 0);
+  --paper-ink: oklch(0.27 0.01 250);
+  --paper-muted: oklch(0.52 0.012 250);
+  --paper-rule: oklch(0.87 0.008 250);
+
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.025 250);
   --primary: oklch(0.22 0.04 250);
@@ -145,6 +166,14 @@
   --foreground: oklch(0.97 0.004 240);
   --card: oklch(0.16 0.006 250);
   --card-foreground: oklch(0.97 0.004 240);
+
+  /* Identical to the light values, deliberately — see the note in :root. The
+     document does not have a dark mode, so neither does its preview. */
+  --paper: oklch(1 0 0);
+  --paper-ink: oklch(0.27 0.01 250);
+  --paper-muted: oklch(0.52 0.012 250);
+  --paper-rule: oklch(0.87 0.008 250);
+
   --popover: oklch(0.19 0.007 250);
   --popover-foreground: oklch(0.97 0.004 240);
 

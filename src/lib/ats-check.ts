@@ -1,4 +1,5 @@
 import { extractFields, type ParsedFields } from '@/lib/parse/extract'
+import { parseSections } from '@/lib/parse/sections'
 
 /**
  * TASK-061 — the ATS résumé checker.
@@ -35,9 +36,28 @@ export type AtsSeverity = 'high' | 'medium' | 'low'
  */
 export type AtsArea = 'parsing' | 'keywords' | 'consistency'
 
+/**
+ * The four groups the report is presented in.
+ *
+ * ⚠️ THIS IS A PRESENTATION AXIS, NOT A SECOND CLASSIFICATION. `area` says what
+ * KIND of problem a finding is and drives the wording; `category` says where it
+ * sits on the report, so a candidate reads four short lists instead of one long
+ * one and can see which part of their résumé is weakest. The category leader in
+ * this space groups 27 checks into seven headings for exactly that reason — a
+ * flat list of findings is read as a wall and acted on in the order written,
+ * which is the order we happened to run the rules in.
+ *
+ * Four, not seven: the three we do not have (recruiter red flags, bias signals,
+ * seniority fit) all require judging the person rather than parsing the file,
+ * and this module is deterministic by design. An empty category is worse than
+ * an absent one.
+ */
+export type AtsCategory = 'ats_essentials' | 'sections' | 'content' | 'tailoring'
+
 export type AtsFinding = {
   id: string
   area: AtsArea
+  category: AtsCategory
   severity: AtsSeverity
   /** What is wrong, in one line. */
   title: string
@@ -49,8 +69,20 @@ export type AtsFinding = {
   evidence?: string
 }
 
+export type AtsCategoryScore = {
+  key: AtsCategory
+  label: string
+  /** Out of 100, deducted only by findings in this category. */
+  score: number
+  /** How many rules in this category ran, and how many the résumé passed. */
+  passed: number
+  total: number
+}
+
 export type AtsReport = {
   findings: AtsFinding[]
+  /** The same findings, grouped and scored per category, for the report UI. */
+  categories: AtsCategoryScore[]
   /** Out of 100, with every deduction itemised. Never a number on its own. */
   readability: {
     score: number
@@ -100,6 +132,17 @@ export function rolesWithKeywords(): string[] {
   return Object.keys(KEYWORDS).sort()
 }
 
+/**
+ * The measured vocabulary for one role, or undefined if we have none.
+ *
+ * Exported so the rewrite aims at the same terms the report told the candidate
+ * were missing. Two surfaces reading two different keyword lists would produce
+ * a rewrite that does not fix the finding that prompted it.
+ */
+export function roleVocabulary(role: string): { terms: string[]; postings: number } | undefined {
+  return KEYWORDS[role]
+}
+
 /** Shortest input that can be assessed at all. */
 export const MIN_RESUME_CHARS = 120
 export const MAX_RESUME_CHARS = 20_000
@@ -107,6 +150,56 @@ export const MAX_RESUME_CHARS = 20_000
 export class AtsCheckError extends Error {}
 
 const SEVERITY_COST: Record<AtsSeverity, number> = { high: 18, medium: 9, low: 4 }
+
+/** A finding before it is placed in a category — see the note in checkResume. */
+type RawFinding = Omit<AtsFinding, 'category'>
+
+/**
+ * Every rule this module can raise, in the group it is reported under.
+ *
+ * ⚠️ THE LIST IS THE DENOMINATOR. "Passed 6 of 8" is only true if this holds
+ * every rule in the category, so a new rule must be added here as well as
+ * written — a rule missing from this table is scored but not counted, and the
+ * report quietly overstates how much was checked. A test asserts every id
+ * raised by checkResume appears here.
+ */
+const RULES: Record<AtsCategory, { label: string; ids: string[] }> = {
+  ats_essentials: {
+    label: 'ATS essentials',
+    ids: [
+      'multi-column', 'single-blob', 'no-email', 'no-phone', 'no-dates',
+      'date-format-mixed', 'resume-length', 'no-links',
+    ],
+  },
+  sections: {
+    label: 'Résumé sections',
+    ids: ['missing-sections', 'section-order', 'separator-header'],
+  },
+  content: {
+    label: 'Content',
+    ids: [
+      'title-unreadable', 'title-misread', 'employer-unreadable', 'no-quantified-impact', 'weak-openers',
+      'bullet-too-long', 'keyword-dump', 'repeated-term', 'overlapping-present',
+      'years-disagree', 'future-date',
+    ],
+  },
+  tailoring: { label: 'Job tailoring', ids: ['role-vocabulary'] },
+}
+
+const CATEGORY_OF: Record<string, AtsCategory> = Object.fromEntries(
+  Object.entries(RULES).flatMap(([cat, { ids }]) => ids.map((id) => [id, cat as AtsCategory])),
+)
+
+/**
+ * Which group a rule is reported under, or null if it is not registered.
+ *
+ * Exported for the test that keeps RULES honest: a rule raised by checkResume
+ * but absent here is scored yet not counted, so "passed 6 of 8" would be
+ * arithmetic over the wrong denominator.
+ */
+export function categoryOf(id: string): AtsCategory | null {
+  return CATEGORY_OF[id] ?? null
+}
 
 /** Headers an ATS keys its sectioning off. Matched loosely — real résumés
  *  write "WORK EXPERIENCE", "Professional Experience", "EXPERIENCE". */
@@ -118,6 +211,14 @@ const SECTION_PATTERNS: [label: string, re: RegExp][] = [
 
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]+/
 const PHONE_RE = /(?:\+?\d[\d\s-]{8,}\d)/
+/** A link a parser can store. An icon hyperlink extracts as nothing at all. */
+const LINK_RE = /(?:https?:\/\/|www\.)\S+|(?:linkedin\.com|github\.com|behance\.net|dribbble\.com)\/\S+/i
+/** A figure attached to work — the shape ranking systems look for. */
+const QUANTIFIED =
+  /\d[\d,.]*\s*(%|percent|x\b|k\b|cr\b|crore|lakh|lakhs|mn\b|million|bn\b|billion)|[₹$€£]\s*\d|\b\d[\d,.]*\s*(users|customers|clients|accounts|engineers|analysts|people|reports|stores|cities|hours|days|weeks|months)\b|\bby \d/i
+/** Openers that name a duty rather than an action. */
+const WEAK_OPENER =
+  /^\s*(responsible for|worked on|helped (with|to)?|assisted (with|in)?|involved in|part of|tasked with|duties includ|handled)\b/i
 const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 const DASH = '[-‐‑‒–—]'
 const DATE_RANGE_RE = new RegExp(
@@ -188,12 +289,25 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
   const lines = text.split(/\n/)
   const nonEmpty = lines.filter((l) => l.trim().length > 0)
   const words = text.split(/\s+/).filter(Boolean)
-  const findings: AtsFinding[] = []
-  const add = (f: AtsFinding) => findings.push(f)
+  /**
+   * Findings are collected without their category and grouped once at the end.
+   * The alternative — a `category` field at all 19 call sites — puts the same
+   * fact in two places and lets a rule drift out of the group it is scored in.
+   */
+  const findings: RawFinding[] = []
+  const add = (f: RawFinding) => findings.push(f)
 
   // Our own parser is the stand-in for theirs — see AtsReport['read'].
   const parsed = extractFields(text)
   const f = parsed.fields
+
+  /**
+   * The document's shape, read by the same deterministic parser the rewrite
+   * uses. Sharing it is the point: a bullet the rewrite will not see is a
+   * bullet this check must not score, or the two surfaces disagree about the
+   * same file in front of the same person.
+   */
+  const structure = parseSections(text)
 
   // ---- parsing ------------------------------------------------------------
 
@@ -307,9 +421,30 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
    * screen shows a title, so nothing looks broken. A real ATS splits on these
    * separators with its own rules and reaches its own wrong answer.
    */
+  /**
+   * ⚠️ THE CONTACT LINE IS EXCLUDED, AND IT WAS NOT UNTIL 2026-09-08.
+   *
+   * "name@example.com | +91 98450 11223 | linkedin.com/in/x" carries two pipes
+   * and no "at", so it matched — and because it appears above the first role,
+   * `.find()` returned it before ever reaching the line the rule is about. The
+   * candidate was then shown a finding headed "a role line built from
+   * separators" quoting their email address, beside a fix telling them to
+   * rewrite it as "Product Manager at Paytm". Observed live on the checker.
+   *
+   * A pipe-separated contact line is an ordinary résumé convention that every
+   * parser handles, so it is not a defect in the first place. Excluding it also
+   * lets the rule find the line it was written for.
+   */
+  const isContactLine = (l: string) => EMAIL_RE.test(l) || LINK_RE.test(l) || PHONE_RE.test(l)
   const separatorHeader = nonEmpty
     .slice(0, 15)
-    .find((l) => (l.match(/[|•·/]/g) ?? []).length >= 2 && !/\bat\b/i.test(l) && l.trim().length < 80)
+    .find(
+      (l) =>
+        (l.match(/[|•·/]/g) ?? []).length >= 2 &&
+        !/\bat\b/i.test(l) &&
+        l.trim().length < 80 &&
+        !isContactLine(l),
+    )
   if (separatorHeader) {
     add({
       id: 'separator-header',
@@ -322,6 +457,38 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         '" — it produced an answer rather than an error, which is why this is easy to miss.',
       fix: 'Write the role as a sentence a person would read: "Product Manager at Paytm", on its own line above the dates.',
       evidence: separatorHeader.slice(0, 120),
+    })
+  }
+
+  /**
+   * The parser answered, and the answer is not a job title.
+   *
+   * ⚠️ THIS IS THE FAILURE THE WHOLE FILE KEEPS CIRCLING: a confident wrong
+   * answer, which is invisible to the candidate because their screen shows a
+   * title. Measured live on 2026-09-08 against an ordinary résumé whose role
+   * line read "Software Engineer II — Razorpay / Jul 2023 - Present |
+   * Bengaluru", extractFields() returned currentTitle "Jul 2023 - Present" and
+   * employer "Bengaluru". Nothing fired: `title-unreadable` needs an ABSENT
+   * title, and `separator-header` was busy matching the contact line above.
+   *
+   * So the report showed a wrong title under "what a parser read out of it"
+   * with no finding beside it explaining why — which turns the most persuasive
+   * panel on the page into a puzzle. A date where a title should be is
+   * mechanically checkable, so it is checked.
+   */
+  const titleLooksLikeDate =
+    Boolean(f.currentTitle) &&
+    (new RegExp(`^${MONTH}\\b|\\b(19|20)\\d{2}\\b|\\b(present|current)\\b`, 'i').test(f.currentTitle!))
+  if (titleLooksLikeDate) {
+    add({
+      id: 'title-misread',
+      area: 'parsing',
+      severity: 'medium',
+      title: `A parser read your job title as "${f.currentTitle}"`,
+      detail:
+        'That is a date, not a role. The parser found something where the title should be and stopped looking, so it never produced an error — it produced a wrong answer, which is harder to notice. An applicant tracking system doing the same thing files you under a job title that does not exist.',
+      fix: 'Put the role on its own line as "Software Engineer at Razorpay", with the dates on the line below it rather than beside it.',
+      evidence: f.currentTitle,
     })
   }
 
@@ -472,6 +639,144 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     }
   }
 
+  // ---- ATS essentials -----------------------------------------------------
+  //
+  // Mechanical properties of the document itself, not of the writing. Each is
+  // something an applicant tracking system reads or fails to read; none is a
+  // judgement about the person. A "professional email address" rule was
+  // considered here and DELIBERATELY NOT WRITTEN — it cannot be evaluated
+  // without an opinion about someone's own name and handle, and this file has
+  // a test asserting no finding accuses the writer.
+
+  const wordCount = words.length
+  if (wordCount < 250 || wordCount > 1200) {
+    add({
+      id: 'resume-length',
+      area: 'parsing',
+      severity: 'low',
+      title:
+        wordCount < 250
+          ? `${wordCount} words is short for a résumé a parser can rank`
+          : `${wordCount} words is long enough that the top of the document carries less weight`,
+      detail:
+        wordCount < 250
+          ? 'A parser ranks partly on how much evidence it can find. Under about 250 words there is usually not enough text for the match to mean much, even when the experience behind it is real.'
+          : 'Most systems index the whole document but weight the first page. Past roughly 1,200 words the oldest roles dilute the recent ones rather than adding to them.',
+      fix:
+        wordCount < 250
+          ? 'Add one or two lines to each recent role describing what you actually did — not adjectives, the work itself.'
+          : 'Cut the oldest roles to a single line each and keep the detail on the last two.',
+    })
+  }
+
+  /**
+   * Mixed date formats.
+   *
+   * "03/2021" and "Mar 2021" in one document force a parser to run two
+   * different readers and pick a winner. Which one it picks decides your
+   * seniority, so this is a consistency problem with a real consequence rather
+   * than a tidiness note.
+   */
+  const numericDates = /\b(0?[1-9]|1[0-2])[/-](?:19|20)\d{2}\b/.test(text)
+  const wordDates = new RegExp(`\\b${MONTH}\\.?\\s+(?:19|20)\\d{2}\\b`, 'i').test(text)
+  if (numericDates && wordDates) {
+    add({
+      id: 'date-format-mixed',
+      area: 'consistency',
+      severity: 'medium',
+      title: 'Two different date formats in one document',
+      detail:
+        'Some dates are written as numbers (03/2021) and others with the month spelled out (Mar 2021). A parser reads dates with one pattern at a time, so one of the two forms is likely to be read as text rather than as a date — and a role with no date attached is a role with no duration.',
+      fix: 'Pick one format and use it everywhere. "Mar 2021 – Present" is read correctly by more systems than the numeric form.',
+      evidence: text.match(new RegExp(`\\b${MONTH}\\.?\\s+(?:19|20)\\d{2}\\b`, 'i'))?.[0],
+    })
+  }
+
+  if (!LINK_RE.test(text)) {
+    add({
+      id: 'no-links',
+      area: 'parsing',
+      severity: 'low',
+      title: 'No LinkedIn, GitHub or portfolio link a parser can find',
+      detail:
+        'Many systems store a candidate profile from the résumé and leave the link fields empty when there are none. A recruiter looking at that profile has nowhere to go next.',
+      fix: 'Add the full URL as text — linkedin.com/in/yourname — rather than hiding it behind a linked icon, which extracts as nothing.',
+    })
+  }
+
+  // ---- sections -----------------------------------------------------------
+
+  /**
+   * Section order.
+   *
+   * ⚠️ ONLY FIRES FOR SOMEONE WHO HAS WORKED. A student's résumé leading with
+   * education is correct, and telling them otherwise would be advice dressed as
+   * a defect. The rule needs both a dated job and education printed above it.
+   */
+  const order = structure.order
+  const iExp = order.indexOf('experience')
+  const iEdu = order.indexOf('education')
+  if (iExp > -1 && iEdu > -1 && iEdu < iExp && structure.experience.length > 0) {
+    add({
+      id: 'section-order',
+      area: 'parsing',
+      severity: 'low',
+      title: 'Education is printed above your work experience',
+      detail:
+        'Systems that summarise a résumé take the first sections they find. With education first, the summary a recruiter sees opens on your degree rather than your most recent role.',
+      fix: 'Move experience above education. Education leads only while you have no work history to lead with.',
+    })
+  }
+
+  // ---- content ------------------------------------------------------------
+
+  const bullets = structure.experience.flatMap((e) => e.bullets)
+
+  if (bullets.length >= 3) {
+    const quantified = bullets.filter((b) => QUANTIFIED.test(b)).length
+    if (quantified === 0) {
+      add({
+        id: 'no-quantified-impact',
+        area: 'keywords',
+        severity: 'low',
+        title: `None of your ${bullets.length} experience lines carries a number`,
+        detail:
+          'Systems that rank on impact look for figures — a count, a percentage, a duration, an amount. Lines without one describe the job you held rather than what changed because you held it.',
+        fix:
+          'Add the figures you already know to be true. Never invent one: a number you cannot defend in the interview costs more than the ranking it buys.',
+        evidence: bullets[0]?.slice(0, 120),
+      })
+    }
+
+    const weak = bullets.filter((b) => WEAK_OPENER.test(b))
+    if (weak.length >= 2) {
+      add({
+        id: 'weak-openers',
+        area: 'keywords',
+        severity: 'low',
+        title: `${weak.length} lines open with a phrase that describes the role, not the work`,
+        detail:
+          '"Responsible for", "Worked on" and "Involved in" name a duty. Keyword matching scores the verb, and these verbs belong to the job description rather than to anything you did.',
+        fix: 'Start with what you did — Built, Ran, Migrated, Negotiated, Reduced — and let the object of the sentence carry the scope.',
+        evidence: weak[0]?.slice(0, 120),
+      })
+    }
+
+    const long = bullets.filter((b) => b.length > 300)
+    if (long.length > 0) {
+      add({
+        id: 'bullet-too-long',
+        area: 'parsing',
+        severity: 'low',
+        title: `${long.length} experience ${long.length === 1 ? 'line runs' : 'lines run'} past 300 characters`,
+        detail:
+          'Long lines are usually a paragraph that lost its bullet. Some parsers truncate at a fixed length, which drops the end of the sentence — and the end is where the outcome usually sits.',
+        fix: 'Split each into two lines of roughly one sentence.',
+        evidence: long[0]?.slice(0, 120),
+      })
+    }
+  }
+
   // ---- score --------------------------------------------------------------
   //
   // Every deduction is itemised and adds up to the number shown. A score whose
@@ -484,8 +789,39 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
   }))
   const score = Math.max(0, 100 - deductions.reduce((s, d) => s + d.points, 0))
 
+  /**
+   * Categories. Each starts at 100 and is deducted only by its own findings,
+   * so a résumé can be perfectly machine-readable and still score badly on
+   * content — which is the distinction the single number cannot make and the
+   * reason the report is grouped at all.
+   *
+   * Tailoring is omitted entirely when no role was chosen. Showing it at 100/100
+   * because no rule ran would be the most flattering possible lie.
+   */
+  const placed: AtsFinding[] = findings.map((x) => ({
+    ...x,
+    category: CATEGORY_OF[x.id] ?? 'content',
+  }))
+
+  const categories: AtsCategoryScore[] = (
+    Object.entries(RULES) as [AtsCategory, { label: string; ids: string[] }][]
+  )
+    .filter(([key]) => key !== 'tailoring' || Boolean(roleEntry))
+    .map(([key, { label, ids }]) => {
+      const mine = placed.filter((x) => x.category === key)
+      const lost = mine.reduce((s, x) => s + SEVERITY_COST[x.severity], 0)
+      return {
+        key,
+        label,
+        score: Math.max(0, 100 - lost),
+        passed: ids.length - mine.length,
+        total: ids.length,
+      }
+    })
+
   return {
-    findings,
+    findings: placed,
+    categories,
     readability: { score, deductions },
     read: {
       currentTitle: f.currentTitle,
