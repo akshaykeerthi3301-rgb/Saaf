@@ -24,6 +24,8 @@ import { extractFields, type ParsedFields } from '@/lib/parse/extract'
  * client.
  */
 
+import ROLE_KEYWORDS from '@/lib/taxonomy/role-keywords.json'
+
 export type AtsSeverity = 'high' | 'medium' | 'low'
 
 /**
@@ -66,6 +68,36 @@ export type AtsReport = {
    */
   read: Pick<ParsedFields, 'currentTitle' | 'employer' | 'city' | 'yearsExperience' | 'credential'>
   stats: { characters: number; words: number; lines: number }
+  /**
+   * The role the check was run against, when one was chosen, and what the
+   * comparison found. Absent when no role was selected — the formatting checks
+   * are role-agnostic and run either way.
+   */
+  role?: {
+    name: string
+    /** How many postings for this role the terms were measured across. */
+    postings: number
+    present: string[]
+    missing: string[]
+  }
+}
+
+/**
+ * Terms real postings use for a role, measured rather than asserted.
+ *
+ * Built by scripts/build-role-keywords.ts against the live index and committed
+ * as JSON, because this module must not touch a database — see the header. Each
+ * entry records how many postings it was measured over, so a finding can say
+ * "named in most of the 199 Product Manager postings we index" instead of
+ * "experts recommend", which is the kind of unverifiable advice this product
+ * exists to argue against.
+ */
+type RoleKeywords = Record<string, { terms: string[]; postings: number }>
+const KEYWORDS = ROLE_KEYWORDS as RoleKeywords
+
+/** Role names the checker can compare against. Used by the form's picker. */
+export function rolesWithKeywords(): string[] {
+  return Object.keys(KEYWORDS).sort()
 }
 
 /** Shortest input that can be assessed at all. */
@@ -144,7 +176,7 @@ function earliestYear(text: string): number | undefined {
  * Throws only for input too short to assess. Everything else is a finding —
  * a checker that refuses to run teaches nothing.
  */
-export function checkResume(resumeText: string): AtsReport {
+export function checkResume(resumeText: string, targetRole?: string): AtsReport {
   const text = resumeText.trim()
   if (text.length < MIN_RESUME_CHARS) {
     throw new AtsCheckError('Paste your full résumé — this looks too short to check.')
@@ -404,6 +436,42 @@ export function checkResume(resumeText: string): AtsReport {
     })
   }
 
+  // ---- the role comparison, when one was chosen ---------------------------
+  //
+  // ⚠️ THIS IS THE ONE CHECK THAT IS ABOUT CONTENT RATHER THAN FORMATTING, so
+  // it is held to a stricter standard. It reports only terms measured in real
+  // postings for the role the candidate picked, it names how many postings, and
+  // it is scored LOW severity however many are missing — a résumé is not
+  // "broken" for wording things differently, and an ATS keyword match is a
+  // ranking signal rather than a parse failure. Overstating it would turn a
+  // deterministic checker into the advice column it was built to replace.
+  const roleEntry = targetRole ? KEYWORDS[targetRole] : undefined
+  let role: AtsReport['role']
+  if (roleEntry) {
+    const hay = text.toLowerCase()
+    const present = roleEntry.terms.filter((t) => hay.includes(t))
+    const missing = roleEntry.terms.filter((t) => !hay.includes(t))
+    role = { name: targetRole!, postings: roleEntry.postings, present, missing }
+
+    // Only worth saying when most of the vocabulary is absent. A résumé
+    // carrying half of it is written in the language of the role already.
+    if (missing.length > roleEntry.terms.length / 2) {
+      add({
+        id: 'role-vocabulary',
+        area: 'keywords',
+        severity: 'low',
+        title: `Your résumé names ${present.length} of ${roleEntry.terms.length} terms common to ${targetRole} postings`,
+        detail:
+          `Across the ${roleEntry.postings} ${targetRole} postings we index, these terms appear in at least a third of them: ` +
+          `${roleEntry.terms.join(', ')}. Yours does not mention ${missing.join(', ')}. ` +
+          `An ATS ranks partly on overlap with the posting, so absent vocabulary can cost you position even when the experience is there.`,
+        fix:
+          `Only add a term if the work behind it is genuinely yours — writing in a word you cannot speak to is worse than missing it. ` +
+          `The authoritative list is the posting itself, not this one: paste a specific job description into Should I apply? to see what THAT employer asks for.`,
+      })
+    }
+  }
+
   // ---- score --------------------------------------------------------------
   //
   // Every deduction is itemised and adds up to the number shown. A score whose
@@ -427,5 +495,6 @@ export function checkResume(resumeText: string): AtsReport {
       credential: f.credential,
     },
     stats: { characters: text.length, words: words.length, lines: nonEmpty.length },
+    role,
   }
 }

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { AlertCircle, CheckCircle2, FileSearch, Loader2, Quote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { checkResumeForAts, type AtsCheckResponse } from '@/app/actions/ats-check'
+import { rolesWithKeywords } from '@/lib/ats-check'
 import { MIN_RESUME_CHARS, MAX_RESUME_CHARS, type AtsSeverity } from '@/lib/ats-check'
 
 /**
@@ -50,8 +51,12 @@ const AREA: Record<string, string> = {
 
 type Report = Extract<AtsCheckResponse, { ok: true }>
 
+/** Static and identical for every visitor, so it is built once. */
+const ROLES = rolesWithKeywords()
+
 export function AtsCheckForm() {
   const [resumeText, setResumeText] = useState('')
+  const [targetRole, setTargetRole] = useState('')
   const [report, setReport] = useState<Report>()
   const [error, setError] = useState<string>()
   const [pending, start] = useTransition()
@@ -62,7 +67,10 @@ export function AtsCheckForm() {
     e.preventDefault()
     setError(undefined)
     start(async () => {
-      const res = await checkResumeForAts({ resumeText })
+      const res = await checkResumeForAts({
+        resumeText,
+        targetRole: targetRole || undefined,
+      })
       if (!res.ok) {
         setError(res.error)
         setReport(undefined)
@@ -92,6 +100,40 @@ export function AtsCheckForm() {
             onChange={(e) => setResumeText(e.target.value)}
             placeholder="Paste it as text — select all in your PDF or Word file and copy. Pasting the text is the point: it is exactly what a parser sees."
           />
+        </div>
+
+        {/*
+          ⚠️ A PLAIN <select> OVER A STATIC LIST, NOT THE RoleInput COMBOBOX.
+          RoleInput calls roleCatalogue(), which queries the database for live
+          counts. This page is public and this module declares "NO DATABASE, NO
+          STORAGE" with a test enforcing it — dropping RoleInput in would have
+          broken that invariant on the one surface whose promise is that nothing
+          is stored. rolesWithKeywords() reads the committed JSON.
+
+          Optional on purpose: the formatting checks are role-agnostic and run
+          either way. A required field here would be friction in front of the
+          thing the visitor came for.
+        */}
+        <div className="mb-6">
+          <label htmlFor="ats-role" className={LABEL}>
+            The role you are targeting <span className="font-normal text-muted-foreground">— optional</span>
+          </label>
+          <select
+            id="ats-role"
+            className={`${FIELD} mt-2`}
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+          >
+            <option value="">Skip — just check the formatting</option>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Adds one more check: the words real postings for that role use, and which
+            of them your résumé does not. Measured from our own index, not a
+            recommended-keywords list.
+          </p>
         </div>
 
         <Button type="submit" disabled={!ready || pending} className="w-full sm:w-auto">
@@ -179,6 +221,62 @@ export function AtsCheckForm() {
               ))}
             </dl>
           </div>
+
+          {/* The role comparison, when one was picked. Present terms first and
+              in the accent, missing ones muted — a candidate should see what
+              their résumé already does before what it does not. */}
+          {report.role && (
+            <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Against {report.role.name} postings
+              </p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Your résumé names{' '}
+                <strong className="font-semibold text-primary">
+                  {report.role.present.length} of {report.role.present.length + report.role.missing.length}
+                </strong>{' '}
+                terms that appear in at least a third of the{' '}
+                <strong className="font-semibold text-primary">{report.role.postings}</strong>{' '}
+                {report.role.name} postings we index.
+              </p>
+
+              {report.role.present.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-primary">Already there</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {report.role.present.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-lg bg-accent/10 px-2 py-1 text-xs font-medium text-accent"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {report.role.missing.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-primary">Not mentioned</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {report.role.missing.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-lg bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    Add a term only if the work behind it is genuinely yours. The
+                    authoritative list is the posting you are applying to, not this one.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {report.findings.length > 0 && (
             <div className="mt-6 space-y-4">

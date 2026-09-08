@@ -30,6 +30,8 @@ const schema = z.object({
     .trim()
     .min(MIN_RESUME_CHARS, 'Paste your full résumé — this looks too short to check.')
     .max(MAX_RESUME_CHARS, 'That résumé is longer than we can read. Paste the most recent few roles.'),
+  /** Optional. Compared against terms measured in real postings for that role. */
+  targetRole: z.string().trim().max(80).optional(),
 })
 
 export type AtsCheckResponse = ({ ok: true } & AtsReport) | { ok: false; error: string }
@@ -78,7 +80,7 @@ export async function checkResumeForAts(input: z.input<typeof schema>): Promise<
   }
 
   try {
-    return { ok: true, ...checkResume(parsed.data.resumeText) }
+    return { ok: true, ...checkResume(parsed.data.resumeText, parsed.data.targetRole) }
   } catch (e) {
     if (e instanceof AtsCheckError) return { ok: false, error: e.message }
     return { ok: false, error: 'We could not check that just now. Try again, or check what you pasted.' }

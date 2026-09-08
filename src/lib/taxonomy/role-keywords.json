@@ -1,0 +1,1279 @@
+{
+  "Software Engineer": {
+    "terms": [
+      "development",
+      "software",
+      "design",
+      "engineering",
+      "technical",
+      "systems",
+      "cloud",
+      "code",
+      "engineer",
+      "services",
+      "performance",
+      "platform",
+      "tools"
+    ],
+    "postings": 196
+  },
+  "Backend Engineer": {
+    "terms": [
+      "engineering",
+      "design",
+      "systems",
+      "backend",
+      "services",
+      "technical",
+      "engineer",
+      "platform",
+      "performance",
+      "software",
+      "code",
+      "engineers",
+      "development"
+    ],
+    "postings": 198
+  },
+  "Frontend Engineer": {
+    "terms": [
+      "react",
+      "applications",
+      "design",
+      "code",
+      "how",
+      "user",
+      "performance",
+      "tools",
+      "components",
+      "frontend",
+      "typescript",
+      "solutions",
+      "web",
+      "engineering"
+    ],
+    "postings": 72
+  },
+  "Full Stack Engineer": {
+    "terms": [
+      "design",
+      "development",
+      "engineering",
+      "software",
+      "stack",
+      "technical",
+      "code",
+      "systems",
+      "engineer",
+      "performance",
+      "quality",
+      "cloud",
+      "apis"
+    ],
+    "postings": 121
+  },
+  "Mobile Engineer": {
+    "terms": [
+      "how",
+      "tools",
+      "mobile",
+      "design",
+      "solutions",
+      "engineering",
+      "ios",
+      "applications",
+      "android",
+      "solving",
+      "engineers",
+      "performance",
+      "production",
+      "platform"
+    ],
+    "postings": 29
+  },
+  "DevOps Engineer": {
+    "terms": [
+      "devops",
+      "infrastructure",
+      "cloud",
+      "automation",
+      "engineering",
+      "development",
+      "engineer",
+      "tools",
+      "code",
+      "monitoring",
+      "python",
+      "hands",
+      "security"
+    ],
+    "postings": 162
+  },
+  "QA Engineer": {
+    "terms": [
+      "test",
+      "testing",
+      "quality",
+      "automation",
+      "tools",
+      "design",
+      "engineer",
+      "engineering",
+      "software",
+      "development",
+      "automated",
+      "functional",
+      "hands",
+      "cases"
+    ],
+    "postings": 118
+  },
+  "Security Engineer": {
+    "terms": [
+      "security",
+      "engineering",
+      "cloud",
+      "engineer",
+      "design",
+      "technical",
+      "hands",
+      "secure",
+      "threat",
+      "automation",
+      "information",
+      "tools"
+    ],
+    "postings": 168
+  },
+  "Solutions Architect": {
+    "terms": [
+      "solutions",
+      "technical",
+      "solution",
+      "design",
+      "architecture",
+      "architect",
+      "technology",
+      "enterprise",
+      "cloud",
+      "engineering",
+      "systems",
+      "development",
+      "platform"
+    ],
+    "postings": 155
+  },
+  "Engineering Manager": {
+    "terms": [
+      "engineering",
+      "technical",
+      "development",
+      "software",
+      "performance",
+      "design",
+      "engineers",
+      "quality",
+      "manager",
+      "practices",
+      "leadership",
+      "technology"
+    ],
+    "postings": 196
+  },
+  "Data Analyst": {
+    "terms": [
+      "analyst",
+      "sql",
+      "analysis",
+      "quality",
+      "global",
+      "analytical",
+      "analytics",
+      "tools",
+      "maintain",
+      "information",
+      "technical"
+    ],
+    "postings": 156
+  },
+  "Data Scientist": {
+    "terms": [
+      "science",
+      "learning",
+      "python",
+      "engineering",
+      "models",
+      "design",
+      "machine",
+      "scientist",
+      "solutions",
+      "technical",
+      "development",
+      "model",
+      "tools"
+    ],
+    "postings": 132
+  },
+  "Data Engineer": {
+    "terms": [
+      "engineering",
+      "design",
+      "technical",
+      "engineer",
+      "cloud",
+      "pipelines",
+      "development",
+      "quality",
+      "systems",
+      "performance",
+      "python",
+      "hands",
+      "tools"
+    ],
+    "postings": 195
+  },
+  "Machine Learning Engineer": {
+    "terms": [
+      "engineering",
+      "learning",
+      "machine",
+      "models",
+      "production",
+      "model",
+      "engineer",
+      "science",
+      "technical",
+      "systems",
+      "design",
+      "python",
+      "solutions"
+    ],
+    "postings": 64
+  },
+  "Business Analyst": {
+    "terms": [
+      "process",
+      "analysis",
+      "analyst",
+      "functional",
+      "processes",
+      "technology",
+      "development",
+      "solutions",
+      "technical",
+      "tools",
+      "information"
+    ],
+    "postings": 196
+  },
+  "Analytics Manager": {
+    "terms": [
+      "analytics",
+      "sql",
+      "tools",
+      "insights",
+      "performance",
+      "python",
+      "solutions",
+      "analysis",
+      "complex",
+      "manager",
+      "translate"
+    ],
+    "postings": 52
+  },
+  "Product Manager": {
+    "terms": [
+      "engineering",
+      "manager",
+      "platform",
+      "cross",
+      "strategy",
+      "technical",
+      "functional",
+      "own",
+      "roadmap",
+      "define",
+      "design"
+    ],
+    "postings": 199
+  },
+  "Associate Product Manager": {
+    "terms": [
+      "manager",
+      "platform",
+      "process",
+      "closely",
+      "functional",
+      "associate",
+      "engineering",
+      "user",
+      "development",
+      "identify",
+      "design"
+    ],
+    "postings": 12
+  },
+  "Technical Product Manager": {
+    "terms": [
+      "engineering",
+      "technical",
+      "manager",
+      "platform",
+      "solutions",
+      "own",
+      "design",
+      "functional",
+      "closely",
+      "development",
+      "driven",
+      "roadmap"
+    ],
+    "postings": 33
+  },
+  "Growth Product Manager": {
+    "terms": [
+      "platform",
+      "growth",
+      "users",
+      "consumer",
+      "owning",
+      "own",
+      "define",
+      "opportunities",
+      "design",
+      "analytics",
+      "ownership",
+      "strategy",
+      "user"
+    ],
+    "postings": 5
+  },
+  "Product Analyst": {
+    "terms": [
+      "analyst",
+      "analysis",
+      "development",
+      "tools",
+      "technical",
+      "impact",
+      "functional",
+      "process",
+      "analytical",
+      "cross",
+      "opportunities"
+    ],
+    "postings": 51
+  },
+  "Product Owner": {
+    "terms": [
+      "development",
+      "owner",
+      "backlog",
+      "technical",
+      "user",
+      "cross",
+      "delivery",
+      "functional",
+      "engineering",
+      "design",
+      "agile"
+    ],
+    "postings": 51
+  },
+  "Product Management": {
+    "terms": [
+      "engineering",
+      "manager",
+      "platform",
+      "cross",
+      "strategy",
+      "technical",
+      "functional",
+      "own",
+      "roadmap",
+      "define",
+      "design"
+    ],
+    "postings": 199
+  },
+  "Product Designer": {
+    "terms": [
+      "design",
+      "user",
+      "designer",
+      "engineering",
+      "systems",
+      "tools",
+      "designers",
+      "complex",
+      "platform",
+      "interaction",
+      "research",
+      "experiences",
+      "closely"
+    ],
+    "postings": 85
+  },
+  "UX Designer": {
+    "terms": [
+      "design",
+      "information",
+      "user",
+      "portfolio",
+      "enterprise",
+      "research",
+      "tools",
+      "architecture",
+      "systems",
+      "designer",
+      "experiences",
+      "interaction",
+      "engineering"
+    ],
+    "postings": 13
+  },
+  "UX Researcher": {
+    "terms": [
+      "research",
+      "insights",
+      "global",
+      "cross",
+      "impact",
+      "design",
+      "decisions",
+      "leadership",
+      "user",
+      "own",
+      "future",
+      "execute",
+      "strategy"
+    ],
+    "postings": 6
+  },
+  "Graphic Designer": {
+    "terms": [
+      "design",
+      "creative",
+      "visual",
+      "quality",
+      "adobe",
+      "media",
+      "brand",
+      "graphic",
+      "digital",
+      "designer",
+      "marketing",
+      "social",
+      "content"
+    ],
+    "postings": 25
+  },
+  "Motion Designer": {
+    "terms": [
+      "design",
+      "motion",
+      "after",
+      "effects",
+      "brand",
+      "how",
+      "digital",
+      "visual",
+      "designer",
+      "content",
+      "video",
+      "platform",
+      "every",
+      "social"
+    ],
+    "postings": 10
+  },
+  "Business Development Executive": {
+    "terms": [
+      "market",
+      "growth",
+      "revenue",
+      "people",
+      "negotiation",
+      "leads",
+      "long",
+      "term",
+      "cold",
+      "smart",
+      "existing",
+      "manager",
+      "selling"
+    ],
+    "postings": 40
+  },
+  "Business Development Manager": {
+    "terms": [
+      "market",
+      "development",
+      "sales",
+      "growth",
+      "relationships",
+      "opportunities",
+      "existing",
+      "revenue",
+      "identify",
+      "pipeline",
+      "marketing",
+      "generation"
+    ],
+    "postings": 86
+  },
+  "Sales Manager": {
+    "terms": [
+      "sales",
+      "market",
+      "development",
+      "relationships",
+      "growth",
+      "identify",
+      "solutions",
+      "assigned",
+      "targets",
+      "manager",
+      "marketing",
+      "revenue",
+      "industry"
+    ],
+    "postings": 196
+  },
+  "Account Executive": {
+    "terms": [
+      "sales",
+      "account",
+      "executive",
+      "relationships",
+      "opportunities",
+      "market",
+      "value",
+      "growth",
+      "selling",
+      "success",
+      "pipeline",
+      "accounts",
+      "process"
+    ],
+    "postings": 127
+  },
+  "Account Manager": {
+    "terms": [
+      "account",
+      "relationships",
+      "sales",
+      "manager",
+      "internal",
+      "accounts",
+      "solutions",
+      "growth",
+      "opportunities",
+      "performance",
+      "cross",
+      "market"
+    ],
+    "postings": 197
+  },
+  "Key Account Manager": {
+    "terms": [
+      "sales",
+      "account",
+      "market",
+      "relationships",
+      "manager",
+      "accounts",
+      "growth",
+      "internal",
+      "opportunities",
+      "value",
+      "services",
+      "solutions"
+    ],
+    "postings": 39
+  },
+  "Field Sales": {
+    "terms": [
+      "sales",
+      "opportunities",
+      "identify",
+      "long",
+      "market",
+      "collection",
+      "term",
+      "service",
+      "rentokil",
+      "networking",
+      "provider",
+      "initial",
+      "achieve",
+      "locations"
+    ],
+    "postings": 160
+  },
+  "Inside Sales": {
+    "terms": [
+      "sales",
+      "inside",
+      "crm",
+      "opportunities",
+      "revenue",
+      "market",
+      "than",
+      "executive",
+      "growth",
+      "responsible",
+      "email",
+      "leads"
+    ],
+    "postings": 29
+  },
+  "Partnerships Manager": {
+    "terms": [
+      "performance",
+      "cross",
+      "relationships",
+      "track",
+      "strategy",
+      "development",
+      "partnerships",
+      "identify",
+      "people",
+      "growth",
+      "manager",
+      "market"
+    ],
+    "postings": 23
+  },
+  "Digital Marketing Manager": {
+    "terms": [
+      "digital",
+      "marketing",
+      "performance",
+      "manager",
+      "media",
+      "execute",
+      "campaigns",
+      "channels.",
+      "campaign",
+      "platforms",
+      "tools",
+      "paid"
+    ],
+    "postings": 5
+  },
+  "Performance Marketing": {
+    "terms": [
+      "performance",
+      "marketing",
+      "conversion",
+      "manager",
+      "campaigns",
+      "paid",
+      "own",
+      "ads",
+      "hands",
+      "tools",
+      "google",
+      "meta",
+      "strategy"
+    ],
+    "postings": 15
+  },
+  "Growth Marketer": {
+    "terms": [
+      "marketing",
+      "sales",
+      "growth",
+      "performance",
+      "strategy",
+      "closely",
+      "market",
+      "execution",
+      "journey",
+      "creative",
+      "technology",
+      "quality",
+      "clear",
+      "than"
+    ],
+    "postings": 7
+  },
+  "Product Marketing Manager": {
+    "terms": [
+      "marketing",
+      "competitive",
+      "sales",
+      "market",
+      "how",
+      "positioning",
+      "platform",
+      "messaging",
+      "value",
+      "cross",
+      "functional",
+      "content"
+    ],
+    "postings": 26
+  },
+  "Content Marketing": {
+    "terms": [
+      "content",
+      "marketing",
+      "writing",
+      "world",
+      "own",
+      "why",
+      "pages",
+      "write",
+      "bring",
+      "how",
+      "tools",
+      "impact",
+      "workflows",
+      "brand"
+    ],
+    "postings": 9
+  },
+  "Brand Manager": {
+    "terms": [
+      "brand",
+      "marketing",
+      "manager",
+      "execution",
+      "development",
+      "performance",
+      "market",
+      "brands",
+      "strategy",
+      "growth",
+      "how",
+      "global",
+      "impact"
+    ],
+    "postings": 13
+  },
+  "SEO Specialist": {
+    "terms": [
+      "seo",
+      "search",
+      "monitor",
+      "growth",
+      "specialist",
+      "traffic",
+      "improve",
+      "keyword",
+      "research",
+      "content",
+      "pages",
+      "tools",
+      "google"
+    ],
+    "postings": 6
+  },
+  "Financial Analyst": {
+    "terms": [
+      "financial",
+      "finance",
+      "analysis",
+      "reporting",
+      "accounting",
+      "analyst",
+      "process",
+      "information",
+      "global",
+      "performance",
+      "processes"
+    ],
+    "postings": 70
+  },
+  "Finance Manager": {
+    "terms": [
+      "finance",
+      "financial",
+      "reporting",
+      "compliance",
+      "process",
+      "accounting",
+      "internal",
+      "processes",
+      "analysis",
+      "manager",
+      "planning"
+    ],
+    "postings": 92
+  },
+  "Relationship Manager": {
+    "terms": [
+      "market",
+      "location",
+      "sales",
+      "services",
+      "regular",
+      "banking",
+      "dbs",
+      "credit",
+      "relationship",
+      "group",
+      "loans",
+      "solutions",
+      "deposits"
+    ],
+    "postings": 101
+  },
+  "Credit Analyst": {
+    "terms": [
+      "credit",
+      "risk",
+      "analysis",
+      "finance",
+      "location",
+      "solutions",
+      "process",
+      "financial",
+      "etc.",
+      "compliance",
+      "operations"
+    ],
+    "postings": 18
+  },
+  "Risk Analyst": {
+    "terms": [
+      "risk",
+      "analyst",
+      "technology",
+      "compliance",
+      "industry",
+      "culture",
+      "identify",
+      "maintain",
+      "believe",
+      "financial",
+      "process"
+    ],
+    "postings": 30
+  },
+  "Investment Banking": {
+    "terms": [
+      "investment",
+      "markets",
+      "equity",
+      "income",
+      "sales",
+      "value",
+      "focus",
+      "risk",
+      "compliance",
+      "culture",
+      "market",
+      "regulatory",
+      "policies",
+      "proactive"
+    ],
+    "postings": 5
+  },
+  "Collections Manager": {
+    "terms": [
+      "collection",
+      "performance",
+      "collections",
+      "cases",
+      "identify",
+      "targets",
+      "bucket",
+      "accounts",
+      "control",
+      "target",
+      "productivity",
+      "financial"
+    ],
+    "postings": 25
+  },
+  "Internal Audit": {
+    "terms": [
+      "internal",
+      "audit",
+      "risk",
+      "controls",
+      "control",
+      "audits",
+      "senior",
+      "financial",
+      "external",
+      "identify",
+      "compliance"
+    ],
+    "postings": 21
+  },
+  "Treasury Manager": {
+    "terms": [
+      "treasury",
+      "financial",
+      "banking",
+      "operations",
+      "bank",
+      "risk",
+      "management.",
+      "internal",
+      "services",
+      "regulatory",
+      "cross",
+      "systems"
+    ],
+    "postings": 8
+  },
+  "Operations Manager": {
+    "terms": [
+      "operations",
+      "process",
+      "manager",
+      "operational",
+      "quality",
+      "performance",
+      "global",
+      "people",
+      "processes",
+      "technology",
+      "improvement"
+    ],
+    "postings": 189
+  },
+  "Operations Executive": {
+    "terms": [
+      "operations",
+      "internal",
+      "service",
+      "compliance",
+      "documentation",
+      "coordination",
+      "external",
+      "areas",
+      "performance",
+      "report",
+      "resolve",
+      "track",
+      "issues"
+    ],
+    "postings": 78
+  },
+  "Program Manager": {
+    "terms": [
+      "program",
+      "cross",
+      "manager",
+      "functional",
+      "technical",
+      "programs",
+      "development",
+      "execution",
+      "project",
+      "leadership",
+      "engineering"
+    ],
+    "postings": 162
+  },
+  "Project Manager": {
+    "terms": [
+      "project",
+      "projects",
+      "manager",
+      "quality",
+      "planning",
+      "engineering",
+      "degree",
+      "execution",
+      "delivery",
+      "progress",
+      "technical",
+      "risks"
+    ],
+    "postings": 196
+  },
+  "Supply Chain Manager": {
+    "terms": [
+      "supply",
+      "chain",
+      "manager",
+      "operations",
+      "performance",
+      "cross",
+      "functional",
+      "procurement",
+      "identify",
+      "global",
+      "improve"
+    ],
+    "postings": 27
+  },
+  "Logistics Manager": {
+    "terms": [
+      "logistics",
+      "operations",
+      "supply",
+      "chain",
+      "service",
+      "inventory",
+      "transportation",
+      "improve",
+      "planning",
+      "process",
+      "automation"
+    ],
+    "postings": 12
+  },
+  "Procurement Manager": {
+    "terms": [
+      "procurement",
+      "contract",
+      "global",
+      "cost",
+      "compliance",
+      "manager",
+      "policies",
+      "suppliers",
+      "performance",
+      "value",
+      "category",
+      "identify",
+      "strategic"
+    ],
+    "postings": 32
+  },
+  "Category Manager": {
+    "terms": [
+      "category",
+      "performance",
+      "commercial",
+      "internal",
+      "global",
+      "cost",
+      "supplier",
+      "categories",
+      "supply",
+      "manager",
+      "cross",
+      "functional",
+      "strategy"
+    ],
+    "postings": 13
+  },
+  "HR Manager": {
+    "terms": [
+      "employee",
+      "performance",
+      "human",
+      "processes",
+      "talent",
+      "resources",
+      "operations",
+      "people",
+      "engagement",
+      "compliance",
+      "development",
+      "strategic"
+    ],
+    "postings": 30
+  },
+  "HR Executive": {
+    "terms": [
+      "recruitment",
+      "employee",
+      "documentation",
+      "proactive",
+      "internal",
+      "attendance",
+      "interview",
+      "requirements.",
+      "hiring",
+      "records",
+      "safety",
+      "compliance"
+    ],
+    "postings": 9
+  },
+  "HR Business Partner": {
+    "terms": [
+      "performance",
+      "employee",
+      "talent",
+      "leadership",
+      "engagement",
+      "development",
+      "human",
+      "strategic",
+      "people",
+      "processes",
+      "planning",
+      "initiatives"
+    ],
+    "postings": 15
+  },
+  "Talent Acquisition": {
+    "terms": [
+      "talent",
+      "hiring",
+      "acquisition",
+      "recruitment",
+      "sourcing",
+      "managers",
+      "global",
+      "strategies",
+      "recruiting",
+      "process",
+      "maintain"
+    ],
+    "postings": 62
+  },
+  "Technical Recruiter": {
+    "terms": [
+      "talent",
+      "technical",
+      "acquisition",
+      "recruiter",
+      "recruiting",
+      "hiring",
+      "managers",
+      "interview",
+      "recruitment",
+      "believe",
+      "sourcing",
+      "market"
+    ],
+    "postings": 7
+  },
+  "Learning and Development": {
+    "terms": [
+      "learning",
+      "training",
+      "development",
+      "design",
+      "feedback",
+      "programs",
+      "maintain",
+      "effectiveness",
+      "identify",
+      "employees",
+      "conduct",
+      "quality",
+      "employee"
+    ],
+    "postings": 31
+  },
+  "Management Consultant": {
+    "terms": [
+      "global",
+      "expertise",
+      "development",
+      "environment",
+      "solutions",
+      "relationships",
+      "leadership",
+      "growth",
+      "market",
+      "complex",
+      "stakeholder"
+    ],
+    "postings": 42
+  },
+  "Strategy Manager": {
+    "terms": [
+      "strategy",
+      "strategic",
+      "cross",
+      "impact",
+      "market",
+      "manager",
+      "identify",
+      "complex",
+      "operations",
+      "leadership",
+      "initiatives"
+    ],
+    "postings": 25
+  },
+  "Business Operations": {
+    "terms": [
+      "operations",
+      "cross",
+      "operational",
+      "processes",
+      "process",
+      "tools",
+      "technology",
+      "functional",
+      "initiatives",
+      "identify",
+      "closely"
+    ],
+    "postings": 18
+  },
+  "Corporate Development": {
+    "terms": [
+      "corporate",
+      "development",
+      "opportunities",
+      "identify",
+      "market",
+      "research",
+      "strategic",
+      "relationships",
+      "industry",
+      "maintain",
+      "financial",
+      "execution",
+      "long"
+    ],
+    "postings": 6
+  },
+  "Customer Success Manager": {
+    "terms": [
+      "success",
+      "manager",
+      "adoption",
+      "value",
+      "sales",
+      "cross",
+      "identify",
+      "opportunities",
+      "strategic",
+      "account",
+      "platform"
+    ],
+    "postings": 35
+  },
+  "Technical Support Engineer": {
+    "terms": [
+      "technical",
+      "engineer",
+      "issues",
+      "global",
+      "complex",
+      "engineering",
+      "resolve",
+      "cloud",
+      "information",
+      "tools",
+      "troubleshooting",
+      "nbsp"
+    ],
+    "postings": 45
+  },
+  "Service Delivery Manager": {
+    "terms": [
+      "service",
+      "delivery",
+      "manager",
+      "continuous",
+      "operations",
+      "services",
+      "quality",
+      "responsible",
+      "identify",
+      "compliance",
+      "global",
+      "proven"
+    ],
+    "postings": 12
+  }
+}

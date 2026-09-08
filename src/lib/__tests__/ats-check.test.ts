@@ -226,3 +226,77 @@ describe('bounds and purity', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
 })
+
+describe('the role comparison', () => {
+  const PM_RESUME = `Priya Iyer
+Bengaluru, Karnataka, India
+
+Product Manager at Paytm
+Mar 2021 - Present
+Owned the merchant payments roadmap and worked cross functional with engineering.
+Built platform strategy for the technical teams.
+
+SKILLS
+SQL, Roadmapping, Experimentation
+
+EDUCATION
+B.Tech, VIT Vellore, 2019`
+
+  it('is absent when no role was chosen', () => {
+    expect(checkResume(PM_RESUME).role).toBeUndefined()
+  })
+
+  it('is absent for a role we have no measured terms for', () => {
+    expect(checkResume(PM_RESUME, 'Astronaut').role).toBeUndefined()
+  })
+
+  it('splits the measured terms into present and missing', () => {
+    const r = checkResume(PM_RESUME, 'Product Manager')!
+    expect(r.role).toBeDefined()
+    expect(r.role!.name).toBe('Product Manager')
+    expect(r.role!.postings).toBeGreaterThan(0)
+    // Every term is accounted for on exactly one side.
+    const all = [...r.role!.present, ...r.role!.missing]
+    expect(new Set(all).size).toBe(all.length)
+    // This résumé genuinely says these.
+    expect(r.role!.present).toEqual(expect.arrayContaining(['roadmap', 'platform', 'strategy']))
+  })
+
+  it('finds every present term actually in the text', () => {
+    const r = checkResume(PM_RESUME, 'Product Manager')!
+    for (const t of r.role!.present) {
+      expect(PM_RESUME.toLowerCase()).toContain(t)
+    }
+    for (const t of r.role!.missing) {
+      expect(PM_RESUME.toLowerCase()).not.toContain(t)
+    }
+  })
+
+  it('scores the vocabulary finding LOW, never as a parse failure', () => {
+    // A résumé is not broken for wording things differently, and an ATS keyword
+    // match is a ranking signal rather than a parse error. Overstating it turns
+    // a deterministic checker into an advice column.
+    const bare = `Anil Kumar
+Bengaluru, India
+
+Manager at Acme
+Jan 2020 - Present
+Did assorted things for the group and reported upward on the numbers.
+
+EDUCATION
+B.Com, 2018`
+    const r = checkResume(bare, 'Product Manager')!
+    const vocab = r.findings.find((x) => x.id === 'role-vocabulary')
+    if (vocab) {
+      expect(vocab.severity).toBe('low')
+      expect(vocab.area).toBe('keywords')
+      // It must name how many postings it measured, not assert best practice.
+      expect(vocab.detail).toMatch(/postings we index/i)
+    }
+  })
+
+  it('still reaches no database with a role selected', () => {
+    const src = readFileSync(join(__dirname, '..', 'ats-check.ts'), 'utf8')
+    expect(src).not.toMatch(/supabase/i)
+  })
+})
