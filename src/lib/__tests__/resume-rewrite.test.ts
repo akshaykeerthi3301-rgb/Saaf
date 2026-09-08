@@ -128,3 +128,31 @@ describe('words already in the candidate’s own line', () => {
     expect(rewriteFailure(next, original, ME, ROLE)).toMatch(/HSBC/)
   })
 })
+
+/**
+ * Inflections. Seen live on production on 2026-09-08, and the reason shown to
+ * the candidate was the problem rather than the outcome: the guard reported
+ * `names "Owns", which is not on your profile` about a verb, because the
+ * original said "owning" and the rewrite said "Owns".
+ */
+describe('a word the model re-inflected', () => {
+  it('accepts a different tense of a word the candidate wrote', () => {
+    const original = 'Comfortable owning a service end to end, from schema through rollout'
+    const next = 'Owns services end to end, from schema design through rollout and support'
+    expect(rewriteFailure(next, original, ME, ROLE)).toBeNull()
+  })
+
+  it('accepts a plural of a word the candidate wrote', () => {
+    const original = 'Built the retention report for the growth team'
+    const next = 'Built retention reports for the growth team every week'
+    expect(rewriteFailure(next, original, ME, ROLE)).toBeNull()
+  })
+
+  it('still catches a company at the start of a sentence', () => {
+    // The obvious alternative fix — exempting sentence-initial words — would
+    // have let this through, which is the fabrication the guard exists for.
+    const original = 'Built reporting for the payments funnel. Ran the weekly review'
+    const next = 'Built reporting for the payments funnel. Flipkart adopted the same model'
+    expect(rewriteFailure(next, original, ME, ROLE)).toMatch(/Flipkart/)
+  })
+})

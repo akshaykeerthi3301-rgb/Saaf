@@ -147,7 +147,34 @@ function ownVocabulary(original: string, me: CandidateFacts): Set<string> {
     .split(/\s+/)
     .map((w) => w.replace(/['’]s\b/gi, '').replace(/[^A-Za-z&]/g, '').toLowerCase())
     .filter((w) => w.length >= 3)
-  return new Set(words)
+  // Both forms, so an inflection the model changed still matches — see stem().
+  return new Set([...words, ...words.map(stem)])
+}
+
+/**
+ * The crudest possible stemmer: drop a plural or tense ending.
+ *
+ * ⚠️ IT EXISTS BECAUSE OF A LIVE FALSE POSITIVE, seen on production on
+ * 2026-09-08. The candidate's summary said "Comfortable owning a service end to
+ * end"; the model rewrote it as "Owns services end to end". "Owns" is
+ * capitalised because it starts a sentence, and it is not the same STRING as
+ * "owning", so the grounding check treated it as an unknown proper noun and the
+ * guard reported `names "Owns", which is not on your profile` — about a verb.
+ * Conservative in outcome (the original summary was kept) but wrong in its
+ * reason, and a wrong reason on this surface is worse than no reason: the
+ * refusal list is the evidence that the guard works.
+ *
+ * ⚠️ WHY NOT JUST SKIP WORDS THAT START A SENTENCE, which was the obvious fix.
+ * Because "Flipkart builds payments infrastructure." also starts a sentence, and
+ * exempting that position would blind the rule to exactly the fabrication it
+ * exists to catch. Stemming keeps the position under scrutiny and only forgives
+ * a word the candidate already used in another form.
+ */
+function stem(w: string): string {
+  for (const suffix of ['ing', 'ed', 'es', 's']) {
+    if (w.endsWith(suffix) && w.length - suffix.length >= 3) return w.slice(0, -suffix.length)
+  }
+  return w
 }
 
 /**
@@ -180,7 +207,8 @@ export function rewriteFailure(
       // Lower-casing is enough: the rule only inspects capitalised words, so a
       // word we have grounded simply stops being a candidate for it, while
       // still being present for the tenure and credential rules.
-      return w.length >= 3 && known.has(w) ? word.toLowerCase() : word
+      const grounded = w.length >= 3 && (known.has(w) || known.has(stem(w)))
+      return grounded ? word.toLowerCase() : word
     })
     .join(' ')
 
