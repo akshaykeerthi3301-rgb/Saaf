@@ -5,7 +5,15 @@
 ## ⚠️ ONE MIGRATION IS PENDING — 2026-09-09
 
 **`supabase/migrations/0023_resume_documents.sql` is written and NOT applied.**
-Paste it into the Supabase SQL editor and Run. Until you do, "Keep this résumé"
+Paste it into the Supabase SQL editor and Run:
+<https://supabase.com/dashboard/project/adofdvkhdgifvmbuolcj/sql/new>
+
+**Then run `npm run verify:rls`.** It now covers `resume_documents` and proves
+both halves in one command: that user A cannot read, update, delete or forge
+user B's saved résumé, AND that A can save, read back and delete their own. Until
+the table exists the script prints `– resume_documents: table not present,
+skipped` and passes everything else — a verification script that fails for a
+reason unrelated to security is one people learn to ignore. Until you do, "Keep this résumé"
 on the ATS checker fails with a generic error and `/resume` shows an empty
 saved-résumés list — both degrade rather than break, and that is deliberate, but
 the feature does not exist until the table does.

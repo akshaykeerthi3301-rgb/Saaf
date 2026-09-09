@@ -112,7 +112,33 @@ async function crossUserIsolation() {
       await svc('gate_results', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId, outcome: 'cleared', reason: 'rls probe', score: 50 }) })
       await svc('role_first_shown', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId }) })
       await svc('applications', { method: 'POST', body: JSON.stringify({ user_id: u.id, role_id: roleId, company: 'Probe Co', title: 'Probe Role' }) })
+      /**
+       * ⚠️ THE FIRST TABLE IN THIS PRODUCT THAT HOLDS A DOCUMENT (migration
+       * 0023). It is the row where a leak would matter most — a shortlist tells
+       * you what somebody is looking for, a saved résumé tells you their name,
+       * their employer and their phone number. It is seeded for BOTH users for
+       * the same reason as everything else here: "A sees nothing of B's" proves
+       * nothing when B has nothing.
+       *
+       * Skipped silently when the table does not exist, so this script keeps
+       * working in the window between the code deploying and the founder
+       * pasting the SQL — a verification script that fails for a reason
+       * unrelated to security teaches people to ignore it.
+       */
+      await svc('resume_documents', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: u.id,
+          label: `probe-${u.id.slice(0, 8)}`,
+          target_role: 'Backend Engineer',
+          sections: { contact: { name: 'Probe', email: null, phone: null, links: [] }, summary: null, experience: [], education: [], skills: [], other: [], unplaced: 0, order: [] },
+          body: 'probe résumé body',
+          score: 50,
+        }),
+      })
     }
+
+    const resumeTableExists = (await svc('resume_documents?select=id&limit=1')).status < 400
     const bGate = await (await svc(`gate_results?user_id=eq.${b.id}&select=id`)).json()
     await svc('refusal_reports', { method: 'POST', body: JSON.stringify({ user_id: b.id, gate_result_id: bGate?.[0]?.id }) })
 
@@ -142,7 +168,8 @@ async function crossUserIsolation() {
       })
 
     // --- reads: A must see its own rows and none of B's ---------------------
-    for (const table of ['profiles', 'gate_results', 'role_first_shown', 'applications'] as const) {
+    const candidateTables = ['profiles', 'gate_results', 'role_first_shown', 'applications'] as const
+    for (const table of resumeTableExists ? ([...candidateTables, 'resume_documents'] as const) : candidateTables) {
       const col = table === 'profiles' ? 'id' : 'user_id'
       const bRows = await (await asA(`${table}?${col}=eq.${b.id}&select=${col}`)).json()
       check(`${table}: A cannot read B's rows`, Array.isArray(bRows) && bRows.length === 0,
@@ -175,6 +202,69 @@ async function crossUserIsolation() {
       method: 'POST', body: JSON.stringify({ user_id: b.id, company: 'Forged', title: 'Forged' }),
     })
     check('applications: A cannot INSERT a row owned by B', forge.status >= 400, `http ${forge.status}`)
+
+    /**
+     * Saved résumés — the write half, and the round trip.
+     *
+     * ⚠️ THE ROUND TRIP IS HERE RATHER THAN IN A SEPARATE SCRIPT because it
+     * needs the one expensive thing this file already builds: a real session
+     * for a real user. Proving that A can save, read back and delete their OWN
+     * résumé is the other half of proving they cannot touch B's — a policy set
+     * that denies everything passes every denial test in this file and ships a
+     * feature that does not work.
+     */
+    if (resumeTableExists) {
+      const forgeResume = await asA('resume_documents', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: b.id, label: 'forged', sections: {}, body: 'x',
+        }),
+      })
+      check('resume_documents: A cannot INSERT a résumé owned by B', forgeResume.status >= 400, `http ${forgeResume.status}`)
+
+      const updResume = await asA(`resume_documents?user_id=eq.${b.id}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ label: 'hijacked' }),
+      })
+      const updResumeRows = await updResume.json()
+      check("resume_documents: A cannot UPDATE B's résumé", Array.isArray(updResumeRows) && updResumeRows.length === 0,
+        Array.isArray(updResumeRows) ? `${updResumeRows.length} row(s) changed` : 'unexpected response')
+
+      const delResume = await asA(`resume_documents?user_id=eq.${b.id}`, {
+        method: 'DELETE',
+        headers: { Prefer: 'return=representation' },
+      })
+      const delResumeRows = await delResume.json()
+      check("resume_documents: A cannot DELETE B's résumé", Array.isArray(delResumeRows) && delResumeRows.length === 0,
+        Array.isArray(delResumeRows) ? `${delResumeRows.length} row(s) deleted` : 'unexpected response')
+
+      // --- and the feature actually works for its owner ---------------------
+      const mine = await asA('resume_documents', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          user_id: a.id, label: 'round-trip', target_role: 'Backend Engineer',
+          sections: { contact: { name: 'A', email: null, phone: null, links: [] }, summary: null, experience: [], education: [], skills: [], other: [], unplaced: 0, order: [] },
+          body: 'round trip body', score: 71,
+        }),
+      })
+      const mineRows = await mine.json()
+      check('resume_documents: A CAN save their own', mine.status < 400 && Array.isArray(mineRows) && mineRows.length === 1,
+        `http ${mine.status}`)
+
+      const readBack = await (await asA(`resume_documents?user_id=eq.${a.id}&label=eq.round-trip&select=label,score,body`)).json()
+      check('resume_documents: A can read it back with its score intact',
+        Array.isArray(readBack) && readBack[0]?.score === 71 && readBack[0]?.body === 'round trip body')
+
+      const mineDel = await asA(`resume_documents?user_id=eq.${a.id}&label=eq.round-trip`, {
+        method: 'DELETE', headers: { Prefer: 'return=representation' },
+      })
+      const mineDelRows = await mineDel.json()
+      check('resume_documents: A CAN delete their own', Array.isArray(mineDelRows) && mineDelRows.length === 1)
+    } else {
+      console.log('  – resume_documents: table not present, skipped (migration 0023 pending)')
+    }
 
     // gate_results has deliberately no user-facing insert policy.
     const insGate = await asA('gate_results', {
