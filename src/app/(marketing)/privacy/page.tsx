@@ -54,6 +54,17 @@ export default function PrivacyPage() {
           confirm on the next screen — current title, employer, years of experience,
           preferred role, skills, city, credential — are saved to your profile.
         </P>
+        <P>
+          <strong>One thing you can choose to keep.</strong> If you use the ATS checker
+          and press &ldquo;keep this résumé&rdquo;, the version you built here — the text
+          you saw on screen, not the file you uploaded — is saved to your account so it
+          can be scored against roles we index later. It is listed on your{' '}
+          <Link href="/resume" className="font-semibold text-primary underline underline-offset-4">
+            résumé page
+          </Link>
+          , you can delete any of it there, and deleting your account deletes all of it.
+          Nothing is saved unless you press that button.
+        </P>
         {provider === null ? (
           <P>
             <strong>No third party sees any of it.</strong> No model provider is

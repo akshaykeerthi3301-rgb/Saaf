@@ -3,24 +3,33 @@ import Link from 'next/link'
 import { FileText, RefreshCw, ShieldCheck } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
+import { listResumes, type SavedResume } from '@/lib/services/resume-documents'
+import { SavedResumes } from '@/components/features/saved-resumes'
 
 /**
  * Résumé.
  *
- * ⚠️ THIS IS NOT DOCUMENT STORAGE, AND IT CANNOT BE. The reference for this
- * screen was a competitor's "My Documents" — a table of stored résumé files with
- * Edit, Copy and Delete. Saaf cannot build that, because the upload flow tells
- * the candidate in as many words that the file is DELETED once it has been
- * read, and src/app/actions/parse-resume.ts keeps that promise: the bytes are
- * parsed in memory, never written to storage, never logged.
+ * ⚠️ THIS SCREEN'S PREMISE CHANGED ON 2026-09-09, AND THE OLD ONE IS QUOTED
+ * HERE SO THE REVERSAL IS VISIBLE RATHER THAN SILENT.
  *
- * Building a document manager would mean starting to keep the files, which
- * would make that screen's third line — "Deleted the file" — a lie. So this
- * screen shows the thing we DO hold and the candidate cannot otherwise see:
- * what we read out of their résumé, and what it is doing to their shortlist.
+ * It used to open: "THIS IS NOT DOCUMENT STORAGE, AND IT CANNOT BE… building a
+ * document manager would mean starting to keep the files, which would make the
+ * upload screen's third line — 'Deleted the file' — a lie." That was correct
+ * about files and it is still enforced: src/app/actions/read-resume-file.ts and
+ * parse-resume.ts both parse bytes in memory and drop them, and the upload
+ * screen's promise has not changed by a word.
  *
- * Everything on it is stored profile data, and every field is editable at the
- * place that owns it.
+ * What changed is what a candidate can KEEP. Founder decision, taken twice in
+ * writing after the conflict was put to them: without somewhere to hold a
+ * résumé, the checker is a one-session tool — somebody fixes their document,
+ * closes the tab, and tomorrow morning's ingest of 180 boards has nothing of
+ * theirs to score against.
+ *
+ * ⚠️ THE DISTINCTION THAT MAKES THIS DEFENSIBLE, and it is not a technicality:
+ * we still never keep the FILE they uploaded. What is saved is the RÉSUMÉ THEY
+ * BUILT HERE — the sections they saw, the fixes they accepted, the rewrite they
+ * approved — which they can read on this page and delete from it. A file in a
+ * bucket is none of those things.
  */
 export default async function ResumePage() {
   const supabase = await createClient()
@@ -34,6 +43,20 @@ export default async function ResumePage() {
     .maybeSingle()
 
   if (!profile) redirect('/start')
+
+  /**
+   * Read through the service rather than inline, per CLAUDE.md's third
+   * invariant. The 25 inline queries in src/app/ predate that rule; this one
+   * does not, so it does not get to be the 26th.
+   */
+  let saved: SavedResume[] = []
+  try {
+    saved = await listResumes(user.id)
+  } catch {
+    // Migration 0023 is applied by hand (HANDOFF A1). Until it lands, the table
+    // does not exist — and this page's other half, which has worked for weeks,
+    // must not go down because of a feature that is not there yet.
+  }
 
   const skills: string[] = profile.skills ?? []
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
@@ -60,18 +83,23 @@ export default async function ResumePage() {
     <AppShell title="Résumé" initials={initials}>
       <div className="mx-auto max-w-3xl p-5 sm:p-8">
         {/* The promise this screen exists under, stated first rather than in a
-            footnote — it is the reason there is no file list here. */}
+            footnote — and narrowed, not dropped, on 2026-09-09. */}
         <div className="flex gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-accent" />
           <div>
-            <p className="text-sm font-semibold text-primary">Your résumé file was deleted.</p>
+            <p className="text-sm font-semibold text-primary">
+              Your uploaded file was deleted. What you build here, you keep.
+            </p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              We read it once, kept the fields you confirmed, and deleted the file itself — it was
-              never written to storage. So there is nothing to list here, and nothing of yours sitting
-              on a server. What we kept is below, and it is all you can be matched on.
+              The PDF or Word file you uploaded is read once and dropped inside that request — it is
+              never written to storage, and that has not changed. What is saved below is the résumé
+              you built on this site: the version you fixed, checked and approved. You can read it,
+              replace it, and delete it here, and deleting your account takes it with it.
             </p>
           </div>
         </div>
+
+        <SavedResumes resumes={saved} />
 
         <h2 className="mt-8 text-xs font-bold uppercase tracking-[0.16em] text-primary">
           What we read

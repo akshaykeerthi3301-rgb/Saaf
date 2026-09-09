@@ -2,6 +2,23 @@
 
 ---
 
+## ⚠️ ONE MIGRATION IS PENDING — 2026-09-09
+
+**`supabase/migrations/0023_resume_documents.sql` is written and NOT applied.**
+Paste it into the Supabase SQL editor and Run. Until you do, "Keep this résumé"
+on the ATS checker fails with a generic error and `/resume` shows an empty
+saved-résumés list — both degrade rather than break, and that is deliberate, but
+the feature does not exist until the table does.
+
+It is the first table in this product that stores a document, and it reverses a
+promise three screens used to make. The copy changed in the same commit, not
+after: `/resume` now says "Your uploaded file was deleted. What you build here,
+you keep", and the privacy page names the one thing that is saved and where to
+delete it. **The uploaded PDF or .docx is still parsed in memory and dropped** —
+that has not changed and the upload screen's wording is untouched.
+
+---
+
 ## ⚡ Resuming after 2026-09-07? Read this block first.
 
 **The scale-up shipped.** Live at **https://saaf-ten.vercel.app** with **21,806

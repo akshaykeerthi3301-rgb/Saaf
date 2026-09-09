@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
-  AlertCircle, ArrowRight, Download, FileText, Loader2, Lock, RotateCcw,
+  AlertCircle, ArrowRight, CheckCircle2, Download, FileText, Loader2, Lock, RotateCcw,
   ShieldCheck, Sparkles, Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { optimiseResume } from '@/app/actions/optimise-resume'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { rewriteBullet } from '@/app/actions/rewrite-bullet'
 import { matchesInIndex } from '@/app/actions/index-match'
+import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import { TEMPLATES, DEFAULT_TEMPLATE, type TemplateId } from '@/lib/resume-templates'
 import type { IndexMatchCount } from '@/lib/services/index-match'
 import { ReportRail } from '@/components/features/report-rail'
@@ -108,6 +109,8 @@ export function AtsFlow() {
   const [indexBaseline, setIndexBaseline] = useState<number>()
   const [checkingIndex, setCheckingIndex] = useState(false)
   const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const [checking, startCheck] = useTransition()
   const [improving, startImprove] = useTransition()
@@ -292,6 +295,24 @@ export function AtsFlow() {
       }
       setIndexBaseline((prev) => prev ?? res.strong)
       setIndexMatch(res)
+    })()
+  }
+
+  /** Keep it. The same wall as the download, for the same reason. */
+  function keep() {
+    if (!optimised) return
+    setSaving(true)
+    setError(undefined)
+    setNeedsSignIn(false)
+    void (async () => {
+      const res = await saveResumeToAccount({ sections: optimised.sections, targetRole })
+      setSaving(false)
+      if (!res.ok) {
+        setNeedsSignIn(Boolean(res.needsSignIn))
+        setError(res.error)
+        return
+      }
+      setSaved(true)
     })()
   }
 
@@ -669,6 +690,27 @@ export function AtsFlow() {
                   you can keep editing.
                 </p>
               </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={keep}
+                  disabled={saving || saved}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-secondary disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Saving…
+                    </>
+                  ) : saved ? (
+                    <>
+                      <CheckCircle2 className="size-4 text-accent" aria-hidden="true" /> Saved to your account
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="size-4" aria-hidden="true" /> Keep this résumé
+                    </>
+                  )}
+                </button>
               <Button type="button" onClick={download} disabled={downloading}>
                 {downloading ? (
                   <span className="inline-flex items-center gap-2">
@@ -682,6 +724,7 @@ export function AtsFlow() {
                   </span>
                 )}
               </Button>
+              </div>
             </div>
             <p className="mt-4 inline-flex items-start gap-2 text-xs leading-5 text-muted-foreground">
               <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
