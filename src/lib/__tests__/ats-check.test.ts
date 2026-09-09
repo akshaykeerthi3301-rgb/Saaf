@@ -61,6 +61,7 @@ Education
 B.Tech, Computer Science, VIT Vellore, 2019`
 
 const ids = (t: string) => checkResume(t).findings.map((f) => f.id)
+const ids2 = (t: string, role: string) => checkResume(t, role).findings.map((f) => f.id)
 
 describe('a clean résumé', () => {
   it('raises no high-severity finding', () => {
@@ -564,5 +565,83 @@ describe('market coverage', () => {
     expect(standard.every((s) => s.pct > 0)).toBe(true)
     // "Kafka" is this employer's own emphasis, not the role's.
     expect(specific).toContain('Kafka')
+  })
+})
+
+/**
+ * The second tier — "what a recruiter will think" rather than "what a machine
+ * can read". Added 2026-09-09 to close the gap against the category leader's
+ * content and tailoring categories, deterministically, so the page's claim that
+ * no model decides the score survives.
+ */
+describe('content, second tier', () => {
+  it('flags a misspelling a spellchecker autocorrects around, and names the correction', () => {
+    const typo = CLEAN.replace('Owned the merchant payments funnel', 'Owned the merchant payments funnel and managment of it')
+    const f = checkResume(typo).findings.find((x) => x.id === 'spelling-common')
+    expect(f).toBeDefined()
+    expect(f!.detail).toContain('management')
+  })
+
+  it('flags a word typed twice, which every spellchecker passes', () => {
+    const doubled = CLEAN.replace('Owned the merchant', 'Owned the the merchant')
+    const f = checkResume(doubled).findings.find((x) => x.id === 'doubled-word')
+    expect(f).toBeDefined()
+    expect(f!.evidence).toMatch(/the the/i)
+  })
+
+  it('flags claims a reader cannot check, without calling the writer anything', () => {
+    const fluff = CLEAN.replace(
+      'Product manager with six years',
+      'Hard working team player and results-driven product manager with six years',
+    )
+    const f = checkResume(fluff).findings.find((x) => x.id === 'unevidenced-claims')
+    expect(f).toBeDefined()
+    expect(`${f!.title} ${f!.detail} ${f!.fix}`).not.toMatch(/lazy|padding|dishonest|exaggerat/i)
+  })
+
+  it('measures how many lines open with an action, separately from weak openers', () => {
+    const passive = `Ravi Kumar
+ravi@example.com | +91 90000 00000 | linkedin.com/in/ravi
+
+Experience
+Product Analyst at Zeta
+Jan 2023 - Present
+• The retention report was rebuilt for 200 merchants over two quarters
+• Weekly business reviews with leadership covering 12 product lines
+• Responsibility for the experiment framework across 3 teams
+
+Skills
+SQL, Python, Looker, dbt, Experimentation, Statistics
+
+Education
+B.Tech, VIT Vellore, 2019`
+    expect(ids(passive)).toContain('action-verb-coverage')
+    // CLEAN's lines open with Owned / Ran / Wrote / Rebuilt / Shipped / Built.
+    expect(ids(CLEAN)).not.toContain('action-verb-coverage')
+  })
+
+  it('flags mixed bullet punctuation, and leaves a consistent list alone', () => {
+    const mixed = CLEAN.replace(
+      'Ran the quarterly roadmap process for a group of 4 engineers and 2 designers.',
+      'Ran the quarterly roadmap process for a group of 4 engineers and 2 designers',
+    )
+    expect(ids(mixed)).toContain('bullet-punctuation')
+  })
+
+  it('flags a résumé that never names the role it is aimed at', () => {
+    // CLEAN is a product manager's; targeting Backend Engineer should say so.
+    expect(ids2(CLEAN, 'Backend Engineer')).toContain('title-not-targeted')
+    // And must not fire when the headline already names the target.
+    const targeted = CLEAN.replace('Priya Iyer', 'Priya Iyer\nBackend Engineer')
+    expect(ids2(targeted, 'Backend Engineer')).not.toContain('title-not-targeted')
+  })
+
+  it('keeps every new rule registered, so the denominators stay true', () => {
+    for (const id of [
+      'spelling-common', 'doubled-word', 'bullet-punctuation', 'unevidenced-claims',
+      'action-verb-coverage', 'title-not-targeted',
+    ]) {
+      expect(categoryOf(id), `${id} missing from RULES`).not.toBeNull()
+    }
   })
 })

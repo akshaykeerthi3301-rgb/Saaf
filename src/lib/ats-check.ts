@@ -271,10 +271,14 @@ const RULES: Record<AtsCategory, { label: string; ids: string[] }> = {
     ids: [
       'title-unreadable', 'title-misread', 'employer-unreadable', 'no-quantified-impact', 'weak-openers',
       'bullet-too-long', 'keyword-dump', 'repeated-term', 'overlapping-present',
-      'years-disagree', 'future-date',
+      'years-disagree', 'future-date', 'spelling-common', 'doubled-word',
+      'bullet-punctuation', 'unevidenced-claims',
     ],
   },
-  tailoring: { label: 'Job tailoring', ids: ['role-vocabulary'] },
+  tailoring: {
+    label: 'Job tailoring',
+    ids: ['role-vocabulary', 'action-verb-coverage', 'title-not-targeted'],
+  },
 }
 
 const CATEGORY_OF: Record<string, AtsCategory> = Object.fromEntries(
@@ -307,6 +311,64 @@ const LINK_RE = /(?:https?:\/\/|www\.)\S+|(?:linkedin\.com|github\.com|behance\.
 /** A figure attached to work — the shape ranking systems look for. */
 const QUANTIFIED =
   /\d[\d,.]*\s*(%|percent|x\b|k\b|cr\b|crore|lakh|lakhs|mn\b|million|bn\b|billion)|[₹$€£]\s*\d|\b\d[\d,.]*\s*(users|customers|clients|accounts|engineers|analysts|people|reports|stores|cities|hours|days|weeks|months)\b|\bby \d/i
+/**
+ * Misspellings that actually appear on résumés, as a curated list.
+ *
+ * ⚠️ NOT A SPELLCHECKER, AND THE NAME OF THE CHECK SAYS SO. A real dictionary
+ * is megabytes, flags every product name and every Indian surname, and would
+ * make this module — which must stay deterministic, dependency-free and
+ * shippable to the browser — into something else entirely. The category leader
+ * lists "Spelling and grammar" among its 27 checks and runs a model for it.
+ *
+ * A curated list of the words people actually get wrong on a CV is smaller,
+ * faster and honest about its own limits: it will never flag your employer's
+ * name, and it will never claim your résumé is clean. Each entry is a word that
+ * survives a spellchecker's autocorrect precisely because it is a real English
+ * word or a near-miss nobody proofreads.
+ */
+const MISSPELLINGS: Record<string, string> = {
+  acheive: 'achieve', acheived: 'achieved', reciept: 'receipt', recieve: 'receive',
+  recieved: 'received', managment: 'management', mangement: 'management',
+  responsibilty: 'responsibility', responsibilites: 'responsibilities', liason: 'liaison',
+  seperate: 'separate', sucessful: 'successful', succesful: 'successful',
+  enviroment: 'environment', developement: 'development', experiance: 'experience',
+  knowlege: 'knowledge', accomodate: 'accommodate', occured: 'occurred',
+  publically: 'publicly', teh: 'the', analyse: 'analyse', buisness: 'business',
+  colaborate: 'collaborate', collaberation: 'collaboration', comitted: 'committed',
+  garuntee: 'guarantee', immediatly: 'immediately', maintainance: 'maintenance',
+  neccessary: 'necessary', occassion: 'occasion', persue: 'pursue', priorty: 'priority',
+  proffesional: 'professional', reccomend: 'recommend', refered: 'referred',
+  strategey: 'strategy', sucess: 'success', thier: 'their', trainning: 'training',
+  writting: 'writing',
+}
+
+/**
+ * Adjectives a résumé cannot prove.
+ *
+ * "Team player" and "hard working" are claims about character that no reader
+ * can verify and no parser can score — they occupy the line a piece of evidence
+ * could have used. Deliberately short and deliberately not moralising: the
+ * finding says the line is unverifiable, never that the writer is padding.
+ */
+const UNEVIDENCED = [
+  'team player', 'hard working', 'hard-working', 'go-getter', 'detail oriented',
+  'detail-oriented', 'self motivated', 'self-motivated', 'results driven',
+  'results-driven', 'think outside the box', 'passionate about', 'dynamic professional',
+  'excellent communication skills', 'strong work ethic', 'proven track record',
+]
+
+/** Past-tense openers that describe an action. Used to measure coverage, not
+ *  to prescribe a word — the list is illustrative of the shape, not exhaustive. */
+const ACTION_VERBS = new Set([
+  'built', 'led', 'ran', 'owned', 'shipped', 'migrated', 'designed', 'developed',
+  'delivered', 'launched', 'reduced', 'cut', 'improved', 'increased', 'automated',
+  'scaled', 'rebuilt', 'wrote', 'created', 'managed', 'implemented', 'negotiated',
+  'closed', 'grew', 'drove', 'set', 'introduced', 'replaced', 'consolidated',
+  'streamlined', 'trained', 'mentored', 'audited', 'analysed', 'analyzed', 'forecast',
+  'authored', 'oversaw', 'coordinated', 'supported', 'contributed', 'handled',
+  'rewrote', 'refactored', 'deployed', 'optimised', 'optimized', 'tested', 'maintained',
+])
+
 /** Openers that name a duty rather than an action. */
 const WEAK_OPENER =
   /^\s*(responsible for|worked on|helped (with|to)?|assisted (with|in)?|involved in|part of|tasked with|duties includ|handled)\b/i
@@ -703,6 +765,32 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
   // "broken" for wording things differently, and an ATS keyword match is a
   // ranking signal rather than a parse failure. Overstating it would turn a
   // deterministic checker into the advice column it was built to replace.
+  /**
+   * Does the document say anywhere what job the candidate is applying for?
+   *
+   * ⚠️ ONLY RUNS WHEN A ROLE WAS CHOSEN, and only checks the top of the
+   * document, because that is where a system looks for a headline. A résumé
+   * whose most recent title is "Software Engineer II" applying for "Backend
+   * Engineer" is not wrong — it is simply not saying so anywhere a keyword
+   * match can see.
+   */
+  if (targetRole) {
+    const head = nonEmpty.slice(0, 12).join(' ').toLowerCase()
+    const roleWords = targetRole.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
+    const named = roleWords.length > 0 && roleWords.every((w) => head.includes(w))
+    if (!named) {
+      add({
+        id: 'title-not-targeted',
+        area: 'keywords',
+        severity: 'low',
+        title: `Nothing in the first lines says "${targetRole}"`,
+        detail:
+          `Many systems weight a headline near the top far above the body, and a recruiter reads it before anything else. Your most recent title reads "${f.currentTitle ?? 'nothing we could find'}", which may be exactly right for your last job and does not tell this employer what you are applying for.`,
+        fix: `Add a single line under your name: ${targetRole}. Only do it if it is true of what you are looking for — this is a signpost, not a claim about your last job.`,
+      })
+    }
+  }
+
   const roleEntry = targetRole ? KEYWORDS[targetRole] : undefined
   let role: AtsReport['role']
   if (roleEntry) {
@@ -867,6 +955,107 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         evidence: long[0]?.slice(0, 120),
       })
     }
+  }
+
+  // ---- content, second tier ------------------------------------------------
+  //
+  // ⚠️ THIS IS THE HALF THE CATEGORY LEADER CALLS "what a recruiter will think",
+  // and it is the half we were thinnest on: their score splits into what a
+  // MACHINE can read and what a PERSON will judge, and we had one rule in the
+  // second column. Everything below is still deterministic, because the page's
+  // claim is that no model decides the score — so each check does less than
+  // theirs and can show its working, which is the trade this product makes
+  // everywhere else too.
+
+  /**
+   * Misspellings, from a curated list rather than a dictionary.
+   *
+   * Scanned against the WHOLE document rather than bullets alone: the summary
+   * is where these cluster, and it is the first thing read.
+   */
+  const misspelt = [...new Set(words.map((w) => w.toLowerCase().replace(/[^a-z]/g, '')))]
+    .filter((w) => w in MISSPELLINGS)
+    .slice(0, 6)
+  if (misspelt.length > 0) {
+    add({
+      id: 'spelling-common',
+      area: 'consistency',
+      severity: 'medium',
+      title: `${misspelt.length} commonly misspelled ${misspelt.length === 1 ? 'word' : 'words'}`,
+      detail:
+        `Found: ${misspelt.map((w) => `"${w}" (should be "${MISSPELLINGS[w]}")`).join(', ')}. ` +
+        'A parser does not care, and a recruiter does — this is the one class of defect that costs you nothing to fix and everything to leave.',
+      fix: 'Correct each one. This is a short list of words people actually get wrong on a CV, not a full spellchecker, so run yours as well.',
+      evidence: misspelt[0],
+    })
+  }
+
+  /** A word typed twice. Invisible while writing, obvious to a reader. */
+  const doubled = text.match(/\b(\w{3,})\s+\1\b/i)
+  if (doubled) {
+    add({
+      id: 'doubled-word',
+      area: 'consistency',
+      severity: 'low',
+      title: `"${doubled[1]}" appears twice in a row`,
+      detail: 'Almost always a copy-and-paste artefact. It survives every spellchecker, because both words are spelled correctly.',
+      fix: 'Delete the repeat.',
+      evidence: doubled[0],
+    })
+  }
+
+  if (bullets.length >= 3) {
+    /**
+     * ⚠️ COVERAGE, NOT PRESCRIPTION. `weak-openers` names the lines that open
+     * with a duty; this measures how many open with an action at all, which is
+     * a different question — a line beginning "The system was rebuilt" is
+     * neither a duty nor an action, and only this check sees it.
+     */
+    const strong = bullets.filter((b) =>
+      ACTION_VERBS.has(b.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') ?? ''),
+    ).length
+    if (strong / bullets.length < 0.5) {
+      add({
+        id: 'action-verb-coverage',
+        area: 'keywords',
+        severity: 'low',
+        title: `${strong} of ${bullets.length} experience lines open with an action`,
+        detail:
+          'Keyword matching scores the first words of a line most heavily, and a recruiter skims exactly the same place. Lines that open with a noun or a passive construction describe a situation rather than what you did in it.',
+        fix: 'Open each line with what you did — Built, Ran, Migrated, Reduced, Negotiated — and let the rest of the sentence carry the scope.',
+        evidence: bullets.find(
+          (b) => !ACTION_VERBS.has(b.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') ?? ''),
+        )?.slice(0, 120),
+      })
+    }
+
+    /** Some lines end in a full stop and others do not. A parser is indifferent;
+     *  a reader sees it immediately. */
+    const stopped = bullets.filter((b) => /[.]\s*$/.test(b.trim())).length
+    if (stopped > 0 && stopped < bullets.length) {
+      add({
+        id: 'bullet-punctuation',
+        area: 'consistency',
+        severity: 'low',
+        title: `${stopped} of ${bullets.length} lines end in a full stop, the rest do not`,
+        detail: 'Mixed punctuation across a bullet list is the commonest sign of a résumé edited in several sittings, and it is the kind of detail a hiring manager reads as carelessness rather than as a typo.',
+        fix: 'Pick one. Either every line ends in a full stop or none does.',
+      })
+    }
+  }
+
+  const unevidenced = UNEVIDENCED.filter((phrase) => text.toLowerCase().includes(phrase))
+  if (unevidenced.length > 0) {
+    add({
+      id: 'unevidenced-claims',
+      area: 'keywords',
+      severity: 'low',
+      title: `${unevidenced.length} ${unevidenced.length === 1 ? 'phrase makes a claim' : 'phrases make claims'} nothing on the page supports`,
+      detail:
+        `Found: ${unevidenced.map((p) => `"${p}"`).join(', ')}. These describe character rather than work, so no reader can check them and no system can score them — and they occupy the line an example could have used.`,
+      fix: 'Replace each with the thing that would make somebody believe it. "Team player" becomes the project you shipped with two other teams.',
+      evidence: unevidenced[0],
+    })
   }
 
   // ---- score --------------------------------------------------------------

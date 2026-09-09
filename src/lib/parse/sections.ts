@@ -151,6 +151,21 @@ const BULLET_GLYPH = /^\s*[•▪‣◦·*•●▪]|^\s*[-–—]\s+/
 /** Separators a header line uses between title, employer and location. */
 const HEADER_SPLIT = /\s+[|·•—–]\s+|\s+[-]\s+|\s+at\s+|,\s+/i
 
+/**
+ * The separators that may IDENTIFY a line as a role header — a deliberately
+ * smaller set than the ones used to split one.
+ *
+ * ⚠️ THE BARE COMMA IS EXCLUDED, AND LEAVING IT IN COST US THE FIRST SENTENCE
+ * OF EVERY PROSE-STYLE RÉSUMÉ. "Owned the merchant payments funnel end to end,
+ * covering onboarding, activation" is a sentence with two commas; the old rule
+ * read it as a header, swallowed it into the entry's title, and the job's first
+ * and best line simply disappeared from the document — silently, because the
+ * remaining lines still parsed. Commas are everywhere in prose and nowhere
+ * useful for telling a header from a sentence. They stay in HEADER_SPLIT above,
+ * which only runs on a line already known to be a header.
+ */
+const ENTRY_SEPARATOR = /\s+[|·•—–]\s+|\s+[-]\s+|\s+at\s+/i
+
 function isHeading(line: string): { kind: SectionKind; text: string } | null {
   const t = line.trim().replace(/[:：]\s*$/, '')
   // A heading is short, unpunctuated and alone on its line. Requiring that
@@ -197,7 +212,9 @@ function startsEntry(line: string): boolean {
   const t = line.trim()
   if (t.length === 0 || t.length > 120) return false
   if (DATE_RANGE.test(t)) return true
-  return HEADER_SPLIT.test(t) && /[A-Z]/.test(t) && t.split(/\s+/).length <= 14
+  // Ten words, not fourteen: a role header is "Senior Analyst at Razorpay",
+  // and everything longer is far more likely to be a sentence.
+  return ENTRY_SEPARATOR.test(t) && /[A-Z]/.test(t) && t.split(/\s+/).length <= 10
 }
 
 function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
@@ -270,10 +287,31 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
       continue
     }
 
-    // Unglyphed prose under a header is still that job's content — plenty of
-    // résumés run their achievements as sentences.
+    /**
+     * Unglyphed prose under a header is still that job's content — plenty of
+     * résumés run their achievements as sentences.
+     *
+     * ⚠️ WRAPPED LINES ARE JOINED, AND THEY WERE NOT UNTIL 2026-09-09. A PDF
+     * gives us the line breaks the LAYOUT had, not the ones the sentences have,
+     * so "Owned the merchant payments funnel end to end, covering onboarding,"
+     * and "activation and the first transaction." arrived as two bullets — the
+     * second beginning with a lowercase continuation word. Three checks read
+     * bullets and all three were reading fragments: weak openers, bullet
+     * length, and action-verb coverage, which reported that half a candidate's
+     * lines did not open with a verb when in truth half of them were not lines.
+     *
+     * The join is conservative: only when the previous line does not end a
+     * sentence AND this one does not start one. Anything else stays separate,
+     * because merging two real bullets is worse than splitting one.
+     */
     if (header.length > 0) {
-      bullets.push(line)
+      const prev = bullets[bullets.length - 1]
+      const continues =
+        prev !== undefined &&
+        !/[.!?:;]\s*$/.test(prev) &&
+        !/^[A-Z•\-\d]/.test(line)
+      if (continues) bullets[bullets.length - 1] = `${prev} ${line}`.replace(/\s+/g, ' ')
+      else bullets.push(line)
       continue
     }
 
