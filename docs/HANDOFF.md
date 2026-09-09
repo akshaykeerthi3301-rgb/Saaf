@@ -2,28 +2,25 @@
 
 ---
 
-## ⚠️ ONE MIGRATION IS PENDING — 2026-09-09
+## ✅ Migration 0023 applied — 2026-09-09
 
-**`supabase/migrations/0023_resume_documents.sql` is written and NOT applied.**
-Paste it into the Supabase SQL editor and Run:
-<https://supabase.com/dashboard/project/adofdvkhdgifvmbuolcj/sql/new>
+`resume_documents` is live. **No migration is pending.**
 
-**Then run `npm run verify:rls`.** It now covers `resume_documents` and proves
-both halves in one command: that user A cannot read, update, delete or forge
-user B's saved résumé, AND that A can save, read back and delete their own. Until
-the table exists the script prints `– resume_documents: table not present,
-skipped` and passes everything else — a verification script that fails for a
-reason unrelated to security is one people learn to ignore. Until you do, "Keep this résumé"
-on the ATS checker fails with a generic error and `/resume` shows an empty
-saved-résumés list — both degrade rather than break, and that is deliberate, but
-the feature does not exist until the table does.
+Verified after applying, end to end:
 
-It is the first table in this product that stores a document, and it reverses a
-promise three screens used to make. The copy changed in the same commit, not
-after: `/resume` now says "Your uploaded file was deleted. What you build here,
-you keep", and the privacy page names the one thing that is saved and where to
-delete it. **The uploaded PDF or .docx is still parsed in memory and dropped** —
-that has not changed and the upload screen's wording is untouched.
+| Check | Result |
+|---|---|
+| `npm run verify:rls` | 8 `resume_documents` checks pass — A cannot read, UPDATE, DELETE or forge an INSERT against B's saved résumé; A **can** save, read back with the score intact, and delete their own |
+| Save from the checker | "Keep this résumé" → **Saved to your account** |
+| `/resume` | listed as `Backend Engineer — 9 Sept · 83/100 · saved 9 Sept`, `1 of 10` |
+| Delete | one click, row gone, empty state returns |
+
+⚠️ **This is the first table in the product that stores a document**, and it
+reversed a promise three screens used to make. The copy changed in the same
+commit as the storage, not after — `/resume` now opens "Your uploaded file was
+deleted. What you build here, you keep", and the privacy page names the one
+thing saved and where to delete it. **The uploaded PDF or .docx is still parsed
+in memory and dropped**; that has not changed and the upload screen is untouched.
 
 ---
 
