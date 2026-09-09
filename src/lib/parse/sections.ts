@@ -124,9 +124,21 @@ const HEADINGS: { kind: SectionKind; patterns: string[] }[] = [
 
 const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 const DASH = '[-‐‑‒–—]'
+/**
+ * A month, written either way.
+ *
+ * ⚠️ THE NUMERIC FORM WAS MISSING UNTIL 2026-09-09, and it is common on Indian
+ * résumés. "07/2023 - Present" parsed as the year alone, so the entry's dates
+ * read "2023 - Present" and the numeric month was left behind in the title —
+ * which then fed `title-misread`. The checker was reporting a defect the parser
+ * had created. Only "/" and "." are accepted as the separator: "07-2023" cannot
+ * be told apart from a range dash without guessing, and guessing here silently
+ * changes somebody's employment dates.
+ */
+const MONTH_ANY = `(?:(?:${MONTH}\\.?|\\d{1,2}[/.])\\s*)?`
 /** A date range, the single most reliable signal that a line starts a job. */
 const DATE_RANGE = new RegExp(
-  `((?:${MONTH}\\.?\\s*)?\\d{4})\\s*${DASH}\\s*((?:${MONTH}\\.?\\s*)?\\d{4}|present|current|now|till date|to date)`,
+  `(${MONTH_ANY}\\d{4})\\s*${DASH}\\s*(${MONTH_ANY}\\d{4}|present|current|now|till date|to date)`,
   'i',
 )
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/

@@ -289,7 +289,15 @@ export async function rewriteResume(input: {
     system: SYSTEM,
     schema: SCHEMA,
     temperature: 0.2,
-    timeoutMs: 20_000,
+    /**
+     * ⚠️ SIZED FOR THE SLOW LEG, NOT THE FAST ONE. Groq answers this prompt in
+     * ~1.5s; gemini-3.6-flash was measured at 18.5s on the same résumé on
+     * 2026-09-08. At the old 20s ceiling the fallback provider was one slow
+     * response away from timing out, which would have made the failover look
+     * broken precisely when it was doing its job. Vercel's function limit is
+     * 60s and the chain's worst case is now 12s (Groq) + 35s (Gemini).
+     */
+    timeoutMs: 35_000,
   })
   if (!answer) return null
 
@@ -349,4 +357,59 @@ export async function rewriteResume(input: {
     provider: answer.provider,
     skillsReordered: changed,
   }
+}
+
+/**
+ * Rewrite ONE line, on request.
+ *
+ * ⚠️ THE UNIT MATTERS AS MUCH AS THE OUTPUT. rewriteResume() processes a whole
+ * document for ~1,360 tokens and returns a take-it-or-leave-it draft; this
+ * costs roughly a tenth of that and is invoked only when the candidate presses
+ * a button on a specific line they disagree with. That is the difference
+ * between a feature people use twice and one they use on every bullet, and it
+ * is what the category leader's inline assistant actually is.
+ *
+ * Same guard, same contract: figures and words must already be in the line, and
+ * a refusal returns null so the caller keeps what the candidate wrote.
+ */
+export async function rewriteOneBullet(
+  original: string,
+  me: CandidateFacts,
+  role: RoleFacts,
+): Promise<{ text: string; provider: Provider } | { refused: string } | null> {
+  const answer = await callJsonModel({
+    prompt: [
+      `TARGET ROLE: ${role.title}`,
+      role.description ? `THE ROLE ASKS FOR:\n${role.description.slice(0, 2000)}` : '',
+      '',
+      'REWRITE THIS ONE RÉSUMÉ LINE:',
+      original,
+      '',
+      'RULES — absolute:',
+      '1. Use ONLY facts already in that line. Add no number, employer, product or qualification.',
+      '2. Open with a past-tense action verb. Never "Responsible for", "Worked on", "Involved in".',
+      '3. Put the outcome first where the line has one.',
+      '4. Under 240 characters. One line.',
+      '',
+      'Return JSON: { "line": string }',
+    ].join('\n'),
+    system: 'You sharpen a single résumé line. You never invent facts.',
+    schema: { type: 'object', properties: { line: { type: 'string' } }, required: ['line'] },
+    temperature: 0.2,
+    timeoutMs: 20_000,
+  })
+  if (!answer) return null
+
+  let line: string
+  try {
+    const parsed = JSON.parse(answer.raw) as { line?: unknown }
+    if (typeof parsed.line !== 'string') return null
+    line = parsed.line.trim()
+  } catch {
+    return null
+  }
+
+  const fail = rewriteFailure(line, original, me, role)
+  // Shown, not hidden: a refusal is evidence the filter is real.
+  return fail ? { refused: fail } : { text: line, provider: answer.provider }
 }

@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
-  AlertCircle, ArrowRight, CheckCircle2, Download, FileText, Loader2, Lock, RotateCcw,
+  AlertCircle, ArrowRight, Download, FileText, Loader2, Lock, RotateCcw,
   ShieldCheck, Sparkles, Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,8 +13,17 @@ import { readResumeFile } from '@/app/actions/read-resume-file'
 import { checkResumeForAts } from '@/app/actions/ats-check'
 import { optimiseResume } from '@/app/actions/optimise-resume'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
-import { rolesWithKeywords, MIN_RESUME_CHARS, type AtsReport, type AtsSeverity } from '@/lib/ats-check'
-import type { ResumeSections } from '@/lib/parse/sections'
+import { rewriteBullet } from '@/app/actions/rewrite-bullet'
+import { matchesInIndex } from '@/app/actions/index-match'
+import type { IndexMatchCount } from '@/lib/services/index-match'
+import { ReportRail } from '@/components/features/report-rail'
+import { FindingDetail } from '@/components/features/finding-detail'
+import {
+  checkResume, marketCoverage, rolesWithKeywords, MIN_RESUME_CHARS,
+  type AtsReport,
+} from '@/lib/ats-check'
+import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
+import { fixFor, applyEdit, applyDateNormalisation, type FixEdit } from '@/lib/resume-fix'
 import type { BulletChange } from '@/lib/resume-rewrite'
 
 /**
@@ -47,11 +56,6 @@ const FIELD =
 
 const LABEL = 'mb-2 block text-sm font-semibold text-primary'
 
-const SEVERITY: Record<AtsSeverity, { label: string; dot: string }> = {
-  high: { label: 'Blocks parsing', dot: 'bg-accent' },
-  medium: { label: 'Degrades parsing', dot: 'bg-accent/60' },
-  low: { label: 'Worth tidying', dot: 'bg-accent/30' },
-}
 
 const ROLES = rolesWithKeywords()
 const ROLE_GROUPS = [{ label: 'Roles we measure postings for', options: ROLES.map((value) => ({ value })) }]
@@ -81,12 +85,48 @@ export function AtsFlow() {
   const [error, setError] = useState<string>()
   const [needsSignIn, setNeedsSignIn] = useState(false)
 
+  /**
+   * The working document, and the score recomputed from it after every fix.
+   *
+   * ⚠️ THE RE-SCORE RUNS IN THE BROWSER, AND THAT IS NOT THE "SECOND OPINION ON
+   * THE CLIENT" THIS CODEBASE BANS. The banned thing is a client that
+   * REIMPLEMENTS a check and then disagrees with the server about the same
+   * document. This calls checkResume() — the identical pure function, already
+   * in this bundle because the role picker imports from the same module — so
+   * the two cannot disagree. What it buys is the thing the whole feature turns
+   * on: the score moving the instant a fix is accepted, with no round trip and
+   * no rate limit standing between a candidate and their own edit.
+   */
+  const [sections, setSections] = useState<ResumeSections>()
+  const [baseline, setBaseline] = useState<number>()
+  const [selected, setSelected] = useState<string>()
+  const [appliedEdits, setAppliedEdits] = useState<Set<string>>(new Set())
+  const [skipped, setSkipped] = useState<Set<string>>(new Set())
+  const [rewriting, setRewriting] = useState<string>()
+  const [indexMatch, setIndexMatch] = useState<IndexMatchCount>()
+  const [indexBaseline, setIndexBaseline] = useState<number>()
+  const [checkingIndex, setCheckingIndex] = useState(false)
+
   const [checking, startCheck] = useTransition()
   const [improving, startImprove] = useTransition()
   const [downloading, startDownload] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const ready = Boolean(file) || resumeText.trim().length >= MIN_RESUME_CHARS
+
+  /**
+   * What the right pane is answering, and the fix it can offer.
+   *
+   * Skipped findings stay OUT of the selection but are still counted by the
+   * score — "this does not apply to me" is the candidate's judgement about
+   * relevance, not a claim that a parser will now read the document. Pretending
+   * otherwise would be the one dishonest number on the page.
+   */
+  const visibleFindings = (report?.findings ?? []).filter((f) => !skipped.has(f.id))
+  const activeFinding = visibleFindings.find((f) => f.id === selected) ?? visibleFindings[0]
+  const activeFix = activeFinding && sections ? fixFor(activeFinding.id, sections) : null
+  const coverage =
+    targetRole && sections ? marketCoverage(targetRole, sectionsToText(sections)) : undefined
 
   function pick(f: File | undefined) {
     if (!f) return
@@ -120,6 +160,9 @@ export function AtsFlow() {
         return
       }
       setReport(res)
+      setSections(parseSections(text))
+      setBaseline(res.readability.score)
+      setSelected(res.findings[0]?.id)
       setStep('report')
     })
   }
@@ -146,6 +189,108 @@ export function AtsFlow() {
       })
       setStep('preview')
     })
+  }
+
+  /** Re-score the working document with the same rules, and keep the rail in step. */
+  function rescore(next: ResumeSections) {
+    setSections(next)
+    const text = sectionsToText(next)
+    setResumeText(text)
+    try {
+      setReport(checkResume(text, targetRole || undefined))
+    } catch {
+      // checkResume throws only on input too short to assess. A fix cannot
+      // produce that, and if it somehow did, the last good report is better
+      // than an empty screen.
+    }
+  }
+
+  function acceptEdit(edit: FixEdit, key: string) {
+    if (!sections) return
+    rescore(applyEdit(sections, edit))
+    setAppliedEdits((prev) => new Set(prev).add(key))
+  }
+
+  /** Rebuilding is what our own output format does anyway — see sectionsToText. */
+  function rebuildLayout() {
+    if (!sections) return
+    rescore(applyDateNormalisation(sections))
+  }
+
+  /**
+   * An answer to an ask, written into the document at the only place it can
+   * honestly go. A link joins the contact line; anything else is appended to
+   * the most recent role as its own line, in the candidate's own words.
+   */
+  function answerAsk(findingId: string, value: string) {
+    if (!sections) return
+    if (findingId === 'no-links') {
+      rescore({ ...sections, contact: { ...sections.contact, links: [...sections.contact.links, value] } })
+      return
+    }
+    const experience = sections.experience.map((e, i) =>
+      i === 0 ? { ...e, bullets: [...e.bullets, value] } : e,
+    )
+    rescore({ ...sections, experience })
+  }
+
+  function skipFinding(findingId: string) {
+    setSkipped((prev) => new Set(prev).add(findingId))
+    setSelected(undefined)
+  }
+
+  /** The escape hatch: one line, one model call, same guard. */
+  function rewriteLine(entry: number, bullet: number) {
+    if (!sections) return
+    const key = `${entry}:${bullet}`
+    setRewriting(key)
+    setError(undefined)
+    void (async () => {
+      const res = await rewriteBullet({
+        resumeText: sectionsToText(sections),
+        entry,
+        bullet,
+        targetRole,
+        jdText: jdText.trim() || undefined,
+      })
+      setRewriting(undefined)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      const before = sections.experience[entry]?.bullets[bullet]
+      if (before === undefined) return
+      rescore(applyEdit(sections, { entry, bullet, before, after: res.line }))
+      setAppliedEdits((prev) => new Set(prev).add(`ai:${key}`))
+    })()
+  }
+
+  /**
+   * The score, converted into jobs.
+   *
+   * Runs only when the candidate asks, because it is the heaviest read on any
+   * public surface here — up to 150 postings with their requirements. The first
+   * result becomes the baseline, so every later check reads as a delta rather
+   * than a fresh number.
+   */
+  function checkIndex() {
+    if (!sections || !targetRole) return
+    setCheckingIndex(true)
+    setError(undefined)
+    void (async () => {
+      const res = await matchesInIndex({
+        resumeText: sectionsToText(sections),
+        targetRole,
+        skills: sections.skills,
+      })
+      setCheckingIndex(false)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      setIndexBaseline((prev) => prev ?? res.strong)
+      setIndexMatch(res)
+    })()
   }
 
   function download() {
@@ -334,109 +479,116 @@ export function AtsFlow() {
 
       {/* ---------------------------------------------------------------- 2 */}
       {step === 'report' && report && (
-        <div className="mt-2">
-          <ScorePanel report={report} />
+        <div className="mt-2 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <ReportRail
+            report={report}
+            selected={selected}
+            onSelect={setSelected}
+            targetRole={targetRole}
+            postings={report.role?.postings}
+            onChangeRole={() => setStep('input')}
+            baseline={baseline}
+            indexMatch={indexMatch}
+            indexBaseline={indexBaseline}
+            onCheckIndex={checkIndex}
+            checkingIndex={checkingIndex}
+          />
 
-          <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              What a parser read out of it
-            </p>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              {[
-                ['Current title', report.read.currentTitle],
-                ['Employer', report.read.employer],
-                ['City', report.read.city],
-                [
-                  'Years of experience',
-                  report.read.yearsExperience !== undefined ? String(report.read.yearsExperience) : undefined,
-                ],
-              ].map(([label, value]) => (
-                <div key={label as string} className="flex justify-between gap-3 border-b border-border pb-2">
-                  <dt className="text-sm text-muted-foreground">{label}</dt>
-                  <dd className={`text-right text-sm ${value ? 'text-primary' : 'italic text-muted-foreground'}`}>
-                    {value || 'nothing'}
-                  </dd>
+          <div className="min-w-0">
+            {activeFinding ? (
+              <FindingDetail
+                finding={activeFinding}
+                fix={activeFix}
+                coverage={activeFinding.id === 'role-vocabulary' ? coverage : undefined}
+                appliedEdits={appliedEdits}
+                onApplyEdit={acceptEdit}
+                onApplyLayout={rebuildLayout}
+                onAnswer={answerAsk}
+                onSkip={skipFinding}
+                onRewrite={rewriteLine}
+                rewriting={rewriting}
+              />
+            ) : (
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-primary">
+                  {report.findings.length === 0
+                    ? 'Nothing left to fix.'
+                    : `${report.findings.length} ${report.findings.length === 1 ? 'thing' : 'things'} to fix`}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {report.findings.length === 0
+                    ? 'A parser should read this cleanly. Take the file, or rewrite it against a specific posting below.'
+                    : 'Pick any check on the left. Each one quotes the line it came from, and most can be fixed in one click without a model running.'}
+                </p>
+
+                <div className="mt-6 border-t border-border pt-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    What a parser read out of it
+                  </p>
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {[
+                      ['Current title', report.read.currentTitle],
+                      ['Employer', report.read.employer],
+                      ['City', report.read.city],
+                      [
+                        'Years of experience',
+                        report.read.yearsExperience !== undefined ? String(report.read.yearsExperience) : undefined,
+                      ],
+                    ].map(([label, value]) => (
+                      <div key={label as string} className="flex justify-between gap-3 border-b border-border pb-2">
+                        <dt className="text-sm text-muted-foreground">{label}</dt>
+                        <dd className={`text-right text-sm ${value ? 'text-primary' : 'italic text-muted-foreground'}`}>
+                          {value || 'nothing'}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-              ))}
-            </dl>
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              This is our own parser, the same one our matching runs on. A field it missed is a field a
-              real system plausibly misses too.
-            </p>
-          </div>
-
-          <Findings report={report} />
-
-          {report.role && (
-            <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Against {report.role.name} postings
-              </p>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Your résumé names{' '}
-                <strong className="font-semibold text-primary">
-                  {report.role.present.length} of {report.role.present.length + report.role.missing.length}
-                </strong>{' '}
-                terms that appear in at least a third of the{' '}
-                <strong className="font-semibold text-primary">{report.role.postings}</strong>{' '}
-                {report.role.name} postings we index.
-              </p>
-              <TermList label="Already there" terms={report.role.present} tone="accent" />
-              <TermList label="Not mentioned" terms={report.role.missing} tone="muted" />
-            </div>
-          )}
-
-          {/* The conversion step. Reachable only after the report, because the
-              offer only means something once the problem is specific. */}
-          <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6">
-            <h3 className="text-lg font-semibold tracking-[-0.03em] text-primary">
-              Now let us fix it
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              We will rewrite your own lines — sharper verbs, the role&rsquo;s vocabulary where your
-              experience already supports it, and a layout built from the constructs that parse.{' '}
-              {jdText.trim()
-                ? 'Aimed at the job description you pasted.'
-                : `Aimed at ${targetRole || 'the role you choose'} postings we index.`}
-            </p>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              <strong className="font-semibold text-primary">This step uses a language model</strong> —
-              the first and only one in this flow. It may reorder, compress and reword what you wrote.
-              It may not add a figure, an employer or a qualification that is not already in your own
-              line, and anything it tries is shown to you and reverted.
-            </p>
-            {!targetRole && (
-              <p className="mt-3 text-xs font-semibold text-primary">
-                Pick a target role above first — a rewrite needs something to aim at.
-              </p>
+              </div>
             )}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button type="button" onClick={improve} disabled={improving || !targetRole}>
-                {improving ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    Rewriting your résumé…
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-2">
-                    <Sparkles className="size-4" aria-hidden="true" />
-                    Improve my score
-                  </span>
-                )}
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep('input')}
-                className="text-sm font-semibold text-muted-foreground underline underline-offset-4 hover:text-primary"
-              >
-                Check a different file
-              </button>
+
+            {/* The whole-document rewrite stays, demoted: it is the shortcut for
+                somebody who does not want to work through the list. */}
+            <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6">
+              <h3 className="text-lg font-semibold tracking-[-0.03em] text-primary">
+                Or rewrite the whole thing at once
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Every line rewritten against{' '}
+                {jdText.trim() ? 'the job description you pasted' : `${targetRole || 'the role'} postings we index`}, in
+                one pass, with each change shown beside what it replaced.
+              </p>
+              {!targetRole && (
+                <p className="mt-3 text-xs font-semibold text-primary">Pick a target role first.</p>
+              )}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Button type="button" onClick={improve} disabled={improving || !targetRole}>
+                  {improving ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                      Rewriting…
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <Sparkles className="size-4" aria-hidden="true" />
+                      Rewrite everything
+                    </span>
+                  )}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setStep('input')}
+                  className="text-sm font-semibold text-muted-foreground underline underline-offset-4 hover:text-primary"
+                >
+                  Check a different file
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ---------------------------------------------------------------- 3 */}
+
       {step === 'preview' && optimised && report && (
         <div className="mt-2">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -522,125 +674,6 @@ export function AtsFlow() {
   )
 }
 
-/** Overall score, then the four groups. The groups are what make it actionable. */
-function ScorePanel({ report }: { report: AtsReport }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Your ATS score
-      </p>
-      <p className="mt-2 font-mono text-5xl font-semibold tabular-nums text-primary">
-        {report.readability.score}
-        <span className="text-lg text-muted-foreground">/100</span>
-      </p>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {report.categories.map((c) => (
-          <div key={c.key}>
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-semibold text-primary">{c.label}</p>
-              <p className="font-mono text-xs tabular-nums text-muted-foreground">
-                {c.passed}/{c.total} checks
-              </p>
-            </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-accent"
-                style={{ width: `${c.score}%` }}
-                role="progressbar"
-                aria-valuenow={c.score}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${c.label} score`}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {report.readability.deductions.length === 0 ? (
-        <p className="mt-6 inline-flex items-center gap-2 text-sm text-accent">
-          <CheckCircle2 className="size-4" aria-hidden="true" />
-          Nothing found. A parser should read this cleanly.
-        </p>
-      ) : (
-        <ul className="mt-6 space-y-1.5 border-t border-border pt-4">
-          {report.readability.deductions.map((d) => (
-            <li key={d.id} className="flex justify-between gap-4 font-mono text-xs tabular-nums">
-              <span className="text-muted-foreground">{d.title}</span>
-              <span className="shrink-0 text-primary">−{d.points}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
-function Findings({ report }: { report: AtsReport }) {
-  if (report.findings.length === 0) return null
-  return (
-    <div className="mt-6 space-y-6">
-      {report.categories.map((c) => {
-        const mine = report.findings.filter((f) => f.category === c.key)
-        if (mine.length === 0) return null
-        return (
-          <section key={c.key}>
-            <h3 className="text-sm font-semibold tracking-[-0.02em] text-primary">
-              {c.label}{' '}
-              <span className="font-normal text-muted-foreground">
-                — {mine.length} to fix
-              </span>
-            </h3>
-            <div className="mt-3 space-y-3">
-              {mine.map((f) => (
-                <div key={f.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={`size-1.5 rounded-full ${SEVERITY[f.severity].dot}`} aria-hidden="true" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {SEVERITY[f.severity].label}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-primary">{f.title}</p>
-                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{f.detail}</p>
-                  {f.evidence && (
-                    <p className="mt-3 border-l-2 border-border pl-3 font-mono text-xs leading-5 text-muted-foreground">
-                      {f.evidence}
-                    </p>
-                  )}
-                  <p className="mt-3 text-sm leading-6 text-primary">{f.fix}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )
-      })}
-    </div>
-  )
-}
-
-function TermList({ label, terms, tone }: { label: string; terms: string[]; tone: 'accent' | 'muted' }) {
-  if (terms.length === 0) return null
-  return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold text-primary">{label}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {terms.map((t) => (
-          <span
-            key={t}
-            className={
-              tone === 'accent'
-                ? 'rounded-lg bg-accent/10 px-2 py-1 text-xs font-medium text-accent'
-                : 'rounded-lg bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground'
-            }
-          >
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 /**
  * What changed, and what we refused to change.

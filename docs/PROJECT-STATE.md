@@ -904,6 +904,64 @@ printed page.
 rewritten, and the model's one fabrication — "5 years" against a résumé saying
 four — refused and shown to the candidate.
 
+### Stage P — parity with the category leader, and the one thing past it (2026-09-09)
+
+The checker became an instrument rather than a report, and the index was wired
+to it for the first time.
+
+**What was copied, deliberately.** The two-pane shape is theirs: a fixed rail
+carrying the gauge and every failing check as a clickable row, beside a pane
+that answers one check at a time. Ours was a single scrolling column where every
+finding shouted equally. Our CONTENT was already better — every finding quotes
+the candidate's own line, nothing is paywalled — and the interface was throwing
+that away. One difference kept: their rail shows locked rows, which is what
+makes their paywall convert. Ours has none, and says so at the bottom.
+
+**Per-fix apply/skip/rewrite replaced the all-or-nothing rewrite**, and most
+fixes need no model at all. `src/lib/resume-fix.ts` is a substitution table:
+"Worked on migrating the ledger" → "Migrated the ledger" reuses the candidate's
+own verb; "Responsible for" → "Owned" is a synonym; "Involved in" → "Contributed
+to" is a DE-ESCALATION, never a promotion. Instant, free, identical every time,
+and incapable of hallucinating — the competitor markets this exact class of
+change as "AI rewrite suggestions". The model is now the escape hatch
+(`rewriteBullet`, ~200 tokens for one line against 1,360 for a document).
+
+⚠️ **Three findings are deliberately ASKS, not fixes.** A missing figure, a
+missing link, a résumé that is too short cannot be repaired without inventing
+something. Their product ships "AI rewrite suggestions" for quantifying impact,
+which means a model proposing a number for somebody's achievement. A test
+asserts our copy says "we will not invent one."
+
+**The score re-computes in the browser**, using the identical `checkResume`
+already in the bundle — measured 57 → 79 as four fixes were accepted, with no
+round trip and no rate limit between a candidate and their own edit. That is not
+the banned "second opinion on the client": the ban is on REIMPLEMENTING a check,
+and the same function cannot disagree with itself.
+
+**The market column is the first thing on the page they cannot copy.**
+`scripts/build-role-keywords.ts` was already computing per-term document
+frequency and throwing it away; it now keeps it, so the report says
+"`engineering` is in 88% of the 199 postings, `cloud` in 67%" instead of listing
+missing words flat. `jdVersusMarket()` splits a pasted posting into
+market-standard and employer-specific vocabulary — the over-fitting warning
+nobody without an index can give.
+
+**And the index re-score, which is the strongest sentence this product can
+say.** `src/lib/services/index-match.ts` runs the same `scoreAgainstIndex()`
+`/today` runs, against a résumé pasted by somebody with no account: measured
+46 → 60 postings at 50%+ after a rewrite added terms the candidate genuinely
+holds. ⚠️ **Counts only, never roles** — it uses the service client because
+`roles` is `authenticated read`, and a public endpoint that enumerated the index
+would give away the moat one request at a time. The roles behind the number are
+what signing in buys.
+
+**Two defects found on the way.** The parser could not read numeric dates
+(`07/2023`), so it left `07/` in the title and the checker reported a
+`title-misread` **it had caused itself** — common on Indian résumés. And Groq's
+free tier turned out to be 8,000 tokens per MINUTE shared across every
+environment, which is ~3 rewrites a minute site-wide; see Stage O's note and
+`src/lib/parse/llm.ts`.
+
 ### Deployed 2026-09-07 — the scale-up is live
 
 **https://saaf-ten.vercel.app** (also aliased `saaf-akshay-keerthi.vercel.app`),

@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { extractFields } from '@/lib/parse/extract'
-import { readResumeWithModel, PROVIDER_LABEL } from '@/lib/parse/llm'
+import { PROVIDER_LABEL, ModelBusyError } from '@/lib/parse/llm'
 import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { rewriteResume, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
 import { checkResume, roleVocabulary, MIN_RESUME_CHARS, MAX_RESUME_CHARS, type AtsReport } from '@/lib/ats-check'
@@ -109,32 +109,38 @@ export async function optimiseResume(
     const deterministic = extractFields(resumeText).fields
 
     /**
-     * ⚠️ REFUSE RATHER THAN REWRITE BADLY WHEN THE RÉSUMÉ READ FAILS.
+     * ⚠️ THE SEPARATE RÉSUMÉ-READ CALL WAS REMOVED ON 2026-09-08, AND THE
+     * REASONING THAT PUT IT HERE NO LONGER HOLDS.
      *
-     * Skills and domain come only from the model. Without them the guard cannot
-     * tell the candidate's own employer from a stranger's, so it rejects almost
-     * every rewritten line — and the candidate is shown a document that is
-     * identical to the one they uploaded, with a list of reasons that read like
-     * a bug in our filter rather than a model outage. src/app/actions/tailor-jd.ts
-     * hit exactly this and documents it; the same refusal belongs here.
+     * It existed because groundingFailure() needs `skills`, `employer` and
+     * `domain` to tell the candidate's own work from a stranger's, and without
+     * them it rejected nearly every rewritten line. That was true when this was
+     * written. It stopped being true when ownVocabulary() landed in
+     * src/lib/resume-rewrite.ts: the guard now grounds each rewrite against THE
+     * LINE IT CAME FROM, which is a better source for this job than a model's
+     * summary of the whole document.
+     *
+     * Measured before removing it, on the same résumé: with skills and domain
+     * supplied, 6 kept / 1 reverted. With both empty, 6 kept / 1 reverted — the
+     * same genuine fabrication caught, nothing else lost.
+     *
+     * What it cost is the point. Groq's free tier is 8,000 tokens per MINUTE
+     * across every environment on the key, this call was ~996 of the ~2,360 a
+     * rewrite consumed, and it was a second independent point of failure: in a
+     * 5-run sample, 2 failures were this call and 1 was the rewrite. Dropping it
+     * cuts token cost by ~42%, removes a round trip, and removes the failure
+     * mode that produced the worst message in the product — "we could not read
+     * your résumé closely enough", which blamed the candidate's file for our
+     * quota.
      */
-    const model = await readResumeWithModel(resumeText)
-    if (!model) {
-      return {
-        ok: false,
-        error:
-          'We could not read your résumé closely enough to rewrite it safely just now. ' +
-          'Rather than guess at your experience, we would rather not write anything — try again in a moment. ' +
-          'Your check and its findings are unaffected.',
-      }
-    }
-
     const facts: CandidateFacts = {
-      currentTitle: model.currentTitle ?? deterministic.currentTitle ?? null,
-      employer: model.employer ?? deterministic.employer ?? null,
-      yearsExperience: model.yearsExperience ?? deterministic.yearsExperience ?? null,
-      skills: model.skills ?? [],
-      domain: model.domain ?? null,
+      currentTitle: deterministic.currentTitle ?? null,
+      employer: deterministic.employer ?? null,
+      yearsExperience: deterministic.yearsExperience ?? null,
+      // Empty by design now — see the note above. The guard reads the
+      // candidate's own line instead, which is stricter and costs nothing.
+      skills: [],
+      domain: null,
       credential: deterministic.credential ?? null,
     }
 
@@ -186,6 +192,21 @@ export async function optimiseResume(
     }
   } catch (e) {
     if (e instanceof RewriteError) return { ok: false, error: e.message }
+    /**
+     * ⚠️ CAPACITY IS OUR PROBLEM AND HAS TO READ LIKE ONE. Every provider is
+     * over quota; nothing is wrong with their résumé, and the previous copy
+     * ("we could not read your résumé closely enough") told them otherwise.
+     */
+    if (e instanceof ModelBusyError) {
+      const mins = Math.ceil(e.retryAfterSeconds / 60)
+      return {
+        ok: false,
+        error:
+          'We are at capacity right now — too many résumés being rewritten at once. ' +
+          `Try again in ${e.retryAfterSeconds < 90 ? 'about a minute' : `${mins} minutes`}. ` +
+          'Nothing is wrong with your file, and your check and its findings are unaffected.',
+      }
+    }
     return {
       ok: false,
       error: 'We could not rewrite that just now. Your résumé and its check are unaffected.',

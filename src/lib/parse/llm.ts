@@ -37,7 +37,21 @@ import type { ParsedFields } from './extract'
  */
 
 const GROQ_MODEL = 'openai/gpt-oss-20b'
-const GEMINI_MODEL = 'gemini-2.0-flash'
+/**
+ * ⚠️ THE MODEL NAME IS CONFIGURABLE BECAUSE HARDCODING IT FAILED SILENTLY.
+ *
+ * This read `gemini-2.0-flash` until 2026-09-08, when Google decommissioned it.
+ * Every Gemini call then returned HTTP 404 — "This model is no longer
+ * available" — and the chain swallowed it as one more null, exactly like a
+ * timeout. So the fallback provider was INERT: a valid key, a live account, and
+ * not one request that could ever succeed. Nothing logged, nothing errored, and
+ * the only symptom was Groq's rate limit having no safety net behind it.
+ *
+ * An env override means the next deprecation is a variable change rather than a
+ * deploy, and providerUnavailable() below makes a dead model loud instead of
+ * silent.
+ */
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash'
 const TIMEOUT_MS = 12_000
 /** Enough for any résumé; caps a pathological file's token cost. */
 const MAX_CHARS = 24_000
@@ -178,6 +192,33 @@ export async function readResumeWithModel(text: string): Promise<LlmFields | nul
  * surface can attribute the work correctly after a failover instead of naming
  * the provider that was tried first.
  */
+/**
+ * Every provider refused because we are over a quota, not because anything
+ * broke.
+ *
+ * ⚠️ IT IS A SEPARATE ERROR BECAUSE IT NEEDS A SEPARATE SENTENCE ON SCREEN.
+ * Measured on 2026-09-08: Groq's free tier is 8,000 TOKENS PER MINUTE, shared
+ * across every environment using the key, and one résumé rewrite costs ~2,360
+ * of them on a SHORT CV. That is roughly three rewrites a minute for the whole
+ * site, after which Groq returns HTTP 429 in about 70ms — and the old code
+ * swallowed that into the same `null` as a timeout, so the surface told the
+ * candidate we "could not read your résumé closely enough", which blames their
+ * document for our budget. A capacity limit is our problem and has to read like
+ * one.
+ */
+export class ModelBusyError extends Error {
+  constructor(readonly retryAfterSeconds: number) {
+    super('Every configured model provider is rate limited right now.')
+  }
+}
+
+/** Raised inside this module so the chain can tell a 429 from a real failure. */
+class ProviderRateLimited extends Error {
+  constructor(readonly retryAfterSeconds: number) {
+    super('rate limited')
+  }
+}
+
 export async function callJsonModel(opts: {
   prompt: string
   /** Groq gets this as a system message; Gemini has no equivalent slot. */
@@ -190,6 +231,7 @@ export async function callJsonModel(opts: {
   const chain = providerChain()
   const temperature = opts.temperature ?? 0.2
   const timeout = opts.timeoutMs ?? TIMEOUT_MS
+  let throttled: ProviderRateLimited | undefined
 
   for (const provider of chain) {
     try {
@@ -198,12 +240,28 @@ export async function callJsonModel(opts: {
           ? await callGroqJson(opts.prompt, opts.system, opts.schema, temperature, timeout)
           : await callGeminiJson(opts.prompt, opts.schema, temperature, timeout)
       if (raw) return { raw, provider }
-    } catch {
-      // Silent per provider, like readResumeWithModel: try the next vendor
-      // before the caller is told nothing could answer.
+    } catch (e) {
+      /**
+       * ⚠️ A 429 IS REMEMBERED RATHER THAN SWALLOWED, and this is exactly what
+       * the fallback chain is for: a second vendor has its own quota, so being
+       * throttled by one is precisely the case where trying the next one works.
+       * Only if EVERY provider is throttled does the caller hear about it — and
+       * then it hears "busy", not "broken".
+       */
+      if (e instanceof ProviderRateLimited) throttled = e
+      // Anything else stays silent per provider, like readResumeWithModel.
     }
   }
+
+  if (throttled) throw new ModelBusyError(throttled.retryAfterSeconds)
   return null
+}
+
+/** Groq and Gemini both use 429 plus Retry-After for quota refusals. */
+function throwIfThrottled(res: Response): void {
+  if (res.status !== 429) return
+  const header = Number(res.headers.get('retry-after'))
+  throw new ProviderRateLimited(Number.isFinite(header) && header > 0 ? Math.ceil(header) : 60)
 }
 
 async function callGroqJson(
@@ -230,6 +288,7 @@ async function callGroqJson(
     }),
     signal: AbortSignal.timeout(timeoutMs),
   })
+  throwIfThrottled(res)
   if (!res.ok) return undefined
   return ((await res.json()) as OpenAiResponse).choices?.[0]?.message?.content
 }
@@ -252,6 +311,7 @@ async function callGeminiJson(
       signal: AbortSignal.timeout(timeoutMs),
     },
   )
+  throwIfThrottled(res)
   if (!res.ok) return undefined
   return ((await res.json()) as GeminiResponse).candidates?.[0]?.content?.parts?.[0]?.text
 }

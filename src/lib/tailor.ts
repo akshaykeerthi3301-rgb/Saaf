@@ -37,7 +37,21 @@ import { activeProvider, type Provider } from './parse/llm'
 
 const TIMEOUT_MS = 15_000
 const GROQ_MODEL = 'openai/gpt-oss-20b'
-const GEMINI_MODEL = 'gemini-2.0-flash'
+/**
+ * ⚠️ THE MODEL NAME IS CONFIGURABLE BECAUSE HARDCODING IT FAILED SILENTLY.
+ *
+ * This read `gemini-2.0-flash` until 2026-09-08, when Google decommissioned it.
+ * Every Gemini call then returned HTTP 404 — "This model is no longer
+ * available" — and the chain swallowed it as one more null, exactly like a
+ * timeout. So the fallback provider was INERT: a valid key, a live account, and
+ * not one request that could ever succeed. Nothing logged, nothing errored, and
+ * the only symptom was Groq's rate limit having no safety net behind it.
+ *
+ * An env override means the next deprecation is a variable change rather than a
+ * deploy, and providerUnavailable() below makes a dead model loud instead of
+ * silent.
+ */
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash'
 
 export type CandidateFacts = {
   currentTitle: string | null

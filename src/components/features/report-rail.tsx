@@ -1,0 +1,237 @@
+'use client'
+
+import { Briefcase, Loader2 } from 'lucide-react'
+import type { AtsReport, AtsCategory } from '@/lib/ats-check'
+import type { IndexMatchCount } from '@/lib/services/index-match'
+
+/**
+ * The left rail: the score, the target, and every check as a row you can click.
+ *
+ * ⚠️ THIS SHAPE IS TAKEN FROM THE CATEGORY LEADER, DELIBERATELY AND ALMOST
+ * EXACTLY. Their report is a fixed rail carrying the gauge and all 27 checks
+ * beside a pane that answers one check at a time; ours was a single column that
+ * scrolled, where every finding shouted equally and the shape of the problem
+ * was invisible. The content was already better — every finding quotes the
+ * candidate's own line and nothing is paywalled — and the interface threw that
+ * advantage away.
+ *
+ * ⚠️ ONE DIFFERENCE, AND IT IS THE WHOLE POSITIONING. Their rail shows locked
+ * rows: checks you can see and cannot read until you pay, which is what makes
+ * the paywall convert. Ours has no locked state because there is nothing to
+ * sell, and the rail says so out loud at the bottom. A row you cannot open
+ * would be the single fastest way to lose the only thing this product has.
+ */
+
+const ORDER: AtsCategory[] = ['ats_essentials', 'sections', 'content', 'tailoring']
+
+export function ReportRail({
+  report,
+  selected,
+  onSelect,
+  targetRole,
+  postings,
+  onChangeRole,
+  baseline,
+  indexMatch,
+  indexBaseline,
+  onCheckIndex,
+  checkingIndex,
+}: {
+  report: AtsReport
+  selected?: string
+  onSelect: (findingId: string) => void
+  targetRole: string
+  postings?: number
+  onChangeRole: () => void
+  /** The score before any fix was applied, when it differs from the current one. */
+  baseline?: number
+  /** Live jobs this résumé matches, once the candidate asks for it. */
+  indexMatch?: IndexMatchCount
+  indexBaseline?: number
+  onCheckIndex: () => void
+  checkingIndex: boolean
+}) {
+  const score = report.readability.score
+  const moved = baseline !== undefined && baseline !== score
+
+  return (
+    <aside className="flex flex-col gap-5 lg:sticky lg:top-6 lg:self-start">
+      <Gauge score={score} baseline={moved ? baseline : undefined} />
+
+      <button
+        type="button"
+        onClick={onChangeRole}
+        className="rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left transition-colors hover:border-accent/60"
+      >
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">Target</span>
+        <span className="mt-1 block text-sm font-semibold text-primary">
+          {targetRole || 'No role chosen'}
+        </span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">
+          {postings ? `measured across ${postings} postings · change` : 'choose a role · change'}
+        </span>
+      </button>
+
+      {/*
+        ⚠️ THE ONLY NUMBER HERE THAT IS ABOUT THE MARKET RATHER THAN THE FILE,
+        and the one a résumé tool without an index cannot print. It sits beside
+        the score on purpose: "79/100" is a property of a document, "60 of 150
+        live jobs" is the thing the document was for.
+
+        Count only — the roles behind it are what signing in buys. See
+        src/lib/services/index-match.ts for why that is a moat decision rather
+        than a growth one.
+      */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Live jobs you match
+        </span>
+        {indexMatch ? (
+          <>
+            <p className="mt-1 font-mono text-2xl tabular-nums text-primary">
+              {indexBaseline !== undefined && indexBaseline !== indexMatch.strong ? (
+                <>
+                  <span className="text-base text-muted-foreground">{indexBaseline}</span>
+                  <span className="text-base text-muted-foreground"> → </span>
+                  <span className="text-accent">{indexMatch.strong}</span>
+                </>
+              ) : (
+                indexMatch.strong
+              )}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              scoring {indexMatch.threshold}%+ of the {indexMatch.scoped} {targetRole} postings we
+              indexed. Sign in to see them.
+            </p>
+            <button
+              type="button"
+              onClick={onCheckIndex}
+              disabled={checkingIndex}
+              className="mt-2 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
+            >
+              {checkingIndex ? 'Re-checking…' : 'Re-check after your fixes'}
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              We index live postings from company hiring boards. See how many this résumé actually
+              scores against — before and after you fix it.
+            </p>
+            <button
+              type="button"
+              onClick={onCheckIndex}
+              disabled={checkingIndex || !targetRole}
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
+            >
+              {checkingIndex ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" aria-hidden="true" /> Scoring against the index…
+                </>
+              ) : (
+                <>
+                  <Briefcase className="size-3" aria-hidden="true" /> Count them
+                </>
+              )}
+            </button>
+          </>
+        )}
+      </div>
+
+      <nav className="flex flex-col gap-4" aria-label="Checks">
+        {ORDER.filter((key) => report.categories.some((c) => c.key === key)).map((key) => {
+          const cat = report.categories.find((c) => c.key === key)!
+          const failing = report.findings.filter((f) => f.category === key)
+          return (
+            <div key={key} className="border-t border-border pt-3">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  {cat.label}
+                </span>
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {cat.passed}/{cat.total}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${cat.score}%` }} />
+              </div>
+
+              <ul className="mt-2 flex flex-col">
+                {failing.map((f) => (
+                  <li key={f.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelect(f.id)}
+                      aria-current={selected === f.id ? 'true' : undefined}
+                      className={`flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] leading-5 transition-colors ${
+                        selected === f.id
+                          ? 'bg-secondary font-semibold text-primary'
+                          : 'text-muted-foreground hover:bg-secondary/60 hover:text-primary'
+                      }`}
+                    >
+                      <span aria-hidden className="mt-0.5 font-mono text-[11px] text-destructive">✕</span>
+                      <span className="flex-1">{shortTitle(f.title)}</span>
+                    </button>
+                  </li>
+                ))}
+                {failing.length === 0 && (
+                  <li className="flex items-center gap-2 px-2 py-1.5 text-[12.5px] text-accent">
+                    <span aria-hidden className="font-mono text-[11px]">✓</span>
+                    All {cat.total} passed
+                  </li>
+                )}
+              </ul>
+            </div>
+          )
+        })}
+      </nav>
+
+      <p className="border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
+        Nothing here is locked. Every check opens, every finding quotes your own line, and there is no
+        paid tier to upgrade to.
+      </p>
+    </aside>
+  )
+}
+
+/** Their gauge, drawn as a half-ring. SVG so it inherits the theme tokens. */
+function Gauge({ score, baseline }: { score: number; baseline?: number }) {
+  const r = 52
+  const circumference = Math.PI * r
+  const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        Your ATS score
+      </span>
+      <svg viewBox="0 0 130 74" className="mx-auto mt-2 w-[150px]" role="img" aria-label={`${score} out of 100`}>
+        <path d="M13 65 A 52 52 0 0 1 117 65" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="10" strokeLinecap="round" />
+        <path
+          d="M13 65 A 52 52 0 0 1 117 65"
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={`${filled} ${circumference}`}
+        />
+        <text x="65" y="60" textAnchor="middle" className="fill-primary font-mono" fontSize="26" fontWeight="500">
+          {score}
+        </text>
+      </svg>
+      {baseline !== undefined ? (
+        <p className="font-mono text-xs tabular-nums text-accent">
+          {baseline} → {score} as you fix
+        </p>
+      ) : (
+        <p className="font-mono text-xs tabular-nums text-muted-foreground">out of 100</p>
+      )}
+    </div>
+  )
+}
+
+/** The rail needs a label, not a sentence. Trim at the first clause. */
+function shortTitle(title: string): string {
+  const cut = title.replace(/^A parser read your job title as .*/i, 'Job title misread')
+  return cut.length > 46 ? `${cut.slice(0, 44)}…` : cut
+}

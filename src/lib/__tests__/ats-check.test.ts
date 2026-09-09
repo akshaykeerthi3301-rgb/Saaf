@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { checkResume, categoryOf, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
+import { checkResume, categoryOf, marketCoverage, jdVersusMarket, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
 
 /**
  * TASK-061 — the ATS checker, proved against documents with known defects.
@@ -522,5 +522,47 @@ B.E. Computer Science, PES University, 2021`
 
   it('leaves a clean résumé alone', () => {
     expect(ids(CLEAN)).not.toContain('title-misread')
+  })
+})
+
+/**
+ * The market column — the differentiator, and therefore the part most worth
+ * pinning. Its whole value is that every number is measured, so a test that
+ * only checked shape would miss the one way it can go wrong: a percentage that
+ * does not correspond to the postings it claims to summarise.
+ */
+describe('market coverage', () => {
+  it('ranks a role’s terms by how many postings actually use them', () => {
+    const cov = marketCoverage('Backend Engineer', 'I write Java and run Postgres.')
+    expect(cov.length).toBeGreaterThan(4)
+    // Sorted, so the most common missing term is the first thing to fix.
+    for (let i = 1; i < cov.length; i++) expect(cov[i - 1].pct).toBeGreaterThanOrEqual(cov[i].pct)
+    for (const c of cov) {
+      expect(c.pct).toBeGreaterThan(0)
+      expect(c.pct).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('marks what the résumé already has, so we never tell someone to add a word they wrote', () => {
+    const cov = marketCoverage('Backend Engineer', 'Backend engineer building distributed systems.')
+    const backend = cov.find((c) => c.term === 'backend')
+    expect(backend?.present).toBe(true)
+  })
+
+  it('returns nothing for a role we hold no postings for, rather than guessing', () => {
+    expect(marketCoverage('Sanskrit Calligrapher', 'anything')).toEqual([])
+  })
+
+  it('splits a posting into market-standard and employer-specific vocabulary', () => {
+    const jd = `We are hiring a Backend Engineer to work on distributed systems and platform
+      services. You will use Kafka extensively; Kafka experience is required. Our Kafka
+      pipelines process billions of events. Strong software engineering fundamentals.`
+    const { standard, specific } = jdVersusMarket('Backend Engineer', jd)
+
+    // "platform"/"engineering" are common to the role — worth writing in for good.
+    expect(standard.map((s) => s.term)).toContain('platform')
+    expect(standard.every((s) => s.pct > 0)).toBe(true)
+    // "Kafka" is this employer's own emphasis, not the role's.
+    expect(specific).toContain('Kafka')
   })
 })

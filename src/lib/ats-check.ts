@@ -124,7 +124,7 @@ export type AtsReport = {
  * "experts recommend", which is the kind of unverifiable advice this product
  * exists to argue against.
  */
-type RoleKeywords = Record<string, { terms: string[]; postings: number }>
+type RoleKeywords = Record<string, { terms: string[]; postings: number; coverage?: Record<string, number> }>
 const KEYWORDS = ROLE_KEYWORDS as RoleKeywords
 
 /** Role names the checker can compare against. Used by the form's picker. */
@@ -141,6 +141,97 @@ export function rolesWithKeywords(): string[] {
  */
 export function roleVocabulary(role: string): { terms: string[]; postings: number } | undefined {
   return KEYWORDS[role]
+}
+
+export type TermCoverage = {
+  term: string
+  /** Postings for this role, out of `postings`, whose text contains the term. */
+  count: number
+  /** The same as a percentage, rounded — what the surface actually shows. */
+  pct: number
+  /** Whether the candidate's résumé already contains it. */
+  present: boolean
+}
+
+/**
+ * How common each of a role's terms actually is, and whether the résumé has it.
+ *
+ * ⚠️ THIS IS THE ONE THING THE CATEGORY LEADER CANNOT COMPUTE, and it is worth
+ * being precise about why. Their tailoring reads ONE job ad the candidate
+ * brings, so it can say "this posting wants Kafka" but never "4% of postings
+ * for this role want Kafka, and 88% want something you already have". A single
+ * ad is a sample of one; rewriting a résumé around its idiosyncrasies makes the
+ * document worse for every other posting, and nothing in a product without an
+ * index can warn you. We hold 21,813 India roles from employers' own boards, so
+ * we can rank a missing word by how much of the market actually asks for it.
+ *
+ * Sorted by coverage, because that is the order worth fixing them in.
+ */
+export function marketCoverage(role: string, resumeText: string): TermCoverage[] {
+  const entry = KEYWORDS[role]
+  if (!entry?.coverage) return []
+  const hay = resumeText.toLowerCase()
+  return entry.terms
+    .map((term) => {
+      const count = entry.coverage![term] ?? 0
+      return {
+        term,
+        count,
+        pct: Math.round((count / entry.postings) * 100),
+        present: hay.includes(term),
+      }
+    })
+    .sort((a, b) => b.pct - a.pct)
+}
+
+/**
+ * Requirements a pasted posting asks for, split by how typical they are.
+ *
+ * `standard` are words most postings for this role use — worth writing into a
+ * résumé, because they pay off across every application. `specific` are this
+ * employer's own vocabulary: worth mirroring in THIS application and not worth
+ * reshaping a résumé around. Nobody can draw that line from the ad alone.
+ */
+export function jdVersusMarket(
+  role: string,
+  jdText: string,
+): { standard: TermCoverage[]; specific: string[] } {
+  const entry = KEYWORDS[role]
+  const jd = jdText.toLowerCase()
+  if (!entry?.coverage) return { standard: [], specific: [] }
+
+  const standard = entry.terms
+    .filter((t) => jd.includes(t))
+    .map((t) => ({
+      term: t,
+      count: entry.coverage![t] ?? 0,
+      pct: Math.round(((entry.coverage![t] ?? 0) / entry.postings) * 100),
+      present: false,
+    }))
+    .sort((a, b) => b.pct - a.pct)
+
+  /**
+   * Words the posting leans on that the role's own vocabulary does not carry.
+   * Deliberately crude — capitalised or hyphenated tokens repeated in the ad —
+   * because the claim it supports is soft ("this employer says this a lot"),
+   * and a soft claim must not be dressed as a measurement.
+   */
+  const counts = new Map<string, number>()
+  for (const raw of jdText.split(/[^A-Za-z+#.-]+/)) {
+    const w = raw.trim()
+    if (w.length < 3 || w.length > 24) continue
+    const lower = w.toLowerCase()
+    if (entry.terms.includes(lower) || STOPWORDS.has(lower)) continue
+    if (!/^[A-Z]/.test(w) && !w.includes('-') && !/[+#.]/.test(w)) continue
+    counts.set(w, (counts.get(w) ?? 0) + 1)
+  }
+  const specific = [...counts.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([w]) => w)
+
+  return { standard, specific }
 }
 
 /** Shortest input that can be assessed at all. */
@@ -631,6 +722,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         detail:
           `Across the ${roleEntry.postings} ${targetRole} postings we index, these terms appear in at least a third of them: ` +
           `${roleEntry.terms.join(', ')}. Yours does not mention ${missing.join(', ')}. ` +
+          `The panel below ranks each one by how many of those postings actually use it, so you can fix the common ones first. ` +
           `An ATS ranks partly on overlap with the posting, so absent vocabulary can cost you position even when the experience is there.`,
         fix:
           `Only add a term if the work behind it is genuinely yours — writing in a word you cannot speak to is worse than missing it. ` +

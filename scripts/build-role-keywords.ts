@@ -56,7 +56,16 @@ const words = (s: string) =>
     .filter((w) => w.length >= 3 && w.length <= 24 && !STOP.has(w) && !/^\d+$/.test(w))
 
 async function main() {
-  const out: Record<string, { terms: string[]; postings: number }> = {}
+  /**
+   * ⚠️ `coverage` IS NEW AND IT IS THE POINT OF THE 2026-09-09 RE-RUN. The
+   * document frequency behind each term was already computed here and then
+   * thrown away, so the checker could say "your résumé is missing 'platform'"
+   * but never "'platform' is in 61% of the postings and 'settlement' is in 4%".
+   * That second sentence is the one a candidate can act on — it tells them
+   * which missing word is worth changing their résumé for. Keeping the count
+   * costs nothing; it was already in memory.
+   */
+  const out: Record<string, { terms: string[]; postings: number; coverage: Record<string, number> }> = {}
   const allRoles = DOMAINS.flatMap((d) => d.roles)
   console.log(`mining ${allRoles.length} roles…\n`)
 
@@ -86,7 +95,9 @@ async function main() {
       .map(([w]) => w)
 
     if (terms.length >= 4) {
-      out[role] = { terms, postings: rows.length }
+      const coverage: Record<string, number> = {}
+      for (const t of terms) coverage[t] = df.get(t) ?? 0
+      out[role] = { terms, postings: rows.length, coverage }
       console.log(`  ${role.padEnd(34)} ${String(rows.length).padStart(3)} postings → ${terms.slice(0, 6).join(', ')}`)
     } else {
       console.log(`  ${role.padEnd(34)} ${rows.length} postings — too few shared terms`)
@@ -118,6 +129,11 @@ async function main() {
   console.log(`\n  dropping ${tooCommon.size} terms common to >45% of roles: ${[...tooCommon].join(', ')}`)
   for (const key of Object.keys(out)) {
     out[key].terms = out[key].terms.filter((t) => !tooCommon.has(t))
+    // Coverage is pruned with it. Two lists that disagree about which terms
+    // exist is how a percentage ends up attached to a term nobody is shown.
+    for (const t of Object.keys(out[key].coverage)) {
+      if (!out[key].terms.includes(t)) delete out[key].coverage[t]
+    }
     if (out[key].terms.length < 4) delete out[key]
   }
 
