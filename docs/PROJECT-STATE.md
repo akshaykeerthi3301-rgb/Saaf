@@ -962,6 +962,26 @@ free tier turned out to be 8,000 tokens per MINUTE shared across every
 environment, which is ~3 rewrites a minute site-wide; see Stage O's note and
 `src/lib/parse/llm.ts`.
 
+### Deployed 2026-09-09 — parity, and past it
+
+**https://saaf-ten.vercel.app**, deployment `saaf-1kx67gl1e`. Verified in a real
+browser against production, not by curl:
+
+| Check | Result |
+|---|---|
+| Two-pane report, 7 categories | ATS essentials 7/8 · Sections 3/3 · Content 14/15 · Tailoring 2/3 · Red flags 2/3 · Seniority · Bias |
+| Market column | `design 88% · 175 ads`, `cloud 67% · 134 ads`, measured across 199 postings |
+| Index re-score | **85 live jobs at 50%+ of 150 Backend Engineer postings** |
+| Landing page | two doors — Find your next job · ATS score checker |
+| Saved résumés | migration 0023 applied; save → list → delete walked end to end |
+
+⚠️ **`GEMINI_API_KEY` WAS ADDED TO VERCEL PRODUCTION AS PART OF THIS DEPLOY, and
+without it the deploy would have shipped a known-broken state.** Production had
+only `GROQ_API_KEY`, whose free tier is 8,000 tokens per MINUTE shared across
+every environment on the key — roughly three rewrites a minute for the entire
+site, after which the rewrite fails 60% of the time. The failover chain existed
+in code and had one link. It now has two.
+
 ### Deployed 2026-09-07 — the scale-up is live
 
 **https://saaf-ten.vercel.app** (also aliased `saaf-akshay-keerthi.vercel.app`),
