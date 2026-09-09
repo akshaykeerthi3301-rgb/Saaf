@@ -1,4 +1,5 @@
 import { roleLine, type ResumeSections } from '@/lib/parse/sections'
+import { templateSpec, type TemplateId, type TemplateSpec } from '@/lib/resume-templates'
 
 /**
  * The optimised résumé, as the candidate will receive it.
@@ -22,22 +23,48 @@ import { roleLine, type ResumeSections } from '@/lib/parse/sections'
  * without asking a parser to understand a layout.
  */
 
-function Rule({ label }: { label: string }) {
+/**
+ * A section heading, in whichever of the three marks the template uses.
+ *
+ * All three are a real text heading — never an image, never a table cell, never
+ * a coloured band drawn behind text. That is the whole difference between a
+ * template that parses and one that looks like it should.
+ */
+function Rule({ label, spec }: { label: string; spec: TemplateSpec }) {
+  // Compact is tighter, not cramped: at mt-4 the heading sat almost on the
+  // paragraph above it, which reads as a rendering fault rather than a choice.
+  const gap = spec.density === 'tight' ? 'mt-5 mb-2' : spec.density === 'airy' ? 'mt-8 mb-3' : 'mt-6 mb-2.5'
+
+  if (spec.heading === 'ruled') {
+    return (
+      <div className={`flex items-center gap-3 first:mt-0 ${gap}`}>
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-paper-ink">{label}</h3>
+        <span aria-hidden className="h-px flex-1 bg-paper-rule" />
+      </div>
+    )
+  }
+  if (spec.heading === 'caps') {
+    return (
+      <h3 className={`text-[10.5px] font-bold uppercase tracking-[0.2em] text-paper-muted first:mt-0 ${gap}`}>
+        {label}
+      </h3>
+    )
+  }
   return (
-    <div className="mt-6 mb-2.5 flex items-center gap-3 first:mt-0">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-paper-ink">{label}</h3>
-      <span aria-hidden className="h-px flex-1 bg-paper-rule" />
-    </div>
+    <h3 className={`text-[13px] font-semibold tracking-[-0.01em] text-paper-ink first:mt-0 ${gap}`}>{label}</h3>
   )
 }
 
 export function ResumePreview({
   sections,
   targetRole,
+  template,
 }: {
   sections: ResumeSections
   targetRole?: string
+  template?: TemplateId
 }) {
+  const spec = templateSpec(template)
   const contact = [sections.contact.email, sections.contact.phone, ...sections.contact.links].filter(
     Boolean,
   )
@@ -49,11 +76,21 @@ export function ResumePreview({
        * picture of a printed document, and inverting it would misrepresent what
        * downloads. The wrapper around it carries the page's own theme.
        */
-      className="mx-auto w-full max-w-[46rem] rounded-xl border border-paper-rule bg-paper px-8 py-9 text-[13px] leading-6 text-paper-ink shadow-sm sm:px-12 sm:py-12"
+      className={`mx-auto w-full max-w-[46rem] rounded-xl border border-paper-rule bg-paper text-paper-ink shadow-sm ${
+        spec.density === 'tight'
+          ? 'px-7 py-7 text-[12.5px] leading-[1.45] sm:px-10 sm:py-9'
+          : spec.density === 'airy'
+            ? 'px-8 py-11 text-[13.5px] leading-7 sm:px-14 sm:py-14'
+            : 'px-8 py-9 text-[13px] leading-6 sm:px-12 sm:py-12'
+      }`}
       aria-label="Preview of your optimised résumé"
     >
-      <header className="text-center">
-        <h2 className="text-2xl font-semibold tracking-[-0.03em] text-paper-ink">
+      <header className={spec.align === 'center' ? 'text-center' : 'text-left'}>
+        <h2
+          className={`font-semibold tracking-[-0.03em] text-paper-ink ${
+            spec.density === 'airy' ? 'text-3xl' : spec.density === 'tight' ? 'text-xl' : 'text-2xl'
+          }`}
+        >
           {sections.contact.name ?? 'Your name'}
         </h2>
         {targetRole ? (
@@ -67,14 +104,14 @@ export function ResumePreview({
       <div className="mt-7">
         {sections.summary ? (
           <section>
-            <Rule label="Professional summary" />
+            <Rule label="Professional summary" spec={spec} />
             <p>{sections.summary}</p>
           </section>
         ) : null}
 
         {sections.experience.length > 0 ? (
           <section>
-            <Rule label="Experience" />
+            <Rule label="Experience" spec={spec} />
             <div className="flex flex-col gap-4">
               {sections.experience.map((e, i) => (
                 <div key={`${e.employer ?? 'role'}-${i}`}>
@@ -102,7 +139,7 @@ export function ResumePreview({
 
         {sections.skills.length > 0 ? (
           <section>
-            <Rule label="Skills" />
+            <Rule label="Skills" spec={spec} />
             {/*
               Deliberately a sentence rather than a row of pills. Pills are a
               CSS shape here and a table or a text box in a Word file, and a
@@ -115,7 +152,7 @@ export function ResumePreview({
 
         {sections.education.length > 0 ? (
           <section>
-            <Rule label="Education" />
+            <Rule label="Education" spec={spec} />
             <div className="flex flex-col gap-1">
               {sections.education.map((e, i) => (
                 <p key={i}>
@@ -134,7 +171,7 @@ export function ResumePreview({
 
         {sections.other.map((o) => (
           <section key={o.heading}>
-            <Rule label={o.heading} />
+            <Rule label={o.heading} spec={spec} />
             <ul className="flex list-disc flex-col gap-1 pl-5 marker:text-paper-rule">
               {o.lines.map((line, i) => (
                 <li key={i}>{line}</li>

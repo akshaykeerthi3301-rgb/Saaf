@@ -68,6 +68,9 @@ const sectionsSchema = z.object({
 const schema = z.object({
   sections: sectionsSchema,
   targetRole: z.string().trim().max(120).default(''),
+  /** One of the three ATS-safe templates. An unknown id falls back rather than
+   *  failing — a stale client is exactly how a bad value arrives here. */
+  template: z.enum(['classic', 'compact', 'headline']).optional(),
 })
 
 export type ResumeDownloadResponse =
@@ -95,13 +98,14 @@ export async function downloadOptimisedResume(
   }
 
   try {
-    const { sections, targetRole } = parsed.data
+    const { sections, targetRole, template } = parsed.data
     const buffer = await buildFullResumeDocx({
       // `order` is typed as strings by the schema above because it is display
       // metadata the document never reads; casting it back keeps the builder's
       // type honest without validating an enum nothing depends on.
       sections: { ...sections, order: [] },
       targetRole,
+      template,
     })
     return {
       ok: true,

@@ -15,6 +15,8 @@ import { optimiseResume } from '@/app/actions/optimise-resume'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { rewriteBullet } from '@/app/actions/rewrite-bullet'
 import { matchesInIndex } from '@/app/actions/index-match'
+import { writeCoverLetter } from '@/app/actions/cover-letter'
+import { TEMPLATES, DEFAULT_TEMPLATE, type TemplateId } from '@/lib/resume-templates'
 import type { IndexMatchCount } from '@/lib/services/index-match'
 import { ReportRail } from '@/components/features/report-rail'
 import { FindingDetail } from '@/components/features/finding-detail'
@@ -106,6 +108,9 @@ export function AtsFlow() {
   const [indexMatch, setIndexMatch] = useState<IndexMatchCount>()
   const [indexBaseline, setIndexBaseline] = useState<number>()
   const [checkingIndex, setCheckingIndex] = useState(false)
+  const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
+  const [letter, setLetter] = useState<{ paragraphs: string[]; dropped: { text: string; reason: string }[]; providerLabel: string }>()
+  const [writingLetter, setWritingLetter] = useState(false)
 
   const [checking, startCheck] = useTransition()
   const [improving, startImprove] = useTransition()
@@ -293,6 +298,26 @@ export function AtsFlow() {
     })()
   }
 
+  /** The covering email, from the résumé as it now stands. */
+  function coverLetter() {
+    if (!optimised && !sections) return
+    setWritingLetter(true)
+    setError(undefined)
+    void (async () => {
+      const res = await writeCoverLetter({
+        resumeText: sectionsToText(optimised?.sections ?? sections!),
+        targetRole,
+        jdText: jdText.trim() || undefined,
+      })
+      setWritingLetter(false)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      setLetter({ paragraphs: res.paragraphs, dropped: res.dropped, providerLabel: res.providerLabel })
+    })()
+  }
+
   function download() {
     if (!optimised) return
     setError(undefined)
@@ -301,6 +326,7 @@ export function AtsFlow() {
       const res = await downloadOptimisedResume({
         sections: optimised.sections,
         targetRole,
+        template,
       })
       if (!res.ok) {
         setNeedsSignIn(Boolean(res.needsSignIn))
@@ -620,8 +646,94 @@ export function AtsFlow() {
             </p>
           </div>
 
-          <div className="mt-6">
-            <ResumePreview sections={optimised.sections} targetRole={targetRole} />
+          {/*
+            Three templates, all of which pass our own checker — the test in
+            src/lib/__tests__/resume-templates.test.ts is what makes that claim
+            safe to print beside them.
+          */}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Template
+            </span>
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTemplate(t.id)}
+                aria-pressed={template === t.id}
+                title={t.note}
+                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  template === t.id
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-primary'
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+            <span className="w-full text-xs leading-5 text-muted-foreground">
+              {TEMPLATES.find((t) => t.id === template)?.note} All three are one column, real text, no
+              tables — every one passes the check on the previous screen.
+            </span>
+          </div>
+
+          <div className="mt-4">
+            <ResumePreview sections={optimised.sections} targetRole={targetRole} template={template} />
+          </div>
+
+          {/* The covering email, built from the résumé as it now stands. */}
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold tracking-[-0.03em] text-primary">
+                  Covering email
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Three paragraphs, built only from what your résumé says — and nothing about
+                  motivation, admiration or culture fit, because we have no way to know any of it.
+                </p>
+              </div>
+              <Button type="button" onClick={coverLetter} disabled={writingLetter}>
+                {writingLetter ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    Writing…
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <Sparkles className="size-4" aria-hidden="true" />
+                    {letter ? 'Write it again' : 'Write one'}
+                  </span>
+                )}
+              </Button>
+            </div>
+
+            {letter && (
+              <div className="mt-5 border-t border-border pt-5">
+                <div className="flex flex-col gap-3 rounded-xl bg-secondary/50 p-4">
+                  {letter.paragraphs.map((p, i) => (
+                    <p key={i} className="text-sm leading-6 text-primary">{p}</p>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  No salutation and no sign-off, deliberately — a generated “Dear Hiring Manager” and
+                  “Yours sincerely” are the clearest tell that a letter was not written by the person
+                  sending it. Add those yourself. Written with {letter.providerLabel}.
+                </p>
+                {letter.dropped.length > 0 && (
+                  <div className="mt-4 border-l-2 border-destructive/30 pl-3">
+                    <p className="text-xs font-semibold text-destructive">
+                      {letter.dropped.length} paragraph{letter.dropped.length === 1 ? '' : 's'} refused
+                    </p>
+                    {letter.dropped.map((d, i) => (
+                      <p key={i} className="mt-1 text-xs leading-5 text-muted-foreground">
+                        <span className="line-through">{d.text.slice(0, 120)}</span> — {d.reason}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">

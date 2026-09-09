@@ -337,7 +337,13 @@ function parseEducation(lines: string[]): EducationEntry[] {
     const line = raw.replace(BULLET_GLYPH, '').trim()
     if (!line) continue
     const { rest, dates } = splitDates(line)
-    const parts = rest.split(HEADER_SPLIT).map((p) => p.trim()).filter(Boolean)
+    const parts = rest
+      .split(HEADER_SPLIT)
+      // Same edge-stripping as parseHeader: a split on ", " leaves the comma on
+      // whichever part began the line, and it travelled into the rebuilt
+      // document as "PES University, · 2021".
+      .map((p) => p.replace(/^[\s|·•—–,-]+/, '').replace(/[\s|·•—–,-]+$/, '').trim())
+      .filter(Boolean)
     if (parts.length === 0) continue
     out.push({
       qualification: parts[0],

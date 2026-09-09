@@ -1,5 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx'
 import { roleLine, type ResumeSections } from '@/lib/parse/sections'
+import { templateSpec, DOCX_SIZES, type TemplateId } from '@/lib/resume-templates'
 import type { Draft } from '@/lib/tailor'
 
 /**
@@ -146,23 +147,46 @@ export type FullResumeInput = {
   sections: ResumeSections
   /** Printed under the name, so the document announces what it is aimed at. */
   targetRole: string
+  /** One of the three ATS-safe templates. See src/lib/resume-templates.ts. */
+  template?: TemplateId
 }
 
-export async function buildFullResumeDocx({ sections, targetRole }: FullResumeInput): Promise<Buffer> {
+export async function buildFullResumeDocx({ sections, targetRole, template }: FullResumeInput): Promise<Buffer> {
   const s = sections
+  const spec = templateSpec(template)
+  const size = DOCX_SIZES[spec.density]
+  const align = spec.align === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT
   const children: Paragraph[] = []
 
+  /**
+   * ⚠️ ALL THREE HEADING STYLES ARE A REAL PARAGRAPH OF REAL TEXT. The variation
+   * is a border, letter-spacing or a weight — never a table row, never a shaded
+   * cell, never an image. Those three are the constructs the checker on the
+   * previous screen flags, and a template that used one would produce a
+   * document our own tool marks down.
+   */
   const heading = (text: string) =>
     new Paragraph({
-      spacing: { before: 260, after: 90 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '888888', space: 2 } },
-      children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 22, characterSpacing: 30 })],
+      spacing: { before: size.gapBefore, after: 90 },
+      border:
+        spec.heading === 'ruled'
+          ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: '888888', space: 2 } }
+          : undefined,
+      children: [
+        new TextRun({
+          text: spec.heading === 'bold' ? text : text.toUpperCase(),
+          bold: true,
+          size: size.heading,
+          characterSpacing: spec.heading === 'caps' ? 50 : spec.heading === 'ruled' ? 30 : 0,
+          color: spec.heading === 'caps' ? '555555' : undefined,
+        }),
+      ],
     })
 
   children.push(
     new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: 34 })],
+      alignment: align,
+      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: size.name })],
     }),
   )
 
@@ -170,25 +194,25 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
   if (contactLine) {
     children.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
+        alignment: align,
         spacing: { after: 40 },
-        children: [new TextRun({ text: contactLine, size: 19 })],
+        children: [new TextRun({ text: contactLine, size: size.body - 1 })],
       }),
     )
   }
   if (targetRole) {
     children.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
+        alignment: align,
         spacing: { after: 120 },
-        children: [new TextRun({ text: targetRole, size: 20, color: '444444' })],
+        children: [new TextRun({ text: targetRole, size: size.body, color: '444444' })],
       }),
     )
   }
 
   if (s.summary) {
     children.push(heading('Professional summary'))
-    children.push(new Paragraph({ children: [new TextRun({ text: s.summary, size: 20 })] }))
+    children.push(new Paragraph({ children: [new TextRun({ text: s.summary, size: size.body })] }))
   }
 
   if (s.experience.length) {
@@ -198,7 +222,7 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
         new Paragraph({
           spacing: { before: 140 },
           // Shared with the scorer and the preview — see roleLine()'s note.
-          children: [new TextRun({ text: roleLine(e), bold: true, size: 21 })],
+          children: [new TextRun({ text: roleLine(e), bold: true, size: size.body + 1 })],
         }),
       )
       const meta = [e.dates, e.location].filter(Boolean).join('  |  ')
@@ -209,7 +233,7 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
       }
       for (const b of e.bullets) {
         children.push(
-          new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 20 })] }),
+          new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: size.body })] }),
         )
       }
     }
@@ -217,7 +241,7 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
 
   if (s.skills.length) {
     children.push(heading('Skills'))
-    children.push(new Paragraph({ children: [new TextRun({ text: s.skills.join('  ·  '), size: 20 })] }))
+    children.push(new Paragraph({ children: [new TextRun({ text: s.skills.join('  ·  '), size: size.body })] }))
   }
 
   if (s.education.length) {
@@ -226,12 +250,12 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: e.qualification, bold: true, size: 20 }),
+            new TextRun({ text: e.qualification, bold: true, size: size.body }),
             new TextRun({
               text: [e.institution, e.dates].filter(Boolean).length
                 ? `  ·  ${[e.institution, e.dates].filter(Boolean).join('  ·  ')}`
                 : '',
-              size: 20,
+              size: size.body,
             }),
           ],
         }),
@@ -242,7 +266,7 @@ export async function buildFullResumeDocx({ sections, targetRole }: FullResumeIn
   for (const o of s.other) {
     children.push(heading(o.heading))
     for (const line of o.lines) {
-      children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: line, size: 20 })] }))
+      children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: line, size: size.body })] }))
     }
   }
 
