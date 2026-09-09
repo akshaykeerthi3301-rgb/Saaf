@@ -1,5 +1,8 @@
 import { extractFields, type ParsedFields } from '@/lib/parse/extract'
 import { parseSections } from '@/lib/parse/sections'
+import {
+  timeline, gaps, progressed, skillsWithoutEvidence, leadershipEvidence, seniorityBand,
+} from '@/lib/resume-history'
 
 /**
  * TASK-061 — the ATS résumé checker.
@@ -52,7 +55,14 @@ export type AtsArea = 'parsing' | 'keywords' | 'consistency'
  * and this module is deterministic by design. An empty category is worse than
  * an absent one.
  */
-export type AtsCategory = 'ats_essentials' | 'sections' | 'content' | 'tailoring'
+export type AtsCategory =
+  | 'ats_essentials'
+  | 'sections'
+  | 'content'
+  | 'tailoring'
+  | 'red_flags'
+  | 'bias'
+  | 'seniority'
 
 export type AtsFinding = {
   id: string
@@ -124,7 +134,7 @@ export type AtsReport = {
  * "experts recommend", which is the kind of unverifiable advice this product
  * exists to argue against.
  */
-type RoleKeywords = Record<string, { terms: string[]; postings: number; coverage?: Record<string, number> }>
+type RoleKeywords = Record<string, { terms: string[]; postings: number; coverage?: Record<string, number>; medianYears?: number }>
 const KEYWORDS = ROLE_KEYWORDS as RoleKeywords
 
 /** Role names the checker can compare against. Used by the form's picker. */
@@ -279,6 +289,29 @@ const RULES: Record<AtsCategory, { label: string; ids: string[] }> = {
     label: 'Job tailoring',
     ids: ['role-vocabulary', 'action-verb-coverage', 'title-not-targeted'],
   },
+  /**
+   * ⚠️ THE THREE CATEGORIES THIS FILE ONCE SAID IT WOULD NEVER HAVE, and the
+   * reason it changed is worth recording rather than quietly reversing.
+   *
+   * The original note said recruiter red flags, bias and seniority "all require
+   * judging the person rather than parsing the file". That is true of how the
+   * category leader implements them — a model reading a résumé and forming an
+   * opinion about the human behind it. It is NOT true of the questions
+   * themselves. A six-month gap between two dated roles is arithmetic. A skill
+   * listed and never mentioned again is a set difference. Whether the titles
+   * moved forward is an ordering over words the candidate wrote.
+   *
+   * So these are built the way everything else here is built: measured from the
+   * document, quoting it back, with no model anywhere on the path. What we
+   * refuse to do is the part that requires an opinion — see `bias` below, and
+   * the LinkedIn check we cannot legally build at all.
+   */
+  red_flags: {
+    label: 'Recruiter red flags',
+    ids: ['employment-gap', 'short-tenure', 'skills-not-evidenced'],
+  },
+  bias: { label: 'Bias & discrimination', ids: ['age-signal', 'dated-experience'] },
+  seniority: { label: 'Seniority & impact', ids: ['career-progression', 'leadership-evidence', 'seniority-benchmark'] },
 }
 
 const CATEGORY_OF: Record<string, AtsCategory> = Object.fromEntries(
@@ -1055,6 +1088,177 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         `Found: ${unevidenced.map((p) => `"${p}"`).join(', ')}. These describe character rather than work, so no reader can check them and no system can score them — and they occupy the line an example could have used.`,
       fix: 'Replace each with the thing that would make somebody believe it. "Team player" becomes the project you shipped with two other teams.',
       evidence: unevidenced[0],
+    })
+  }
+
+  // ---- recruiter red flags, bias, seniority ---------------------------------
+  //
+  // ⚠️ THE VOICE RULE IS AT ITS HARDEST HERE AND IS NOT NEGOTIABLE. These
+  // findings touch employment gaps, age and whether somebody has been promoted.
+  // Every one of them says WHAT A READER WILL WONDER and what one line would
+  // answer it — never what the candidate should have done with their life. A
+  // gap is not a defect. A gap the document does not account for is a question
+  // left open, and that is all this is entitled to report. A test asserts no
+  // finding in these three categories contains a judgement word.
+
+  const history = timeline(structure)
+
+  for (const gap of gaps(history).slice(0, 1)) {
+    const years = Math.floor(gap.months / 12)
+    const span = years >= 1 ? `${years} year${years === 1 ? '' : 's'}` : `${gap.months} months`
+    add({
+      id: 'employment-gap',
+      area: 'consistency',
+      severity: 'low',
+      title: `A ${span} gap between ${gap.afterEmployer ?? 'one role'} and ${gap.beforeEmployer ?? 'the next'}`,
+      detail:
+        'Systems that rank on continuous experience read an undated period as no experience, and a recruiter scanning dates will notice it before they read a word of what you did. Neither of them knows what it was for.',
+      fix:
+        'One line, in your own words, wherever it sits in the timeline — a course, caring for family, a business that did not work, a break. It does not need explaining beyond naming it. An accounted gap stops being a question.',
+    })
+  }
+
+  const shortRoles = history.filter((t) => t.months !== null && t.months < 12 && !t.isCurrent)
+  if (shortRoles.length >= 2) {
+    add({
+      id: 'short-tenure',
+      area: 'consistency',
+      severity: 'low',
+      title: `${shortRoles.length} roles lasting under a year`,
+      detail:
+        'A reader deciding between two candidates uses tenure as a proxy for whether an offer will stick. Contract work, an acquisition, a startup closing and a genuine mismatch all look identical in a date range.',
+      fix:
+        'Where a short role had a reason the dates cannot show — a contract, a shutdown, a role that converted — say so in three words beside it. Where it does not, leave it; a real career has short roles in it.',
+      evidence: shortRoles[0].employer ?? undefined,
+    })
+  }
+
+  const unevidencedSkills = skillsWithoutEvidence(structure)
+  if (unevidencedSkills.length >= 3) {
+    add({
+      id: 'skills-not-evidenced',
+      area: 'keywords',
+      severity: 'medium',
+      title: `${unevidencedSkills.length} skills appear only in your skills list`,
+      detail:
+        `${unevidencedSkills.slice(0, 6).join(', ')}${unevidencedSkills.length > 6 ? ' and others' : ''} are named once and never again. A keyword match still finds them, and the interviewer who asks about one finds nothing on the page to ask about — which is the harder half of the process.`,
+      fix:
+        'For each one that matters to the role you want, put it in the line where you actually used it. A skill named inside a piece of work is evidence; a skill in a list is a claim.',
+      evidence: unevidencedSkills[0],
+    })
+  }
+
+  /**
+   * ⚠️ THIS IS THE ONLY CHECK IN THE FILE THAT ARGUES AGAINST INCLUDING
+   * SOMETHING TRUE, and it is here because the risk it names is not the
+   * candidate's fault. Age discrimination in hiring is documented and illegal
+   * in most of the market, and it operates on cues — a graduation year, a role
+   * from 2004 — long before anybody reads the work. Naming the cue lets the
+   * candidate decide. It never tells them to hide anything.
+   */
+  const graduation = structure.education
+    .map((e) => Number(e.dates?.match(/\b(19|20)\d{2}\b/)?.[0] ?? 0))
+    .filter((y) => y > 1950)
+  const thisYear = new Date().getFullYear()
+  const oldestGraduation = graduation.length ? Math.min(...graduation) : 0
+  if (oldestGraduation && thisYear - oldestGraduation > 20) {
+    add({
+      id: 'age-signal',
+      area: 'keywords',
+      severity: 'low',
+      title: `Your graduation year (${oldestGraduation}) puts an age on the page`,
+      detail:
+        'A graduating year is the commonest way a résumé reveals age before anybody reads the experience, and age discrimination is both documented and difficult to prove. Nothing about this is your problem to fix, and it is still yours to decide.',
+      fix:
+        'Dropping the year from education while keeping the degree and institution is normal practice and costs a parser nothing. Keep it if you would rather — this is information, not advice.',
+      evidence: String(oldestGraduation),
+    })
+  }
+
+  const earliestRole = history.find((t) => t.start)?.start?.year
+  if (earliestRole && thisYear - earliestRole > 18) {
+    add({
+      id: 'dated-experience',
+      area: 'keywords',
+      severity: 'low',
+      title: `Your résumé goes back to ${earliestRole}`,
+      detail:
+        'Most systems weight recent work far above old work, and roles beyond roughly fifteen years dilute the page rather than adding to it — while carrying the same age signal as a graduation year.',
+      fix:
+        'Consider an "Earlier roles" line naming the employers without dates. It keeps the history and stops the oldest entry competing with your most recent one.',
+      evidence: String(earliestRole),
+    })
+  }
+
+  /**
+   * ⚠️ BENCHMARKED AGAINST THE POSTINGS, NOT AGAINST OTHER CANDIDATES.
+   *
+   * The category leader calls this "peer benchmarking" and compares a résumé to
+   * other people's. That needs a corpus of candidates' documents, which is a
+   * thing we should not be holding and do not have. Postings are the better
+   * comparison anyway: they are what actually decides whether an application
+   * lands, they are public, and ours carry the sentence each requirement was
+   * read from. `medianYears` is the median minimum experience asked for across
+   * the postings we index for this role — median so one advert demanding
+   * fifteen years cannot move the bar a candidate is measured against.
+   *
+   * It reports BOTH directions and neither as a failure. Under the median is
+   * worth knowing before you apply; well over it is the over-qualification
+   * problem src/match/score.ts already scores on the shortlist, and it costs
+   * candidates interviews just as reliably.
+   */
+  const benchmark = targetRole ? KEYWORDS[targetRole]?.medianYears : undefined
+  const held = f.yearsExperience
+  if (benchmark !== undefined && held !== undefined && roleEntry) {
+    if (held + 2 < benchmark) {
+      add({
+        id: 'seniority-benchmark',
+        area: 'keywords',
+        severity: 'low',
+        title: `${targetRole} postings typically ask for ${benchmark} years; your résumé shows ${held}`,
+        detail:
+          `Measured across the ${roleEntry.postings} postings we index for this role, not asserted. A stated minimum is a filter in some systems and a preference in most — plenty of people are hired under it — but it is the single commonest reason an application is never read.`,
+        fix:
+          'Nothing on your résumé needs to change for this. It is worth knowing which applications are a stretch so you can spend the effort where it converts — and worth checking that every year you have actually shows up in your dates.',
+      })
+    } else if (held > benchmark + 6) {
+      add({
+        id: 'seniority-benchmark',
+        area: 'keywords',
+        severity: 'low',
+        title: `Your ${held} years sit well above the ${benchmark} these postings ask for`,
+        detail:
+          `Measured across the ${roleEntry.postings} ${targetRole} postings we index. Being far over a stated band gets applications filtered as often as being under it — for salary-band reasons that have nothing to do with whether you could do the work.`,
+        fix:
+          'Consider whether the role you are targeting is the right band, or lead with the most recent and most senior work so the reader reaches your level before they reach your total.',
+      })
+    }
+  }
+
+  const moved = progressed(history)
+  if (moved === false) {
+    add({
+      id: 'career-progression',
+      area: 'keywords',
+      severity: 'low',
+      title: 'Your titles do not show a step up across the résumé',
+      detail:
+        'A reader looks for direction as much as duration. Where the title stayed the same, the growth usually lives in the work — a larger system, a bigger number, somebody you trained — and the page has to say so, because the title cannot.',
+      fix:
+        'Where scope grew inside one title, name what changed: the size of the thing you owned at the start against the end. Where a promotion happened, list the two titles as separate entries under the same employer.',
+    })
+  }
+
+  if (leadershipEvidence(structure) === 0 && bullets.length >= 3 && seniorityBand(f.currentTitle ?? null) >= 3) {
+    add({
+      id: 'leadership-evidence',
+      area: 'keywords',
+      severity: 'low',
+      title: 'A senior title with nothing on the page about running things',
+      detail:
+        `Your title reads "${f.currentTitle}", and no line mentions leading, mentoring, owning or hiring. For roles at this level a reader is looking for that specifically, and its absence reads as an answer rather than an omission.`,
+      fix:
+        'If you led, mentored or owned something, say which and how many. If your seniority is technical rather than managerial, say that instead — "owned the payments platform end to end" is a leadership claim without a team in it.',
     })
   }
 

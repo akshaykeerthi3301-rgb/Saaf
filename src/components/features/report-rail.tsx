@@ -22,7 +22,16 @@ import type { IndexMatchCount } from '@/lib/services/index-match'
  * would be the single fastest way to lose the only thing this product has.
  */
 
-const ORDER: AtsCategory[] = ['ats_essentials', 'sections', 'content', 'tailoring']
+/**
+ * ⚠️ ORDER IS EDITORIAL. Machine-readability first, because a document a parser
+ * cannot read makes every later finding moot; then the content a person reads;
+ * then the three that are about how a career looks rather than how a file
+ * parses. A candidate who reads to the bottom has been told the mechanical
+ * truth before anything that touches them personally.
+ */
+const ORDER: AtsCategory[] = [
+  'ats_essentials', 'sections', 'content', 'tailoring', 'red_flags', 'seniority', 'bias',
+]
 
 export function ReportRail({
   report,

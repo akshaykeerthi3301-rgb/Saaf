@@ -65,14 +65,17 @@ async function main() {
    * which missing word is worth changing their résumé for. Keeping the count
    * costs nothing; it was already in memory.
    */
-  const out: Record<string, { terms: string[]; postings: number; coverage: Record<string, number> }> = {}
+  const out: Record<
+    string,
+    { terms: string[]; postings: number; coverage: Record<string, number>; medianYears?: number }
+  > = {}
   const allRoles = DOMAINS.flatMap((d) => d.roles)
   console.log(`mining ${allRoles.length} roles…\n`)
 
   for (const role of allRoles) {
     const { data } = await db
       .from('roles')
-      .select('description')
+      .select('description, role_requirements(kind, min_years, confidence)')
       .eq('in_india', true)
       .textSearch('title_tsv', role, { type: 'websearch', config: 'english' })
       .limit(200)
@@ -97,7 +100,28 @@ async function main() {
     if (terms.length >= 4) {
       const coverage: Record<string, number> = {}
       for (const t of terms) coverage[t] = df.get(t) ?? 0
-      out[role] = { terms, postings: rows.length, coverage }
+
+      /**
+       * ⚠️ THE MEDIAN YEARS THIS ROLE ACTUALLY ASKS FOR — the honest version of
+       * the category leader's "peer benchmarking".
+       *
+       * Theirs compares a candidate against other candidates, which needs a
+       * corpus of résumés nobody should be holding and which we do not have.
+       * This compares them against the POSTINGS, which is the thing that
+       * actually decides whether an application lands — and which we do have,
+       * extracted with its own source quote and confidence.
+       *
+       * Median, not mean: one posting demanding fifteen years should not move
+       * the number a candidate is measured against.
+       */
+      const years = (data ?? [])
+        .flatMap((r) => (r as { role_requirements?: { kind: string; min_years: number | null; confidence: number }[] }).role_requirements ?? [])
+        .filter((q) => q.kind === 'experience_years' && q.min_years !== null && Number(q.confidence) >= 0.7)
+        .map((q) => Number(q.min_years))
+        .sort((a, b) => a - b)
+      const medianYears = years.length >= 8 ? years[Math.floor(years.length / 2)] : undefined
+
+      out[role] = { terms, postings: rows.length, coverage, ...(medianYears !== undefined ? { medianYears } : {}) }
       console.log(`  ${role.padEnd(34)} ${String(rows.length).padStart(3)} postings → ${terms.slice(0, 6).join(', ')}`)
     } else {
       console.log(`  ${role.padEnd(34)} ${rows.length} postings — too few shared terms`)

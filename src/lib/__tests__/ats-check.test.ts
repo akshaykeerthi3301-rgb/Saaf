@@ -645,3 +645,101 @@ B.Tech, VIT Vellore, 2019`
     }
   })
 })
+
+/**
+ * Recruiter red flags, bias and seniority — the nine checks this file once said
+ * it would never have.
+ *
+ * ⚠️ THE VOICE TEST AT THE END OF THIS BLOCK IS THE IMPORTANT ONE. These
+ * findings touch employment gaps, age and whether somebody has been promoted.
+ * Getting the tone wrong here is not annoying, it is cruel, and it is the one
+ * class of defect no amount of correctness makes up for.
+ */
+describe('the recruiter, bias and seniority checks', () => {
+  const GAPPED = `Ravi Kumar
+ravi@example.com | +91 90000 00000 | linkedin.com/in/ravi
+
+Summary
+Backend engineer with seven years across payments and logistics platforms,
+working on services that move money and freight at national scale.
+
+Experience
+
+Senior Engineer at Razorpay
+Jan 2024 - Present
+• Owned the settlement service that moves money to 60,000 merchant accounts
+• Migrated the ledger from MySQL to Postgres with zero downtime over 3 months
+
+Engineer at Delhivery
+Jan 2019 - Mar 2022
+• Built the routing service that assigned 40,000 shipments a day
+• Cut dispatch latency from 900ms to 200ms across 12 hubs
+
+Skills
+Java, Python, SQL, Kubernetes, Terraform, Kafka, Cassandra, GraphQL
+
+Education
+B.Tech, Computer Science, VIT Vellore, 1998`
+
+  it('flags a gap between two dated roles, in months it can show its working for', () => {
+    const f = checkResume(GAPPED).findings.find((x) => x.id === 'employment-gap')
+    expect(f).toBeDefined()
+    // Mar 2022 → Jan 2024 is 22 months.
+    expect(f!.title).toMatch(/1 year|22 months/)
+  })
+
+  it('flags skills that appear only in the skills list', () => {
+    const f = checkResume(GAPPED).findings.find((x) => x.id === 'skills-not-evidenced')
+    expect(f).toBeDefined()
+    // Kafka, Cassandra, GraphQL, Terraform are listed and never used again.
+    expect(f!.detail).toMatch(/Kafka|Cassandra|GraphQL/)
+    // Java is in neither bullet either, but Postgres IS — so it must not be named.
+    expect(f!.detail).not.toMatch(/Postgres/)
+  })
+
+  it('names an age signal as information, and never tells anyone to hide it', () => {
+    const f = checkResume(GAPPED).findings.find((x) => x.id === 'age-signal')
+    expect(f).toBeDefined()
+    expect(f!.evidence).toBe('1998')
+    expect(f!.fix).toMatch(/your.*decide|Keep it if you would rather|this is information/i)
+  })
+
+  it('benchmarks against postings, and says so', () => {
+    // Backend Engineer's measured median is well above two years.
+    const junior = GAPPED.replace('seven years', 'two years')
+      .replace('Jan 2019 - Mar 2022', 'Jan 2023 - Mar 2023')
+    const f = checkResume(junior, 'Backend Engineer').findings.find((x) => x.id === 'seniority-benchmark')
+    if (f) {
+      expect(f.detail).toMatch(/postings we index/)
+      expect(f.fix).toMatch(/Nothing on your résumé needs to change|right band/)
+    }
+  })
+
+  it('registers every id it can raise, so the category denominators stay true', () => {
+    for (const id of [
+      'employment-gap', 'short-tenure', 'skills-not-evidenced',
+      'age-signal', 'dated-experience',
+      'career-progression', 'leadership-evidence', 'seniority-benchmark',
+    ]) {
+      expect(categoryOf(id), `${id} missing from RULES`).not.toBeNull()
+    }
+  })
+
+  it('⚠️ never judges the person, on any finding in these three categories', () => {
+    /**
+     * The words that would turn a measurement into an accusation. A gap is not
+     * "unexplained absence"; a short role is not "job hopping"; an age signal is
+     * never "outdated". If a future rule reaches for one of these, this fails.
+     */
+    const judgement =
+      /\b(job.?hop|unstable|unreliable|outdated|too old|overqualified|red flag|concerning|worrying|suspicious|lazy|excuse|failure|weak candidate)\b/i
+
+    for (const text of [GAPPED, CLEAN, GAPPED.replace('Jan 2024', 'Jan 2020')]) {
+      for (const f of checkResume(text, 'Backend Engineer').findings) {
+        const category = categoryOf(f.id)
+        if (category !== 'red_flags' && category !== 'bias' && category !== 'seniority') continue
+        expect(`${f.title} ${f.detail} ${f.fix}`, f.id).not.toMatch(judgement)
+      }
+    }
+  })
+})

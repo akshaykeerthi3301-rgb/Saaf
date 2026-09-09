@@ -30,7 +30,8 @@
       "performance": 122,
       "tools": 121,
       "platform": 121
-    }
+    },
+    "medianYears": 5
   },
   "Backend Engineer": {
     "terms": [
@@ -63,7 +64,8 @@
       "code": 137,
       "engineers": 135,
       "cloud": 134
-    }
+    },
+    "medianYears": 7
   },
   "Frontend Engineer": {
     "terms": [
@@ -98,7 +100,8 @@
       "solutions": 35,
       "web": 34,
       "engineering": 34
-    }
+    },
+    "medianYears": 5
   },
   "Full Stack Engineer": {
     "terms": [
@@ -131,7 +134,8 @@
       "quality": 84,
       "cloud": 83,
       "apis": 83
-    }
+    },
+    "medianYears": 5
   },
   "Mobile Engineer": {
     "terms": [
@@ -166,7 +170,8 @@
       "performance": 13,
       "production": 13,
       "platform": 13
-    }
+    },
+    "medianYears": 5
   },
   "DevOps Engineer": {
     "terms": [
@@ -199,7 +204,8 @@
       "python": 113,
       "hands": 113,
       "security": 111
-    }
+    },
+    "medianYears": 5
   },
   "QA Engineer": {
     "terms": [
@@ -234,7 +240,8 @@
       "hands": 70,
       "cases": 69,
       "functional": 69
-    }
+    },
+    "medianYears": 5
   },
   "Security Engineer": {
     "terms": [
@@ -265,7 +272,8 @@
       "automation": 100,
       "information": 98,
       "tools": 98
-    }
+    },
+    "medianYears": 5
   },
   "Solutions Architect": {
     "terms": [
@@ -298,7 +306,8 @@
       "systems": 100,
       "development": 94,
       "platform": 92
-    }
+    },
+    "medianYears": 8
   },
   "Engineering Manager": {
     "terms": [
@@ -329,7 +338,8 @@
       "manager": 125,
       "leadership": 123,
       "platform": 122
-    }
+    },
+    "medianYears": 5
   },
   "Data Analyst": {
     "terms": [
@@ -358,7 +368,8 @@
       "maintain": 91,
       "information": 88,
       "technical": 87
-    }
+    },
+    "medianYears": 4
   },
   "Data Scientist": {
     "terms": [
@@ -391,7 +402,8 @@
       "development": 90,
       "tools": 88,
       "model": 88
-    }
+    },
+    "medianYears": 5
   },
   "Data Engineer": {
     "terms": [
@@ -424,7 +436,8 @@
       "python": 131,
       "hands": 128,
       "tools": 122
-    }
+    },
+    "medianYears": 5
   },
   "Machine Learning Engineer": {
     "terms": [
@@ -457,7 +470,8 @@
       "design": 47,
       "python": 44,
       "solutions": 43
-    }
+    },
+    "medianYears": 5
   },
   "Business Analyst": {
     "terms": [
@@ -486,7 +500,8 @@
       "technical": 109,
       "tools": 106,
       "information": 106
-    }
+    },
+    "medianYears": 5
   },
   "Analytics Manager": {
     "terms": [
@@ -515,7 +530,8 @@
       "complex": 32,
       "manager": 31,
       "translate": 30
-    }
+    },
+    "medianYears": 5
   },
   "Product Manager": {
     "terms": [
@@ -544,7 +560,8 @@
       "design": 116,
       "development": 116,
       "roadmap": 115
-    }
+    },
+    "medianYears": 5
   },
   "Associate Product Manager": {
     "terms": [
@@ -573,7 +590,8 @@
       "development": 8,
       "identify": 8,
       "design": 8
-    }
+    },
+    "medianYears": 5
   },
   "Technical Product Manager": {
     "terms": [
@@ -604,7 +622,8 @@
       "development": 22,
       "driven": 21,
       "roadmap": 21
-    }
+    },
+    "medianYears": 5
   },
   "Growth Product Manager": {
     "terms": [
@@ -666,7 +685,8 @@
       "analytical": 30,
       "cross": 30,
       "opportunities": 30
-    }
+    },
+    "medianYears": 5
   },
   "Product Owner": {
     "terms": [
@@ -695,7 +715,8 @@
       "engineering": 35,
       "design": 34,
       "agile": 34
-    }
+    },
+    "medianYears": 7
   },
   "Product Management": {
     "terms": [
@@ -724,7 +745,8 @@
       "design": 116,
       "development": 116,
       "roadmap": 115
-    }
+    },
+    "medianYears": 5
   },
   "Product Designer": {
     "terms": [
@@ -757,7 +779,8 @@
       "research": 56,
       "experiences": 55,
       "closely": 55
-    }
+    },
+    "medianYears": 5
   },
   "UX Designer": {
     "terms": [
@@ -790,7 +813,8 @@
       "experiences": 9,
       "interaction": 9,
       "systems": 9
-    }
+    },
+    "medianYears": 5
   },
   "UX Researcher": {
     "terms": [
@@ -856,7 +880,8 @@
       "content": 16,
       "tools": 16,
       "marketing": 15
-    }
+    },
+    "medianYears": 3
   },
   "Motion Designer": {
     "terms": [
@@ -924,7 +949,8 @@
       "existing": 27,
       "manager": 27,
       "selling": 27
-    }
+    },
+    "medianYears": 2
   },
   "Business Development Manager": {
     "terms": [
@@ -955,7 +981,8 @@
       "pipeline": 45,
       "marketing": 44,
       "generation": 43
-    }
+    },
+    "medianYears": 4
   },
   "Sales Manager": {
     "terms": [
@@ -986,7 +1013,8 @@
       "assigned": 104,
       "marketing": 99,
       "revenue": 97
-    }
+    },
+    "medianYears": 5
   },
   "Account Executive": {
     "terms": [
@@ -1019,7 +1047,8 @@
       "pipeline": 77,
       "accounts": 76,
       "process": 76
-    }
+    },
+    "medianYears": 5
   },
   "Account Manager": {
     "terms": [
@@ -1050,7 +1079,8 @@
       "performance": 100,
       "market": 99,
       "cross": 98
-    }
+    },
+    "medianYears": 5
   },
   "Key Account Manager": {
     "terms": [
@@ -1081,7 +1111,8 @@
       "value": 28,
       "services": 27,
       "solutions": 27
-    }
+    },
+    "medianYears": 6
   },
   "Field Sales": {
     "terms": [
@@ -1116,7 +1147,8 @@
       "initial": 123,
       "achieve": 122,
       "interpersonal": 119
-    }
+    },
+    "medianYears": 2
   },
   "Inside Sales": {
     "terms": [
@@ -1147,7 +1179,8 @@
       "responsible": 16,
       "email": 15,
       "leads": 15
-    }
+    },
+    "medianYears": 3
   },
   "Partnerships Manager": {
     "terms": [
@@ -1178,7 +1211,8 @@
       "people": 15,
       "growth": 15,
       "process": 15
-    }
+    },
+    "medianYears": 5
   },
   "Digital Marketing Manager": {
     "terms": [
@@ -1242,7 +1276,8 @@
       "growth": 22,
       "how": 22,
       "ads": 21
-    }
+    },
+    "medianYears": 1
   },
   "Growth Marketer": {
     "terms": [
@@ -1308,7 +1343,8 @@
       "cross": 17,
       "functional": 17,
       "content": 16
-    }
+    },
+    "medianYears": 6
   },
   "Content Marketing": {
     "terms": [
@@ -1341,7 +1377,8 @@
       "services": 11,
       "real": 11,
       "social": 11
-    }
+    },
+    "medianYears": 2
   },
   "Brand Manager": {
     "terms": [
@@ -1374,7 +1411,8 @@
       "how": 8,
       "global": 8,
       "impact": 8
-    }
+    },
+    "medianYears": 5
   },
   "SEO Specialist": {
     "terms": [
@@ -1436,7 +1474,8 @@
       "global": 42,
       "performance": 39,
       "processes": 38
-    }
+    },
+    "medianYears": 4
   },
   "Finance Manager": {
     "terms": [
@@ -1465,7 +1504,8 @@
       "manager": 49,
       "operations": 48,
       "analysis": 48
-    }
+    },
+    "medianYears": 5
   },
   "Relationship Manager": {
     "terms": [
@@ -1498,7 +1538,8 @@
       "loans": 83,
       "solutions": 82,
       "deposits": 82
-    }
+    },
+    "medianYears": 3
   },
   "Credit Analyst": {
     "terms": [
@@ -1527,7 +1568,8 @@
       "etc.": 12,
       "compliance": 12,
       "operations": 11
-    }
+    },
+    "medianYears": 3
   },
   "Risk Analyst": {
     "terms": [
@@ -1556,7 +1598,8 @@
       "believe": 19,
       "financial": 19,
       "process": 18
-    }
+    },
+    "medianYears": 4
   },
   "Investment Banking": {
     "terms": [
@@ -1622,7 +1665,8 @@
       "target": 16,
       "productivity": 16,
       "financial": 16
-    }
+    },
+    "medianYears": 4
   },
   "Internal Audit": {
     "terms": [
@@ -1651,7 +1695,8 @@
       "external": 14,
       "identify": 14,
       "compliance": 13
-    }
+    },
+    "medianYears": 4
   },
   "Treasury Manager": {
     "terms": [
@@ -1711,7 +1756,8 @@
       "processes": 105,
       "technology": 104,
       "improvement": 99
-    }
+    },
+    "medianYears": 5
   },
   "Operations Executive": {
     "terms": [
@@ -1744,7 +1790,8 @@
       "resolve": 57,
       "track": 56,
       "issues": 56
-    }
+    },
+    "medianYears": 3
   },
   "Program Manager": {
     "terms": [
@@ -1773,7 +1820,8 @@
       "leadership": 97,
       "project": 96,
       "engineering": 94
-    }
+    },
+    "medianYears": 7
   },
   "Project Manager": {
     "terms": [
@@ -1804,7 +1852,8 @@
       "technical": 98,
       "risks": 95,
       "plans": 93
-    }
+    },
+    "medianYears": 7
   },
   "Supply Chain Manager": {
     "terms": [
@@ -1833,7 +1882,8 @@
       "identify": 17,
       "global": 16,
       "improve": 15
-    }
+    },
+    "medianYears": 6
   },
   "Logistics Manager": {
     "terms": [
@@ -1862,7 +1912,8 @@
       "planning": 7,
       "process": 7,
       "automation": 7
-    }
+    },
+    "medianYears": 5
   },
   "Procurement Manager": {
     "terms": [
@@ -1895,7 +1946,8 @@
       "category": 18,
       "identify": 17,
       "strategic": 17
-    }
+    },
+    "medianYears": 8
   },
   "Category Manager": {
     "terms": [
@@ -1928,7 +1980,8 @@
       "cross": 7,
       "functional": 7,
       "strategy": 7
-    }
+    },
+    "medianYears": 8
   },
   "HR Manager": {
     "terms": [
@@ -1959,7 +2012,8 @@
       "compliance": 17,
       "development": 17,
       "strategic": 16
-    }
+    },
+    "medianYears": 8
   },
   "HR Executive": {
     "terms": [
@@ -2021,7 +2075,8 @@
       "processes": 11,
       "planning": 11,
       "initiatives": 10
-    }
+    },
+    "medianYears": 7
   },
   "Talent Acquisition": {
     "terms": [
@@ -2050,7 +2105,8 @@
       "maintain": 39,
       "recruiting": 38,
       "process": 38
-    }
+    },
+    "medianYears": 5
   },
   "Technical Recruiter": {
     "terms": [
@@ -2114,7 +2170,8 @@
       "conduct": 18,
       "quality": 17,
       "employee": 17
-    }
+    },
+    "medianYears": 5
   },
   "Management Consultant": {
     "terms": [
@@ -2143,7 +2200,8 @@
       "market": 25,
       "complex": 25,
       "stakeholder": 23
-    }
+    },
+    "medianYears": 5
   },
   "Strategy Manager": {
     "terms": [
@@ -2172,7 +2230,8 @@
       "initiatives": 17,
       "functional": 17,
       "manager": 16
-    }
+    },
+    "medianYears": 5
   },
   "Business Operations": {
     "terms": [
@@ -2201,7 +2260,8 @@
       "process": 12,
       "closely": 12,
       "driven": 12
-    }
+    },
+    "medianYears": 5
   },
   "Corporate Development": {
     "terms": [
@@ -2263,7 +2323,8 @@
       "strategic": 25,
       "account": 25,
       "platform": 24
-    }
+    },
+    "medianYears": 3
   },
   "Customer Support Executive": {
     "terms": [
@@ -2329,7 +2390,8 @@
       "tools": 25,
       "troubleshooting": 25,
       "nbsp": 24
-    }
+    },
+    "medianYears": 3
   },
   "Service Delivery Manager": {
     "terms": [
@@ -2360,6 +2422,7 @@
       "compliance": 9,
       "global": 9,
       "proven": 9
-    }
+    },
+    "medianYears": 8
   }
 }
