@@ -1440,9 +1440,24 @@ returned **zero** across 642 sampled India roles. A future session that finds on
 employer publishing salary and concludes the index has it should re-run
 `npm run probe:salary` before building anything.
 
-⚠️ **`workday` (324 boards) was not probed** — its listing is a paged POST, not a
-GET. The 2.2% covers the other six providers. Probing Workday is the one thing
-that could still move this number.
+~~⚠️ **`workday` (324 boards) was not probed.**~~ **Probed 2026-09-15 (TASK-070):
+0 of 168 postings across 7 boards carry salary in either tier. 0.0%.** By the rule
+of three that is a 95% upper bound near 1.8%, so Workday is comfortably under the
+gate and **the question is now closed across all seven providers.**
+
+Workday needed its own probe, and not because of the POST. Its listing rows carry
+title, path and `locationsText` and nothing else — `description: ''` in the
+adapter, filled later by `fillDescriptions()`. A listing-only probe would have
+reported 0% for a quarter of the registry and the zero would have been an
+artefact of where we looked rather than a fact about employers. The probe fetches
+the **detail** payload per posting instead, capped at 25 per board, using only
+`fetchAll` and `detailUrl` so nothing in the ingest had to be reshaped for a
+measurement.
+
+**Final measurement, all seven providers, 3,468 India roles: 2.2%** — 1.1%
+structured, 1.1% in text. Greenhouse (567 boards, the largest provider) and
+Workday (324 boards) both return **zero**. Recruitee is the only provider above
+5%, at 8.5%.
 
 **This also corrects `docs/COMPETITOR-ANALYSIS.local.md`**, which ranked closing
 the salary gap as recommendation #2 on the strength of Naukri scoring salary as

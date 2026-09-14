@@ -17,6 +17,45 @@ This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio a
 - Full system orientation: `productos/AGENTS.md`.
 <!-- END PRODUCTOS -->
 
+## ⚑ How every Saaf session ends
+
+**Non-negotiable, and it applies to every session regardless of what was asked.**
+Founder instruction, 2026-09-15. A session that does good work and leaves no
+trace of where things stand costs the next session the time it takes to
+rediscover it — which is what `docs/HANDOFF.md` has already had to be corrected
+for twice.
+
+Before your final message, do these three things **in the repository**, not only
+in the reply:
+
+1. **Tick the boxes.** `docs/ROADMAP.md` is the tracked surface — its own header
+   says the agent MUST mark tasks `- [x]` as they are finished. Update the
+   `**Status:**` count in the same edit. If the work was not on the roadmap, add
+   the task, then tick it. Work that is not in the roadmap did not happen as far
+   as the next session can tell.
+2. **Record the *why* in `docs/PROJECT-STATE.md`** when a decision, a
+   measurement, or a reversal came out of the work. Numbers with the date they
+   were measured. A correction goes in struck through, never deleted — the
+   mistake is usually worth more than the sentence was.
+3. **Update `docs/HANDOFF.md`** if anything now needs the founder: a migration to
+   apply, a deploy to run, an account only they hold. Say what is *live*, not
+   what is *written* — committing is not shipping, and that distinction has been
+   got wrong here before.
+
+Then close the reply itself with two short sections, in this order:
+
+- **Progress** — what moved, with the roadmap count (`Phase 8 — n/13`) and the
+  measured numbers behind any claim.
+- **Next steps** — what comes next, and **separately, what only the founder can
+  do.** Those two lists are different and merging them is how the founder-only
+  items get deferred through five phases, which has already happened.
+
+⚠️ **State what was verified and how.** "Tests pass" is not "it works in the
+browser", and "committed" is not "deployed". If something is unverified, say
+`unverified`. This repository has been given confident wrong answers by grepping
+served HTML three times; the standing rule is to open the page.
+
+
 <!-- BEGIN ARCHITECTURE -->
 ## Architecture invariants
 

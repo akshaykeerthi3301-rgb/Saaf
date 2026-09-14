@@ -163,6 +163,69 @@ function descriptionOf(provider: string, j: Record<string, unknown>): string {
   }
 }
 
+/**
+ * ⚠️ WORKDAY NEEDS ITS OWN PROBE, AND NOT BECAUSE OF THE POST.
+ *
+ * The other six providers return a description in their listing, so one GET per
+ * board answers both tiers. Workday's listing rows carry title, path and
+ * locationsText and nothing else — `description: ''` in the adapter, filled
+ * later by fillDescriptions(). So a listing-only probe would report 0% for 324
+ * boards, a quarter of the registry, and the zero would be an artefact of where
+ * we looked rather than a fact about employers.
+ *
+ * This fetches the DETAIL payload per posting, which is where jobDescription
+ * and any pay range actually live. That is one request per posting, so it
+ * samples hard: a handful of boards, a cap per board. It uses only the
+ * adapter's public interface (fetchAll + detailUrl) so nothing in the ingest
+ * had to be exported or reshaped for a measurement.
+ */
+const WD_DETAILS_PER_BOARD = 25
+
+async function probeWorkday(boards: Board[], perProvider: number): Promise<Tally> {
+  const adapter = ADAPTERS.find((a) => a.provider === 'workday')
+  const t: Tally = { boards: 0, postings: 0, india: 0, tier1: 0, tier2: 0, examples: [] }
+  if (!adapter?.fetchAll || !adapter.detailUrl) return t
+
+  const picked = boards
+    .filter((b) => b.provider === 'workday')
+    .sort((a, b) => (b.india ?? 0) - (a.india ?? 0))
+    .slice(0, perProvider)
+
+  for (const b of picked) {
+    let roles: { externalId: string }[] = []
+    try {
+      // fetchAll already applies the India facet, so everything it returns is
+      // an India role and resolveInIndia() would be a second, weaker filter.
+      const res = await adapter.fetchAll(b.token, { deadline: Date.now() + 25_000 })
+      roles = res.roles
+    } catch { continue }
+    if (!roles.length) continue
+    t.boards++
+
+    for (const r of roles.slice(0, WD_DETAILS_PER_BOARD)) {
+      const detail = await fetchJson(adapter.detailUrl(b.token, r.externalId))
+      if (!detail) continue
+      t.postings++
+      t.india++
+
+      const struct = structuredComp(detail)
+      if (struct) {
+        t.tier1++
+        if (t.examples.length < 3) t.examples.push(`[T1 ${b.company_name ?? b.token}] ${struct}`)
+        continue
+      }
+      const info = (detail as Record<string, unknown>).jobPostingInfo
+      const desc = String((info as Record<string, unknown>)?.jobDescription ?? '')
+      if (TEXT_FIGURE.test(desc) && TEXT_SALARY.test(desc)) {
+        t.tier2++
+        if (t.examples.length < 3) t.examples.push(`[T2 ${b.company_name ?? b.token}] …${desc.match(TEXT_FIGURE)?.[0] ?? ''}…`)
+      }
+    }
+    process.stdout.write('.')
+  }
+  return t
+}
+
 type Tally = { boards: number; postings: number; india: number; tier1: number; tier2: number; examples: string[] }
 
 async function main(): Promise<void> {
@@ -173,7 +236,7 @@ async function main(): Promise<void> {
   // what share of the INDEX carries salary, which is weighted to large boards.
   const byProvider = new Map<string, Board[]>()
   for (const b of boards) {
-    if (b.provider === 'workday') continue // POST + paging; excluded, reported below
+    if (b.provider === 'workday') continue // handled by probeWorkday() — different shape entirely
     const list = byProvider.get(b.provider) ?? []
     list.push(b)
     byProvider.set(b.provider, list)
@@ -220,6 +283,9 @@ async function main(): Promise<void> {
     console.log(` ${provider}`)
   }
 
+  const wd = await probeWorkday(boards, Math.max(3, Math.floor(BOARDS_PER_PROVIDER / 2)))
+  if (wd.boards) { tallies.set('workday*', wd); console.log(' workday') }
+
   console.log('\n\nSALARY COVERAGE — India roles only')
   console.log('─'.repeat(76))
   console.log('provider'.padEnd(17), 'boards'.padStart(7), 'india'.padStart(7), 'tier1'.padStart(7), 'tier2'.padStart(7), 'any%'.padStart(8))
@@ -239,8 +305,8 @@ async function main(): Promise<void> {
   console.log('\nExamples of what was found:')
   for (const [, t] of tallies) for (const e of t.examples) console.log('  ' + e)
 
-  console.log('\n⚠️ workday (324 boards) was NOT probed — its listing is a paged POST, not a GET.')
-  console.log('   Probe it separately before treating this total as the whole index.\n')
+  console.log('\n* workday is sampled by DETAIL payload — its listing carries no description,')
+  console.log(`  so up to ${WD_DETAILS_PER_BOARD} postings per board are fetched individually. Smaller n, same question.`)
 
   console.log('THE GATE (docs plan §2.3):')
   const verdict = anyPct >= 15 ? 'BUILD THE FULL EPIC — salary enters the scorer'
