@@ -185,25 +185,67 @@ function titleAffinity(preferredRoles: string[], title: string): ScoreComponent 
     return { key: 'title', label: 'Role match', points: max * 0.5, max, note: 'No preferred role set.' }
   }
 
-  let best = { coverage: 0, hits: 0, want: 0, role: candidates[0] }
+  let evaluated = false
+  let best = { fit: 0, recall: 0, hits: 0, want: 0, role: candidates[0], extra: 0 }
   for (const role of candidates) {
     const want = [...new Set(tokens(role))]
     if (want.length === 0) continue
+    evaluated = true
     const hits = want.filter((w) => have.has(w)).length
-    const coverage = hits / want.length
-    if (coverage > best.coverage) best = { coverage, hits, want: want.length, role }
+    const recall = hits / want.length
+    /**
+     * ⚠️ THE SECOND HALF, AND ITS ABSENCE MADE THIS COMPONENT A CONSTANT.
+     * Until 2026-09-14 the score was recall alone — "does the posting's title
+     * contain every word I asked for" — which is the SAME QUESTION the index
+     * query already filtered on. Roles are retrieved by matching the preferred
+     * role and were then awarded the heaviest weight in the model for matching
+     * the preferred role. Measured across 504 real roles it paid out at 99%,
+     * and across 40 rendered cards 39 scored a flat 28/28.
+     *
+     * What it never asked is how much of the POSTING is your role. "Product
+     * Analyst" is every word of "Business Execution Consultant - Product
+     * Support Analyst", and that posting is not the job the candidate asked
+     * for — it was the top result on the live shortlist at 88%.
+     *
+     * Precision supplies it, weighted so recall still dominates (Fβ, β=2).
+     * Indian postings routinely carry team and grade in the title — "Product
+     * Analyst - Assistant Manager - Lending" is a product analyst job — so a
+     * symmetric F1 would punish a correct match for its employer's naming
+     * convention. β=2 costs that posting a little and costs a buried match a
+     * lot, which is the distinction worth drawing.
+     */
+    const precision = have.size === 0 ? 0 : hits / have.size
+    const fit =
+      recall === 0 || precision === 0
+        ? 0
+        : (5 * precision * recall) / (4 * precision + recall)
+    if (fit > best.fit) {
+      best = { fit, recall, hits, want: want.length, role, extra: Math.max(0, have.size - hits) }
+    }
   }
 
-  if (best.want === 0) {
+  /**
+   * ⚠️ "NOTHING MATCHED" IS NOT "NOTHING WAS ASKED", AND THIS CONFLATED THEM.
+   * `best.want` stays 0 when no candidate role scores above zero, so a posting
+   * sharing no words at all with the preferred role fell into the branch below
+   * — scoring half marks and telling the candidate "No preferred role set."
+   * when they had set one. Half the weight of the heaviest component, awarded
+   * to the roles that match least, under a note that was simply untrue.
+   */
+  if (!evaluated) {
     return { key: 'title', label: 'Role match', points: max * 0.5, max, note: 'No preferred role set.' }
   }
 
-  const points = Math.round(max * best.coverage)
+  const points = Math.round(max * best.fit)
   const which = candidates.length > 1 ? ` (${best.role})` : ''
   const note =
-    best.coverage === 1 ? `Title matches every word of the role you asked for${which}.`
-    : best.coverage > 0 ? `Title matches ${best.hits} of ${best.want} words in the role you asked for${which}.`
-    : 'Title shares no words with any role you asked for.'
+    best.recall === 1 && best.extra === 0
+      ? `Title matches every word of the role you asked for${which}.`
+    : best.recall === 1
+      ? `Title carries every word of the role you asked for${which}, alongside ${best.extra} other${best.extra === 1 ? '' : 's'} — so it is close to your role rather than exactly it.`
+    : best.recall > 0
+      ? `Title matches ${best.hits} of ${best.want} words in the role you asked for${which}.`
+    : `Title shares no words with ${candidates.length > 1 ? 'any role' : 'the role'} you asked for.`
 
   return { key: 'title', label: 'Role match', points, max, note }
 }
@@ -443,13 +485,27 @@ function locationFit(
   return at(Math.round(max * 0.3), 'In another city.', 'elsewhere')
 }
 
-function workModeFit(preference: string | undefined, role: RoleFacts): ScoreComponent {
+/**
+ * ⚠️ RETURNS NULL WHERE IT USED TO RETURN FULL MARKS, AND THAT WAS 7 FREE
+ * POINTS ON EVERY ROLE IN THE INDEX. Measured 2026-09-14 across 504 scored
+ * roles: this component paid out at 100%. A component that never varies is not
+ * a component — it is a constant wearing a weight, and it compresses every
+ * score in the product toward the top of the range.
+ *
+ * The candidate who set no preference has not told us anything, so there is
+ * nothing here to measure. `scoreRole` normalises over the components that
+ * apply, so returning null removes this from the denominator too: the score
+ * neither rises nor falls, it stops counting a question nobody asked.
+ *
+ * `src/lib/jd-match.ts` reached the same conclusion for the pasted-JD surface
+ * and worked around it with `omit`. That fix was correct and in the wrong
+ * place — every caller had to remember it, and the main shortlist never did.
+ */
+function workModeFit(preference: string | undefined, role: RoleFacts): ScoreComponent | null {
   const max = WEIGHTS.work_mode
   const loc = `${role.locationRaw ?? ''} ${role.city ?? ''}`.trim()
 
-  if (!preference || preference === 'no_preference') {
-    return { key: 'work_mode', label: 'Work mode', points: max, max, note: 'No work-mode preference set.' }
-  }
+  if (!preference || preference === 'no_preference') return null
   const remote = isRemoteLocation(loc)
   const hybrid = isHybridLocation(loc)
   const matches =
@@ -468,14 +524,23 @@ function workModeFit(preference: string | undefined, role: RoleFacts): ScoreComp
  * A credential is binary and cannot be earned between now and applying — so it
  * carries the heaviest single penalty in the model. It still does not withhold.
  */
-function credentialFit(held: string | undefined, reqs: TypedRequirement[]): ScoreComponent {
+/**
+ * ⚠️ AND THE SAME HERE — 98% AVERAGE AWARD ACROSS 504 ROLES. Only 780 of the
+ * roles we index state a credential at all, so for almost every posting this
+ * component was handing out its full 10 points for a requirement that did not
+ * exist. A posting that asks for nothing has told us nothing about the
+ * candidate, and scoring it rewards them for the posting's silence.
+ *
+ * Note the asymmetry this preserves, which is the point: a posting that DOES
+ * require a credential the candidate holds still earns 10/10, and one they do
+ * not hold still scores 0/10. Only the vacuous case is dropped.
+ */
+function credentialFit(held: string | undefined, reqs: TypedRequirement[]): ScoreComponent | null {
   const max = WEIGHTS.credential
   const required = reqs.filter(
     (r) => r.kind === 'credential' && r.credential && r.confidence >= CONFIDENCE_THRESHOLD
   )
-  if (required.length === 0) {
-    return { key: 'credential', label: 'Credential', points: max, max, note: 'No credential required.' }
-  }
+  if (required.length === 0) return null
   const holds = held && held !== 'none' ? held : null
   const met = required.some((r) => r.credential === holds)
   const wanted = required.map((r) => r.credential).join(' or ')

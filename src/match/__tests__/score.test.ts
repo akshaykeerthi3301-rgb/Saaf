@@ -57,7 +57,18 @@ describe('components', () => {
     // Crude stemming has to survive the plural/gerund forms real titles use.
     const c = scoreRole(junior, { ...role, title: 'Product Management - Lending' }, [])
       .components.find((x) => x.key === 'title')!
-    expect(c.points).toBe(c.max)
+    /**
+     * ⚠️ NO LONGER FULL MARKS, AND THAT IS THE POINT OF THIS TEST HOLDING.
+     * What it pins is that STEMMING works — every word of the search is found,
+     * which is why the note below says so. Since 2026-09-14 the component also
+     * weighs how much of the POSTING the search accounts for, and "- Lending"
+     * is scope the candidate did not ask for, so a near-miss scores near-full
+     * rather than full. Asserting c.max here would quietly reinstate the
+     * recall-only model this test is not about.
+     */
+    expect(c.note).toMatch(/every word of the role you asked for/)
+    expect(c.points).toBeGreaterThan(c.max * 0.8)
+    expect(c.points).toBeLessThan(c.max)
   })
 
   it('penalises a credential the candidate does not hold, without withholding', () => {
@@ -310,6 +321,125 @@ describe('entry-level titles are read as a ceiling', () => {
   })
 })
 
+describe('components that had nothing to measure', () => {
+  /**
+   * ⚠️ ALL THREE CASES BELOW USED TO PAY OUT FULL MARKS, AND TOGETHER THEY WERE
+   * 45 OF THE 100 POINTS. Measured across 504 real roles on 2026-09-14:
+   * work mode 100% average award, credential 98%, title 99%. A component that
+   * returns the same value for every candidate is not measuring anything — it
+   * raises the floor and compresses every score in the product.
+   */
+  const cand = {
+    yearsExperience: 3, city: 'Bengaluru', preferredRole: 'Product Analyst', skills: [],
+  } as unknown as Parameters<typeof scoreRole>[0]
+  const posting = { title: 'Product Analyst', locationRaw: 'Bengaluru, India', city: 'Bengaluru' }
+  const keys = (b: ReturnType<typeof scoreRole>) => b.components.map((c) => c.key)
+
+  it('does not score work mode when the candidate set no preference', () => {
+    expect(keys(scoreRole(cand, posting, []))).not.toContain('work_mode')
+  })
+
+  it('scores work mode when the candidate did set one', () => {
+    const withPref = { ...cand, workModePreference: 'remote' } as typeof cand
+    expect(keys(scoreRole(withPref, posting, []))).toContain('work_mode')
+  })
+
+  it('does not score credential when the posting names none', () => {
+    expect(keys(scoreRole(cand, posting, []))).not.toContain('credential')
+  })
+
+  it('still scores credential — both ways — when the posting names one', () => {
+    const reqs = [req({ kind: 'credential', credential: 'CA' })]
+    const lacks = scoreRole(cand, posting, reqs)
+    const holds = scoreRole({ ...cand, credential: 'CA' } as typeof cand, posting, reqs)
+    expect(keys(lacks)).toContain('credential')
+    expect(holds.total).toBeGreaterThan(lacks.total)
+  })
+
+  it('omitting removes the component from the denominator, not just the numerator', () => {
+    /**
+     * The candidate must not be pushed DOWN by a question nobody asked. Stated
+     * as a comparison rather than a threshold, because that is the actual
+     * claim: a candidate who set a work-mode preference AND met it scores the
+     * same as one who was never asked — not more, not less.
+     */
+    const unasked = scoreRole(cand, posting, [])
+    const askedAndMet = scoreRole(
+      { ...cand, workModePreference: 'onsite' } as typeof cand, posting, [])
+    const askedAndMissed = scoreRole(
+      { ...cand, workModePreference: 'remote' } as typeof cand, posting, [])
+
+    /**
+     * The three-way relationship, stated exactly because the middle case is
+     * easy to get wrong. Meeting a preference you expressed is worth a little
+     * — adding a full-marks component lifts a normalised average. Not being
+     * asked costs almost nothing. MISSING one costs real points.
+     *
+     * What must never return is the old behaviour, where not being asked paid
+     * the same 7/7 as meeting it, on every role in the index.
+     */
+    expect(askedAndMet.total).toBeGreaterThan(unasked.total)
+    expect(unasked.total - askedAndMissed.total).toBeGreaterThan(5)
+    expect(askedAndMet.total - unasked.total).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('a title component that is not the search query again', () => {
+  /**
+   * ⚠️ THE DEFECT THIS PINS IS ARCHITECTURAL. Roles reach the scorer BECAUSE
+   * their title matched the preferred role, and the component then awarded the
+   * heaviest weight in the model for matching the preferred role — measuring
+   * the retrieval query rather than the candidate. 39 of 40 cards on the live
+   * shortlist scored a flat 28/28.
+   */
+  const cand = {
+    yearsExperience: 3, city: 'Bengaluru', preferredRole: 'Product Analyst', skills: [],
+  } as unknown as Parameters<typeof scoreRole>[0]
+  const titleFor = (title: string) =>
+    scoreRole(cand, { title, locationRaw: 'Bengaluru, India', city: 'Bengaluru' }, [])
+      .components.find((c) => c.key === 'title')!
+
+  it('ranks an exact title above one that merely contains it', () => {
+    /**
+     * The live example: "Business Execution Consultant - Product Support
+     * Analyst" contains every word of "Product Analyst" and was the TOP result
+     * at 88%. It is not the job the candidate asked for.
+     */
+    const exact = titleFor('Product Analyst')
+    const buried = titleFor('Business Execution Consultant - Product Support Analyst')
+    expect(exact.points).toBe(exact.max)
+    expect(buried.points).toBeLessThan(exact.points * 0.8)
+  })
+
+  it('costs an Indian scope-and-grade title only a little', () => {
+    // "Product Analyst - Assistant Manager - Lending" IS a product analyst job.
+    // A symmetric F1 would punish it for its employer's naming convention.
+    const scoped = titleFor('Product Analyst - Assistant Manager - Lending')
+    expect(scoped.points).toBeGreaterThan(scoped.max * 0.7)
+    expect(scoped.points).toBeLessThan(scoped.max)
+  })
+
+  it('separates a title that shares nothing from a candidate who asked for nothing', () => {
+    /**
+     * ⚠️ THESE WERE THE SAME BRANCH, AND BOTH SCORED HALF MARKS. A posting
+     * sharing no words with the preferred role fell through to the
+     * no-role-set fallback — half the heaviest component, awarded to the worst
+     * matches, under a note saying "No preferred role set." when one was set.
+     */
+    const unrelated = titleFor('Data Scientist')
+    expect(unrelated.points).toBe(0)
+    expect(unrelated.note).toMatch(/shares no words/)
+
+    const noRole = scoreRole(
+      { ...cand, preferredRole: undefined } as typeof cand,
+      { title: 'Data Scientist', locationRaw: 'Bengaluru, India', city: 'Bengaluru' },
+      [],
+    ).components.find((c) => c.key === 'title')!
+    expect(noRole.note).toMatch(/No preferred role set/)
+    expect(noRole.points).toBeGreaterThan(0)
+  })
+})
+
 describe('the worked example published on the landing page', () => {
   // src/app/(marketing)/page.tsx prints these numbers as the product's own
   // proof that its arithmetic can be checked. They were wrong for months —
@@ -322,7 +452,7 @@ describe('the worked example published on the landing page', () => {
       { title: 'Staff Engineer', locationRaw: 'Bengaluru, India', city: 'Bengaluru' },
       [req({ minYears: 8 })],
     )
-    expect(b.total).toBe(35)
+    expect(b.total).toBe(31)
     const at = (k: string) => {
       const c = b.components.find((x) => x.key === k)!
       return `${c.points}/${c.max}`
@@ -330,9 +460,19 @@ describe('the worked example published on the landing page', () => {
     expect(at('title')).toBe('28/28')
     expect(at('seniority')).toBe('1/25')
     expect(at('location')).toBe('10/10')
-    expect(at('work_mode')).toBe('7/7')
-    expect(at('credential')).toBe('10/10')
-    expect(at('cap')).toBe('35/50')
+    expect(at('cap')).toBe('31/50')
+
+    /**
+     * ⚠️ WORK MODE AND CREDENTIAL ARE ABSENT, AND THAT IS THE FIX, NOT A
+     * REGRESSION. Both used to return full marks for this candidate — who set
+     * no work-mode preference against a posting requiring no credential — so
+     * the published example carried seventeen points awarded for absence of
+     * data. Measured across 504 real roles on 2026-09-14 they paid out at 100%
+     * and 98%. The total moved 35 → 31 because those points stopped propping
+     * up a candidate six years under the bar.
+     */
+    expect(b.components.map((c) => c.key)).not.toContain('work_mode')
+    expect(b.components.map((c) => c.key)).not.toContain('credential')
   })
 })
 
@@ -392,8 +532,10 @@ describe('several preferred roles', () => {
     // happily take LOWERS the score of every posting that answers the first.
     const one = titleOf({ ...base, preferredRoles: ['Product Manager'] })
     const two = titleOf({ ...base, preferredRoles: ['Product Manager', 'Data Analyst'] })
+    // The claim is that the second role costs nothing — not that either scores
+    // full marks, which depends on how closely this posting's title is written.
     expect(two.points).toBe(one.points)
-    expect(two.points).toBe(two.max)
+    expect(two.points).toBeGreaterThan(0)
   })
 
   it('names which of the roles matched, when there is more than one', () => {
@@ -418,7 +560,9 @@ describe('several preferred roles', () => {
       preferredRole: 'Product Manager',
       preferredRoles: ['Product Manager'],
     })
-    expect(both.points).toBe(both.max)
+    const single = titleOf({ ...base, preferredRoles: ['Product Manager'] })
+    // Deduping is the claim: the same role from both columns scores once.
+    expect(both.points).toBe(single.points)
   })
 })
 

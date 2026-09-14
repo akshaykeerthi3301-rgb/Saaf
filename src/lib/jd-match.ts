@@ -306,15 +306,32 @@ export async function matchJdToResume(input: JdMatchInput): Promise<JdMatchResul
    * The total is normalised over the components that apply, so this does not
    * push scores down; it stops counting a question we never asked.
    *
-   * Credential is deliberately KEPT. "No credential required" is a finding
-   * about the POSTING, read from its text — not an assumption about the
-   * candidate — so it is earned in a way work mode is not.
+   * ⚠️ THE `omit` ARGUMENT IS GONE, AND CREDENTIAL WENT WITH IT (2026-09-14).
+   * `scoreRole` now drops a component with nothing to measure, wherever it is
+   * called from — so this surface no longer has to remember, and the main
+   * shortlist stops handing out the free points this file worked around for
+   * itself. The reasoning above was right; it was in the wrong place.
+   *
+   * This paragraph used to argue that credential should be KEPT: "no credential
+   * required" is a finding about the POSTING, read from its text, not an
+   * assumption about the candidate. That is true and it is not enough. Measured
+   * across 504 real roles, the component paid out at 98% — because only 780 of
+   * the 23,184 roles we index state a credential at all. A score component
+   * measures FIT, and there is no question of fit where there is no
+   * requirement; the posting's silence is information about the posting, not
+   * about whether this candidate suits it.
+   *
+   * The trade it makes, stated plainly: a posting that requires a credential
+   * the candidate HOLDS now scores fractionally above an otherwise identical
+   * posting that requires none, because the first earns a component the second
+   * does not have. That is a real asymmetry and we think it is the right way
+   * round — clearing a stated bar is weak positive evidence, and facing no bar
+   * is not evidence at all.
    */
   const breakdown = scoreRole(
     profile,
     { title: title ?? '', description: input.jdText, locationRaw: locationRaw || undefined },
     requirements,
-    { omit: ['work_mode'] }
   )
 
   /**

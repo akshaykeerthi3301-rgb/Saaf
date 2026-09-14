@@ -238,11 +238,21 @@ export default function Landing() {
                 WEIGHTS or the caps change — see the test that pins them.
                 They were 35/35, 2/30, 15/15 and 10/10 until 2026-09-07: four
                 denominators the scorer has never used, on the one page whose
-                entire argument is that our arithmetic can be checked. */}
+                entire argument is that our arithmetic can be checked.
+
+                ⚠️ WORK MODE AND CREDENTIAL CAME OFF THIS LINE ON 2026-09-14,
+                and their absence is the honest version. Both used to pay out
+                full marks when the candidate had stated no preference and the
+                posting required nothing — measured at 100% and 98% average
+                award across 504 scored roles. Printing "Work mode 7/7 ·
+                Credential 10/10" here advertised seventeen points that were
+                awarded for absence of data, on the page arguing against scores
+                you cannot check. The scorer now omits a component with nothing
+                to measure, so the example shows three real ones. */}
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Role match 28/28 · Experience 1/25 — asks for 8 years, you have 2 · Location 10/10 ·
-              Work mode 7/7 · Credential 10/10 — then capped at 50, because you are well under the
-              bar this posting states.
+              Role match 28/28 · Experience 1/25 — asks for 8 years, you have 2 · Location 10/10 —
+              then capped at 50, because you are well under the bar this posting states. Work mode
+              and credential are not scored here: you set no preference and the posting names none.
             </p>
           </article>
         </div>

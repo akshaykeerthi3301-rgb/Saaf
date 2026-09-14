@@ -24,7 +24,8 @@
     "bench": "tsx scripts/bench-ats.ts",
     "bench:fixtures": "tsx bench/make-fixtures.ts",
     "rescore:saved": "tsx --env-file=.env.local scripts/rescore-saved.ts",
-    "bench:samples": "bash scripts/fetch-samples.sh"
+    "bench:samples": "bash scripts/fetch-samples.sh",
+    "bench:match": "tsx --env-file=.env.local scripts/bench-match.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

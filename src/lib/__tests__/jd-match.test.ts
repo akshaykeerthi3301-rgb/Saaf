@@ -62,7 +62,7 @@ afterEach(() => {
 })
 
 describe('criterion 1 — a real JD and résumé produce the /today breakdown', () => {
-  it('returns the five always-applicable components in the /today shape', async () => {
+  it('scores only the components that had something to measure', async () => {
     const r = await matchJdToResume({ jdText: JD, resumeText: RESUME, jdLocation: 'Bengaluru, India' })
 
     const keys = r.breakdown.components.map((c) => c.key).filter((k) => k !== 'cap')
@@ -71,11 +71,19 @@ describe('criterion 1 — a real JD and résumé produce the /today breakdown', 
     // component and normalises over what remains. That is deliberate (the
     // candidate is not penalised for a component that never had a chance), and
     // it is why the module warns when the row is missing.
-    expect(keys).toEqual(expect.arrayContaining(['title', 'seniority', 'location', 'credential']))
+    expect(keys).toEqual(expect.arrayContaining(['title', 'seniority', 'location']))
     expect(keys).not.toContain('skills')
-    // Omitted on this surface: nobody sets a work-mode preference when pasting
-    // a JD, and workModeFit() awards full marks for an absent one.
+    /**
+     * ⚠️ CREDENTIAL AND WORK MODE ARE BOTH ABSENT NOW, AND THIS TEST USED TO
+     * REQUIRE CREDENTIAL. Since 2026-09-14 `scoreRole` drops any component with
+     * nothing to measure, rather than each surface passing `omit`. This posting
+     * names no credential and the pasted-JD flow asks for no work-mode
+     * preference, so neither is a question anyone answered. Both used to return
+     * FULL MARKS in that situation — measured at 98% and 100% average award
+     * across 504 real roles, which is a constant, not a component.
+     */
     expect(keys).not.toContain('work_mode')
+    expect(keys).not.toContain('credential')
     expect(r.breakdown.total).toBeGreaterThan(0)
     expect(r.breakdown.total).toBeLessThanOrEqual(100)
   })
