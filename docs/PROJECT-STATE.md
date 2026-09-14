@@ -605,7 +605,8 @@ The same role, same two years, different background:
 *"Asks for 2 years of Product experience; your 2 years are in HR & People."*
 
 **Salary is still not modelled and cannot be**, because no employer in the index
-publishes one. What the founder wanted from it — an internship not reading as a
+publishes one. **Re-measured properly 2026-09-15 including structured ATS fields —
+2.2% of 3,509 India roles. The conclusion holds; see Stage T for the numbers.** What the founder wanted from it — an internship not reading as a
 90 — is a level problem, and level is now read from the title in both
 directions. Pay banding stays parked until there is a real source for it.
 
@@ -1383,6 +1384,72 @@ with free-text `title_tsv` matching, so retrieval and scoring never read this
 column. `npm run bench:match` before and after: identical, 0 components paying
 out at 90%+. `npm run bench`: 26 documents, no delta. 521 tests, lint 0 errors,
 RLS verified.
+
+### Stage T — salary was measured properly, and the answer is still no (2026-09-15)
+
+Build #2's first epic was salary-aware scoring. **It was cancelled by its own
+measurement gate, half a day in.** The gate is the deliverable; the epic is not.
+
+**The premise that started it was reasonable and wrong.** This file said at line
+607 that *"salary is still not modelled and cannot be, because no employer in the
+index publishes one."* That was measured against posting **text** — 12 of 799 on
+2026-09-07 — and never against the **structured compensation fields the ATS APIs
+return**. Three of six providers carry one and the pipeline has never asked:
+Lever sends `salaryRange`/`salaryDescription` in a payload we already receive and
+discard, Ashby returns `compensation` only behind `?includeCompensation=true`
+which is never passed, Recruitee sends a `salary` object. `scripts/seed-fixture.ts:28`
+explicitly sets `includeCompensation=false`, so somebody knew and turned it off.
+`NormalisedRole` has six fields and no slot for it.
+
+So the claim was unproven for half the index. `scripts/probe-salary-coverage.ts`
+proves it. **Measured over 3,509 live India roles across six providers:**
+
+| | share of India roles |
+|---|---|
+| tier 1 — a structured field with a real value | **1.1%** |
+| tier 2 — a figure parseable from the description | **1.1%** |
+| **any salary at all** | **2.2%** |
+
+The gate said <5% → do not score. **Salary stays out of the scorer.** What ships
+instead is the honest disclosure it already had, and tier-3 context from open
+government data if it earns its place later.
+
+⚠️ **THE FIRST VERSION OF THE PROBE REPORTED 27.4% AND WAS WRONG, IN THE HOUSE
+STYLE.** It asked *"is there a compensation field?"* rather than *"is there a
+value in it?"* — and Ashby and Recruitee both return the key on **every** posting
+with nothing inside:
+
+```
+ashby      compensation = {compensationTierSummary: null, compensationTiers: []}
+recruitee  salary       = {max: null, min: null, period: null, currency: null}
+lever      salaryDescription = "<div><br></div>"
+```
+
+Both read as 100% coverage. That is the same defect as the 28-point constant and
+the parser that returned one line per page: **a check that measures the shape of
+a thing instead of the thing.** It would have greenlit a two-week epic with
+nothing to read, and the component would then have become exactly the constant
+`bench:match` exists to catch. The corrected probe measures a value, and the
+comment above `meaningfulValue()` records why.
+
+**The pockets are real but small, and worth knowing.** Recruitee is the best
+provider at ~11% on the sampled boards (Lenskart publishes real figures), and
+Signoz on Ashby publishes the best data in the whole index — `₹40L – ₹70L •
+0.06% – 0.15%`, band plus equity. Greenhouse, the largest provider at 567 boards,
+returned **zero** across 642 sampled India roles. A future session that finds one
+employer publishing salary and concludes the index has it should re-run
+`npm run probe:salary` before building anything.
+
+⚠️ **`workday` (324 boards) was not probed** — its listing is a paged POST, not a
+GET. The 2.2% covers the other six providers. Probing Workday is the one thing
+that could still move this number.
+
+**This also corrects `docs/COMPETITOR-ANALYSIS.local.md`**, which ranked closing
+the salary gap as recommendation #2 on the strength of Naukri scoring salary as
+one of its six parameters. Naukri can score it because candidates and recruiters
+type it into Naukri. We read employer postings, and employers do not write it
+down. **That gap is not closable from this supply, and the analysis was wrong to
+imply it was.**
 
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
