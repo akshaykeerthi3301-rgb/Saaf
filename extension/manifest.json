@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Saaf — score any job posting",
+  "version": "0.1.0",
+  "description": "Score a job posting against your resume, with the arithmetic shown. Reads only the page you are on. Stores nothing.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://boards.greenhouse.io/*",
+    "https://job-boards.greenhouse.io/*",
+    "https://jobs.lever.co/*",
+    "https://jobs.ashbyhq.com/*",
+    "https://apply.workable.com/*",
+    "https://*.recruitee.com/*",
+    "https://jobs.smartrecruiters.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://saaf-ten.vercel.app/*"
+  ],
+  "background": { "service_worker": "service-worker.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://boards.greenhouse.io/*",
+        "https://job-boards.greenhouse.io/*",
+        "https://jobs.lever.co/*",
+        "https://jobs.ashbyhq.com/*",
+        "https://apply.workable.com/*",
+        "https://*.recruitee.com/*",
+        "https://jobs.smartrecruiters.com/*",
+        "https://*.myworkdayjobs.com/*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_title": "Saaf", "default_popup": "popup.html" }
+}

@@ -136,6 +136,42 @@ index before believing it**, and the four open judgment calls at the end of Phas
 
 ---
 
+## ⏳ Migration 0026 — PENDING, and it is the highest-risk one yet
+
+`supabase/migrations/0026_recruiter_foundation.sql`. **Apply by hand in the
+Supabase SQL editor**, then immediately:
+
+```
+npm run verify:rls        # the positive control below is the one that matters
+```
+…and **open `/today` in a browser** while signed in.
+
+⚠️ **THE FAILURE MODE IS NOT AN ERROR.** This migration replaces the two policies
+that let a signed-in account read the index — `roles` and `role_requirements`
+were `to authenticated using (true)`. If the JWT claim does not evaluate the way
+the migration assumes, nothing throws: **every candidate's shortlist silently
+returns zero rows.** `verify:rls` now carries a positive control that asserts a
+signed-in candidate can still read the index, precisely so this is caught by a
+script and not by a user.
+
+**Why it exists.** `roles` carries `company_name` and `apply_url`, so every
+authenticated account can largely reconstruct the registry that the `boards`
+table exists to protect. That is fine only while every authenticated account is a
+candidate — which a recruiter account invalidates on the day it is created,
+before any recruiter code is written. Closing it first is the whole point.
+
+**What it does NOT add:** no recruiter UI, no employer identity table, no
+candidate search index, and no way to become a recruiter (`account_type` is
+service-role-only). `candidate_discoverability` is opt-in, default absent, and
+has **no recruiter read policy at all**.
+
+⚠️ **It fails OPEN towards candidates, deliberately.** A missing claim reads as
+`candidate` and the row is allowed. With zero recruiter accounts the cost of
+that is zero; the cost of failing closed is every shortlist in the product.
+**Revisit that line first when recruiters actually exist.**
+
+---
+
 ## ✅ Migration 0025 — applied by the founder, 2026-09-14
 
 `supabase/migrations/0025_role_functions.sql` widened `roles.function` to allow

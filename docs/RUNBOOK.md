@@ -74,7 +74,7 @@ SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
 # sitting in /tmp is its own exposure even if Vercel never receives it.
 rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
   --exclude '.claude' --exclude 'productos' --exclude 'saaf-ai' --exclude 'docs' \
-  --exclude 'bench' \
+  --exclude 'bench' --exclude 'extension' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
 

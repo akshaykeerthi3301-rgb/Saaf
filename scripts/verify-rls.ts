@@ -99,6 +99,16 @@ async function main() {
   )
   const anonReqs = await anon('role_requirements?select=id&limit=1')
   const anonReqRows = anonReqs.status < 400 ? await anonReqs.json() : []
+  /**
+   * ⚠️ THE POSITIVE CONTROL FOR MIGRATION 0026, AND THE ONE THAT MATTERS MOST.
+   * 0026 replaces `authenticated read roles` (using (true)) with a policy keyed
+   * on public.account_type(). If that claim does not evaluate the way the
+   * migration assumes, the symptom is NOT an error — it is every candidate's
+   * shortlist silently returning zero rows. The cross-user half below signs in
+   * as a real user A and reads `roles`; this is where that read is asserted to
+   * return something. A denial-only suite would pass happily while the product
+   * was empty.
+   */
   check(
     'role_requirements: anon is DENIED',
     anonReqs.status >= 400 || (Array.isArray(anonReqRows) && anonReqRows.length === 0),
@@ -260,6 +270,26 @@ async function crossUserIsolation() {
      * feature that does not work.
      */
     if (resumeTableExists) {
+      /**
+       * Migration 0026's positive control. A signed-in CANDIDATE must still
+       * read the index after the policy narrowing — this is the assertion that
+       * catches "every shortlist is empty" before a user does.
+       */
+      const aRoles = await asA('roles?select=id&limit=1')
+      const aRoleRows = aRoles.status < 400 ? await aRoles.json() : []
+      check(
+        'roles: a signed-in CANDIDATE can still read the index (0026 positive control)',
+        Array.isArray(aRoleRows) && aRoleRows.length > 0,
+        `http ${aRoles.status}, ${Array.isArray(aRoleRows) ? aRoleRows.length : 0} row(s)`,
+      )
+      const aReqs = await asA('role_requirements?select=id&limit=1')
+      const aReqRows = aReqs.status < 400 ? await aReqs.json() : []
+      check(
+        'role_requirements: a signed-in CANDIDATE can still read them',
+        Array.isArray(aReqRows) && aReqRows.length > 0,
+        `http ${aReqs.status}`,
+      )
+
       const forgeResume = await asA('resume_documents', {
         method: 'POST',
         body: JSON.stringify({

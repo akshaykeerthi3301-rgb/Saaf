@@ -40,3 +40,10 @@ registry/candidates.json
 # dropped; shipping the founder's own into a public deployment would break it in
 # the most literal way available.
 bench/
+
+# The browser extension is a separate build target, loaded unpacked or shipped
+# through the Chrome Web Store. Nothing in src/ imports it and Next never serves
+# it — it is not under public/ — so uploading it only adds weight to every
+# deploy. Its one dependency on the web app is the /api/extension/score URL,
+# which is a string in service-worker.js, not an import.
+extension/
