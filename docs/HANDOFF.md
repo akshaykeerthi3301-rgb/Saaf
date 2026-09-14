@@ -4,20 +4,36 @@
 
 ## ⚡ Resuming after 2026-09-14? Start here.
 
-**All work since 2026-09-12 is on the branch `ats-parity`, not on `main`.**
-Eight commits, 55 files, +4,524/−269. The working tree is clean and every gate
-passes. Nothing is deployed.
+~~**All work since 2026-09-12 is on the branch `ats-parity`, not on `main`.**~~
+~~Eight commits, 55 files, +4,524/−269.~~ **Merged the same day — corrected in
+place rather than deleted, because this block was true when it was written and
+false an hour later.** `ats-parity` was fast-forwarded into `main` and the branch
+deleted; only the reflog still names it. **Nine commits, 55 files, +4,727/−269
+are on `main` now** (the ninth is this file's own handoff commit), working tree
+clean, every gate passing. **There is nothing to merge and no branch to check
+out.** If a future session reads "the work is on a branch", re-measure before
+believing it — this line went stale once already.
+
+⚠️ **Still true, and it is the part that matters: nothing is deployed.** The
+last *recorded* deploy is 2026-09-09 (`Record the 2026-09-09 deploy`), which
+predates every commit in the table below. On that record the live site is still
+running the **old scorer** — the 28-point constant and the 74% "strong match" on
+zero skill overlap are fixed in the repository and **not fixed for anyone who
+opens https://saaf-ten.vercel.app**. Verify against Vercel rather than against
+this line, then deploy by `docs/RUNBOOK.md` (and §2 A5 below — stage a copy
+without `.git`, never `--prebuilt`).
+
+**`main` is also 19 commits ahead of `origin/main`.** The remote is a backup and
+does not deploy, so pushing is not deploying and deploying does not push. They
+are two separate chores.
 
 ```
-git log --oneline main..ats-parity     # what is on it
-git merge --ff-only ats-parity         # if you want it on main
+git log --oneline f98f6b4..HEAD          # the nine commits, oldest first
+git rev-list --count origin/main..main   # unpushed — 19 when this was written
+git reflog --date=short | grep parity    # the merge, if you want the trace
 ```
 
-⚠️ **It is a clean fast-forward.** `docs/ROADMAP.md` says "no pull request
-between phases", so a branch is not this repo's habit — it exists because the
-change is large enough that landing it should be your call, not a side effect.
-
-### What is on it, in one line each
+### What landed, in one line each
 
 | Commit | What |
 |---|---|
@@ -35,7 +51,7 @@ change is large enough that landing it should be your call, not a side effect.
 **Buy a domain and put the product in front of ten people.** It is the third P0
 from the 2026-09-14 teardown and the only one a coding session cannot do.
 
-Both scorer defects fixed on this branch — a 28-point constant, a 74% "strong
+Both scorer defects fixed on 2026-09-14 — a 28-point constant, a 74% "strong
 match" on zero skill overlap — are exactly the class of problem that one
 afternoon with five real candidates surfaces immediately and that no amount of
 solo building does. **Recruit engineering, data and product candidates**, which
