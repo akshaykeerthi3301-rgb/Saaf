@@ -59,6 +59,52 @@ async function main() {
   const anonProfiles = await anon('profiles', { method: 'POST', body: JSON.stringify({ id: '00000000-0000-0000-0000-000000000000' }) })
   check('profiles: anon cannot insert a profile it does not own', anonProfiles.status >= 400, `http ${anonProfiles.status}`)
 
+  /**
+   * ⚠️ resume_documents IS THE ONE TABLE WHOSE DENIAL RESTS ON NULL SEMANTICS.
+   * Its four policies (0023:62-72) omit `to authenticated`, so unlike every
+   * other policy here they apply to the `public` role — anon included. They
+   * still deny, because auth.uid() is NULL and `NULL = user_id` evaluates to
+   * NULL rather than true. That is correct and it is also the most fragile
+   * reason any table in this schema is closed, and until 2026-09-15 nothing
+   * probed it: the cross-user half tests A against B, never anon against
+   * either. It stores the only documents the product keeps.
+   */
+  const anonResumes = await anon('resume_documents?select=id')
+  const anonResumeRows = anonResumes.status < 400 ? await anonResumes.json() : []
+  check(
+    'resume_documents: anon is DENIED (policies omit `to authenticated` — denial rests on NULL semantics)',
+    anonResumes.status >= 400 || (Array.isArray(anonResumeRows) && anonResumeRows.length === 0),
+    `http ${anonResumes.status}`,
+  )
+
+  /**
+   * ⚠️ THE INDEX POLICIES ARE `using (true)`, AND NOTHING HERE EVER EXERCISED
+   * THEM. `roles` and `role_requirements` grant SELECT to every authenticated
+   * account (0002:16-20). That is correct today because every authenticated
+   * account is a candidate — and it is the single assumption a recruiter-side
+   * product breaks on day one, because `roles` carries company_name and
+   * apply_url and largely reconstructs the registry the `boards` table exists
+   * to protect.
+   *
+   * Asserting anon gets nothing is the half that can be checked before that
+   * account type exists. When it does exist, the probe to add here is R reading
+   * `roles` — and this comment is the reason it will be obvious that it must.
+   */
+  const anonRoles = await anon('roles?select=id,company_name&limit=1')
+  const anonRoleRows = anonRoles.status < 400 ? await anonRoles.json() : []
+  check(
+    'roles: anon is DENIED (policy is `to authenticated using (true)` — every signed-in account reads the whole index)',
+    anonRoles.status >= 400 || (Array.isArray(anonRoleRows) && anonRoleRows.length === 0),
+    `http ${anonRoles.status}`,
+  )
+  const anonReqs = await anon('role_requirements?select=id&limit=1')
+  const anonReqRows = anonReqs.status < 400 ? await anonReqs.json() : []
+  check(
+    'role_requirements: anon is DENIED',
+    anonReqs.status >= 400 || (Array.isArray(anonReqRows) && anonReqRows.length === 0),
+    `http ${anonReqs.status}`,
+  )
+
   await svc('boards?token=eq.__rls_probe__', { method: 'DELETE' })
   await svc('audit_daily?day=eq.1999-01-01', { method: 'DELETE' })
 
