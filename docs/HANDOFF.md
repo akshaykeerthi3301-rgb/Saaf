@@ -2,7 +2,85 @@
 
 ---
 
-## ⏳ Migration 0024 — NOT YET APPLIED (2026-09-12)
+## ⚡ Resuming after 2026-09-14? Start here.
+
+**All work since 2026-09-12 is on the branch `ats-parity`, not on `main`.**
+Eight commits, 55 files, +4,524/−269. The working tree is clean and every gate
+passes. Nothing is deployed.
+
+```
+git log --oneline main..ats-parity     # what is on it
+git merge --ff-only ats-parity         # if you want it on main
+```
+
+⚠️ **It is a clean fast-forward.** `docs/ROADMAP.md` says "no pull request
+between phases", so a branch is not this repo's habit — it exists because the
+change is large enough that landing it should be your call, not a side effect.
+
+### What is on it, in one line each
+
+| Commit | What |
+|---|---|
+| `Measure the checker before changing it again` | `npm run bench` — the ATS checker's benchmark, 26 documents, accuracy + invariance gates |
+| `Read the whole page…` | The PDF parser rewrite, the two-part score, the report UI |
+| `Stop comparing a v1 score to a v2 one` | Migration `0024` + the backfill |
+| `Write down what the corpus found…` | Stage Q |
+| `Stop burying the half nobody else can build` | The index re-score and market panel promoted |
+| `Stop the fix button lowering the score` | Round-trip defects found by using the product |
+| `Stop the scorer paying out for questions nobody asked` | **The P0 scorer fixes** — see Stage R |
+| `Say the employer's name, the city once…` | **The P1 fixes** |
+
+### The one thing blocking everything, still
+
+**Buy a domain and put the product in front of ten people.** It is the third P0
+from the 2026-09-14 teardown and the only one a coding session cannot do.
+
+Both scorer defects fixed on this branch — a 28-point constant, a 74% "strong
+match" on zero skill overlap — are exactly the class of problem that one
+afternoon with five real candidates surfaces immediately and that no amount of
+solo building does. **Recruit engineering, data and product candidates**, which
+is what the index actually serves: HR Business Partner returns three strong
+matches and marketing is 1.8% of the index.
+
+Everything else on this page is refinement. This one is binary, and it has been
+deferred through four phases.
+
+### Two benchmarks now gate changes, and both must be run
+
+```
+npm run bench          # the ATS checker — 26 documents, accuracy + invariance
+npm run bench:match    # the MATCH scorer — score spread + average award per component
+```
+
+⚠️ **`bench:match` is the one that matters most and is newest.** Any component
+averaging above ~90% is a constant wearing a weight, not a component. That check
+is what found three of them. Do not change `src/match/score.ts` without running
+it before and after.
+
+⚠️ **`bench:match` reads the live index and needs `.env.local`.** It writes
+nothing. `npm run bench` is offline.
+
+### The corpus is real and is NOT in git
+
+`bench/corpus/real/` holds nine of the founder's own résumé variants and
+`bench/corpus/samples/` holds eleven public samples with invented people. Both
+are gitignored — real résumés are personal data and this product's promise is
+that an uploaded file is parsed and dropped. **A fresh clone has only the
+synthetic corpus and will report 6 documents, not 26.** Re-fetch the public
+samples with `npm run bench:samples`; the founder's own variants have to be put
+back by hand.
+
+### Scores in the database are from the new model
+
+`npm run recompute` equivalent was run on 2026-09-14 after the scorer change
+(`recomputeAll()` from `ingest/recompute.ts`), so `gate_results` holds v2 scores.
+The nightly cron does this anyway. If you change the scorer again, **stored
+scores are stale until recompute runs** — `/today` reads `gate_results`, it does
+not rescore on load.
+
+---
+
+## ✅ Migration 0024 — applied by the founder, 2026-09-14
 
 `supabase/migrations/0024_resume_score_model.sql` adds `resume_documents.score_model`.
 **Apply it by hand in the Supabase SQL editor**, then:

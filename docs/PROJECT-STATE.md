@@ -1169,6 +1169,131 @@ line. `npm run rescore:saved` recomputes every stored row from its `body` text �
 possible only because 0023 denormalised that text, which it justified as "derived,
 small" without knowing this is what it would buy.
 
+### Stage R — the teardown, and the scorer it broke open (2026-09-14)
+
+The whole product was driven end to end against the live index for the first
+time — every screen, signed in, with a real résumé — and judged against the
+claim to lead the Indian market. The published assessment is
+[Can Saaf Be Number One?](https://claude.ai/code/artifact/4dcec4bf-b18d-4cd3-bd77-9b0788ffde19).
+Its verdict, and the reasoning a fresh session needs:
+
+**No, not as aimed — and the reason is not quality.** Three measured things.
+
+⚠️ **45 OF THE 100 SCORING POINTS WERE CONSTANTS.** Measured across 504 real
+roles: work mode paid out at **100%**, credential at **98%**, title at **99%**.
+Three of six components never varied, which is why every score sat between 50
+and 88 and why a role naming none of the candidate's skills was badged a
+**strong match at 74%** on the live shortlist — the same unexplained badge the
+landing page attacks portals for.
+
+⚠️ **THE COVERAGE CLIFF IS STRUCTURAL AND DECIDES THE CLAIM.** Twelve real
+Indian roles through the live scorer: Data Analyst 81 strong matches, Backend
+Engineer 42 — against **HR Business Partner 3**, Content Writer 8, Customer
+Success 7. Index composition, unchanged as the index grew: engineering 39.2%,
+unclassified 44.3%, marketing 1.8%, HR 1.6%, with **sales and operations not
+classified at all**. Company ATS boards are where tech and GCC employers post;
+Indian sales, operations, BPO and HR hiring largely is not there. **The locked
+decision that makes the supply legal is the same decision that caps the
+addressable market at roughly the engineering slice.** That is a fair trade and
+it is incompatible with "number one in India".
+
+**Zero users after 130 commits.** Both scoring defects above are exactly what
+one afternoon with five real candidates surfaces and no amount of solo building
+does.
+
+#### What was fixed (P0)
+
+**`scripts/bench-match.ts` is the instrument, and its absence is why this
+survived.** `ats-check.ts` got a bench on 2026-09-12; the MATCH scorer — the one
+that actually decides the shortlist — had none. It prints score spread and the
+average award per component. Anything above ~90% is a constant wearing a weight.
+
+**Work mode and credential paid full marks for ABSENCE.** A candidate who set no
+preference, against a posting naming no credential, collected 17 points for
+having been asked nothing. `scoreRole` already normalised over applicable
+components and `skillsFit` already returned null when there was nothing to
+measure; these two did not follow the pattern. `src/lib/jd-match.ts` had worked
+around it for its own surface with `omit` — the right conclusion in the wrong
+place, since every caller had to remember and the main shortlist never did.
+
+⚠️ **THAT REVERSED A DOCUMENTED DECISION.** `jd-match.ts` argued credential
+should be KEPT: "no credential required" is a finding about the posting, read
+from its text. True, and not enough — a component measures FIT, and there is no
+question of fit where there is no requirement. The trade it makes is recorded in
+the file: a posting requiring a credential the candidate HOLDS now scores
+fractionally above one requiring none.
+
+**The title component was scoring the retrieval query.** Roles reach the scorer
+BECAUSE their title matched the preferred role, and the component then awarded
+the heaviest weight in the model for matching the preferred role. What it never
+asked is how much of the POSTING is your role — "Product Analyst" is every word
+of "Business Execution Consultant - Product Support Analyst", and that posting
+led the live shortlist at 88%. Precision supplies the missing half, weighted so
+recall still dominates (Fβ, β=2): Indian postings carry team and grade in the
+title, so a symmetric F1 would punish a correct match for its employer's naming
+convention.
+
+**A separate defect fell out of reading it:** a posting sharing NO words with
+the preferred role scored half marks under the note "No preferred role set."
+The zero-match case and the no-role-given case were the same branch.
+
+| | Before | After |
+|---|---|---|
+| work mode | 100% average award | omitted — nothing to measure |
+| credential | 98% | scored on 10 of 504 roles |
+| title | 99% | 83% |
+| Components above 90% | 3 of 6 | **0 of 5** |
+| Role match on the live shortlist | 39 of 40 cards at a flat 28/28 | seven distinct values |
+| "High-precision match" badges | 18 | 6 |
+| The zero-skill role | 74% | 65% |
+
+⚠️ **THE LANDING PAGE WAS ADVERTISING THE BUG.** Its worked example printed
+"Work mode 7/7 · Credential 10/10" — seventeen points awarded for absence of
+data, on the page whose argument is that our arithmetic can be checked. A test
+existed carrying the comment *"If this test fails, the landing page is lying."*
+It failed. Both are corrected.
+
+#### What was fixed (P1)
+
+**Employer names.** The index stores an ATS slug in title case: "Wf" on 202
+roles, "Jll" on 320, "Aecom" on 352, "Ag" on 207. Corrections are GROUNDED, not
+guessed — Workday tokens carry a host and a path, and the path names the company
+the host abbreviates (`wf.wd1…/wellsfargojobs`, `ag.wd3…/Airbus`, which is
+Airbus). Applied at display, never in ingest: the stored value is what the board
+told us and is the evidence behind the name. A test asserts already-correct
+names come through untouched.
+
+**One city per city.** "Bengaluru" and "Bangalore" appeared as different places
+on adjacent cards. `locationFit` already treated them as one for scoring. Only a
+bare city field is canonicalised — "Hybrid in Bangalore" is the posting's own
+sentence.
+
+**One résumé, one answer.** `/resume` showed "Manager" at "icici bank" with 2
+years while the ATS checker showed "Private Banking Manager (M1)" at "ICICI Bank
+Bangalore" with 4 — same file, same session. Three readers existed
+(`extractFields`, `parseSections`, the model) and each surface chose its own
+precedence. **`src/lib/parse/facts.ts` now owns that precedence and both
+surfaces call it.** The model no longer overrides a deterministic answer; it
+fills what nothing else reached, and remains the only reader that gets skills
+and domain.
+
+**Coverage, named.** The thin-list message said "our coverage, not a verdict on
+you" and stopped — right sentiment, nothing the reader can act on. It now lists
+the functions we actually cover with live counts and offers the ATS checker.
+
+#### What is NOT fixed, and should not be guessed at
+
+- **Exact-title roles now rank BELOW a buried-title one** (53% vs 76%) because
+  experience is doing the ranking. Whether title should outweigh experience is a
+  weighting question that needs real candidates, not judgement.
+- **HR Business Partner still sees 3 strong matches.** The scorer is honest now;
+  the supply is still the supply.
+- **The bucket thresholds were not touched.** A zero-skill role at 65% is still
+  labelled STRONG MATCH. Changing where that line sits is a product decision.
+- **The remaining P2s**: three names for one product (Saaf / Saaf AI / Cookie /
+  `jobmatch`), "100% Tailored" in the hero, and the unclassified 44% of the
+  index — which needs sales and operations as functions.
+
 ### Deployed 2026-09-09 — parity, and past it
 
 **https://saaf-ten.vercel.app**, deployment `saaf-1kx67gl1e`. Verified in a real
