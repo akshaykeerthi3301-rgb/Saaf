@@ -83,12 +83,28 @@ export async function countIndexMatches(
  */
 export type FunctionCoverage = { fn: string; label: string; roles: number }
 
+/**
+ * ⚠️ THIS LIST IS THE COVERAGE PANEL, SO AN OMISSION HERE READS AS A ZERO.
+ *
+ * It must name every function `ingest/classify.ts` can assign, or the panel
+ * tells a candidate we have nothing in theirs. That is what it did until
+ * 2026-09-14: sales, operations, support and design were all classified `other`
+ * — 44.2% of the index — and a sales candidate on a thin shortlist was shown
+ * five functions, none of them sales, against 1,390 live sales roles.
+ *
+ * `other` is deliberately absent. A row reading "Other 7,545" is not coverage a
+ * candidate can act on, and it is the honest remainder rather than a function.
+ */
 const FUNCTION_LABELS: Record<string, string> = {
   engineering: 'Engineering',
   consulting: 'Consulting',
   finance: 'Finance',
+  sales: 'Sales',
+  operations: 'Operations',
   marketing: 'Marketing',
   hr: 'HR',
+  support: 'Customer Support',
+  design: 'Design',
 }
 
 export async function coverageByFunction(): Promise<FunctionCoverage[]> {

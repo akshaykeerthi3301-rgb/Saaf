@@ -48,11 +48,58 @@ describe('classifyFunction', () => {
     expect(classifyFunction(title)).toBe(fn)
   })
 
-  // A role the classifier cannot type is never shown to anyone, so a wrong
-  // 'other' is a silent supply loss rather than a wrong answer. Documented so
-  // the count is watched rather than forgotten.
+  // ~~A role the classifier cannot type is never shown to anyone.~~ Corrected
+  // 2026-09-14: migration 0010 replaced function-bucket equality with free-text
+  // matching on title_tsv, so `other` costs a role nothing in retrieval. What
+  // it costs is DISCLOSURE — `other` is invisible to the coverage panel, which
+  // is the only reader of this column. A wrong 'other' is a function we quietly
+  // claim not to cover.
   it('returns other rather than guessing', () => {
     expect(classifyFunction('Client Onboarding Director')).toBe('other')
+  })
+
+  // The four appended 2026-09-14. Before them, 44.2% of the India index was
+  // `other` and the coverage panel named five functions out of nine.
+  it.each([
+    ['Senior Account Executive', 'sales'],
+    ['Area Sales Manager, Chennai', 'sales'],
+    ['Operations Executive - Kolkata (RI)', 'operations'],
+    ['Assistant Manager Procurement', 'operations'],
+    ['Customer Support Specialist', 'support'],
+    ['Sr. Director, Service Desk Leader', 'support'],
+    ['Staff Product Designer', 'design'],
+    ['Director, UX Research', 'design'],
+  ])('%s → %s', (title, fn) => {
+    expect(classifyFunction(title)).toBe(fn)
+  })
+
+  // ⚠️ APPENDED MEANS APPENDED. The new patterns may only claim what the
+  // original five declined. Each of these matches a new pattern AND an older
+  // one; the older one must still win, or this change silently re-cut
+  // boundaries the ingest has been using since 0001.
+  it.each([
+    // 'business development' and 'supply chain' are consulting's, deliberately
+    // — see the isCorporateRole comment on early-career field sales.
+    ['Business Development Executive', 'consulting'],
+    ['Supply Chain Analyst', 'consulting'],
+    ['Operations Manager', 'consulting'],
+    // 'revenue operations' is finance's.
+    ['Revenue Operations Analyst', 'finance'],
+    // engineering leads the list and keeps anything it names.
+    ['Support Engineer', 'engineering'],
+    ['Design Verification Engineer', 'engineering'],
+  ])('%s stays %s', (title, fn) => {
+    expect(classifyFunction(title)).toBe(fn)
+  })
+
+  // The guard. Both of these fell to `other` before the change; without it they
+  // land in operations, which replaces no answer with a wrong one.
+  it.each([
+    'Senior Software Development Manager - Global Operations Team',
+    'SOC Analyst — Security Operations',
+    'Network Operations Center Technology Lead',
+  ])('%s is not operations', (title) => {
+    expect(classifyFunction(title)).not.toBe('operations')
   })
 })
 

@@ -94,7 +94,7 @@ export default function Landing() {
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" strokeWidth={2.2} />
           </span>
-          <span className="text-base font-semibold tracking-[-0.03em]">Saaf AI</span>
+          <span className="text-base font-semibold tracking-[-0.03em]">Saaf</span>
         </Link>
         <div className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
           {/* ⚠️ THE TOOLS WERE ORPHANS UNTIL 2026-09-08 — zero inbound links from
@@ -135,8 +135,17 @@ export default function Landing() {
           </div>
 
           <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.05em] text-primary sm:text-6xl lg:text-7xl">
-            Precision Career Copilot for India. <span className="text-accent">Zero Spam.</span>{' '}
-            100% Tailored.
+            {/*
+              ⚠️ "100% TAILORED." WAS CUT FROM HERE, 2026-09-14. It was a
+              completeness figure nothing measures — the same invented number as
+              the "Profile Strength: 92%" dial /copilot refuses to draw, on the
+              one page whose whole argument is that our arithmetic can be
+              checked. The landing page had already advertised one scoring bug
+              this way ("Work mode 7/7 · Credential 10/10"); this was the second
+              instance of the same habit. The sub-headline below carries the
+              real promise, and it is checkable.
+            */}
+            Precision Career Copilot for India. <span className="text-accent">Zero Spam.</span>
           </h1>
 
           <p className="mt-7 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
@@ -328,7 +337,7 @@ export default function Landing() {
       <footer className="border-t border-border bg-secondary/40">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Saaf AI</span>
+            <span className="font-semibold text-foreground">Saaf</span>
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
             <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">Free ATS checker</Link>
             <Link href="/tools/paste-jd" className="transition-colors hover:text-foreground">Should I apply?</Link>

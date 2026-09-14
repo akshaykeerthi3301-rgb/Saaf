@@ -82,7 +82,17 @@ export function normaliseTitle(raw: string): string {
   return t
 }
 
-export type Fn = 'engineering' | 'finance' | 'marketing' | 'consulting' | 'hr' | 'other'
+export type Fn =
+  | 'engineering'
+  | 'finance'
+  | 'marketing'
+  | 'consulting'
+  | 'hr'
+  | 'sales'
+  | 'operations'
+  | 'support'
+  | 'design'
+  | 'other'
 
 /** Ordered: the first match wins, so put the most specific patterns first. */
 const FUNCTIONS: { fn: Fn; re: RegExp }[] = [
@@ -91,9 +101,63 @@ const FUNCTIONS: { fn: Fn; re: RegExp }[] = [
   { fn: 'hr',          re: /\b(recruit(er|ment|ing)|talent acquisition|talent partner|people (ops|operations|partner)|human resources|\bhr\b|hrbp|compensation|l&d|learning and development)\b/i },
   { fn: 'marketing',   re: /\b(marketing|growth|brand|\bseo\b|\bsem\b|performance marketing|content (writer|strateg|marketing)|copywrit|social media|communications|\bpr\b|demand gen|lifecycle|crm marketing)\b/i },
   { fn: 'consulting',  re: /\b(consultant|consulting|strateg(y|ic)|business analyst|business development|\bbd\b|program manager|project manager|chief of staff|operations (manager|analyst|associate)|category (manager|lead)|supply chain|product manager|product owner|analytics)\b/i },
+
+  /*
+   * ⚠️ THE FOUR BELOW ARE APPENDED, AND THAT PLACEMENT IS THE DESIGN.
+   *
+   * Added 2026-09-14 against the teardown's last P2: 44.2% of the index was
+   * `other`, which made the coverage panel on a thin shortlist lie by omission
+   * — a sales candidate was shown "Engineering 9,096 · Consulting 1,916 ·
+   * Finance 1,107 · Marketing 412 · HR 375" and could only conclude we had no
+   * sales jobs. We had 1,390.
+   *
+   * Because the first match wins, appending means these can only claim titles
+   * that ALL FIVE EXISTING PATTERNS ALREADY DECLINED. Not one existing
+   * classification moves. That is deliberate: `consulting` already claims
+   * "business development" and "supply chain", and the comment above
+   * `isCorporateRole` records that "Business Development Executive" was
+   * deliberately read as an early-career consulting/marketing role. Re-cutting
+   * that boundary is a product decision about the personas, not a coverage fix,
+   * and it is not what this change is for. Measured over all 23,184 India
+   * roles: other 44.2% -> 32.8%.
+   *
+   * The remaining 32.8% is NOT a fifth missing function and should not be
+   * chased with a sixth pattern. It is the long tail a 1,396-board index of GCC
+   * and pharma employers actually contains — "Senior Statistical Programmer",
+   * "Regulatory Affairs (CMC, Biologics)", "Specialist, Payroll", "Senior
+   * Manager - PMO", "Scrum Master". Each needs its own function to be named
+   * honestly, and none is a market this product claims to serve.
+   *
+   * Order within the block is load-bearing. `sales` precedes `operations` so
+   * "Sales Operations Manager" is sales; `support` precedes `operations` so
+   * "Customer Service Operations" is support; `design` leads so "Design
+   * Operations" is design.
+   */
+  { fn: 'design',     re: /\b(designer|\bux\b|\bui\b|visual design|graphic design|product design|interaction design|motion design|design (lead|manager|director|systems?))\b/i },
+  { fn: 'sales',      re: /\b(sales|account (executive|manager|director|partner)|key accounts?|territory manager|pre[- ]?sales|presales|client partner|relationship manager|channel (sales|partner))\b/i },
+  { fn: 'support',    re: /\b(customer (success|support|service|experience|onboarding|engagement)|technical support|help ?desk|service desk|client servicing|support (engineer|specialist|analyst|advisor|representative)|escalation manager)\b/i },
+  { fn: 'operations', re: /\b(operations?|\bops\b|supply chain|logistics|procurement|warehouse|fulfil?lment|inventory|vendor management|process (associate|executive|specialist|manager)|dispatch)\b/i },
 ]
+
+/**
+ * Titles whose subject is engineering even though an operations word sits in
+ * them. "Operations" is the one new pattern broad enough to steal, and it did:
+ * the first measured run put "Senior Software Development Manager - Global
+ * Operations Team" and "SOC Analyst — Security Operations" in operations. Both
+ * fell through to `other` before, so the change would have replaced no answer
+ * with a wrong one — strictly worse, and exactly the trade this product refuses
+ * elsewhere.
+ *
+ * It guards ONLY `operations`. The narrower three cannot make this mistake, and
+ * a guard applied to all four would be a second place to look when a title is
+ * classified oddly.
+ */
+const ENGINEERING_SUBJECT =
+  /\b(software|development|devops|security operations|\bsoc\b|network operations|\bnoc\b|data engineering|systems? engineer|technology)\b/i
 
 export function classifyFunction(title: string, hint?: string): Fn {
   const text = `${title} ${hint ?? ''}`
-  return FUNCTIONS.find((f) => f.re.test(text))?.fn ?? 'other'
+  const fn = FUNCTIONS.find((f) => f.re.test(text))?.fn ?? 'other'
+  if (fn === 'operations' && ENGINEERING_SUBJECT.test(text)) return 'other'
+  return fn
 }

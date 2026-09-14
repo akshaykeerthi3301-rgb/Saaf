@@ -96,6 +96,68 @@ not rescore on load.
 
 ---
 
+## ⏳ Migration 0025 — PENDING, and it must go first
+
+`supabase/migrations/0025_role_functions.sql` widens `roles.function` to allow
+`sales`, `operations`, `support` and `design`. **Apply it by hand in the Supabase
+SQL editor**, then:
+
+```
+npm run reclassify:roles            # dry run — prints the table, writes nothing
+npm run reclassify:roles -- --write # apply
+```
+
+⚠️ **ORDER IS NOT OPTIONAL, AND GETTING IT WRONG LOSES POSTINGS.**
+`roles.function` carries a CHECK constraint naming the six values migration 0001
+allowed. `ingest/classify.ts` now returns four more. Against the old constraint
+an ingest run does not mislabel a role — **the INSERT fails**, and the night's
+sales, operations, support and design postings are dropped. Schema first, then
+the deploy. Same rule as Stage C.
+
+**Why it exists.** 44.2% of the India index was classified `other`, and `other`
+is invisible to `coverageByFunction()` — the one reader of this column, feeding
+the message a candidate sees when their shortlist is thin. Confirmed in a
+browser on `/today`: *"we are strongest here: Engineering 9,096 · Consulting
+1,916 · Finance 1,107 · Marketing 412 · HR 375"*. A sales candidate reads five
+functions, none of them theirs, against **1,390 live sales roles** sitting in the
+index unnamed. The panel exists to blame our coverage rather than the candidate;
+omitting a function inverts it into a false claim about our coverage.
+
+**What it does NOT touch.** Migration 0010 replaced function-bucket equality with
+free-text matching on `title_tsv`, so retrieval and scoring never read this
+column. **No score moves, no shortlist moves.** `npm run bench:match` was run
+before and after: unchanged, 0 components paying out at 90%+.
+
+| Measured over 23,184 India roles | |
+|---|---|
+| sales | 1,390 |
+| operations | 640 |
+| support | 314 |
+| design | 309 |
+| `other` | **44.2% → 32.8%** |
+
+⚠️ **The remaining 32.8% is not a fifth missing function.** Stage R's P2 line said
+the unclassified 44% "needs sales and operations as functions" — measured, that
+framing is about a quarter right. What is left is the long tail a 1,396-board
+index of GCC and pharma employers actually contains: *Senior Statistical
+Programmer*, *Regulatory Affairs (CMC, Biologics)*, *Specialist, Payroll*,
+*Senior Manager - PMO*, *Scrum Master*. Each needs its own function to be named
+honestly, and none is a market this product claims to serve. **Do not chase it
+with a sixth pattern.**
+
+⚠️ **The backfill deliberately leaves 30 rows alone.** The dry run reports them:
+rows stored `other` that the *current* classifier calls engineering or
+consulting, because they were ingested under an older version and the ingest
+never re-reads. At least one is a defect rather than an improvement — *"Hindi -
+AI Voice Data Collection Project"* reaches engineering through the pattern's bare
+`\bai\b`. Folding that into a migration about sales would be importing an
+unreviewed change under another change's name. **Open question, not a task.**
+
+**Blocks:** the coverage panel stays five functions until this runs. Nothing
+else.
+
+---
+
 ## ✅ Migration 0024 — applied by the founder, 2026-09-14
 
 `supabase/migrations/0024_resume_score_model.sql` adds `resume_documents.score_model`.
@@ -124,7 +186,7 @@ labelled `v1` until you run it.
 
 ## ✅ Migration 0023 applied — 2026-09-09
 
-`resume_documents` is live. **No migration is pending.**
+`resume_documents` is live. ~~**No migration is pending.**~~ **Stale — `0025` is pending as of 2026-09-14, see above.** True of 0023 on the day it was written; this is a dated block, not a live status line.
 
 Verified after applying, end to end:
 
@@ -273,7 +335,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 
 | # | Action | Needed for | Notes |
 |---|---|---|---|
-| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **No migration is pending as of 2026-09-08** — `0018` (`role_requirements.max_years`) was recorded here as outstanding but is APPLIED; verified by selecting the column against the live database. Over-qualification is scored. Re-check by query rather than by this line, which went stale once already |
+| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **`0025_role_functions.sql` IS PENDING as of 2026-09-14** and must be applied before the next deploy, or the nightly ingest drops every sales, operations, support and design posting. ~~No migration is pending as of 2026-09-08~~ — `0018` (`role_requirements.max_years`) was recorded here as outstanding but is APPLIED; verified by selecting the column against the live database. Over-qualification is scored. Re-check by query rather than by this line, which went stale once already |
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |

@@ -62,7 +62,7 @@ export function ToolPage({
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" />
           </span>
-          Saaf AI
+          Saaf
         </Link>
         <div className="flex items-center gap-5 text-sm">
           <Link

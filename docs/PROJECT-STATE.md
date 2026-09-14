@@ -1290,9 +1290,99 @@ the functions we actually cover with live counts and offers the ATS checker.
   the supply is still the supply.
 - **The bucket thresholds were not touched.** A zero-skill role at 65% is still
   labelled STRONG MATCH. Changing where that line sits is a product decision.
-- **The remaining P2s**: three names for one product (Saaf / Saaf AI / Cookie /
+- ~~**The remaining P2s**: three names for one product (Saaf / Saaf AI / Cookie /
   `jobmatch`), "100% Tailored" in the hero, and the unclassified 44% of the
-  index — which needs sales and operations as functions.
+  index — which needs sales and operations as functions.~~ **Done 2026-09-14 —
+  see Stage S below.**
+
+### Stage S — the P2s, and the coverage panel that was lying by omission (2026-09-14)
+
+The three items Stage R parked. Two were copy; the third turned out to be a
+user-facing defect rather than tidying.
+
+**One name.** `Saaf AI` was the wordmark in nine places — the document title, the
+landing header and footer, the sign-in screen, three shells and the OG card —
+while `Saaf` was the name everywhere else. **"Name is Saaf" is in the locked
+decisions table**, so this was drift, not a choice, and needed no deciding.
+
+**`/copilot` lost its persona.** It spoke in the first person as "Cookie" ("I
+scored 42 roles against your profile") — the only place in the product using that
+name, and the fourth name for one product. The card now reads *"Your shortlist,
+averaged"* and the sentence is *"Saaf scored 51 roles against your profile."* The
+biscuit icon went with it. **Module names were deliberately not renamed**:
+`lib/services/cookie.ts` and the interview-prep engine keep theirs, because
+renaming internals buys a reader nothing and loses the history.
+
+**"100% Tailored." was cut from the hero**, which now reads *"Precision Career
+Copilot for India. Zero Spam."* It was a completeness figure nothing measures —
+the same invented number as the "Profile Strength: 92%" dial `/copilot` refuses
+to draw, on the one page whose argument is that our arithmetic can be checked.
+Stage R found the landing page advertising a scoring bug the same way. **Second
+instance of one habit, not two unrelated slips.** The sub-headline already
+carried the real promise and is checkable.
+
+⚠️ **THE UNCLASSIFIED 44% WAS NOT A TIDINESS PROBLEM.** `roles.function` has
+exactly one reader — `coverageByFunction()`, which feeds the message a candidate
+sees when their shortlist comes back thin — and `other` is invisible to it.
+Confirmed in a browser on `/today`: *"we are strongest here: Engineering 9,096 ·
+Consulting 1,916 · Finance 1,107 · Marketing 412 · HR 375."* A sales candidate
+reads five functions, none of them theirs, while **1,390 live sales roles** sit
+in the index unnamed. That panel exists to attribute a thin list to our coverage
+rather than to the candidate; omitting a function inverts it into a false
+statement about our coverage.
+
+Four functions added — `sales`, `operations`, `support`, `design`. Migration
+`0025` widens the CHECK constraint; `npm run reclassify:roles` backfills.
+
+| Measured over all 23,184 India roles | |
+|---|---|
+| sales | 1,390 |
+| operations | 640 |
+| support | 314 |
+| design | 309 |
+| `other` | **44.2% → 32.8%** |
+
+⚠️ **STAGE R'S FRAMING WAS ABOUT A QUARTER RIGHT, AND THE CORRECTION MATTERS
+MORE THAN THE FIX.** It said the 44% "needs sales and operations as functions."
+Sales and operations alone move it to 35.3%. The remainder is not a fifth missing
+function — it is the long tail a 1,396-board index of GCC and pharma employers
+actually contains: *Senior Statistical Programmer*, *Regulatory Affairs (CMC,
+Biologics)*, *Specialist, Payroll*, *Senior Manager - PMO*, *Scrum Master*. Each
+needs its own function to be named honestly and none is a market this product
+claims to serve. **Do not chase 32.8% with a sixth pattern.**
+
+**The new patterns are APPENDED, and that placement is the design.** First match
+wins, so they can only claim titles all five existing patterns declined — not one
+existing classification moves. `consulting` keeps "business development" and
+"supply chain"; re-cutting that boundary is a decision about the personas, not a
+coverage fix. Six tests assert exactly that.
+
+**One guard, one measured reason.** The first run put "Senior Software
+Development Manager - Global Operations Team" and "SOC Analyst — Security
+Operations" in operations. Both were `other` before, so the change would have
+replaced no answer with a wrong one. `ENGINEERING_SUBJECT` guards `operations`
+only — the narrower three cannot make that mistake, and a guard on all four
+would be a second place to look when a title classifies oddly.
+
+**The backfill lives in TypeScript, not in the migration.** Four `update roles
+set function = ...` statements with the regexes transcribed into Postgres ARE
+syntax were written and then deleted: the same rules in a second dialect, covered
+by no test, drifting the first time `classify.ts` changes. `reclassify-roles.ts`
+calls `classifyFunction` itself. One definition of what a sales role is.
+
+**What the dry run found and deliberately does not write.** 30 rows stored
+`other` that the *current* classifier calls engineering or consulting — ingested
+under an older version and never revisited, because the ingest classifies on
+write and never re-reads. At least one is a defect: *"Hindi - AI Voice Data
+Collection Project"* reaches engineering through the pattern's bare `\bai\b`.
+Folding that into a migration about sales would import an unreviewed change under
+another change's name. Reported by the script, left alone. **Open question.**
+
+**Nothing scored differently.** Migration 0010 replaced function-bucket equality
+with free-text `title_tsv` matching, so retrieval and scoring never read this
+column. `npm run bench:match` before and after: identical, 0 components paying
+out at 90%+. `npm run bench`: 26 documents, no delta. 521 tests, lint 0 errors,
+RLS verified.
 
 ### Deployed 2026-09-09 — parity, and past it
 

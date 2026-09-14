@@ -29,7 +29,7 @@ export function DocPage({
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" />
           </span>
-          Saaf AI
+          Saaf
         </Link>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
           <Link href="/audit" className="transition-colors hover:text-foreground">Index audit</Link>

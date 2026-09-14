@@ -66,7 +66,7 @@ export function AppShell({
               <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Sparkles className="size-4" />
               </span>
-              Saaf AI
+              Saaf
             </Link>
             <button
               className="rounded-lg p-2 text-muted-foreground lg:hidden"

@@ -64,7 +64,7 @@ export function OnboardingShell({
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" />
           </span>
-          Saaf AI
+          Saaf
         </Link>
 
         {/* Was a badge, a headline and two promises. The badge said what the
