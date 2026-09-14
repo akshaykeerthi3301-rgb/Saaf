@@ -37,17 +37,32 @@ export type ParseResult = {
   warnings: string[]
 }
 
-const CITIES = [
+import { dateRangeYears } from './dates'
+
+/**
+ * Indian metros, shared with sections.ts so a city is never mistaken for an
+ * employer. Deliberately short and deliberately not a gazetteer: it exists to
+ * resolve an ambiguity, not to geocode.
+ */
+export const CITIES = [
   'Bengaluru', 'Bangalore', 'Mumbai', 'Delhi', 'New Delhi', 'Gurgaon', 'Gurugram',
   'Noida', 'Hyderabad', 'Pune', 'Chennai', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Kochi',
 ]
 
-const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
-const DASH = '[-‐‑‒–—]'
-const DATE_RANGE_RE = new RegExp(
-  `(?:${MONTH}\\s*)?((?:19|20)\\d{2})\\s*${DASH}\\s*(?:(?:${MONTH}\\s*)?((?:19|20)\\d{2})|present|current|now)`,
-  'gi'
-)
+/**
+ * Is this string just a city name?
+ *
+ * ⚠️ USED TO STOP A CITY BEING REPORTED AS AN EMPLOYER. A role line with no job
+ * title — a company name alone, above a "dates | city" line — is read
+ * positionally by both parsers in this repo, and both returned employer
+ * "Bengaluru". Neither had any way to notice; the shapes are identical.
+ */
+export function isCity(value: string | null | undefined): boolean {
+  if (!value) return false
+  const v = value.trim().toLowerCase()
+  return CITIES.some((c) => c.toLowerCase() === v)
+}
+
 
 // Section headers that are never employment — a date range under one of these
 // (e.g. a graduation year) must not be read as a career-start date. Deliberately
@@ -88,7 +103,7 @@ function readYears(lines: string[], clean: string): { years?: number; inferred: 
   const starts: number[] = []
   lines.forEach((line, i) => {
     if (isExcluded(i)) return
-    for (const m of line.matchAll(DATE_RANGE_RE)) {
+    for (const m of line.matchAll(dateRangeYears())) {
       const y = Number(m[1])
       if (y >= 1980 && y <= new Date().getFullYear()) starts.push(y)
     }

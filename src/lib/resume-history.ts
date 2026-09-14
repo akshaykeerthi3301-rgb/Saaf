@@ -113,7 +113,14 @@ export function timeline(sections: ResumeSections): Tenure[] {
   })
 }
 
-export type Gap = { afterEmployer: string | null; beforeEmployer: string | null; months: number }
+export type Gap = {
+  afterEmployer: string | null
+  beforeEmployer: string | null
+  months: number
+  /** The window itself, so a caller can ask what else was happening then. */
+  start: Month
+  end: Month
+}
 
 /**
  * Unexplained months between one role ending and the next beginning.
@@ -134,7 +141,13 @@ export function gaps(t: Tenure[]): Gap[] {
     if (!prev.end || !next.start) continue
     const months = monthsBetween(prev.end, next.start)
     if (months >= GAP_THRESHOLD_MONTHS) {
-      out.push({ afterEmployer: prev.employer, beforeEmployer: next.employer, months })
+      out.push({
+        afterEmployer: prev.employer,
+        beforeEmployer: next.employer,
+        months,
+        start: prev.end,
+        end: next.start,
+      })
     }
   }
   return out

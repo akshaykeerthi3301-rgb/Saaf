@@ -1,5 +1,6 @@
-import { extractFields, type ParsedFields } from '@/lib/parse/extract'
-import { parseSections } from '@/lib/parse/sections'
+import { extractFields, isCity, type ParsedFields } from '@/lib/parse/extract'
+import { parseSections, parseCoverage, type ParseCoverage, type ResumeSections } from '@/lib/parse/sections'
+import { dateRangeYears, openEnded, MONTH } from '@/lib/parse/dates'
 import {
   timeline, gaps, progressed, skillsWithoutEvidence, leadershipEvidence, seniorityBand,
 } from '@/lib/resume-history'
@@ -93,11 +94,23 @@ export type AtsReport = {
   findings: AtsFinding[]
   /** The same findings, grouped and scored per category, for the report UI. */
   categories: AtsCategoryScore[]
-  /** Out of 100, with every deduction itemised. Never a number on its own. */
+  /**
+   * Out of 100, with every deduction itemised. Never a number on its own.
+   *
+   * `points` is each finding's TRUE MARGINAL COST — the score recomputed with
+   * that finding removed, minus the score with it. Under the old flat model the
+   * printed cost and the real one were the same number by construction; under a
+   * weighted, renormalised model they are not, and printing the nominal
+   * severity cost would put a figure on screen that the arithmetic does not
+   * support. This repo's whole argument is that a score should be reproducible
+   * by the person reading it.
+   */
   readability: {
     score: number
     deductions: { id: string; title: string; points: number }[]
   }
+  /** How much of the document the parser could interpret — half the score. */
+  coverage: ParseCoverage
   /**
    * What our own deterministic parser got out of the document.
    *
@@ -250,7 +263,51 @@ export const MAX_RESUME_CHARS = 20_000
 
 export class AtsCheckError extends Error {}
 
-const SEVERITY_COST: Record<AtsSeverity, number> = { high: 18, medium: 9, low: 4 }
+/**
+ * ⚠️ THE SCORE IS NO LONGER `100 − Σ {high: 18, medium: 9, low: 4}`, AND THAT
+ * FLAT SUBTRACTIVE SHAPE WAS WHY IT NEVER RESEMBLED A REAL ATS SCORE.
+ *
+ * Flat subtractive costs have three defects, all measured: the headline number
+ * and the per-category bars were computed separately and never reconciled; six
+ * findings saturated the score at 0 no matter what else was true; and the
+ * `passed`/`total` fractions on screen fed nothing at all.
+ *
+ * The replacement has the two parts the category leader's own documentation
+ * describes — "the proportion of content we can interpret", plus an assessment
+ * of what is in it. The first half is `parseCoverage`, which this repo had
+ * already been computing and discarding for weeks.
+ */
+const PARSE_WEIGHT = 0.35
+
+/**
+ * What one finding costs ITS OWN CATEGORY, in points out of that category's 100.
+ *
+ * ⚠️ NOT A SHARE OF THE CHECK COUNT. Dividing by how many rules a category
+ * happens to contain made severity meaningless: `multi-column` is one of eight
+ * ATS-essentials rules, so a finding whose own copy says "blocks parsing" moved
+ * the final score by two points. How much a defect matters cannot depend on how
+ * many other things we thought to check alongside it.
+ */
+const SEVERITY_CATEGORY_COST: Record<AtsSeverity, number> = { high: 40, medium: 18, low: 7 }
+
+/**
+ * Category weights, summing to 100 across all seven.
+ *
+ * Ordered by what actually stops a résumé being read rather than by how much
+ * there is to say about each: a document that will not parse fails before any
+ * question of content arises, and bias signals — while worth naming — change
+ * nothing about machine readability. Renormalised over whichever categories
+ * ran, so a check with no target role does not silently score as a pass.
+ */
+const CATEGORY_WEIGHT: Record<AtsCategory, number> = {
+  ats_essentials: 25,
+  sections: 15,
+  content: 25,
+  tailoring: 10,
+  red_flags: 10,
+  seniority: 10,
+  bias: 5,
+}
 
 /** A finding before it is placed in a category — see the note in checkResume. */
 type RawFinding = Omit<AtsFinding, 'category'>
@@ -269,12 +326,12 @@ const RULES: Record<AtsCategory, { label: string; ids: string[] }> = {
     label: 'ATS essentials',
     ids: [
       'multi-column', 'single-blob', 'no-email', 'no-phone', 'no-dates',
-      'date-format-mixed', 'resume-length', 'no-links',
+      'date-format-mixed', 'resume-length', 'no-links', 'unprofessional-email',
     ],
   },
   sections: {
     label: 'Résumé sections',
-    ids: ['missing-sections', 'section-order', 'separator-header'],
+    ids: ['missing-sections', 'section-order', 'separator-header', 'contact-incomplete'],
   },
   content: {
     label: 'Content',
@@ -282,12 +339,21 @@ const RULES: Record<AtsCategory, { label: string; ids: string[] }> = {
       'title-unreadable', 'title-misread', 'employer-unreadable', 'no-quantified-impact', 'weak-openers',
       'bullet-too-long', 'keyword-dump', 'repeated-term', 'overlapping-present',
       'years-disagree', 'future-date', 'spelling-common', 'doubled-word',
-      'bullet-punctuation', 'unevidenced-claims',
+      'bullet-punctuation',
+      'action-verb-coverage', 'unevidenced-claims',
     ],
   },
   tailoring: {
     label: 'Job tailoring',
-    ids: ['role-vocabulary', 'action-verb-coverage', 'title-not-targeted'],
+    /**
+     * ⚠️ `action-verb-coverage` USED TO LIVE HERE AND LEAKED. It fires on any
+     * résumé with three bullets, target role or not — but this whole category
+     * is dropped from the grouped view when no role was chosen, so its cost hit
+     * the headline score from a category the reader could not open. Whether a
+     * bullet opens with a verb is a property of the writing, not of the role
+     * being targeted, so it belongs in `content` and is scored there.
+     */
+    ids: ['role-vocabulary', 'title-not-targeted', 'jd-missing-standard'],
   },
   /**
    * ⚠️ THE THREE CATEGORIES THIS FILE ONCE SAID IT WOULD NEVER HAVE, and the
@@ -329,14 +395,6 @@ export function categoryOf(id: string): AtsCategory | null {
   return CATEGORY_OF[id] ?? null
 }
 
-/** Headers an ATS keys its sectioning off. Matched loosely — real résumés
- *  write "WORK EXPERIENCE", "Professional Experience", "EXPERIENCE". */
-const SECTION_PATTERNS: [label: string, re: RegExp][] = [
-  ['experience', /^\s*(work|professional|employment|relevant)?\s*experience\b/im],
-  ['education', /^\s*(education|academics?|qualifications?)\b/im],
-  ['skills', /^\s*(technical\s+)?(skills|competencies|technologies)\b/im],
-]
-
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]+/
 const PHONE_RE = /(?:\+?\d[\d\s-]{8,}\d)/
 /** A link a parser can store. An icon hyperlink extracts as nothing at all. */
@@ -359,20 +417,42 @@ const QUANTIFIED =
  * survives a spellchecker's autocorrect precisely because it is a real English
  * word or a near-miss nobody proofreads.
  */
-const MISSPELLINGS: Record<string, string> = {
-  acheive: 'achieve', acheived: 'achieved', reciept: 'receipt', recieve: 'receive',
-  recieved: 'received', managment: 'management', mangement: 'management',
+export const MISSPELLINGS: Record<string, string> = {
+  acheive: 'achieve', acheived: 'achieved', acheivement: 'achievement',
+  reciept: 'receipt', recieve: 'receive', recieved: 'received',
+  managment: 'management', mangement: 'management',
   responsibilty: 'responsibility', responsibilites: 'responsibilities', liason: 'liaison',
   seperate: 'separate', sucessful: 'successful', succesful: 'successful',
-  enviroment: 'environment', developement: 'development', experiance: 'experience',
-  knowlege: 'knowledge', accomodate: 'accommodate', occured: 'occurred',
-  publically: 'publicly', teh: 'the', analyse: 'analyse', buisness: 'business',
+  sucessfully: 'successfully', enviroment: 'environment', developement: 'development',
+  experiance: 'experience', knowlege: 'knowledge', accomodate: 'accommodate',
+  occured: 'occurred', publically: 'publicly', teh: 'the', buisness: 'business',
   colaborate: 'collaborate', collaberation: 'collaboration', comitted: 'committed',
   garuntee: 'guarantee', immediatly: 'immediately', maintainance: 'maintenance',
   neccessary: 'necessary', occassion: 'occasion', persue: 'pursue', priorty: 'priority',
   proffesional: 'professional', reccomend: 'recommend', refered: 'referred',
   strategey: 'strategy', sucess: 'success', thier: 'their', trainning: 'training',
   writting: 'writing',
+  // Added 2026-09-12 alongside the en-GB test below, which is what makes
+  // growing this list safe rather than risky.
+  abilties: 'abilities', adminstration: 'administration', aquired: 'acquired',
+  assesment: 'assessment', begining: 'beginning', calender: 'calendar',
+  carrer: 'career', challanging: 'challenging', comminication: 'communication',
+  compitition: 'competition', consistant: 'consistent', curriculam: 'curriculum',
+  decison: 'decision', definately: 'definitely', desicion: 'decision',
+  develope: 'develop', diffrent: 'different', efficency: 'efficiency',
+  elligible: 'eligible', excecutive: 'executive', familier: 'familiar',
+  finacial: 'financial', flexable: 'flexible', goverment: 'government',
+  guage: 'gauge', hierachy: 'hierarchy', implemetation: 'implementation',
+  independant: 'independent', initate: 'initiate', inteligent: 'intelligent',
+  intrested: 'interested', leadersip: 'leadership', lenght: 'length',
+  negotation: 'negotiation', oppurtunity: 'opportunity', paticular: 'particular',
+  performace: 'performance', personell: 'personnel', posession: 'possession',
+  preformance: 'performance', presntation: 'presentation', proffesion: 'profession',
+  proficent: 'proficient', programing: 'programming', recomendation: 'recommendation',
+  relevent: 'relevant', requirment: 'requirement', reserach: 'research',
+  resposible: 'responsible', supervisior: 'supervisor', techincal: 'technical',
+  tecnology: 'technology', transfered: 'transferred', univeristy: 'university',
+  vaild: 'valid', volunter: 'volunteer',
 }
 
 /**
@@ -390,27 +470,29 @@ const UNEVIDENCED = [
   'excellent communication skills', 'strong work ethic', 'proven track record',
 ]
 
-/** Past-tense openers that describe an action. Used to measure coverage, not
- *  to prescribe a word — the list is illustrative of the shape, not exhaustive. */
-const ACTION_VERBS = new Set([
+/**
+ * Past-tense openers that describe an action. Used to measure coverage, not
+ * to prescribe a word — the list is illustrative of the shape, not exhaustive.
+ *
+ * ⚠️ MUST STAY DISJOINT FROM `WEAK_OPENER`. 'handled' sat in both, so a bullet
+ * opening "Handled production incidents…" was simultaneously counted as strong
+ * for action-verb coverage and flagged as weak — two findings disagreeing about
+ * one line, on the same screen. It is a weak opener (it names a duty, not an
+ * outcome) and has been removed from here. A test enforces the separation.
+ */
+export const ACTION_VERBS = new Set([
   'built', 'led', 'ran', 'owned', 'shipped', 'migrated', 'designed', 'developed',
   'delivered', 'launched', 'reduced', 'cut', 'improved', 'increased', 'automated',
   'scaled', 'rebuilt', 'wrote', 'created', 'managed', 'implemented', 'negotiated',
   'closed', 'grew', 'drove', 'set', 'introduced', 'replaced', 'consolidated',
   'streamlined', 'trained', 'mentored', 'audited', 'analysed', 'analyzed', 'forecast',
-  'authored', 'oversaw', 'coordinated', 'supported', 'contributed', 'handled',
+  'authored', 'oversaw', 'coordinated', 'supported', 'contributed',
   'rewrote', 'refactored', 'deployed', 'optimised', 'optimized', 'tested', 'maintained',
 ])
 
-/** Openers that name a duty rather than an action. */
-const WEAK_OPENER =
+/** Openers that name a duty rather than an action. Disjoint from ACTION_VERBS. */
+export const WEAK_OPENER =
   /^\s*(responsible for|worked on|helped (with|to)?|assisted (with|in)?|involved in|part of|tasked with|duties includ|handled)\b/i
-const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
-const DASH = '[-‐‑‒–—]'
-const DATE_RANGE_RE = new RegExp(
-  `(?:${MONTH}\\s*)?((?:19|20)\\d{2})\\s*${DASH}\\s*(?:(?:${MONTH}\\s*)?((?:19|20)\\d{2})|present|current|now)`,
-  'gi'
-)
 /** "8+ years", "over 6 years of experience". */
 const CLAIMED_YEARS_RE = /\b(?:over\s+|more\s+than\s+|about\s+)?(\d{1,2})\s*\+?\s*years?\b(?=[^.]{0,40}experience)/i
 
@@ -448,13 +530,45 @@ function looksMultiColumn(lines: string[]): { hit: boolean; sample?: string } {
 }
 
 /** Overlapping open-ended roles: more than one entry marked Present/Current. */
-function openEndedRoles(text: string): number {
-  return [...text.matchAll(new RegExp(`${DASH}\\s*(present|current|now)\\b`, 'gi'))].length
+/**
+ * Roles with no end date.
+ *
+ * ⚠️ COUNTED FROM PARSED ENTRIES, NOT FROM TEXT MATCHES, AND THE DIFFERENCE IS
+ * A FALSE FINDING. Counting "– Present" across the raw document tallies every
+ * open-ended thing on the page, including side projects listed under their own
+ * heading. On the founder's own résumé that produced "6 roles are both marked
+ * as ongoing" against one current job and three ongoing projects — an
+ * ambiguity the document does not actually contain, charged at three points.
+ */
+function openEndedRoles(structure: ResumeSections): number {
+  return structure.experience.filter(
+    (e) => !e.isProject && e.dates !== null && openEnded().test(e.dates),
+  ).length
 }
 
 function earliestYear(text: string): number | undefined {
-  const years = [...text.matchAll(DATE_RANGE_RE)].map((m) => Number(m[1])).filter(Boolean)
+  const years = [...text.matchAll(dateRangeYears())].map((m) => Number(m[1])).filter(Boolean)
   return years.length ? Math.min(...years) : undefined
+}
+
+/**
+ * What the PDF's geometry says, when we have it.
+ *
+ * ⚠️ SEVERAL CHECKS WERE GUESSING AT THIS FROM FLATTENED TEXT AND COULD NOT WIN.
+ * `looksMultiColumn` hunts for runs of three spaces, because that is the only
+ * trace a column layout leaves once the lines are gone — and the old extractor
+ * collapsed exactly those runs before this file ever saw them. Passing the real
+ * column count from `pdfToLayout` replaces a proxy with the fact. Optional, so
+ * a pasted résumé (which genuinely has no geometry) still scores.
+ */
+export type LayoutFacts = {
+  /** Text columns on the busiest page. 1 for an ordinary résumé. */
+  columns: number
+  /** x-positions recurring down the page — right-aligned dates, table cells. */
+  alignedColumns: number
+  pages: number
+  /** A line found outside the first column, quoted back as evidence. */
+  sample?: string
 }
 
 /**
@@ -463,7 +577,12 @@ function earliestYear(text: string): number | undefined {
  * Throws only for input too short to assess. Everything else is a finding —
  * a checker that refuses to run teaches nothing.
  */
-export function checkResume(resumeText: string, targetRole?: string): AtsReport {
+export function checkResume(
+  resumeText: string,
+  targetRole?: string,
+  layout?: LayoutFacts,
+  jdText?: string,
+): AtsReport {
   const text = resumeText.trim()
   if (text.length < MIN_RESUME_CHARS) {
     throw new AtsCheckError('Paste your full résumé — this looks too short to check.')
@@ -494,10 +613,66 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
    * same file in front of the same person.
    */
   const structure = parseSections(text)
+  const coverage = parseCoverage(structure, layout)
+
+  /**
+   * ⚠️ TWO PARSERS WERE ANSWERING THE SAME QUESTION AND DISAGREEING ON SCREEN.
+   * `extractFields` is the older line-anchored regex reader; `parseSections`
+   * builds the real structure. On the founder's own résumé the structured parse
+   * had "Private Banking Manager (M1)" at ICICI Bank while the report told him
+   * "your current job title did not come through" — the checker contradicting
+   * its own extraction, and charging four points for it.
+   *
+   * The structured read wins where it has an answer, because it is the one the
+   * rewrite, the preview and the saved document all use. The regex reader stays
+   * as the fallback: it finds titles in résumés with no Experience heading at
+   * all, which parseSections by design cannot.
+   */
+  /**
+   * ⚠️ ONLY WHEN CORROBORATED, AND THE FIRST ATTEMPT AT THIS WAS WRONG.
+   * `parseHeader` assigns positionally — parts[0] is the title, parts[1] the
+   * employer — so a role line reading only "Paytm" comes back as
+   * {title: "Paytm", employer: null}. Preferring that outright silenced
+   * `title-unreadable` on exactly the documents it exists for, and handed the
+   * candidate a confident wrong answer instead of a finding. Three existing
+   * tests caught it, one of which was written after this same class of bug.
+   *
+   * A structured read is trusted only when the line produced BOTH halves, which
+   * means it genuinely carried a separator ("Title at Employer"). Where it did
+   * not, the older regex reader is the better witness precisely because it
+   * returns nothing rather than guessing.
+   */
+  const firstRole = structure.experience.find((e) => !e.isProject)
+  const corroborated = Boolean(firstRole?.title && firstRole?.employer)
+  // `?? undefined` because ResumeSections uses null for "absent" and
+  // ParsedFields uses undefined; the report type follows the latter.
+  const readTitle = (corroborated ? firstRole!.title : f.currentTitle) ?? undefined
+  // The fallback reader has the same positional blind spot, so the guard has
+  // to sit on both paths — fixing only parseHeader left "Bengaluru" arriving
+  // as the employer by the other route.
+  const fallbackEmployer = isCity(f.employer) ? undefined : f.employer
+  const readEmployer = (corroborated ? firstRole!.employer : fallbackEmployer) ?? undefined
 
   // ---- parsing ------------------------------------------------------------
 
-  const missingSections = SECTION_PATTERNS.filter(([, re]) => !re.test(text)).map(([label]) => label)
+  /**
+   * ⚠️ THIS USED TO RUN ITS OWN REGEXES (`SECTION_PATTERNS`) OVER THE RAW TEXT,
+   * a fourth copy of section detection alongside sections.ts's. The two
+   * diverged the moment heading matching was widened: a résumé headed
+   * "WHERE I'VE WORKED" parsed correctly into an experience section and was
+   * then told it had no experience heading — the checker reporting a defect the
+   * parser had already handled. One source of truth, and the finding now means
+   * "our parser could not find this", which is the claim the copy makes.
+   */
+  const missingSections = (
+    [
+      ['experience', structure.order.includes('experience') || structure.experience.length > 0],
+      ['education', structure.order.includes('education') || structure.education.length > 0],
+      ['skills', structure.order.includes('skills') || structure.skills.length > 0],
+    ] as [string, boolean][]
+  )
+    .filter(([, present]) => !present)
+    .map(([label]) => label)
   if (missingSections.length) {
     add({
       id: 'missing-sections',
@@ -518,8 +693,74 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     })
   }
 
+  // The measured column count beats the whitespace proxy whenever we have it.
+  /**
+   * A working address that reads as a person's name.
+   *
+   * ⚠️ THE PROVIDER IS NEVER JUDGED, and that is a deliberate limit rather than
+   * an oversight. Advice of the "get a Gmail address" kind is a class signal
+   * dressed as technical guidance — rediffmail and yahoo addresses are ordinary
+   * in India and parse identically. What actually costs a candidate anything is
+   * a local part a recruiter has to read twice, so that is the only thing
+   * measured: a long digit run, or one of a short list of words nobody chooses
+   * for a work address. `ats-check.ts` previously had a comment saying this
+   * check was "considered here and DELIBERATELY NOT WRITTEN"; what it was
+   * missing was a form that says something checkable.
+   */
+  const emailMatch = text.match(EMAIL_RE)
+  const localPart = emailMatch?.[0].split('@')[0] ?? ''
+  const juvenile = /\b(cool|sexy|babe|hunk|killer|rockstar|ninja|guru|crazy|sweet|angel|devil)\b/i
+  /**
+   * ⚠️ A RUN OF DIGITS IS NOT THE PROBLEM, AND THE FIRST VERSION OF THIS CHECK
+   * SAID IT WAS. It flagged any four consecutive digits, which fires on
+   * "priyaiyer1998@…" and on the founder's own address — ordinary addresses
+   * where a common name was already taken. Appending a number is what almost
+   * everyone with a common name has had to do, and telling them it reads badly
+   * is advice with nothing behind it.
+   *
+   * What actually costs a candidate anything is an address with no NAME in it
+   * to connect back to them. So the test is for the absence of a usable
+   * alphabetic run, not for the presence of digits.
+   */
+  const hasNameLikeRun = /[a-z]{4,}/i.test(localPart)
+  if (localPart && (!hasNameLikeRun || juvenile.test(localPart))) {
+    add({
+      id: 'unprofessional-email',
+      area: 'parsing',
+      severity: 'low',
+      title: 'Your email address does not read as your name',
+      detail:
+        'A recruiter copies this address by hand more often than you would think, and it is the one line of the résumé that reappears in every reply. A long run of digits or a nickname makes it easy to mistype and harder to connect back to you in a full inbox.',
+      fix: 'Use some arrangement of your own name if the address is free — the provider does not matter and no system prefers one over another.',
+      evidence: emailMatch?.[0],
+    })
+  }
+
+  /**
+   * Contact fields a parser could not recover, named individually.
+   *
+   * Distinct from `no-email` / `no-phone`, which ask whether the DOCUMENT
+   * contains one. This asks whether our parser could attach it to the
+   * candidate, which is the question an ATS actually answers when it builds a
+   * profile row. Reads `coverage`, so it cannot disagree with the parse rate
+   * printed beside it.
+   */
+  const contactGaps = coverage.fieldsMissing.filter((f) => f === 'name' || f === 'email' || f === 'phone')
+  if (contactGaps.length > 0) {
+    add({
+      id: 'contact-incomplete',
+      area: 'parsing',
+      severity: contactGaps.length >= 2 ? 'medium' : 'low',
+      title: `A parser could not pick out your ${new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(contactGaps)}`,
+      detail:
+        'Applicant tracking systems build a contact record before anybody reads the document, and a field they cannot attach is usually left blank rather than guessed. A blank name or phone number on that record is what makes an application hard to follow up even after somebody wants to.',
+      fix: 'Put your name on its own line at the very top, with email and phone on the line directly beneath it — plain text, no icons, no text box.',
+    })
+  }
+
   const column = looksMultiColumn(lines)
-  if (column.hit) {
+  const multiColumn = layout ? layout.columns > 1 : column.hit
+  if (multiColumn) {
     add({
       id: 'multi-column',
       area: 'parsing',
@@ -528,7 +769,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
       detail:
         'Text extracted from side-by-side columns interleaves them line by line, so a job title can arrive joined to an unrelated date from the other column. The document looks correct to a person and arrives scrambled to the parser.',
       fix: 'Rebuild it as a single column, top to bottom. Sidebars, text boxes and tables are the usual cause.',
-      evidence: column.sample,
+      evidence: layout?.sample ?? column.sample,
     })
   }
 
@@ -578,7 +819,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     })
   }
 
-  const dateMatches = [...text.matchAll(DATE_RANGE_RE)]
+  const dateMatches = [...text.matchAll(dateRangeYears())]
   if (dateMatches.length === 0) {
     add({
       id: 'no-dates',
@@ -663,8 +904,8 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
    * mechanically checkable, so it is checked.
    */
   const titleLooksLikeDate =
-    Boolean(f.currentTitle) &&
-    (new RegExp(`^${MONTH}\\b|\\b(19|20)\\d{2}\\b|\\b(present|current)\\b`, 'i').test(f.currentTitle!))
+    Boolean(readTitle) &&
+    (new RegExp(`^${MONTH}\\b|\\b(19|20)\\d{2}\\b|\\b(present|current)\\b`, 'i').test(readTitle!))
   if (titleLooksLikeDate) {
     add({
       id: 'title-misread',
@@ -678,7 +919,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     })
   }
 
-  if (!f.currentTitle) {
+  if (!readTitle) {
     add({
       id: 'title-unreadable',
       area: 'parsing',
@@ -689,7 +930,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
       fix: 'Put your current role on its own line as "Product Manager at Paytm", above its date range.',
     })
   }
-  if (!f.employer) {
+  if (!readEmployer) {
     add({
       id: 'employer-unreadable',
       area: 'parsing',
@@ -744,7 +985,7 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
   //
   // Written as ambiguity, never as accusation. See the module comment.
 
-  const openEnded = openEndedRoles(text)
+  const openEnded = openEndedRoles(structure)
   if (openEnded > 1) {
     add({
       id: 'overlapping-present',
@@ -850,6 +1091,44 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
           `The authoritative list is the posting itself, not this one: paste a specific job description into Should I apply? to see what THAT employer asks for.`,
       })
     }
+
+    /**
+     * ⚠️ THE PASTED JOB DESCRIPTION WAS COLLECTED AND THROWN AWAY. The upload
+     * form has always offered "Have a specific job description? Paste it", and
+     * `jdVersusMarket` has existed since Stage P — but nothing called it, so the
+     * JD only ever reached the rewrite. A candidate who pasted a posting got a
+     * report that had not read it.
+     *
+     * What makes this worth more than a keyword diff is the SPLIT. Terms the
+     * posting shares with the wider market are worth adding, because every
+     * employer for this role wants them. Terms peculiar to this one employer
+     * are worth knowing about and NOT worth rewriting a résumé around — that is
+     * over-fitting to a single ad, and it is advice nobody without an index can
+     * give, because telling the two apart requires knowing what the rest of the
+     * market says.
+     */
+    const jd = jdText?.trim()
+    if (jd && jd.length > 80) {
+      const { standard, specific } = jdVersusMarket(targetRole!, jd)
+      const absent = standard.filter((t) => !hay.includes(t.term))
+      if (absent.length > 0) {
+        add({
+          id: 'jd-missing-standard',
+          area: 'keywords',
+          severity: absent.length >= 3 ? 'medium' : 'low',
+          title: `This posting asks for ${absent.length} term${absent.length === 1 ? '' : 's'} your résumé does not use`,
+          detail:
+            `${absent.map((t) => `"${t.term}" (in ${t.pct}% of the ${roleEntry.postings} ${targetRole} postings we index)`).join(', ')}. ` +
+            `These are not this employer's private vocabulary — they are standard for the role, which is why their absence costs you at every posting rather than this one.` +
+            (specific.length
+              ? ` By contrast, ${specific.slice(0, 4).map((w) => `"${w}"`).join(', ')} appear to be specific to this employer. Knowing which is which is the point: rewriting your résumé around one company's words is over-fitting, and it makes the document worse everywhere else.`
+              : ''),
+          fix:
+            `Add the standard terms only where the work behind them is genuinely yours. Leave the employer-specific ones for the cover note, where naming their language is an advantage rather than a distortion.`,
+          evidence: absent[0]?.term,
+        })
+      }
+    }
   }
 
   // ---- ATS essentials -----------------------------------------------------
@@ -929,7 +1208,15 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
   const order = structure.order
   const iExp = order.indexOf('experience')
   const iEdu = order.indexOf('education')
-  if (iExp > -1 && iEdu > -1 && iEdu < iExp && structure.experience.length > 0) {
+  /**
+   * ⚠️ AND NEVER ACROSS COLUMNS. In a sidebar layout the parser reads the left
+   * column first, so education in the sidebar lands "before" experience in the
+   * main column — an artefact of reading order, not of how the page is printed.
+   * Firing here told a two-column résumé to reorder sections that are already
+   * side by side, and made one résumé score differently in two layouts.
+   */
+  const singleColumn = (layout?.columns ?? 1) === 1
+  if (singleColumn && iExp > -1 && iEdu > -1 && iEdu < iExp && structure.experience.length > 0) {
     add({
       id: 'section-order',
       area: 'parsing',
@@ -1073,7 +1360,14 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         title: `${stopped} of ${bullets.length} lines end in a full stop, the rest do not`,
         detail: 'Mixed punctuation across a bullet list is the commonest sign of a résumé edited in several sittings, and it is the kind of detail a hiring manager reads as carelessness rather than as a typo.',
         fix: 'Pick one. Either every line ends in a full stop or none does.',
-      })
+        /**
+       * The minority line — whichever way round it is. Quoting one of the
+       * majority would show the reader a line that is not the problem.
+       */
+      evidence: stopped * 2 > bullets.length
+        ? bullets.find((b) => !/[.]\s*$/.test(b.trim()))
+        : bullets.find((b) => /[.]\s*$/.test(b.trim())),
+    })
     }
   }
 
@@ -1103,7 +1397,29 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
 
   const history = timeline(structure)
 
-  for (const gap of gaps(history).slice(0, 1)) {
+  /**
+   * ⚠️ A GAP THE RÉSUMÉ ALREADY EXPLAINS IS NOT A GAP, and saying otherwise is
+   * the worst kind of finding this product can produce: advice to explain
+   * something the reader has already explained, on the same page. Measured on
+   * the founder's own résumé — "a 2 years gap between Amazon and ICICI Bank",
+   * with a full-time MBA dated across exactly that window printed below it.
+   *
+   * Education dates are the one other timeline a résumé reliably carries, so a
+   * gap overlapping a degree is suppressed rather than softened. The check
+   * still fires on genuinely undated periods, which is what it is for.
+   */
+  const studyYears = new Set<number>()
+  for (const e of structure.education) {
+    const years = [...(e.dates ?? '').matchAll(/\b(19|20)\d{2}\b/g)].map((m) => Number(m[0]))
+    if (years.length === 0) continue
+    for (let y = Math.min(...years); y <= Math.max(...years); y++) studyYears.add(y)
+  }
+  const explainedByStudy = (gap: { start: { year: number }; end: { year: number } }) => {
+    for (let y = gap.start.year; y <= gap.end.year; y++) if (studyYears.has(y)) return true
+    return false
+  }
+
+  for (const gap of gaps(history).filter((g) => !explainedByStudy(g)).slice(0, 1)) {
     const years = Math.floor(gap.months / 12)
     const span = years >= 1 ? `${years} year${years === 1 ? '' : 's'}` : `${gap.months} months`
     add({
@@ -1249,31 +1565,20 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     })
   }
 
-  if (leadershipEvidence(structure) === 0 && bullets.length >= 3 && seniorityBand(f.currentTitle ?? null) >= 3) {
+  if (leadershipEvidence(structure) === 0 && bullets.length >= 3 && seniorityBand(readTitle ?? null) >= 3) {
     add({
       id: 'leadership-evidence',
       area: 'keywords',
       severity: 'low',
       title: 'A senior title with nothing on the page about running things',
       detail:
-        `Your title reads "${f.currentTitle}", and no line mentions leading, mentoring, owning or hiring. For roles at this level a reader is looking for that specifically, and its absence reads as an answer rather than an omission.`,
+        `Your title reads "${readTitle}", and no line mentions leading, mentoring, owning or hiring. For roles at this level a reader is looking for that specifically, and its absence reads as an answer rather than an omission.`,
       fix:
         'If you led, mentored or owned something, say which and how many. If your seniority is technical rather than managerial, say that instead — "owned the payments platform end to end" is a leadership claim without a team in it.',
     })
   }
 
   // ---- score --------------------------------------------------------------
-  //
-  // Every deduction is itemised and adds up to the number shown. A score whose
-  // arithmetic the reader cannot reproduce is the thing this product exists to
-  // replace, and that applies to our own tools first.
-  const deductions = findings.map((x) => ({
-    id: x.id,
-    title: x.title,
-    points: SEVERITY_COST[x.severity],
-  }))
-  const score = Math.max(0, 100 - deductions.reduce((s, d) => s + d.points, 0))
-
   /**
    * Categories. Each starts at 100 and is deducted only by its own findings,
    * so a résumé can be perfectly machine-readable and still score badly on
@@ -1288,13 +1593,22 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
     category: CATEGORY_OF[x.id] ?? 'content',
   }))
 
-  const categories: AtsCategoryScore[] = (
-    Object.entries(RULES) as [AtsCategory, { label: string; ids: string[] }][]
+  const activeRules = (Object.entries(RULES) as [AtsCategory, { label: string; ids: string[] }][]).filter(
+    ([key]) => key !== 'tailoring' || Boolean(roleEntry),
   )
-    .filter(([key]) => key !== 'tailoring' || Boolean(roleEntry))
-    .map(([key, { label, ids }]) => {
-      const mine = placed.filter((x) => x.category === key)
-      const lost = mine.reduce((s, x) => s + SEVERITY_COST[x.severity], 0)
+
+  /**
+   * Score a given set of findings. Called twice per finding as well as once for
+   * the whole report, which is what makes the itemised costs honest — see the
+   * note on `readability`.
+   */
+  const scoreWith = (
+    raised: AtsFinding[],
+    cov: ParseCoverage = coverage,
+  ): { score: number; categories: AtsCategoryScore[] } => {
+    const categories: AtsCategoryScore[] = activeRules.map(([key, { label, ids }]) => {
+      const mine = raised.filter((x) => x.category === key)
+      const lost = mine.reduce((n, x) => n + SEVERITY_CATEGORY_COST[x.severity], 0)
       return {
         key,
         label,
@@ -1303,14 +1617,52 @@ export function checkResume(resumeText: string, targetRole?: string): AtsReport 
         total: ids.length,
       }
     })
+    const weight = categories.reduce((n, c) => n + CATEGORY_WEIGHT[c.key], 0)
+    const content =
+      weight === 0 ? 100 : categories.reduce((n, c) => n + CATEGORY_WEIGHT[c.key] * c.score, 0) / weight
+    return {
+      score: Math.max(0, Math.min(100, Math.round(PARSE_WEIGHT * cov.rate + (1 - PARSE_WEIGHT) * content))),
+      categories,
+    }
+  }
+
+  const full = scoreWith(placed)
+  const categories = full.categories
+  const score = full.score
+  /**
+   * ⚠️ A LAYOUT FINDING COSTS BOTH HALVES OF THE SCORE, AND SHOWING ONLY ONE
+   * UNDERSTATES IT BADLY. Removing `multi-column` from the finding list is
+   * worth about seven points of content — but a two-column document is also
+   * what drives `parseCoverage` down, and that reduction is computed from the
+   * geometry rather than from the findings. Reported naively, a check whose own
+   * copy says "blocks parsing" printed a smaller cost than a punctuation nit,
+   * beside a gauge that would jump twenty points the moment it was fixed.
+   *
+   * The figure has to answer the question the candidate is actually asking —
+   * "what do I get for fixing this" — so for a finding that depresses the parse
+   * rate, the rescore drops the structural penalty too. That is exactly what
+   * the "Rebuild the layout" button does to the real document.
+   */
+  const coverageWithoutLayoutRisk = coverage.atsRisk.length > 0 ? parseCoverage(structure) : coverage
+  const LAYOUT_DRIVEN = new Set(['multi-column'])
+  const deductions = placed.map((x) => ({
+    id: x.id,
+    title: x.title,
+    points:
+      scoreWith(
+        placed.filter((y) => y !== x),
+        LAYOUT_DRIVEN.has(x.id) ? coverageWithoutLayoutRisk : coverage,
+      ).score - score,
+  }))
 
   return {
     findings: placed,
     categories,
     readability: { score, deductions },
+    coverage,
     read: {
-      currentTitle: f.currentTitle,
-      employer: f.employer,
+      currentTitle: readTitle,
+      employer: readEmployer,
       city: f.city,
       yearsExperience: f.yearsExperience,
       credential: f.credential,

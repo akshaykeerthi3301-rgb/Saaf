@@ -55,16 +55,71 @@ function Rule({ label, spec }: { label: string; spec: TemplateSpec }) {
   )
 }
 
+/**
+ * Does this line correspond to the finding the reader is looking at?
+ *
+ * Matching is on TEXT rather than on an index, because a finding's `evidence`
+ * is a quotation — sometimes the whole line, sometimes a fragment of it — and
+ * nothing in the pipeline carries a line number from the check back to the
+ * rendered document. Either direction of containment counts, and both sides
+ * must be long enough that a short bullet cannot swallow a long quotation by
+ * accident.
+ */
+function matcher(highlight?: string): (text: string) => boolean {
+  const needle = highlight?.replace(/\s+/g, ' ').trim().toLowerCase() ?? ''
+  if (needle.length < 2) return () => false
+  return (text) => {
+    const hay = text.replace(/\s+/g, ' ').trim().toLowerCase()
+    if (hay.length < 2) return false
+    /**
+     * ⚠️ SHORT EVIDENCE HAS TO MATCH EXACTLY, AND REQUIRING LENGTH INSTEAD LOST
+     * A WHOLE CLASS OF FINDING. `skills-not-evidenced` quotes a single skill —
+     * "Python", six characters — and an eight-character floor silently dropped
+     * every one of them. But loose containment on a short needle would mark any
+     * line containing the word, so the two cases need different rules rather
+     * than one threshold.
+     */
+    if (needle.length < 12) return hay === needle
+    return hay.includes(needle) || needle.includes(hay)
+  }
+}
+
+/**
+ * A line the active finding came from.
+ *
+ * ⚠️ AN OVERLAY, NOT PART OF THE DOCUMENT. This component's own header promises
+ * it is a picture of the file that downloads, and a highlight is the one thing
+ * on it that is not — so it is drawn with the APP's accent rather than the
+ * paper palette, and it exists only while a finding is selected. Nothing here
+ * reaches buildFullResumeDocx(), which builds the .docx from the sections
+ * independently.
+ */
+function Mark({ on, children }: { on: boolean; children: React.ReactNode }) {
+  if (!on) return <>{children}</>
+  return (
+    <mark
+      data-highlighted="true"
+      className="rounded-[3px] bg-accent/18 px-1 py-0.5 text-paper-ink shadow-[inset_2px_0_0_0_var(--color-accent)]"
+    >
+      {children}
+    </mark>
+  )
+}
+
 export function ResumePreview({
   sections,
   targetRole,
   template,
+  highlight,
 }: {
   sections: ResumeSections
   targetRole?: string
   template?: TemplateId
+  /** Text quoted by the finding on screen; the matching line is marked. */
+  highlight?: string
 }) {
   const spec = templateSpec(template)
+  const hit = matcher(highlight)
   const contact = [sections.contact.email, sections.contact.phone, ...sections.contact.links].filter(
     Boolean,
   )
@@ -91,13 +146,20 @@ export function ResumePreview({
             spec.density === 'airy' ? 'text-3xl' : spec.density === 'tight' ? 'text-xl' : 'text-2xl'
           }`}
         >
-          {sections.contact.name ?? 'Your name'}
+          <Mark on={hit(sections.contact.name ?? '')}>{sections.contact.name ?? 'Your name'}</Mark>
         </h2>
         {targetRole ? (
           <p className="mt-1 text-[12.5px] uppercase tracking-[0.14em] text-paper-muted">{targetRole}</p>
         ) : null}
         {contact.length > 0 ? (
-          <p className="mt-2 text-[12.5px] text-paper-muted">{contact.join('  ·  ')}</p>
+          <p className="mt-2 text-[12.5px] text-paper-muted">
+            {contact.map((c, i) => (
+              <span key={c}>
+                {i > 0 ? '  ·  ' : ''}
+                <Mark on={hit(c ?? '')}>{c}</Mark>
+              </span>
+            ))}
+          </p>
         ) : null}
       </header>
 
@@ -105,7 +167,7 @@ export function ResumePreview({
         {sections.summary ? (
           <section>
             <Rule label="Professional summary" spec={spec} />
-            <p>{sections.summary}</p>
+            <p><Mark on={hit(sections.summary)}>{sections.summary}</Mark></p>
           </section>
         ) : null}
 
@@ -117,7 +179,7 @@ export function ResumePreview({
                 <div key={`${e.employer ?? 'role'}-${i}`}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                     <p className="font-semibold text-paper-ink">
-                      {roleLine(e)}
+                      <Mark on={hit(roleLine(e))}>{roleLine(e)}</Mark>
                     </p>
                     {e.dates ? (
                       <p className="font-mono text-[11.5px] tabular-nums text-paper-muted">{e.dates}</p>
@@ -127,7 +189,9 @@ export function ResumePreview({
                   {e.bullets.length > 0 ? (
                     <ul className="mt-1.5 flex list-disc flex-col gap-1 pl-5 marker:text-paper-rule">
                       {e.bullets.map((b, j) => (
-                        <li key={j}>{b}</li>
+                        <li key={j}>
+                          <Mark on={hit(b)}>{b}</Mark>
+                        </li>
                       ))}
                     </ul>
                   ) : null}
@@ -146,7 +210,14 @@ export function ResumePreview({
               table is the second most common reason a skills section extracts
               as nothing at all.
             */}
-            <p>{sections.skills.join('  ·  ')}</p>
+            <p>
+              {sections.skills.map((sk, i) => (
+                <span key={sk}>
+                  {i > 0 ? '  ·  ' : ''}
+                  <Mark on={hit(sk)}>{sk}</Mark>
+                </span>
+              ))}
+            </p>
           </section>
         ) : null}
 
@@ -156,7 +227,9 @@ export function ResumePreview({
             <div className="flex flex-col gap-1">
               {sections.education.map((e, i) => (
                 <p key={i}>
-                  <span className="font-semibold text-paper-ink">{e.qualification}</span>
+                  <span className="font-semibold text-paper-ink">
+                    <Mark on={hit(e.qualification)}>{e.qualification}</Mark>
+                  </span>
                   {[e.institution, e.dates].filter(Boolean).length ? (
                     <span className="text-paper-muted">
                       {'  ·  '}
@@ -174,7 +247,9 @@ export function ResumePreview({
             <Rule label={o.heading} spec={spec} />
             <ul className="flex list-disc flex-col gap-1 pl-5 marker:text-paper-rule">
               {o.lines.map((line, i) => (
-                <li key={i}>{line}</li>
+                <li key={i}>
+                  <Mark on={hit(line)}>{line}</Mark>
+                </li>
               ))}
             </ul>
           </section>

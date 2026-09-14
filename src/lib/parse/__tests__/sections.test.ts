@@ -176,20 +176,29 @@ describe('the document we generate must pass the check we sell', () => {
     expect(introduced).toEqual([])
   })
 
-  it('makes the title and employer readable, where the input was not', () => {
+  it('keeps the title and employer readable through the round trip', () => {
     /**
-     * Both of these fire on CLEAN, whose role lines are built with an em dash,
-     * and neither fires on the rebuilt document. The rewrite therefore FIXES
-     * two findings by reformatting alone, before a single word is changed —
-     * which is most of the honest value in this feature.
+     * ⚠️ THIS TEST HAS BEEN INVERTED, AND THE REASON IS A GOOD ONE. It used to
+     * assert that `title-unreadable` and `employer-unreadable` FIRED on CLEAN —
+     * whose role lines are built with an em dash that the old regex reader could
+     * not parse — and were fixed by rebuilding the document. That was most of
+     * the honest value in the rewrite feature.
+     *
+     * Since 2026-09-12 the checker prefers `parseSections`, which reads em-dash
+     * role lines correctly, so neither finding fires on the input any more. The
+     * rewrite did not get worse; the PARSER got better, and the repair it used
+     * to perform is no longer needed for this class of document. What still has
+     * to hold — and is the thing this file exists to guard — is that writing the
+     * document back out does not LOSE what we could already read.
      */
-    const before = checkResume(CLEAN).findings.map((f) => f.id)
-    const after = checkResume(sectionsToText(parseSections(CLEAN))).findings.map((f) => f.id)
+    const before = checkResume(CLEAN)
+    const after = checkResume(sectionsToText(parseSections(CLEAN)))
 
-    expect(before).toContain('title-unreadable')
-    expect(before).toContain('employer-unreadable')
-    expect(after).not.toContain('title-unreadable')
-    expect(after).not.toContain('employer-unreadable')
+    expect(before.read.currentTitle).toBeTruthy()
+    expect(after.read.currentTitle).toBe(before.read.currentTitle)
+    expect(after.read.employer).toBe(before.read.employer)
+    expect(after.findings.map((f) => f.id)).not.toContain('title-unreadable')
+    expect(after.findings.map((f) => f.id)).not.toContain('employer-unreadable')
 
     /**
      * `separator-header` fired on this fixture's CONTACT line — "email | phone

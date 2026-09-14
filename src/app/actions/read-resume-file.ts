@@ -4,10 +4,12 @@ import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { pdfToText } from '@/lib/parse/pdf'
+import { pdfToLayout, pdfToText, pdfProducer } from '@/lib/parse/pdf'
+import { columnSample } from '@/lib/parse/layout'
 import { docxToText } from '@/lib/parse/docx'
 import { extractFields, type ParsedFields } from '@/lib/parse/extract'
 import { parseSections, type ResumeSections } from '@/lib/parse/sections'
+import type { LayoutFacts } from '@/lib/ats-check'
 import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
 
 /**
@@ -64,6 +66,16 @@ export type ReadResumeFileResponse =
       /** Deterministic fields only — no model has touched these. */
       fields: ParsedFields
       sections: ResumeSections
+      /**
+       * The PDF's geometry, when the upload was a PDF. Absent for .docx, which
+       * has paragraphs but no page coordinates, and for pasted text.
+       *
+       * Carried to the client so the checker scores the same document the same
+       * way in both places: `checkResume` re-runs in the browser after every
+       * accepted fix, and without this it would silently lose the column count
+       * mid-session and start disagreeing with the server about one file.
+       */
+      layout?: LayoutFacts
       warnings: string[]
     }
   | { ok: false; error: string }
@@ -107,26 +119,52 @@ export async function readResumeFile(formData: FormData): Promise<ReadResumeFile
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
-    const text = kind === 'pdf' ? await pdfToText(buffer) : await docxToText(buffer)
+    let layout: LayoutFacts | undefined
+    let text: string
+    if (kind === 'pdf') {
+      const doc = await pdfToLayout(buffer)
+      text = doc.pages.map((pg) => pg.lines.map((l) => l.text).join('\n')).join('\n').trim()
+      layout = {
+        columns: Math.max(1, ...doc.pages.map((pg) => pg.columns)),
+        alignedColumns: Math.max(0, ...doc.pages.map((pg) => pg.alignedColumns)),
+        pages: doc.pages.length,
+        sample: columnSample(doc),
+      }
+    } else {
+      text = await docxToText(buffer)
+    }
 
     if (text.trim().length < 50) {
       /**
-       * Almost always a scan with no text layer — and worth saying plainly,
-       * because it is the single most useful finding this tool can return. A
-       * document with no text layer scores zero at every ATS in the market and
-       * looks perfect to the person who wrote it.
+       * A document with no text layer scores zero at every ATS in the market
+       * and looks perfect to the person who wrote it — the single most useful
+       * finding this tool can return.
+       *
+       * ⚠️ AND THE COMMONEST CAUSE IS NOT A SCANNER. Measured across public
+       * sample résumés on 2026-09-12, the files that extracted nothing were
+       * produced by "Microsoft: Print To PDF", which paints text as vector
+       * shapes. Telling that candidate their file is "likely a scan" describes
+       * a machine they never used, so they resend the same document. Naming
+       * what they actually did makes the fix one sentence long.
        */
+      const producer = kind === 'pdf' ? await pdfProducer(buffer) : undefined
+      const printToPdf = /print to pdf|microsoft print/i.test(producer ?? '')
       return {
         ok: false,
-        error:
-          'We could not find any text in that file — it is likely a scan or an image rather than a text document. ' +
-          'An applicant tracking system reads it exactly the same way, which means it reads nothing at all. ' +
-          'Export it again from Word or Google Docs as a PDF, or paste the text below instead.',
+        error: printToPdf
+          ? 'There is no readable text in that file. It was made with "Microsoft Print to PDF", which draws ' +
+            'the words as a picture rather than storing them as text — so it looks perfect to you and arrives ' +
+            'completely blank at every applicant tracking system. Open the document in Word and use ' +
+            'File → Save As → PDF instead of File → Print. That one change is usually the difference between ' +
+            'being read and being discarded.'
+          : 'We could not find any text in that file — it is likely a scan or an image rather than a text document. ' +
+            'An applicant tracking system reads it exactly the same way, which means it reads nothing at all. ' +
+            'Export it again from Word or Google Docs as a PDF, or paste the text below instead.',
       }
     }
 
     const { fields, warnings } = extractFields(text)
-    return { ok: true, text, fields, sections: parseSections(text), warnings }
+    return { ok: true, text, fields, sections: parseSections(text), layout, warnings }
   } catch {
     return {
       ok: false,

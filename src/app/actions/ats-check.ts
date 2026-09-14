@@ -10,6 +10,7 @@ import {
   MIN_RESUME_CHARS,
   MAX_RESUME_CHARS,
   type AtsReport,
+  type LayoutFacts,
 } from '@/lib/ats-check'
 
 /**
@@ -32,6 +33,29 @@ const schema = z.object({
     .max(MAX_RESUME_CHARS, 'That résumé is longer than we can read. Paste the most recent few roles.'),
   /** Optional. Compared against terms measured in real postings for that role. */
   targetRole: z.string().trim().max(80).optional(),
+  /**
+   * A specific posting, when the candidate pasted one. Bounded at the same
+   * ceiling as the résumé itself — it is read the same way, by the same
+   * deterministic code, and nothing about it is stored.
+   */
+  jdText: z.string().trim().max(MAX_RESUME_CHARS).optional(),
+  /**
+   * The uploaded PDF's geometry, forwarded by readResumeFile.
+   *
+   * Bounded rather than trusted: this crosses the network from an
+   * unauthenticated caller, so every field is clamped to a range a real
+   * document can occupy. A forged column count can only change which findings
+   * this caller sees about their own pasted text — it reads nothing and writes
+   * nothing — but an unbounded number would still reach arithmetic.
+   */
+  layout: z
+    .object({
+      columns: z.number().int().min(1).max(8),
+      alignedColumns: z.number().int().min(0).max(64),
+      pages: z.number().int().min(1).max(15),
+      sample: z.string().max(400).optional(),
+    })
+    .optional(),
 })
 
 export type AtsCheckResponse = ({ ok: true } & AtsReport) | { ok: false; error: string }
@@ -80,7 +104,15 @@ export async function checkResumeForAts(input: z.input<typeof schema>): Promise<
   }
 
   try {
-    return { ok: true, ...checkResume(parsed.data.resumeText, parsed.data.targetRole) }
+    return {
+      ok: true,
+      ...checkResume(
+        parsed.data.resumeText,
+        parsed.data.targetRole,
+        parsed.data.layout as LayoutFacts | undefined,
+        parsed.data.jdText,
+      ),
+    }
   } catch (e) {
     if (e instanceof AtsCheckError) return { ok: false, error: e.message }
     return { ok: false, error: 'We could not check that just now. Try again, or check what you pasted.' }

@@ -91,7 +91,22 @@ export function ToolPage({
             a crawler both meet the thing the page is for before the reassurance
             about it. lg:col-span keeps the promises alongside on a wide screen
             without pushing the input down on a phone. */}
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start lg:gap-10">
+        {/*
+          ⚠️ THE PROMISES STAND DOWN ONCE THERE IS A RESULT, AND THE LAYOUT
+          NEEDS THEM TO. Measured at 1280px with both sidebars up, the pane that
+          holds the report and the résumé preview is 368px wide — too narrow to
+          read a document in, which made the whole point of showing one moot.
+
+          They are also spent by then. Every line in that column is about what
+          happens BEFORE you paste — nothing stored, no sign-up, no model
+          deciding your score — and a reader looking at their own findings has
+          already taken the step those sentences exist to reassure them about.
+
+          Done with `:has()` rather than state because this shell is a server
+          component and the step lives inside the client one. A browser without
+          `:has()` support simply keeps the narrower layout; nothing breaks.
+        */}
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start lg:gap-10 [&:has([data-report])>aside]:hidden lg:[&:has([data-report])]:grid-cols-[minmax(0,1fr)]">
           <div className="min-w-0">{children}</div>
           <aside className="lg:sticky lg:top-8">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">

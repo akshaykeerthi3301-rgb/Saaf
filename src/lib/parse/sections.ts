@@ -31,6 +31,8 @@ export type ExperienceEntry = {
   dates: string | null
   location: string | null
   bullets: string[]
+  /** True when this came from a Projects section rather than an employment one. */
+  isProject?: boolean
 }
 
 export type EducationEntry = {
@@ -75,12 +77,19 @@ export type SectionKind =
  * before "experience" or a heading reading "Work Experience" is matched by the
  * shorter pattern and the word "Work" is left behind as content.
  */
+import { dateRange } from './dates'
+import { isCity } from './extract'
+
 const HEADINGS: { kind: SectionKind; patterns: string[] }[] = [
   {
     kind: 'summary',
     patterns: [
       'professional summary', 'career summary', 'executive summary', 'career objective',
       'personal profile', 'profile summary', 'summary', 'objective', 'profile', 'about me', 'about',
+      // ⚠️ "SUMMARY OF QUALIFICATIONS" is a standard US résumé heading and was
+      // being read as EDUCATION, because the keyword fallback below saw
+      // "qualification" first. Its whole section then landed among the degrees.
+      'summary of qualifications', 'qualifications summary', 'career profile',
     ],
   },
   {
@@ -122,25 +131,6 @@ const HEADINGS: { kind: SectionKind; patterns: string[] }[] = [
   },
 ]
 
-const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
-const DASH = '[-‐‑‒–—]'
-/**
- * A month, written either way.
- *
- * ⚠️ THE NUMERIC FORM WAS MISSING UNTIL 2026-09-09, and it is common on Indian
- * résumés. "07/2023 - Present" parsed as the year alone, so the entry's dates
- * read "2023 - Present" and the numeric month was left behind in the title —
- * which then fed `title-misread`. The checker was reporting a defect the parser
- * had created. Only "/" and "." are accepted as the separator: "07-2023" cannot
- * be told apart from a range dash without guessing, and guessing here silently
- * changes somebody's employment dates.
- */
-const MONTH_ANY = `(?:(?:${MONTH}\\.?|\\d{1,2}[/.])\\s*)?`
-/** A date range, the single most reliable signal that a line starts a job. */
-const DATE_RANGE = new RegExp(
-  `(${MONTH_ANY}\\d{4})\\s*${DASH}\\s*(${MONTH_ANY}\\d{4}|present|current|now|till date|to date)`,
-  'i',
-)
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/
 /** Indian and international shapes. Deliberately loose — a false positive here
  *  costs nothing; a miss makes the contact check lie. */
@@ -166,6 +156,61 @@ const HEADER_SPLIT = /\s+[|·•—–]\s+|\s+[-]\s+|\s+at\s+|,\s+/i
  */
 const ENTRY_SEPARATOR = /\s+[|·•—–]\s+|\s+[-]\s+|\s+at\s+/i
 
+/**
+ * Words that identify a section when the exact phrase is NOT in HEADINGS.
+ *
+ * ⚠️ THE VOCABULARY USED TO BE A CLOSED LIST MATCHED BY STRING EQUALITY, and
+ * anything outside it was invisible. "WHERE I'VE WORKED", "SCHOOLING" and
+ * "WHAT I KNOW" are all ordinary résumé headings that matched nothing, so every
+ * line beneath them was counted as unplaced and the whole section vanished.
+ * Measured on bench/corpus/synthetic/headings-odd.pdf: zero experience, zero
+ * education and zero skills recovered from a document that has all three.
+ *
+ * Order matters — the first kind whose words appear wins, so the more specific
+ * kinds are listed before the more general ones ("ACADEMIC PROJECTS" is a
+ * projects heading, not an education one).
+ */
+const HEADING_KEYWORDS: { kind: SectionKind; words: RegExp }[] = [
+  { kind: 'certifications', words: /\b(certif|licen|courses?)/i },
+  { kind: 'projects', words: /\bprojects?\b/i },
+  /**
+   * ⚠️ SUMMARY IS TESTED BEFORE EXPERIENCE AND EDUCATION, AND THE ORDER IS THE
+   * WHOLE FIX. "SUMMARY OF QUALIFICATIONS" carries the word "qualification", so
+   * with education first it became an education heading and its prose was
+   * parsed into degrees — measured on two of eleven public sample résumés,
+   * which reported ten and eleven qualifications against a real two.
+   * A heading that calls itself a summary is a summary.
+   */
+  { kind: 'summary', words: /\b(summary|objective|profile|about|bio)\b/i },
+  { kind: 'experience', words: /\b(work(ed|ing)?|experience|employment|career|roles?|positions?)\b/i },
+  { kind: 'education', words: /\b(education|academics?|school(ing)?|college|universit|degrees?|qualification)/i },
+  { kind: 'skills', words: /\b(skills?|competenc|technolog|toolkit|tools?|stack|expertise|know|proficien)/i },
+]
+
+/**
+ * Does this line LOOK like a heading, independent of what it says?
+ *
+ * This gate is what makes the keyword fallback safe. Without it, "Work at
+ * Google" and "I have five years of experience" both carry section keywords and
+ * would silently become headings — which is worse than missing one, because a
+ * spurious heading re-parents every line beneath it.
+ */
+function looksStyledHeading(t: string): boolean {
+  const words = t.split(/\s+/).filter(Boolean)
+  if (words.length === 0 || words.length > 5) return false
+  // Dates, phone numbers and addresses are not headings.
+  if (/\d/.test(t)) return false
+  // "Product Manager at Zeta" is a role header; that is a different thing and
+  // startsEntry owns it.
+  if (ENTRY_SEPARATOR.test(t)) return false
+  if (t.includes('@')) return false
+  const letters = t.replace(/[^A-Za-z]/g, '')
+  if (letters.length < 3) return false
+  // Headings are set apart typographically. In extracted text that survives as
+  // capitalisation: either shouted, or every word capitalised.
+  return letters === letters.toUpperCase() || words.every((w) => !/^[a-z]/.test(w))
+}
+
 function isHeading(line: string): { kind: SectionKind; text: string } | null {
   const t = line.trim().replace(/[:：]\s*$/, '')
   // A heading is short, unpunctuated and alone on its line. Requiring that
@@ -180,12 +225,16 @@ function isHeading(line: string): { kind: SectionKind; text: string } | null {
       if (lower === p || lower === `${p}:`) return { kind, text: t }
     }
   }
+  if (!looksStyledHeading(t)) return null
+  for (const { kind, words } of HEADING_KEYWORDS) {
+    if (words.test(lower)) return { kind, text: t }
+  }
   return null
 }
 
 /** Strip a date range out of a line and hand back both halves. */
 function splitDates(line: string): { rest: string; dates: string | null } {
-  const m = line.match(DATE_RANGE)
+  const m = line.match(dateRange())
   if (!m) {
     // A single year is a date too — common on education lines.
     const solo = line.match(/\b(19|20)\d{2}\b/)
@@ -211,7 +260,7 @@ function startsEntry(line: string): boolean {
   if (BULLET_GLYPH.test(line)) return false
   const t = line.trim()
   if (t.length === 0 || t.length > 120) return false
-  if (DATE_RANGE.test(t)) return true
+  if (dateRange().test(t)) return true
   // Ten words, not fourteen: a role header is "Senior Analyst at Razorpay",
   // and everything longer is far more likely to be a sentence.
   return ENTRY_SEPARATOR.test(t) && /[A-Z]/.test(t) && t.split(/\s+/).length <= 10
@@ -234,13 +283,25 @@ function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
     )
     .filter(Boolean)
 
-  // Two or more parts: the first is the role, the second the employer. A third
-  // is a location often enough to be worth keeping, and harmless when it isn't
-  // — it is displayed, never scored.
+  /**
+   * Two or more parts: the first is the role, the second the employer, a third
+   * is usually a location.
+   *
+   * ⚠️ EXCEPT WHEN THE SECOND PART IS A CITY, which is how a title-less role
+   * line produces TWO confident wrong answers instead of one. "Razorpay" on its
+   * own line above "Jul 2023 - Present | Bengaluru" joins into one header, and
+   * positional assignment returns title "Razorpay", employer "Bengaluru" — a
+   * company read as a job and a city read as a company, with nothing anywhere
+   * indicating a problem. Recognising the city collapses that back to a single
+   * honest ambiguity, which the checker can then report.
+   */
+  const cityAt = parts.findIndex((p) => isCity(p))
+  const location = cityAt > 0 ? parts.splice(cityAt, 1)[0] : undefined
+
   return {
     title: parts[0] ?? null,
     employer: parts[1] ?? null,
-    location: parts[2] ?? null,
+    location: location ?? parts[2] ?? null,
     dates,
   }
 }
@@ -331,11 +392,59 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
   return { entries, unplaced }
 }
 
+/**
+ * The qualification itself, as opposed to the place that awarded it.
+ *
+ * Used only to decide whether a line OPENS an education entry or CONTINUES the
+ * one above it. A narrow column wraps "B.Tech Computer Science, NIT Trichy,
+ * 2019" onto two lines, and reading each as its own entry reported two degrees
+ * where the résumé claims one — which then fed the age-bias check a graduation
+ * year belonging to a qualification that did not exist.
+ */
+const DEGREE =
+  /\b(b\.?\s?tech|b\.?\s?e\.?|b\.?sc|b\.?a\.?|b\.?com|bca|m\.?\s?tech|m\.?sc|m\.?a\.?|m\.?com|mca|mba|ph\.?\s?d|diploma|bachelors?|masters?|doctorate|pgdm|hsc|ssc|intermediate)\b/i
+
 function parseEducation(lines: string[]): EducationEntry[] {
   const out: EducationEntry[] = []
   for (const raw of lines) {
     const line = raw.replace(BULLET_GLYPH, '').trim()
     if (!line) continue
+    const prev = out.at(-1)
+    /**
+     * ⚠️ NOT EVERY LINE UNDER "EDUCATION" IS A DEGREE, and treating them as
+     * such is how two qualifications became ten. Real education sections carry
+     * coursework lists, minors, study-abroad notes, honours and activity
+     * bullets. Measured before this rule: the founder's own résumé reported a
+     * placement committee and a dance club as qualifications, and two public
+     * sample résumés reported ten and eleven degrees against a real one each.
+     *
+     * A line OPENS an entry only if it names a qualification or carries a year.
+     * Everything else is detail belonging to the degree above it — used as the
+     * institution when we do not have one yet, and otherwise left attached
+     * rather than promoted. The first line of the section always opens an
+     * entry, because there is nothing above it to belong to.
+     */
+    const hasYear = /\b(19|20)\d{2}\b/.test(line)
+    if (prev && !DEGREE.test(line) && !hasYear) {
+      if (prev.institution === null) prev.institution = line.replace(/[\s|·—–,-]+$/, '').trim()
+      continue
+    }
+
+    /**
+     * The wrapped case, which a narrow column produces constantly:
+     * "B.Tech Computer Science" on one line and "NIT Trichy, 2019" on the next.
+     * The second names no qualification but does carry a year, so the rule above
+     * lets it through — and read as its own entry it reports two degrees where
+     * the résumé claims one, then feeds the age-bias check a graduation year
+     * belonging to a qualification that does not exist.
+     */
+    if (prev && !DEGREE.test(line) && DEGREE.test(prev.qualification) && prev.institution === null) {
+      const cont = splitDates(line)
+      prev.institution = cont.rest || prev.institution
+      prev.dates = prev.dates ?? cont.dates
+      continue
+    }
+
     const { rest, dates } = splitDates(line)
     const parts = rest
       .split(HEADER_SPLIT)
@@ -460,7 +569,16 @@ export function parseSections(text: string): ResumeSections {
       case 'experience':
       case 'projects': {
         const { entries, unplaced } = parseExperience(body)
-        sections.experience.push(...entries)
+        /**
+         * ⚠️ PROJECTS STILL LIVE IN `experience`, BUT THEY ARE NOW LABELLED.
+         * Merging them is right — a side project with dates and bullets is
+         * work, and the bullet-level checks should read it. Treating it as
+         * EMPLOYMENT is not: on the founder's own résumé three projects dated
+         * "2026 – Present" sat beside one real job and the checker reported
+         * "6 roles are both marked as ongoing", which is a finding about a
+         * document that does not exist.
+         */
+        sections.experience.push(...entries.map((e) => (mark.kind === 'projects' ? { ...e, isProject: true } : e)))
         sections.unplaced += unplaced
         break
       }
@@ -553,4 +671,100 @@ export function sectionsToText(s: ResumeSections): string {
   }
   for (const o of s.other) out.push('', o.heading.toUpperCase(), ...o.lines)
   return out.join('\n')
+}
+
+/**
+ * How much of this document did we actually understand?
+ *
+ * ⚠️ THIS NUMBER ALREADY EXISTED AND WAS THROWN AWAY. `parseSections` has always
+ * counted `unplaced` lines, and the module header has always said a surface
+ * above should be able to report "we could not place 7 lines". No surface ever
+ * did — it was validated by two Zod schemas in transit and rendered nowhere.
+ *
+ * It matters because it is the honest half of an ATS score. A checklist of
+ * rules can only penalise things it recognises; it cannot say "your document
+ * defeated us", which is precisely what happens to a résumé built in a design
+ * tool. Field recovery is weighted above line placement deliberately: a résumé
+ * whose name, title, employer and dates all came out clean is readable even if
+ * the interests section at the bottom went unplaced, and the reverse is not
+ * true.
+ *
+ * Weights are provisional and belong to the benchmark, not to taste — see
+ * scripts/bench-ats.ts. Change them there, with the corpus in front of you.
+ */
+export const FIELD_WEIGHT = 0.7
+export const LINE_WEIGHT = 0.3
+
+export type ParseCoverage = {
+  linesPlaced: number
+  linesTotal: number
+  /** Field names we recovered, in report order. */
+  fieldsFound: string[]
+  /** Field names we did not. This is what the candidate needs to see. */
+  fieldsMissing: string[]
+  /**
+   * Structural reasons a typical ATS will read this worse than we just did.
+   * Named rather than folded silently into the number.
+   */
+  atsRisk: string[]
+  /** 0-100. The share of this document a typical parser could interpret. */
+  rate: number
+}
+
+/**
+ * ⚠️ THE RATE DESCRIBES A TYPICAL ATS, NOT US, AND THE DIFFERENCE IS THE WHOLE
+ * POINT. `layout.ts` reconstructs columns and reads them in the right order, so
+ * OUR field recovery on a two-column résumé is near perfect — and reporting
+ * that as the parse rate would tell a candidate their sidebar CV is safe
+ * because our parser is good, which is the opposite of the truth and the
+ * opposite of what this tool is for. Where we know a structure defeats ordinary
+ * parsers, the rate is reduced and the reason is named in `atsRisk`.
+ */
+const MULTI_COLUMN_PENALTY = 0.62
+
+export function parseCoverage(s: ResumeSections, layout?: { columns: number; alignedColumns: number }): ParseCoverage {
+  const firstRole = s.experience[0]
+  const fields: [string, boolean][] = [
+    ['name', Boolean(s.contact.name)],
+    ['email', Boolean(s.contact.email)],
+    ['phone', Boolean(s.contact.phone)],
+    ['job title', Boolean(firstRole?.title)],
+    ['employer', Boolean(firstRole?.employer)],
+    ['dates', s.experience.some((e) => Boolean(e.dates))],
+    ['skills', s.skills.length > 0],
+    ['education', s.education.length > 0],
+  ]
+  const fieldsFound = fields.filter(([, ok]) => ok).map(([n]) => n)
+  const fieldsMissing = fields.filter(([, ok]) => !ok).map(([n]) => n)
+
+  // Lines we placed into a section, against every line the document has.
+  const placedLines =
+    (s.summary ? 1 : 0) +
+    s.experience.reduce((n, e) => n + 1 + (e.dates ? 1 : 0) + e.bullets.length, 0) +
+    s.education.length +
+    (s.skills.length ? 1 : 0) +
+    s.other.reduce((n, o) => n + 1 + o.lines.length, 0)
+  const linesTotal = placedLines + s.unplaced
+
+  const fieldRate = fieldsFound.length / fields.length
+  const lineRate = linesTotal === 0 ? 0 : placedLines / linesTotal
+
+  const atsRisk: string[] = []
+  let penalty = 1
+  if ((layout?.columns ?? 1) > 1) {
+    atsRisk.push('side-by-side columns, which most parsers interleave line by line')
+    penalty *= MULTI_COLUMN_PENALTY
+  }
+  // Grid alignment (`layout.alignedColumns`) is deliberately NOT penalised yet.
+  // It is measured and carried, but no threshold has been validated against a
+  // real corpus, and a penalty without one is a guess wearing a number.
+
+  return {
+    linesPlaced: placedLines,
+    linesTotal,
+    fieldsFound,
+    fieldsMissing,
+    atsRisk,
+    rate: Math.round((FIELD_WEIGHT * fieldRate + LINE_WEIGHT * lineRate) * penalty * 100),
+  }
 }

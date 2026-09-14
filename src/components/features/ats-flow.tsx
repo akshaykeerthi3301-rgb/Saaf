@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
   AlertCircle, ArrowRight, CheckCircle2, Download, FileText, Loader2, Lock, RotateCcw,
@@ -22,6 +22,7 @@ import { ReportRail } from '@/components/features/report-rail'
 import { FindingDetail } from '@/components/features/finding-detail'
 import {
   checkResume, marketCoverage, rolesWithKeywords, MIN_RESUME_CHARS,
+  type LayoutFacts,
   type AtsReport,
 } from '@/lib/ats-check'
 import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
@@ -83,6 +84,20 @@ export function AtsFlow() {
   const [showJd, setShowJd] = useState(false)
 
   const [report, setReport] = useState<AtsReport>()
+  /**
+   * The uploaded PDF's geometry, held for the whole session.
+   *
+   * ⚠️ IT IS DELIBERATELY NOT CLEARED AS FIXES ARE APPLIED. Every accepted fix
+   * re-renders the working document through sectionsToText(), which is single
+   * column by construction — so dropping this would make a two-column résumé
+   * silently stop being two-column after the user fixed an unrelated bullet.
+   * The finding describes THEIR FILE, and their file is unchanged until they
+   * take the rebuilt one from the preview step. That rebuild runs server-side
+   * with no layout at all, which is why the projected score there is allowed to
+   * clear the column finding: that document really is one column.
+   */
+  const [layout, setLayout] = useState<LayoutFacts>()
+  const documentRef = useRef<HTMLDivElement>(null)
   const [optimised, setOptimised] = useState<Optimised>()
   const [error, setError] = useState<string>()
   const [needsSignIn, setNeedsSignIn] = useState(false)
@@ -144,6 +159,9 @@ export function AtsFlow() {
     setError(undefined)
     startCheck(async () => {
       let text = resumeText
+      // Read from the response rather than from state: setLayout has not
+      // committed by the time the check below runs.
+      let uploaded: LayoutFacts | undefined
 
       if (file) {
         const fd = new FormData()
@@ -157,9 +175,16 @@ export function AtsFlow() {
         }
         text = read.text
         setResumeText(read.text)
+        setLayout(read.layout)
+        uploaded = read.layout
       }
 
-      const res = await checkResumeForAts({ resumeText: text, targetRole: targetRole || undefined })
+      const res = await checkResumeForAts({
+        resumeText: text,
+        targetRole: targetRole || undefined,
+        layout: uploaded,
+        jdText: jdText.trim() || undefined,
+      })
       if (!res.ok) {
         setError(res.error)
         return
@@ -196,13 +221,26 @@ export function AtsFlow() {
     })
   }
 
+  /**
+   * Bring the marked line into view when the reader picks a different check.
+   *
+   * `block: 'center'` rather than 'start' because the document sits below the
+   * finding: scrolling the line to the top of the viewport would push the check
+   * that named it off the screen, which is the one thing the reader needs to
+   * keep looking at while they judge it.
+   */
+  useEffect(() => {
+    const marked = documentRef.current?.querySelector('[data-highlighted]')
+    marked?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selected])
+
   /** Re-score the working document with the same rules, and keep the rail in step. */
   function rescore(next: ResumeSections) {
     setSections(next)
     const text = sectionsToText(next)
     setResumeText(text)
     try {
-      setReport(checkResume(text, targetRole || undefined))
+      setReport(checkResume(text, targetRole || undefined, layout, jdText.trim() || undefined))
     } catch {
       // checkResume throws only on input too short to assess. A fix cannot
       // produce that, and if it somehow did, the last good report is better
@@ -266,7 +304,14 @@ export function AtsFlow() {
       const before = sections.experience[entry]?.bullets[bullet]
       if (before === undefined) return
       rescore(applyEdit(sections, { entry, bullet, before, after: res.line }))
-      setAppliedEdits((prev) => new Set(prev).add(`ai:${key}`))
+      /**
+       * ⚠️ THE KEY IS THE PLAIN ONE, NOT `ai:${key}`. FindingDetail reads
+       * `appliedEdits.has(key)` where key is `${findingId}:${entry}:${bullet}`,
+       * so a prefixed key could never match and a line rewritten by the model
+       * never showed as applied — the button stayed live, inviting the
+       * candidate to rewrite a line that had already been rewritten.
+       */
+      setAppliedEdits((prev) => new Set(prev).add(key))
     })()
   }
 
@@ -503,9 +548,15 @@ export function AtsFlow() {
 
       {/* ---------------------------------------------------------------- 2 */}
       {step === 'report' && report && (
-        <div className="mt-2 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div
+          // Read by ToolPage via :has() — see the note there. The report and the
+          // document need the width the "before you paste" column is holding.
+          data-report
+          className="mt-2 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]"
+        >
           <ReportRail
             report={report}
+            skipped={skipped}
             selected={selected}
             onSelect={setSelected}
             targetRole={targetRole}
@@ -542,7 +593,7 @@ export function AtsFlow() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {report.findings.length === 0
                     ? 'A parser should read this cleanly. Take the file, or rewrite it against a specific posting below.'
-                    : 'Pick any check on the left. Each one quotes the line it came from, and most can be fixed in one click without a model running.'}
+                    : 'Pick any check on the left. Wherever there is a line to quote, it is shown and marked in your résumé below — and most can be fixed in one click without a model running.'}
                 </p>
 
                 <div className="mt-6 border-t border-border pt-5">
@@ -569,6 +620,45 @@ export function AtsFlow() {
                   </dl>
                 </div>
               </div>
+            )}
+
+            {/*
+              ⚠️ THE DOCUMENT ITSELF, WHICH THE REPORT HAS NEVER SHOWN.
+              Until now the résumé appeared only AFTER the whole-document
+              rewrite, so every finding on this screen described a line the
+              candidate had to picture from a quotation. The category leader
+              puts the document beside the checks, and that is the right shape:
+              a finding is an assertion about a specific line, and the fastest
+              way to judge an assertion is to look at what it is about.
+
+              It sits below the finding rather than in a third column on
+              purpose. Nesting another rail inside ToolPage's own two-column
+              shell already squeezes this pane; a third would leave the document
+              too narrow to read on the laptop screens most people use.
+            */}
+            {sections && (
+              <section className="mt-6" aria-label="Your résumé, with the selected line marked">
+                <div className="flex items-baseline justify-between gap-3 px-1 pb-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Your résumé, as we read it
+                  </p>
+                  {activeFinding?.evidence ? (
+                    <p className="text-xs text-muted-foreground">Marked: the line this check came from</p>
+                  ) : null}
+                </div>
+                <div ref={documentRef}>
+                  <ResumePreview
+                    sections={sections}
+                    targetRole={targetRole || undefined}
+                    highlight={activeFinding?.evidence}
+                  />
+                </div>
+                <p className="mt-3 px-1 text-xs leading-5 text-muted-foreground">
+                  This is the structure a parser recovered, not a picture of your original file — which is the
+                  point: anything missing here is missing for an applicant tracking system too. The highlight is
+                  ours and never appears in the document you download.
+                </p>
+              </section>
             )}
 
             {/* The whole-document rewrite stays, demoted: it is the shortcut for

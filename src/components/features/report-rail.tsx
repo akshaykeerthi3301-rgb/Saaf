@@ -36,6 +36,7 @@ const ORDER: AtsCategory[] = [
 export function ReportRail({
   report,
   selected,
+  skipped,
   onSelect,
   targetRole,
   postings,
@@ -47,6 +48,17 @@ export function ReportRail({
   checkingIndex,
 }: {
   report: AtsReport
+  /**
+   * Findings the candidate has dismissed.
+   *
+   * ⚠️ THE RAIL USED TO IGNORE THIS AND THE TWO PANES DISAGREED. `skipped` only
+   * filtered the detail pane's list, so a dismissed check kept its clickable
+   * row here; clicking it set `selected` to an id the pane could not find, the
+   * pane silently fell back to a DIFFERENT check, and `aria-current` stayed on
+   * the row the candidate had actually clicked. Screen-reader users got the
+   * worst of it — announced as current, showing something else.
+   */
+  skipped: Set<string>
   selected?: string
   onSelect: (findingId: string) => void
   targetRole: string
@@ -62,10 +74,48 @@ export function ReportRail({
 }) {
   const score = report.readability.score
   const moved = baseline !== undefined && baseline !== score
+  /**
+   * What each finding actually costs this résumé, from the itemised deductions.
+   * Computed by rescoring without the finding, so it is reproducible by the
+   * reader rather than a severity label dressed as a number.
+   */
+  const cost = (id: string) => report.readability.deductions.find((d) => d.id === id)?.points ?? 0
 
   return (
     <aside className="flex flex-col gap-5 lg:sticky lg:top-6 lg:self-start">
       <Gauge score={score} baseline={moved ? baseline : undefined} />
+
+      {/*
+        ⚠️ HALF THE SCORE, AND THE HALF THAT WAS INVISIBLE UNTIL NOW.
+        `parseSections` has always counted the lines it could not place, and
+        sections.ts has always said a surface above ought to report it. None
+        did — it was validated in transit by two Zod schemas and rendered
+        nowhere. It is also the more useful of the two numbers: a list of rules
+        can only penalise faults it has a name for, whereas this says plainly
+        how much of the document defeated the parser, which is what actually
+        happens to a résumé built in a design tool.
+
+        The rate describes a TYPICAL ATS, not ours — see parseCoverage. Saying
+        "we read it fine" about a sidebar résumé because our own extractor
+        rebuilds columns would be the most comfortable possible lie.
+      */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          What a parser could read
+        </span>
+        <p className="mt-1 font-mono text-2xl tabular-nums text-primary">{report.coverage.rate}%</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {report.coverage.fieldsMissing.length === 0
+            ? `Every field we look for came out clean, and ${report.coverage.linesPlaced} of ${report.coverage.linesTotal} lines landed in a section.`
+            : `We could not find your ${new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(report.coverage.fieldsMissing)}.`}
+        </p>
+        {report.coverage.atsRisk.length > 0 && (
+          <p className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
+            Reduced because this document uses{' '}
+            {new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(report.coverage.atsRisk)}.
+          </p>
+        )}
+      </div>
 
       <button
         type="button"
@@ -150,7 +200,9 @@ export function ReportRail({
       <nav className="flex flex-col gap-4" aria-label="Checks">
         {ORDER.filter((key) => report.categories.some((c) => c.key === key)).map((key) => {
           const cat = report.categories.find((c) => c.key === key)!
-          const failing = report.findings.filter((f) => f.category === key)
+          const raised = report.findings.filter((f) => f.category === key)
+          const failing = raised.filter((f) => !skipped.has(f.id))
+          const dismissed = raised.length - failing.length
           return (
             <div key={key} className="border-t border-border pt-3">
               <div className="flex items-baseline justify-between gap-2">
@@ -172,21 +224,53 @@ export function ReportRail({
                       type="button"
                       onClick={() => onSelect(f.id)}
                       aria-current={selected === f.id ? 'true' : undefined}
-                      className={`flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] leading-5 transition-colors ${
+                      className={`flex w-full items-start gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] leading-5 transition-colors ${
                         selected === f.id
                           ? 'bg-secondary font-semibold text-primary'
                           : 'text-muted-foreground hover:bg-secondary/60 hover:text-primary'
                       }`}
                     >
-                      <span aria-hidden className="mt-0.5 font-mono text-[11px] text-destructive">✕</span>
                       <span className="flex-1">{shortTitle(f.title)}</span>
+                      {/*
+                        ⚠️ SEVERITY, AS THE NUMBER IT IS WORTH. Every failing row
+                        used to render the same ✕, so a finding whose own copy
+                        says "blocks parsing" looked identical to a tidy-up. The
+                        cost shown is the finding's REAL marginal impact —
+                        rescore without it, take the difference — so a reader can
+                        check it by applying the fix and watching the gauge.
+
+                        And it is not `destructive`. DESIGN.md reserves that
+                        token exclusively for system errors: "a low score is a
+                        correct answer, not a failure". The old ✕ was a live
+                        violation of that rule, which is why it has gone rather
+                        than been recoloured.
+                      */}
+                      <span
+                        className="mt-0.5 shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground"
+                        aria-label={`costs ${cost(f.id)} points`}
+                      >
+                        −{cost(f.id)}
+                      </span>
                     </button>
                   </li>
                 ))}
-                {failing.length === 0 && (
+                {/*
+                  ⚠️ "ALL PASSED" MUST MEAN PASSED. Filtering dismissed findings
+                  out of this list would otherwise turn a category the candidate
+                  waved away into one they cleared — and skipping deliberately
+                  does NOT change the score (see ats-flow's skipFinding), so the
+                  bar above would still be short while the words said perfect.
+                */}
+                {failing.length === 0 && dismissed === 0 && (
                   <li className="flex items-center gap-2 px-2 py-1.5 text-[12.5px] text-accent">
                     <span aria-hidden className="font-mono text-[11px]">✓</span>
                     All {cat.total} passed
+                  </li>
+                )}
+                {failing.length === 0 && dismissed > 0 && (
+                  <li className="px-2 py-1.5 text-[12.5px] text-muted-foreground">
+                    {dismissed === 1 ? 'One check dismissed' : `${dismissed} checks dismissed`} — still counted in the
+                    score.
                   </li>
                 )}
               </ul>
@@ -196,7 +280,7 @@ export function ReportRail({
       </nav>
 
       <p className="border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
-        Nothing here is locked. Every check opens, every finding quotes your own line, and there is no
+        Nothing here is locked. Every check opens, every finding that has a line to quote shows it, and there is no
         paid tier to upgrade to.
       </p>
     </aside>

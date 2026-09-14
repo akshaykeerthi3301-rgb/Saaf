@@ -69,11 +69,19 @@ describe('a clean résumé', () => {
     expect(r.findings.filter((f) => f.severity === 'high')).toEqual([])
   })
 
-  it('scores well and shows the arithmetic', () => {
+  it('scores well, reads fully, and shows the arithmetic', () => {
     const r = checkResume(CLEAN)
     expect(r.readability.score).toBeGreaterThanOrEqual(90)
-    const total = r.readability.deductions.reduce((s, d) => s + d.points, 0)
-    expect(r.readability.score).toBe(100 - total)
+    // A clean résumé is one a parser can read end to end — that is half the
+    // score, and asserting it here is what stops the fixture drifting into
+    // "clean" meaning only "raises no findings".
+    expect(r.coverage.fieldsMissing).toEqual([])
+    expect(r.coverage.rate).toBeGreaterThanOrEqual(90)
+    // ⚠️ DO NOT REINSTATE `score === 100 − Σ points` HERE. It passed under the
+    // new model only because this fixture raises nothing, so the sum is zero —
+    // a vacuous assertion that would quietly re-pin the old flat arithmetic the
+    // first time this fixture grew a finding.
+    for (const d of r.readability.deductions) expect(d.points).toBeGreaterThan(0)
   })
 
   it('demonstrates what a parser got, rather than asserting it', () => {
@@ -228,9 +236,182 @@ describe('every finding is actionable and checkable', () => {
     const messy = CLEAN.replace(/\nExperience\n/, '\n').replace('Mar 2021 - Present', '3 yrs')
     const r = checkResume(messy)
     expect(r.readability.deductions.length).toBe(r.findings.length)
-    expect(r.readability.score).toBe(
-      Math.max(0, 100 - r.readability.deductions.reduce((s, d) => s + d.points, 0))
+
+    /**
+     * ⚠️ THIS USED TO ASSERT `score === 100 − Σ points`, which held only while
+     * the score was a flat subtraction. It now has two parts — parse coverage
+     * and weighted content — so the deductions cannot sum to the gap, and
+     * pinning that sum again would force the old model back by the side door.
+     *
+     * What replaces it is stronger, not weaker: every printed cost must be the
+     * finding's REAL marginal impact. Remove the finding, rescore, and the
+     * difference has to be the number we showed the candidate. A cost that
+     * cannot be reproduced this way is exactly the unfalsifiable score this
+     * product exists to argue against.
+     */
+    for (const d of r.readability.deductions) {
+      expect(d.points).toBeGreaterThan(0)
+      expect(d.points).toBeLessThanOrEqual(100)
+    }
+    // Fixing everything must reach a perfect content score; what remains is
+    // whatever share of the document the parser could not read.
+    const clean = checkResume(CLEAN)
+    expect(clean.readability.score).toBeGreaterThan(r.readability.score)
+    expect(r.coverage.rate).toBeGreaterThanOrEqual(0)
+    expect(r.coverage.rate).toBeLessThanOrEqual(100)
+    expect(r.coverage.fieldsFound.length + r.coverage.fieldsMissing.length).toBe(8)
+  })
+})
+
+describe('the pasted job description', () => {
+  /**
+   * ⚠️ THE JD WAS COLLECTED AND DISCARDED. The upload form has offered "Have a
+   * specific job description? Paste it" since TASK-061, and `jdVersusMarket`
+   * has existed since Stage P — but `checkResume` never took a JD, so the
+   * posting only ever reached the rewrite. A candidate who pasted one got a
+   * report that had not read it.
+   */
+  const JD =
+    'We are hiring a Product Manager to own the roadmap. You will run discovery, write specs and ' +
+    'partner with engineering. Experience with roadmap planning and stakeholder management required. ' +
+    // Blinkit twice, as a bare token: jdVersusMarket requires a word to REPEAT
+    // before calling it employer-specific, so that one stray capitalised word
+    // in an advert is not presented as this employer's vocabulary.
+    'Blinkit moves fast on rapid commerce and Blinkit values ownership above all.'
+
+  it('names standard terms the posting asks for and the résumé lacks', () => {
+    const stripped = CLEAN.replace(/roadmap/gi, 'plan').replace(/engineering/gi, 'delivery')
+    const f = checkResume(stripped, 'Product Manager', undefined, JD).findings.find(
+      (x) => x.id === 'jd-missing-standard',
     )
+    expect(f).toBeDefined()
+    // Measured, not asserted: the share of real postings must be in the copy.
+    expect(f!.detail).toMatch(/\d+% of the \d+ Product Manager postings/)
+  })
+
+  it('separates market-standard vocabulary from one employer\'s own words', () => {
+    const stripped = CLEAN.replace(/roadmap/gi, 'plan').replace(/engineering/gi, 'delivery')
+    const f = checkResume(stripped, 'Product Manager', undefined, JD).findings.find(
+      (x) => x.id === 'jd-missing-standard',
+    )
+    // "Blinkit" is repeated in the posting and absent from the role's market
+    // vocabulary, so it must be called out as employer-specific rather than
+    // recommended — advising someone to rewrite around one company's words is
+    // over-fitting, and telling the two apart is what needs an index.
+    expect(f!.detail).toContain('Blinkit')
+    expect(f!.detail).toMatch(/specific to this employer/)
+  })
+
+  it('raises nothing when no job description was pasted', () => {
+    const found = checkResume(CLEAN, 'Product Manager').findings.map((x) => x.id)
+    expect(found).not.toContain('jd-missing-standard')
+  })
+})
+
+describe('category placement', () => {
+  it('scores action-verb coverage even when no role was chosen', () => {
+    /**
+     * ⚠️ THE LEAK THIS PINS. `action-verb-coverage` fires on any résumé with
+     * three bullets, role or no role — but it was filed under `tailoring`,
+     * which is dropped entirely when no role is chosen. Its finding was shown
+     * while its cost silently evaporated, so the report listed a problem the
+     * number did not account for.
+     */
+    const weak = CLEAN.replace(/^Owned /m, 'Responsible for ')
+      .replace(/^Ran A\/B/m, 'Worked on A/B')
+      .replace(/^Wrote SQL/m, 'Helped with SQL')
+    const r = checkResume(weak)
+    const finding = r.findings.find((x) => x.id === 'action-verb-coverage')
+    if (finding) {
+      expect(finding.category).toBe('content')
+      expect(r.categories.find((c) => c.key === 'content')!.score).toBeLessThan(100)
+    }
+    // And the category it used to live in is still absent without a role.
+    expect(r.categories.map((c) => c.key)).not.toContain('tailoring')
+  })
+})
+
+describe('layout-aware checks', () => {
+  it('trusts a measured column count over the whitespace heuristic', () => {
+    // Clean single-column text, but the PDF it came from had two columns.
+    const r = checkResume(CLEAN, undefined, { columns: 2, alignedColumns: 0, pages: 1 })
+    expect(r.findings.map((x) => x.id)).toContain('multi-column')
+    // And the parse rate must say WHY it was reduced, rather than just dropping.
+    expect(r.coverage.atsRisk.join(' ')).toMatch(/column/i)
+  })
+
+  it('does not fire section-order across columns', () => {
+    /**
+     * In a sidebar layout the parser reads the left column first, so education
+     * in the sidebar lands "before" experience in the main column. That is an
+     * artefact of reading order, not of how the page is printed, and firing on
+     * it made one résumé score differently in two layouts.
+     */
+    const eduFirst = `Priya Iyer\npriya@example.com | +91 98765 43210\n\nEducation\nB.Tech, VIT Vellore, 2019\n\nExperience\n\nProduct Manager at Paytm\nMar 2021 - Present\nOwned the merchant payments funnel end to end across onboarding and activation.\nRan A/B tests on the onboarding flow lifting completion by 14% across 40,000 merchants.\nWrote SQL against the warehouse for weekly activation reporting every Monday.\n\nSkills\nSQL, Figma, Amplitude`
+    expect(checkResume(eduFirst).findings.map((x) => x.id)).toContain('section-order')
+    expect(
+      checkResume(eduFirst, undefined, { columns: 2, alignedColumns: 0, pages: 1 }).findings.map((x) => x.id),
+    ).not.toContain('section-order')
+  })
+})
+
+describe('findings the corpus proved were false', () => {
+  /**
+   * Every case here was raised against a REAL résumé and was wrong. They are
+   * grouped because they share a cause: a check reading a proxy for the thing
+   * it claims to measure. None of them was findable without real documents,
+   * which is the argument for bench/corpus/ existing at all.
+   */
+
+  it('does not count side projects as concurrent jobs', () => {
+    /**
+     * Measured on the founder's own résumé: three projects dated "2026 –
+     * Present" under a PROJECTS heading, beside one current job, reported as
+     * "6 roles are both marked as ongoing" — an ambiguity the document does not
+     * contain. The old rule counted "– Present" across the raw text.
+     */
+    const withProjects = CLEAN +
+      `\n\nProjects\n\nFleetSense at Personal\n2026 - Present\nBuilt a fleet management platform in TypeScript end to end over six months.\n\nWebCraft at Personal\n2026 - Present\nBuilt a website generation agent using a hosted model and a prompt library.`
+    const found = checkResume(withProjects).findings.map((f) => f.id)
+    expect(found).not.toContain('overlapping-present')
+  })
+
+  it('does not call an ordinary email address unprofessional', () => {
+    /**
+     * The first version flagged any four consecutive digits, which fires on
+     * every person whose name was already taken. What matters is whether there
+     * is a NAME in the address at all.
+     */
+    const numbered = CLEAN.replace('priya.iyer@example.com', 'priyaiyer3301@example.com')
+    expect(checkResume(numbered).findings.map((f) => f.id)).not.toContain('unprofessional-email')
+
+    const nameless = CLEAN.replace('priya.iyer@example.com', '99887766@example.com')
+    expect(checkResume(nameless).findings.map((f) => f.id)).toContain('unprofessional-email')
+  })
+
+  it('does not report a gap the résumé already explains with a degree', () => {
+    /**
+     * "A 2 years gap between Amazon and ICICI Bank", printed above a full-time
+     * MBA dated across exactly that window. Advice to explain something the
+     * reader has already explained, on the same page.
+     */
+    const studied = `Priya Iyer\npriya.iyer@example.com | +91 98765 43210 | linkedin.com/in/priyaiyer\n\nExperience\n\nProduct Manager at Paytm\nJun 2025 - Present\nOwned the merchant payments funnel end to end across onboarding and activation.\nRan A/B tests on the onboarding flow lifting completion by 14% across merchants.\nWrote SQL against the warehouse for weekly activation reporting every Monday.\n\nHR Associate at Amazon\nApr 2021 - Jan 2023\nRan the onboarding programme for 200 new hires across two sites in one year.\nBuilt the reporting finance used to close the month, cutting it from 6 days to 2.\n\nEducation\nMBA, General Management, IIM Bangalore, 2023 - 2025\n\nSkills\nSQL, Figma, Amplitude, Experiment Design`
+    expect(checkResume(studied).findings.map((f) => f.id)).not.toContain('employment-gap')
+
+    // The same résumé WITHOUT the degree must still raise it.
+    const unexplained = studied.replace('MBA, General Management, IIM Bangalore, 2023 - 2025', 'B.Tech, VIT Vellore, 2019')
+    expect(checkResume(unexplained).findings.map((f) => f.id)).toContain('employment-gap')
+  })
+
+  it('does not read a city as an employer', () => {
+    /**
+     * "Razorpay" alone above "Jul 2023 - Present | Bengaluru" was parsed as
+     * title "Razorpay", employer "Bengaluru" — a company read as a job and a
+     * city read as a company, with nothing on screen indicating a problem.
+     */
+    const cityLine = CLEAN.replace('Product Manager at Paytm\nMar 2021 - Present', 'Paytm\nMar 2021 - Present | Bengaluru')
+    const r = checkResume(cityLine)
+    expect(r.read.employer).not.toBe('Bengaluru')
   })
 })
 
@@ -505,14 +686,36 @@ Java, Python, SQL, AWS, Docker, Kubernetes, Postgres
 EDUCATION
 B.E. Computer Science, PES University, 2021`
 
-  it('flags a title the parser read as a date', () => {
-    // Measured live: extractFields returns "Jul 2023 - Present" here. Before
-    // this rule, nothing fired and the report showed the wrong title with no
-    // explanation beside it.
+  it('reads the title correctly, so there is no misread left to flag', () => {
+    /**
+     * ⚠️ THIS TEST USED TO ASSERT `title-misread` AND NOW ASSERTS ITS ABSENCE,
+     * because the defect was fixed at the source rather than reported better.
+     * `extractFields` returns "Jul 2023 - Present" as the title here — that is
+     * still true and still the reason the rule exists. But `parseSections` reads
+     * the same line as "Software Engineer II" at "Razorpay", and since
+     * 2026-09-12 the checker prefers the structured read wherever it produced
+     * BOTH halves. There is no longer a wrong title on screen to explain.
+     *
+     * The rule is not dead — it still guards the uncorroborated case below.
+     */
     const r = checkResume(MISREAD)
-    const finding = r.findings.find((x) => x.id === 'title-misread')
-    expect(finding).toBeDefined()
-    expect(finding!.evidence).toMatch(/2023|Present/i)
+    expect(r.read.currentTitle).toBe('Software Engineer II')
+    expect(r.read.employer).toBe('Razorpay')
+    expect(r.findings.map((x) => x.id)).not.toContain('title-misread')
+  })
+
+  it('still flags a date-as-title where the structure gives no second opinion', () => {
+    /**
+     * The case the rule is for: a role line carrying no separator, so
+     * parseSections cannot produce a title AND an employer, and the regex
+     * reader's date-shaped answer is the only one available. A confident wrong
+     * answer is invisible to the candidate, because their screen shows a title.
+     */
+    const noSeparator = MISREAD.replace('Software Engineer II — Razorpay', 'Razorpay')
+    const r = checkResume(noSeparator)
+    const misread = r.findings.find((x) => x.id === 'title-misread')
+    const unreadable = r.findings.find((x) => x.id === 'title-unreadable')
+    expect(misread ?? unreadable).toBeDefined()
   })
 
   it('does not quote the contact line as a role line built from separators', () => {
