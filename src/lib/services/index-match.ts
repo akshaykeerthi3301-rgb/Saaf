@@ -66,3 +66,48 @@ export async function countIndexMatches(
     threshold: STRONG_MATCH,
   }
 }
+
+/**
+ * How many roles we hold per function, for the day a candidate's shortlist
+ * comes back thin.
+ *
+ * ⚠️ THE THIN-DAY MESSAGE USED TO SAY "our coverage, not a verdict on you" AND
+ * STOP THERE. The sentiment is right and the candidate can do nothing with it.
+ * Measured on 2026-09-14, this index is 39% engineering and 1.6% HR — so an HR
+ * candidate seeing three roles is not having a thin DAY, they are in a function
+ * we do not yet cover, and the honest thing is to say which functions we do.
+ *
+ * Counted rather than cached because it must not drift from the index it
+ * describes, and only ever called on the thin path — a well-served shortlist
+ * never pays for this.
+ */
+export type FunctionCoverage = { fn: string; label: string; roles: number }
+
+const FUNCTION_LABELS: Record<string, string> = {
+  engineering: 'Engineering',
+  consulting: 'Consulting',
+  finance: 'Finance',
+  marketing: 'Marketing',
+  hr: 'HR',
+}
+
+export async function coverageByFunction(): Promise<FunctionCoverage[]> {
+  const db = createServiceClient()
+  const entries = Object.entries(FUNCTION_LABELS)
+
+  const counts = await Promise.all(
+    entries.map(async ([fn]) => {
+      const { count } = await db
+        .from('roles')
+        .select('*', { count: 'exact', head: true })
+        .eq('function', fn)
+        .eq('in_india', true)
+      return count ?? 0
+    }),
+  )
+
+  return entries
+    .map(([fn, label], i) => ({ fn, label, roles: counts[i] }))
+    .filter((c) => c.roles > 0)
+    .sort((a, b) => b.roles - a.roles)
+}

@@ -1,5 +1,6 @@
-import { extractFields, isCity, type ParsedFields } from '@/lib/parse/extract'
-import { parseSections, parseCoverage, type ParseCoverage, type ResumeSections } from '@/lib/parse/sections'
+import { type ParsedFields } from '@/lib/parse/extract'
+import { parseCoverage, type ParseCoverage, type ResumeSections } from '@/lib/parse/sections'
+import { resumeFacts } from '@/lib/parse/facts'
 import { dateRangeYears, openEnded, MONTH } from '@/lib/parse/dates'
 import {
   timeline, gaps, progressed, skillsWithoutEvidence, leadershipEvidence, seniorityBand,
@@ -603,8 +604,6 @@ export function checkResume(
   const add = (f: RawFinding) => findings.push(f)
 
   // Our own parser is the stand-in for theirs — see AtsReport['read'].
-  const parsed = extractFields(text)
-  const f = parsed.fields
 
   /**
    * The document's shape, read by the same deterministic parser the rewrite
@@ -612,46 +611,19 @@ export function checkResume(
    * bullet this check must not score, or the two surfaces disagree about the
    * same file in front of the same person.
    */
-  const structure = parseSections(text)
+  const facts = resumeFacts(text)
+  const f = facts.fields
+  const structure = facts.sections
   const coverage = parseCoverage(structure, layout)
 
   /**
-   * ⚠️ TWO PARSERS WERE ANSWERING THE SAME QUESTION AND DISAGREEING ON SCREEN.
-   * `extractFields` is the older line-anchored regex reader; `parseSections`
-   * builds the real structure. On the founder's own résumé the structured parse
-   * had "Private Banking Manager (M1)" at ICICI Bank while the report told him
-   * "your current job title did not come through" — the checker contradicting
-   * its own extraction, and charging four points for it.
-   *
-   * The structured read wins where it has an answer, because it is the one the
-   * rewrite, the preview and the saved document all use. The regex reader stays
-   * as the fallback: it finds titles in résumés with no Experience heading at
-   * all, which parseSections by design cannot.
+   * Title and employer come from `resumeFacts`, which owns the precedence
+   * between the structured read and the regex one — see src/lib/parse/facts.ts
+   * for why it has to live in one place. This file used to decide it inline,
+   * and /resume decided it differently, so one résumé had two answers.
    */
-  /**
-   * ⚠️ ONLY WHEN CORROBORATED, AND THE FIRST ATTEMPT AT THIS WAS WRONG.
-   * `parseHeader` assigns positionally — parts[0] is the title, parts[1] the
-   * employer — so a role line reading only "Paytm" comes back as
-   * {title: "Paytm", employer: null}. Preferring that outright silenced
-   * `title-unreadable` on exactly the documents it exists for, and handed the
-   * candidate a confident wrong answer instead of a finding. Three existing
-   * tests caught it, one of which was written after this same class of bug.
-   *
-   * A structured read is trusted only when the line produced BOTH halves, which
-   * means it genuinely carried a separator ("Title at Employer"). Where it did
-   * not, the older regex reader is the better witness precisely because it
-   * returns nothing rather than guessing.
-   */
-  const firstRole = structure.experience.find((e) => !e.isProject)
-  const corroborated = Boolean(firstRole?.title && firstRole?.employer)
-  // `?? undefined` because ResumeSections uses null for "absent" and
-  // ParsedFields uses undefined; the report type follows the latter.
-  const readTitle = (corroborated ? firstRole!.title : f.currentTitle) ?? undefined
-  // The fallback reader has the same positional blind spot, so the guard has
-  // to sit on both paths — fixing only parseHeader left "Bengaluru" arriving
-  // as the employer by the other route.
-  const fallbackEmployer = isCity(f.employer) ? undefined : f.employer
-  const readEmployer = (corroborated ? firstRole!.employer : fallbackEmployer) ?? undefined
+  const readTitle = facts.fields.currentTitle
+  const readEmployer = facts.fields.employer
 
   // ---- parsing ------------------------------------------------------------
 

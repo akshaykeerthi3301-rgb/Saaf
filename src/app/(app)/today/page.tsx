@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { displayCity, displayEmployer } from '@/lib/display-names'
+import { coverageByFunction } from '@/lib/services/index-match'
 import { redirect } from 'next/navigation'
 import { ChevronRight, Eye, Laptop, Pencil, ShieldCheck, Wallet } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
@@ -157,6 +159,11 @@ export default async function TodayPage({
     }))
 
   const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
+  /**
+   * Only on the thin path — a well-served shortlist never pays for these
+   * counts, and the message they feed only renders below 10 strong matches.
+   */
+  const coverage = strong < 10 ? await coverageByFunction() : []
   const gap = functionGap(profile.preferred_role)
 
   // A work-mode preference is a filter wearing a score component's clothes. Set
@@ -528,8 +535,8 @@ export default async function TodayPage({
                           gateResultId={r.id}
                           roleId={r.role_id}
                           title={r.roles?.title ?? ''}
-                          company={r.roles?.company_name ?? ''}
-                          city={r.roles?.city ?? undefined}
+                          company={displayEmployer(r.roles?.company_name)}
+                          city={displayCity(r.roles?.city) || undefined}
                           score={r.score ?? 0}
                           breakdown={r.score_breakdown}
                           reason={r.reason}
@@ -582,10 +589,40 @@ export default async function TodayPage({
             {/* The honest empty state, and only when it applies. It used to sit
                 here on every visit, including days with 165 matches, where it
                 answered a worry nobody had. */}
-            {rows.length < 10 ? (
-              <p className="mt-4 border-t border-border pt-4 text-[11px] leading-5 text-muted-foreground">
-                A thin day is our coverage, not a verdict on you.
-              </p>
+            {/*
+              ⚠️ "OUR COVERAGE, NOT A VERDICT ON YOU" WAS RIGHT AND UNUSABLE.
+              The sentiment is the locked decision — thinness is attributed to
+              us, never to the candidate — but a person reading it can do
+              nothing with it. Measured on 2026-09-14 this index is 39%
+              engineering and 1.6% HR, so an HR candidate seeing three roles is
+              not having a thin DAY; they are in a function we do not cover yet.
+              Naming which functions we DO cover, with the counts, turns an
+              apology into information — and the checker below is genuinely
+              useful to them today, with no account and no shortlist.
+            */}
+            {strong < 10 ? (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-[11px] leading-5 text-muted-foreground">
+                  A thin list is our coverage, not a verdict on you. We index company hiring boards,
+                  which means we are strongest here:
+                </p>
+                <ul className="mt-2.5 space-y-1">
+                  {coverage.map((c) => (
+                    <li key={c.fn} className="flex items-baseline justify-between gap-3 text-[11px]">
+                      <span className="text-muted-foreground">{c.label}</span>
+                      <span className="font-mono tabular-nums text-primary">
+                        {c.roles.toLocaleString('en-IN')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/tools/ats-checker"
+                  className="mt-3 inline-block text-[11px] font-semibold text-primary underline underline-offset-4"
+                >
+                  Meanwhile, check what a parser reads out of your résumé →
+                </Link>
+              </div>
             ) : null}
           </div>
 

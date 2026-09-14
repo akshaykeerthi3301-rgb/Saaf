@@ -3,7 +3,8 @@
 import { z } from 'zod'
 import { pdfToText } from '@/lib/parse/pdf'
 import { docxToText } from '@/lib/parse/docx'
-import { extractFields, type ParseResult } from '@/lib/parse/extract'
+import { type ParseResult } from '@/lib/parse/extract'
+import { resumeFacts } from '@/lib/parse/facts'
 import { readResumeWithModel } from '@/lib/parse/llm'
 import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
 
@@ -58,7 +59,14 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
       }
     }
 
-    const deterministic = extractFields(text)
+    /**
+     * ⚠️ `resumeFacts`, NOT `extractFields`, AND THAT IS THE WHOLE FIX HERE.
+     * This screen used to read the résumé its own way and the ATS checker read
+     * it another, so the founder's own document produced "Manager" at "icici
+     * bank" on /resume and "Private Banking Manager (M1)" at "ICICI Bank
+     * Bangalore" in the checker. Same file, same session, two answers.
+     */
+    const deterministic = resumeFacts(text)
 
     // Strictly additive. The model reaches skills and domain that fixed
     // patterns cannot; where both produce a field the model wins, because it
@@ -69,12 +77,26 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
     const model = await readResumeWithModel(text)
     if (!model) return { ok: true, ...deterministic }
 
+    /**
+     * ⚠️ THE MODEL NO LONGER OVERRIDES A FACT THE DETERMINISTIC READER FOUND.
+     * It used to win on every field, which is how /resume came to show 2 years
+     * where the checker showed 4 — the model's number replacing arithmetic done
+     * from the candidate's own dates. It still FILLS fields nothing else
+     * reached, and it is still the only reader that gets skills and domain at
+     * all, which is why it runs.
+     *
+     * The narrowing matters beyond consistency: `llm.ts` records a live
+     * incident where the model returned "Systems Engineer at Infosys Jun 2024 -
+     * Present" as a job title, and it reached `preferred_role` and emptied a
+     * candidate's shortlist. A deterministic answer that exists is the better
+     * answer; the model's value is what it finds when there is nothing there.
+     */
     const fields = {
       ...deterministic.fields,
-      currentTitle: model.currentTitle ?? deterministic.fields.currentTitle,
-      employer: model.employer ?? deterministic.fields.employer,
-      yearsExperience: model.yearsExperience ?? deterministic.fields.yearsExperience,
-      city: model.city ?? deterministic.fields.city,
+      currentTitle: deterministic.fields.currentTitle ?? model.currentTitle,
+      employer: deterministic.fields.employer ?? model.employer,
+      yearsExperience: deterministic.fields.yearsExperience ?? model.yearsExperience,
+      city: deterministic.fields.city ?? model.city,
       skills: model.skills,
       domain: model.domain,
     }
@@ -82,7 +104,7 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
     // Warnings describe what still needs checking, so drop the ones the model
     // has now answered — telling someone we could not find a city while
     // showing them their city reads as a broken product.
-    const warnings = deterministic.warnings.filter((w) =>
+    const warnings = deterministic.warnings.filter((w: string) =>
       !(fields.city && /city/i.test(w)) &&
       !(fields.currentTitle && /current title/i.test(w)) &&
       !(fields.employer && /employer/i.test(w)) &&
