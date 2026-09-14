@@ -65,10 +65,21 @@ cannot authorise third-party OAuth apps.
 # into node_modules and .next by path, so it fails on the first file it cannot
 # find. Copy the sources and let Vercel build.
 SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
+#
+# ⚠️ rsync DOES NOT READ .gitignore. Every exclude here must be written out, and
+# anything gitignored-but-on-disk is staged unless it is named. On 2026-09-14
+# this list was missing `bench`, and staged nine of the founder's real résumés
+# from bench/corpus/real/ into a world-readable /tmp directory ready for upload.
+# `.vercelignore` now also carries `bench/` — two layers, because the staged copy
+# sitting in /tmp is its own exposure even if Vercel never receives it.
 rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
   --exclude '.claude' --exclude 'productos' --exclude 'saaf-ai' --exclude 'docs' \
+  --exclude 'bench' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
+
+# Prove it before you deploy — this should print nothing:
+find $SP -path '*corpus*' -o -name '.env*' -o -name '*.pem'
 (cd $SP && npx vercel deploy --prod)
 
 # Permanent fix — after this, plain `npx vercel --prod` works:

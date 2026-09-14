@@ -23,3 +23,20 @@ scripts/
 # by scripts/qualify-boards.ts, which is excluded above. registry/boards.json is
 # NOT excluded and must not be: ingest/run.ts reads it on every cron run.
 registry/candidates.json
+
+# ⚠️ THE BENCH CORPUS IS PERSONAL DATA AND MUST NEVER BE UPLOADED.
+# bench/corpus/real/ holds nine of the founder's own résumés — full name, employer
+# history, phone, email. They are gitignored, and the header above is exactly why
+# that is not enough: this file existing means .gitignore no longer applies, so
+# "it is gitignored" is the reasoning that ships them.
+#
+# Caught on 2026-09-14 while staging a deploy — the RUNBOOK's rsync had copied all
+# nine into /tmp/saaf-deploy ready for upload. Nothing had leaked: the corpus
+# arrived in 40cc807 on 2026-09-12 and the last deploy was 2026-09-09, so this was
+# the first deploy that could have carried it.
+#
+# Read by nothing at runtime — only scripts/bench-*.ts, and scripts/ is already
+# excluded above. The product's whole promise is that a résumé is parsed and
+# dropped; shipping the founder's own into a public deployment would break it in
+# the most literal way available.
+bench/
