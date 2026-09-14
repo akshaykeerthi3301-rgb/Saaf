@@ -963,7 +963,15 @@ export function checkResume(
       id: 'overlapping-present',
       area: 'consistency',
       severity: 'medium',
-      title: `${openEnded} roles are both marked as ongoing`,
+      // "both" is only English for two. The rule fires at >1, so a CV with
+      // three concurrent appointments read "3 roles are both marked as
+      // ongoing" — found on uw-cv.pdf, an academic CV with three open-ended
+      // posts. The number is right and the sentence is not, which is the kind
+      // of slip that makes a reader doubt the arithmetic beside it.
+      title:
+        openEnded === 2
+          ? 'Two roles are both marked as ongoing'
+          : `${openEnded} roles are all marked as ongoing`,
       detail:
         'A parser computing total experience from overlapping open-ended ranges either double-counts the overlap or discards one of the roles. Either way the number it reaches is not the one you meant.',
       fix: 'Give every role but your current one a real end date. If two genuinely overlap — a part-time or advisory role alongside a full-time one — say which is which on the line.',

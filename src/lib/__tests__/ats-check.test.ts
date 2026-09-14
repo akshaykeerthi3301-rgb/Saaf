@@ -363,6 +363,33 @@ describe('findings the corpus proved were false', () => {
    * which is the argument for bench/corpus/ existing at all.
    */
 
+  it('says "both" only when there are two of them', () => {
+    /**
+     * The rule fires at >1 but the sentence said "both" at any count, so an
+     * academic CV with three open-ended appointments read "3 roles are both
+     * marked as ongoing". Found on uw-cv.pdf. A wrong sentence next to a
+     * correct number invites doubt about the number.
+     *
+     * The extra roles are spliced INSIDE the experience section — appended
+     * after the document they land outside it and the rule never fires, which
+     * is how the first version of this test passed nothing.
+     */
+    const withOngoing = (extra: number) =>
+      CLEAN.replace(
+        'Associate Product Manager at Zeta',
+        Array.from({ length: extra }, (_, i) =>
+          `Advisor at Institute ${i}\nJan 2024 - Present\nAdvised on a programme of work across the year, reviewing designs monthly.`,
+        ).join('\n\n') + '\n\nAssociate Product Manager at Zeta',
+      )
+
+    const title = (n: number) =>
+      checkResume(withOngoing(n)).findings.find((f) => f.id === 'overlapping-present')?.title
+
+    expect(title(1)).toBe('Two roles are both marked as ongoing')
+    expect(title(2)).toBe('3 roles are all marked as ongoing')
+    expect(title(2)).not.toContain('both')
+  })
+
   it('does not count side projects as concurrent jobs', () => {
     /**
      * Measured on the founder's own résumé: three projects dated "2026 –
