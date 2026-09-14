@@ -2,6 +2,32 @@
 
 ---
 
+## ⏳ Migration 0024 — NOT YET APPLIED (2026-09-12)
+
+`supabase/migrations/0024_resume_score_model.sql` adds `resume_documents.score_model`.
+**Apply it by hand in the Supabase SQL editor**, then:
+
+```
+npm run rescore:saved            # dry run — prints every old → new score
+npm run rescore:saved -- --write # apply
+npm run verify:rls               # the 8 resume_documents checks must still pass
+```
+
+**Why it cannot be skipped.** The scoring model changed shape on 2026-09-12, so
+a score stored before that date and one computed after it are different kinds of
+number. Migration `0023` exists specifically to show "was 57, now 84" — across
+the change that line would compare two different rulers and present the gap as
+progress the candidate made. The old figures are also wrong in a specific way:
+they were produced by a parser that returned one line per page for every PDF.
+
+The backfill rescores from `resume_documents.body`, so no uploaded file is
+needed and nothing about the privacy posture changes.
+
+**Blocks:** nothing user-facing. Saved résumés keep working; their scores stay
+labelled `v1` until you run it.
+
+---
+
 ## ✅ Migration 0023 applied — 2026-09-09
 
 `resume_documents` is live. **No migration is pending.**

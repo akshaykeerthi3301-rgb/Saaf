@@ -962,6 +962,177 @@ free tier turned out to be 8,000 tokens per MINUTE shared across every
 environment, which is ~3 rewrites a minute site-wide; see Stage O's note and
 `src/lib/parse/llm.ts`.
 
+### Stage Q — the checker was measuring the file, not the résumé (2026-09-12)
+
+Six rebuilds of `src/lib/ats-check.ts` had added checks on top of a parser that
+returned nothing, and nobody could tell, because there were no fixtures and no
+benchmark.
+
+**The measurement that ended the argument.** `resume.pdf` and `resume.docx` in
+`src/lib/parse/__tests__/fixtures/` contain the IDENTICAL résumé. Run through
+the checker as it stood: **34/100 as a PDF, 65/100 as a .docx.** A 31-point
+swing caused only by the file container.
+
+**The cause was one expression.** `pdf.ts` mapped every pdfjs text item to
+`.str` and joined on a space — **one line per page** — discarding `transform`
+(x/y), `width`, `height` and `fontName`, all of which pdfjs hands over free.
+Downstream, everything starved:
+
+- `parseSections` needs headings under 42 characters, so **every PDF returned
+  zero experience, zero skills, zero education, zero section order**.
+- **13 of 37 rules read `experience[].bullets`** and silently never fired, so a
+  genuinely weak résumé was not penalised.
+- `looksMultiColumn` needs six substantial lines and got one, so the file's own
+  self-described *"highest-value check"* could never fire on a PDF.
+- `single-blob` and `missing-sections` fired on effectively every PDF — the
+  checker reporting, at −36, a defect the parser had created.
+
+**`src/lib/parse/layout.ts` is the fix.** Lines are recovered by clustering text
+items on shared baselines (tolerance = half the median glyph height); columns by
+finding vertical whitespace corridors no text crosses; headings additionally by
+point size. `pdfToText` keeps its exact signature and is now a flattening of
+that structure, so no caller changed. **The two fixtures now score 65 and 65.**
+
+**The score model changed shape, and had to.** It was `100 − Σ {high 18, medium
+9, low 4}` — flat, saturating at zero after six findings, with the headline
+number and the category bars computed separately and never reconciling. It is
+now the two-part shape the category leader's own documentation describes:
+`0.35 × parse-coverage + 0.65 × weighted content`.
+
+⚠️ **`parseCoverage` is not new work — the number was already being computed and
+thrown away.** `parseSections` has always returned `unplaced`, and `sections.ts`
+has always said a surface above should report it. None did; it was validated in
+transit by two Zod schemas and rendered nowhere.
+
+⚠️ **The parse rate describes a TYPICAL ATS, not ours.** `layout.ts` rebuilds
+columns and reads them in order, so our own recovery on a sidebar résumé is near
+perfect. Reporting that as the parse rate would tell a candidate their two-column
+CV is safe because our parser is good — the opposite of the truth, and the
+opposite of what the tool is for. Where a structure is known to defeat ordinary
+parsers the rate is reduced and the reason is named in `coverage.atsRisk`.
+
+**`bench/` and `npm run bench` are the part that stops this recurring.** One
+invented résumé in four layouts plus the original fixture pair, with two gates:
+ACCURACY (did we recover the facts `bench/manifest.json` says are there) and
+INVARIANCE (do layouts of one résumé score alike — tolerance 3 points, measured
+at 31 before). `bench/corpus/real/` is gitignored: real résumés are third-party
+personal data and this product deletes what it parses.
+
+⚠️ **The weights are provisional and belong to the corpus, not to taste.**
+`PARSE_WEIGHT`, `CATEGORY_WEIGHT` and `SEVERITY_CATEGORY_COST` are set by
+judgement until 20–30 real Indian résumés land in `bench/corpus/real/`. The
+bench prints a distribution line and labels it as not a basis for tuning while
+only synthetic documents are loaded.
+
+**Defects found and fixed on the way, each with a test that makes it
+unrepeatable:**
+
+| Defect | Why it mattered |
+|---|---|
+| `analyse: 'analyse'` in `MISSPELLINGS` | British spelling registered as a misspelling of ITSELF, rendering «"analyse" (should be "analyse")» and costing 18 points of the content category. **British spelling is standard in India** — the only market this serves. `misspellings.test.ts` now proves against a real en-GB dictionary that no key is a real word and every value is; the dictionary is a devDependency because `checkResume` is isomorphic and 576 KB would ship to every visitor. The list grew 41 → 98 under that guard. |
+| `handled` in both `ACTION_VERBS` and `WEAK_OPENER` | One bullet counted as strong and weak simultaneously — two findings disagreeing on one screen. |
+| Three copies of the date regex, one fixed | Numeric dates (`07/2023`, common on Indian résumés) were fixed in `sections.ts` only; `extract.ts` and `ats-check.ts` were byte-identical to each other and blind to half the dates they fed. Now one `src/lib/parse/dates.ts`, with `2021 to 2023`, `Jan. 2023` and `Ongoing` added. Every export is a factory — a shared `g`-flagged RegExp carries `lastIndex` and makes `.test()` alternate. |
+| `jdVersusMarket` never called | The form has always offered "paste a job description"; nothing read it. Now `jd-missing-standard` splits what the posting asks for into **market-standard** terms (worth adding, with the % of real postings that use them) and **employer-specific** vocabulary (worth NOT over-fitting to). Telling those apart requires an index, which is the point. |
+| `action-verb-coverage` categorised `tailoring` | It fires without a target role, but that whole category is dropped when no role is chosen — so its cost silently evaporated. Moved to `content`, where it is a property of the writing rather than of the target. |
+| Skipped findings stayed clickable in the rail | Selecting one set an id the detail pane could not find; the pane fell back to a DIFFERENT check while `aria-current` stayed on the clicked row. |
+| `ai:`-prefixed applied-edit keys | Could never match their reader, so a model-rewritten line never showed as applied. |
+
+**Severity is now rendered as the finding's real marginal cost** — `−20`, `−1` —
+rescored without it and differenced, so the reader can check it by applying the
+fix and watching the gauge. ⚠️ A layout finding's cost includes the parse-rate
+half it depresses; attributing only the content half printed `−7` beside a check
+whose own copy says "blocks parsing". The old `✕` glyph used `text-destructive`,
+which `DESIGN.md` reserves exclusively for system errors — *"a low score is a
+correct answer, not a failure"* — so it has gone rather than been recoloured.
+
+### What the real corpus found (2026-09-12, same day)
+
+The corpus arrived the same day the rig did: nine variants of the founder's own
+résumé, plus eleven public sample résumés from university career centres
+(`npm run bench:samples`, fictional people, gitignored — third-party material,
+and real strangers' CVs would be personal data this product has no business
+holding). **26 documents. Every defect below was invisible to the synthetic
+corpus and obvious within one run.**
+
+⚠️ **Two of eleven public samples have NO TEXT LAYER AT ALL**, and the producer
+is not a scanner — it is `Microsoft: Print To PDF`, which paints words as vector
+shapes. ~12,000 drawing operations, zero text items. A résumé made that way
+**reads as completely blank at every applicant tracking system in the market**
+while looking perfect to its author. The existing copy called this "likely a
+scan or an image", which describes the result and is useless as advice: nobody
+who chose File → Print recognises themselves in the word "scan", so they resend
+the same file. `pdfProducer()` now names it and the instruction is one sentence
+— File → Save As, not File → Print. **This is probably the single most valuable
+finding the tool can return, and it was unreachable without real documents.**
+
+| Defect | Measured on | Cause |
+|---|---|---|
+| **"6 roles are both marked as ongoing"** | Founder's résumé | `overlapping-present` counted "– Present" across raw TEXT, so three side projects under a Projects heading were tallied as concurrent jobs. Now counted from parsed entries, with projects tagged `isProject`. |
+| **"Your current job title did not come through"** | Founder's résumé | Two parsers answering one question. `parseSections` had "Private Banking Manager (M1)" at ICICI Bank while the report printed the older regex reader's blank — the checker contradicting its own extraction, at 4 points. |
+| **Ten and eleven "degrees"** | Two public samples | Everything under an education heading became a qualification: coursework, minors, study-abroad notes, honours, a placement committee, a dance club. A line now opens an entry only if it names a qualification or carries a year. |
+| **"SUMMARY OF QUALIFICATIONS" read as EDUCATION** | Two public samples | The keyword fallback matched `qualification` before it considered `summary`, so a summary's prose was parsed into degrees. Summary is now tested first. |
+| **City reported as employer** | Public samples | "Razorpay" alone above "Jul 2023 – Present \| Bengaluru" parsed positionally as title "Razorpay", employer "Bengaluru". **Both parsers had it**, identically and invisibly — fixing `parseHeader` alone left it arriving by the other route. |
+| **"A 2 years gap between Amazon and ICICI"** | Founder's résumé | Printed above a full-time MBA dated across exactly that window. Advice to explain something the reader had already explained, on the same page. Gaps overlapping education are suppressed. |
+| **`unprofessional-email` on an ordinary address** | Founder's résumé | **A defect introduced the same day.** The check flagged any four consecutive digits, which fires on everyone whose name was already taken. It now tests for the absence of a name-like run, not the presence of digits. |
+
+⚠️ **One fix had to be walked back, and the repo's own test caught it.** Preferring
+the structured title outright silenced `title-unreadable` on the documents it
+exists for: `parseHeader` assigns positionally, so a role line reading only
+"Paytm" returns `{title: "Paytm", employer: null}` — a confident wrong answer,
+which is the exact regression a comment in `ats-check.test.ts` was written after.
+The structured read is now trusted only when the line produced BOTH halves.
+
+**Net effect on the founder's own résumé: 85 → 94**, with four false findings
+removed and the four that remain all genuine. Across the corpus, education
+entries fell from as many as twelve to between one and four, and no document
+regressed.
+
+### The document, beside the findings (Phase 4.1)
+
+The report used to describe lines the candidate had to picture from a
+quotation; the résumé itself appeared only AFTER the whole-document rewrite.
+It now renders under the finding, with the quoted line marked, and selecting a
+different check scrolls to its line.
+
+⚠️ **The highlight is an overlay and never reaches the file.** `ResumePreview`'s
+own header promises it is a picture of what downloads, so the mark is drawn with
+the app's accent rather than the paper palette, exists only while a finding is
+selected, and `buildFullResumeDocx()` is untouched.
+
+⚠️ **The "before you paste" column now stands down once a report exists**, and
+the layout needed it to. Measured at 1280px with both sidebars up, the pane
+holding the report and the document was **368px wide** — too narrow to read a
+résumé in, which made showing one pointless. It is now 668px. Those promises are
+also spent by then: every line in that column is about what happens *before* you
+paste, and somebody reading their own findings has taken that step. Implemented
+with CSS `:has()` rather than state, because `ToolPage` is a server component
+and the step lives in the client one; a browser without `:has()` keeps the
+narrower layout and nothing breaks.
+
+**Matching is on text, not on line numbers**, because nothing in the pipeline
+carries a line index from a check back to the rendered document. Short evidence
+must match exactly and long evidence matches by containment — a single
+threshold silently dropped every `skills-not-evidenced` finding, whose evidence
+is one skill name.
+
+⚠️ **Two things this surfaced.** `multi-column` had quietly LOST its quote when
+detection moved to geometry: its evidence still came from the whitespace
+heuristic, which no longer runs once a measured column count exists — so the
+highest-severity check in the file was the one with nothing to show.
+`columnSample()` now takes a line of real content from the narrower column,
+which is both better evidence and findable in the document on screen.
+
+And the empty-state copy claimed *"Each one quotes the line it came from"*,
+which is true of roughly half. Some findings are about ABSENCE — `no-email`
+cannot quote a line that is not there — so the sentence was corrected rather
+than evidence being forced onto checks that have none.
+
+**Migration `0024` adds `score_model`.** A v1 score and a v2 score are not the
+same kind of number, and `0023` exists specifically to power a "was 57, now 84"
+line. `npm run rescore:saved` recomputes every stored row from its `body` text —
+possible only because 0023 denormalised that text, which it justified as "derived,
+small" without knowing this is what it would buy.
+
 ### Deployed 2026-09-09 — parity, and past it
 
 **https://saaf-ten.vercel.app**, deployment `saaf-1kx67gl1e`. Verified in a real
@@ -1175,7 +1346,14 @@ Meera ranks 4th but is **strategically the most valuable beta user** — an ATS 
 
 ## Next step
 
-**1 · Deploy Stage C, then set the key — in that order.** It is the only
+⚠️ **THIS SECTION IS STALE AND IS KEPT ONLY FOR THE REASONING IN ITEMS 2 AND 4.**
+Item 1 shipped (Stage C deployed 2026-09-07, `GEMINI_API_KEY` set 2026-09-09) and
+item 3's board count is 1,396, not 31. **The live next steps are: apply migration
+`0024` (see `docs/HANDOFF.md`), collect 20–30 real résumés into
+`bench/corpus/real/` so the scoring weights can be set from data rather than
+judgement, and buy a domain.**
+
+**1 · ~~Deploy Stage C, then set the key — in that order.~~ DONE.** It is the only
 unshipped code. Deploying first puts the honest privacy copy live *before* the
 behaviour it describes exists; setting `GEMINI_API_KEY` first would make the
 production privacy page false for the length of the gap. The key is set nowhere
