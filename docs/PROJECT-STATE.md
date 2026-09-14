@@ -1384,6 +1384,42 @@ column. `npm run bench:match` before and after: identical, 0 components paying
 out at 90%+. `npm run bench`: 26 documents, no delta. 521 tests, lint 0 errors,
 RLS verified.
 
+### Deployed 2026-09-14 — Stage R and Stage S, five days late
+
+**https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.
+Migration `0025` applied by the founder; `npm run reclassify:roles -- --write`
+moved 2,653 roles out of `other`.
+
+⚠️ **The scorer fixes reached users today, not on 2026-09-14 when they were
+written.** Stage R landed in the repository and sat there through five days of
+further work — the 28-point constant and the 74% "strong match" on zero skill
+overlap were fixed for nobody that whole time. The gap was invisible because
+`docs/HANDOFF.md` opened by describing a branch instead of a deploy. Committing
+is not shipping, and this repository has now demonstrated that at a cost of five
+days.
+
+Verified in a real browser against production, not by curl:
+
+| Check | Result |
+|---|---|
+| Landing hero | "Precision Career Copilot for India. Zero Spam." — no "100% Tailored" |
+| Wordmark | "Saaf" on the landing header, footer, sign-in and every shell |
+| `/copilot` | 200, redirects to `/signin` unauthenticated; no "Cookie" in the markup |
+| `/api/audit/today` | 23,184 roles · 1,388 boards · `stale: false` |
+| Coverage panel | nine functions, Sales third at 1,390 — verified signed-in against the same live database |
+| `bench/corpus/real/*.pdf` | **404** — see below |
+
+⚠️ **THE DEPLOY PROCEDURE WAS STAGING NINE REAL RÉSUMÉS, AND THIS WAS THE FIRST
+DEPLOY THAT COULD HAVE SHIPPED THEM.** `docs/RUNBOOK.md`'s rsync names its
+excludes explicitly because rsync does not read `.gitignore`, and the list was
+missing `bench`. `.vercelignore` would not have caught it either, for the reason
+its own header states about `.env`: the file existing means `.gitignore` stops
+applying entirely, so "the corpus is gitignored" is precisely the reasoning that
+ships it. Nothing leaked — the corpus arrived in `40cc807` on 2026-09-12 and the
+previous deploy was 2026-09-09. Fixed in both places, and the RUNBOOK now carries
+a `find` that prints nothing when the staged copy is clean. **A gitignored file
+is not a file that stays out of a deployment.**
+
 ### Deployed 2026-09-09 — parity, and past it
 
 **https://saaf-ten.vercel.app**, deployment `saaf-1kx67gl1e`. Verified in a real
