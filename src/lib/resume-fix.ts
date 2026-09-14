@@ -170,6 +170,20 @@ export function normaliseDates(value: string): string {
  */
 export function fixFor(findingId: string, sections: ResumeSections): Fix | null {
   switch (findingId) {
+    /**
+     * ⚠️ `action-verb-coverage` USED TO OFFER NOTHING BUT "SKIP THIS". Found by
+     * walking a real résumé through the tool: it scored 94, and three of its
+     * four findings had no action at all — the report became advice with a
+     * dismiss button, on the surface that exists to make changes.
+     *
+     * It shares weak-openers' machinery because it is the same defect measured
+     * differently: one counts duty-phrases, the other counts lines that fail to
+     * open with a verb. Where `strengthenOpener` has nothing to offer — a line
+     * opening on a noun needs judgement, not a substitution table — this
+     * correctly returns null and the finding stays advice rather than inventing
+     * a rewrite.
+     */
+    case 'action-verb-coverage':
     case 'weak-openers': {
       const edits: FixEdit[] = []
       sections.experience.forEach((e, i) =>
@@ -184,6 +198,46 @@ export function fixFor(findingId: string, sections: ResumeSections): Fix | null 
             findingId,
             edits,
             note: 'Each line now opens with what you did. Only the opening words change — every fact, figure and name is the one you wrote.',
+          }
+        : null
+    }
+
+    /**
+     * Terminal punctuation, made consistent the way the document already leans.
+     *
+     * The most mechanical fix in the file: no word is added, removed or
+     * reordered — only a full stop at the end of a line. Majority wins, because
+     * the candidate has already expressed a preference by writing most of the
+     * lines one way, and overriding it would be a style opinion rather than a
+     * repair.
+     */
+    case 'bullet-punctuation': {
+      const all = sections.experience.flatMap((e, i) =>
+        e.bullets.map((b, j) => ({ entry: i, bullet: j, text: b })),
+      )
+      const ends = (t: string) => /[.]\s*$/.test(t.trim())
+      const stopped = all.filter((b) => ends(b.text)).length
+      if (all.length < 3 || stopped === 0 || stopped === all.length) return null
+      const wantStop = stopped * 2 > all.length
+      const edits: FixEdit[] = []
+      for (const b of all) {
+        if (ends(b.text) === wantStop) continue
+        const trimmed = b.text.trim()
+        // Never touch a line ending in other punctuation — a question mark or a
+        // colon is a choice, and "fixing" it would change what the line says.
+        if (!wantStop && !/[.]$/.test(trimmed)) continue
+        if (wantStop && /[!?:;]$/.test(trimmed)) continue
+        const after = wantStop ? `${trimmed}.` : trimmed.replace(/\.+$/, '')
+        if (after !== trimmed) edits.push({ entry: b.entry, bullet: b.bullet, before: b.text, after })
+      }
+      return edits.length
+        ? {
+            kind: 'edit',
+            findingId,
+            edits,
+            note: wantStop
+              ? 'A full stop added to the lines that were missing one. Nothing else changes.'
+              : 'The trailing full stops removed, to match the rest. Nothing else changes.',
           }
         : null
     }

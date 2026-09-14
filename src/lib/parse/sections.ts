@@ -646,15 +646,30 @@ export function roleLine(entry: Pick<ExperienceEntry, 'title' | 'employer'>): st
   return entry.title ?? entry.employer ?? 'Role'
 }
 
+/** Comfortably under `keyword-dump`'s threshold of fifteen. */
+const SKILLS_PER_LINE = 10
+
 export function sectionsToText(s: ResumeSections): string {
   const out: string[] = []
   if (s.contact.name) out.push(s.contact.name)
   const line = [s.contact.email, s.contact.phone, ...s.contact.links].filter(Boolean).join(' | ')
   if (line) out.push(line)
   if (s.summary) out.push('', 'PROFESSIONAL SUMMARY', s.summary)
-  if (s.experience.length) {
-    out.push('', 'EXPERIENCE')
-    for (const e of s.experience) {
+  /**
+   * ⚠️ PROJECTS GET THEIR OWN HEADING BACK, OR THE ROUND TRIP INVENTS A FINDING.
+   * `isProject` is set when parsing from a Projects section and is the reason
+   * `overlapping-present` no longer counts side projects as concurrent jobs.
+   * Writing everything under EXPERIENCE erased it: re-parsing our own output
+   * produced three ongoing "roles" beside a current job, so a candidate who
+   * accepted a fix was told about an ambiguity their document did not have —
+   * under a button that promises to improve the score.
+   */
+  const roles = s.experience.filter((e) => !e.isProject)
+  const projects = s.experience.filter((e) => e.isProject)
+  const writeEntries = (heading: string, entries: ExperienceEntry[]) => {
+    if (entries.length === 0) return
+    out.push('', heading)
+    for (const e of entries) {
       out.push(roleLine(e))
       const meta = [e.dates, e.location].filter(Boolean).join(', ')
       if (meta) out.push(meta)
@@ -662,7 +677,22 @@ export function sectionsToText(s: ResumeSections): string {
       out.push('')
     }
   }
-  if (s.skills.length) out.push('', 'SKILLS', s.skills.join(', '))
+  writeEntries('EXPERIENCE', roles)
+  writeEntries('PROJECTS', projects)
+  /**
+   * ⚠️ WRAPPED, BECAUSE OUR OWN CHECKER READS ONE LONG LINE AS A KEYWORD DUMP.
+   * `keyword-dump` fires on a line with more than fifteen comma-separated
+   * items. A résumé listing 29 skills across several lines does not trip it;
+   * joining them into one does — so the document we hand back failed a check
+   * the document we received had passed. Measured on a real résumé: 94 → 88 the
+   * moment a fix was applied.
+   */
+  if (s.skills.length) {
+    out.push('', 'SKILLS')
+    for (let i = 0; i < s.skills.length; i += SKILLS_PER_LINE) {
+      out.push(s.skills.slice(i, i + SKILLS_PER_LINE).join(', '))
+    }
+  }
   if (s.education.length) {
     out.push('', 'EDUCATION')
     for (const e of s.education) {

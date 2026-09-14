@@ -188,3 +188,72 @@ describe('what we refuse to write', () => {
     expect(fix && 'note' in fix ? fix.note : '').toMatch(/will not invent/i)
   })
 })
+
+/**
+ * Fixes added after walking a real résumé through the tool.
+ *
+ * ⚠️ IT SCORED 94 AND THREE OF ITS FOUR FINDINGS OFFERED ONLY "SKIP THIS".
+ * On a good document the report had become advice with a dismiss button, on the
+ * one surface whose purpose is making changes. Only 12 of 37 finding ids had a
+ * fix wired; these are the two that are purely mechanical and need no judgement.
+ */
+describe('the mechanical fixes', () => {
+  const withBullets = (bullets: string[]) =>
+    parseSections(
+      ['Priya Iyer', 'priya@example.com', '', 'Experience', '', 'Product Manager at Paytm', 'Mar 2021 - Present', ...bullets].join(
+        '\n',
+      ),
+    )
+
+  it('makes terminal punctuation consistent the way the document already leans', () => {
+    const sections = withBullets([
+      'Owned the merchant payments funnel end to end across onboarding.',
+      'Ran the experiments that lifted completion by 14% across merchants.',
+      'Wrote SQL against the warehouse for the weekly activation reporting',
+    ])
+    const fix = fixFor('bullet-punctuation', sections)
+    expect(fix?.kind).toBe('edit')
+    const edits = fix && 'edits' in fix ? fix.edits : []
+    // Only the minority line is touched, and only its final character.
+    expect(edits).toHaveLength(1)
+    expect(edits[0].after).toBe(`${edits[0].before}.`)
+  })
+
+  it('leaves a line ending in other punctuation alone', () => {
+    // A question mark or a colon is a choice, not a defect. "Fixing" it would
+    // change what the line says.
+    const sections = withBullets([
+      'Owned the merchant payments funnel end to end across onboarding.',
+      'Ran the experiments that lifted completion by 14% across merchants.',
+      'Asked one question of every churned merchant: why did you stop?',
+    ])
+    const edits = (() => {
+      const f = fixFor('bullet-punctuation', sections)
+      return f && 'edits' in f ? f.edits : []
+    })()
+    expect(edits.every((e) => !e.before.trim().endsWith('?'))).toBe(true)
+  })
+
+  it('offers nothing when the document is already consistent', () => {
+    const sections = withBullets([
+      'Owned the merchant payments funnel end to end across onboarding.',
+      'Ran the experiments that lifted completion by 14% across merchants.',
+      'Wrote SQL against the warehouse for the weekly activation reporting.',
+    ])
+    expect(fixFor('bullet-punctuation', sections)).toBeNull()
+  })
+
+  it('strengthens openers for action-verb coverage, not only for weak openers', () => {
+    const sections = withBullets([
+      'Responsible for the merchant payments funnel across onboarding and activation.',
+      'Worked on the experiments that lifted completion by 14% across merchants.',
+      'Wrote SQL against the warehouse for the weekly activation reporting.',
+    ])
+    const fix = fixFor('action-verb-coverage', sections)
+    expect(fix?.kind).toBe('edit')
+    const edits = fix && 'edits' in fix ? fix.edits : []
+    expect(edits.length).toBeGreaterThan(0)
+    // Their own words — the opening changes, the facts do not.
+    for (const e of edits) expect(e.after).not.toMatch(/^Responsible for|^Worked on/i)
+  })
+})

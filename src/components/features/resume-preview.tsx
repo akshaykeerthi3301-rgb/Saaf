@@ -79,8 +79,43 @@ function matcher(highlight?: string): (text: string) => boolean {
      * line containing the word, so the two cases need different rules rather
      * than one threshold.
      */
-    if (needle.length < 12) return hay === needle
-    return hay.includes(needle) || needle.includes(hay)
+    /**
+     * ⚠️ THE FLOOR IS ON BOTH SIDES, AND GUARDING ONLY THE NEEDLE WAS A BUG.
+     * `needle.includes(hay)` lets any SHORT rendered line match a long
+     * quotation that happens to mention it — measured on a real résumé, one
+     * finding about a bullet lit up "Power BI", "Excel" and "F&O" in the skills
+     * list because the bullet named them. A short string has to match exactly
+     * on both sides or not at all.
+     */
+    if (needle.length < 12 || hay.length < 12) return hay === needle
+    /**
+     * ⚠️ CONTAINMENT RUNS ONE WAY ONLY. `needle.includes(hay)` marks any
+     * rendered line whose whole text appears somewhere inside the quotation —
+     * so a finding about one bullet also lit up "Equity Derivatives" in the
+     * skills list, because the bullet named it. Those fragments are not the
+     * line the finding came from, and a highlight that means "mentioned
+     * nearby" teaches the reader to ignore highlights.
+     */
+    if (hay.includes(needle)) return true
+
+    /**
+     * ⚠️ A LINE WE REPAIRED WILL NOT MATCH THE LINE WE QUOTED, and that silently
+     * cost the highlight on every formatting finding. `separator-header` quotes
+     * the candidate's ORIGINAL line — "Manager (M1) • ICICI Bank | Jun 2025" —
+     * while the preview renders `roleLine()`, our normalised "Title at
+     * Employer". Both describe the same role and share no punctuation, so
+     * containment fails on exactly the findings whose subject is punctuation.
+     *
+     * Comparing on leading alphanumerics gets past it: a role line begins with
+     * the job title either way. Sixteen characters is specific enough that two
+     * different roles do not collide, and short enough to survive everything
+     * that happens after the title.
+     */
+    const bare = (t: string) => t.replace(/[^a-z0-9]/g, '')
+    const a = bare(hay)
+    const b = bare(needle)
+    if (a.length < 16 || b.length < 16) return false
+    return a.startsWith(b.slice(0, 16)) || b.startsWith(a.slice(0, 16))
   }
 }
 

@@ -176,6 +176,45 @@ describe('the document we generate must pass the check we sell', () => {
     expect(introduced).toEqual([])
   })
 
+  it('does not turn a long skills list into a keyword dump', () => {
+    /**
+     * ⚠️ THE GUARD ABOVE MISSED THIS BECAUSE ITS FIXTURE IS TOO SMALL. CLEAN
+     * lists eight skills; `keyword-dump` fires at more than fifteen
+     * comma-separated items on ONE line. A real résumé listing 29 skills across
+     * several lines passes, and joining them into a single line — which is what
+     * sectionsToText used to do — fails. Measured live: 94 → 88 the moment a
+     * fix was applied, under a button that promises to improve the score.
+     */
+    const many = Array.from({ length: 29 }, (_, i) => `Skill${i}`).join(', ')
+    const input = CLEAN.replace(
+      /Skills\n[^\n]+/,
+      `Skills\n${many}`,
+    )
+    const before = checkResume(input).findings.map((f) => f.id)
+    const after = checkResume(sectionsToText(parseSections(input))).findings.map((f) => f.id)
+    expect(before).not.toContain('keyword-dump')
+    expect(after).not.toContain('keyword-dump')
+  })
+
+  it('writes projects back under their own heading', () => {
+    /**
+     * ⚠️ `isProject` HAS TO SURVIVE THE ROUND TRIP OR A FIXED FINDING RETURNS.
+     * It is what stops `overlapping-present` counting side projects as
+     * concurrent jobs. Writing everything under EXPERIENCE erased it, so
+     * re-parsing our own output reported an ambiguity the candidate's document
+     * did not contain — and only after they accepted a fix.
+     */
+    const withProjects =
+      CLEAN +
+      `\n\nProjects\n\nFleetSense at Personal\n2026 - Present\nBuilt a fleet management platform in TypeScript end to end over six months.\n\nWebCraft at Personal\n2026 - Present\nBuilt a website generation agent against a hosted model and a prompt library.`
+    const parsed = parseSections(withProjects)
+    expect(parsed.experience.filter((e) => e.isProject)).toHaveLength(2)
+
+    const round = parseSections(sectionsToText(parsed))
+    expect(round.experience.filter((e) => e.isProject)).toHaveLength(2)
+    expect(checkResume(sectionsToText(parsed)).findings.map((f) => f.id)).not.toContain('overlapping-present')
+  })
+
   it('keeps the title and employer readable through the round trip', () => {
     /**
      * ⚠️ THIS TEST HAS BEEN INVERTED, AND THE REASON IS A GOOD ONE. It used to
