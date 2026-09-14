@@ -147,3 +147,44 @@ describe('applying a fix', () => {
     expect(next.experience[0].dates).toContain('Jul 2023')
   })
 })
+
+/**
+ * The three findings that are deliberately ASKS rather than fixes.
+ *
+ * ⚠️ THIS IS THE PRODUCT'S SHARPEST HONEST DIFFERENCE AND IT IS ONE EDIT FROM
+ * BEING LOST. A missing figure, a missing link and a résumé that is too short
+ * cannot be repaired without inventing something, and the category leader ships
+ * exactly that class of change as "AI rewrite suggestions" for quantifying
+ * impact — a model proposing a number for somebody else's achievement. The day
+ * one of these quietly becomes an `edit` is the day the argument ends.
+ */
+describe('what we refuse to write', () => {
+  const sections = parseSections(
+    [
+      'Priya Iyer',
+      'priya.iyer@example.com',
+      '',
+      'Experience',
+      '',
+      'Product Manager at Paytm',
+      'Mar 2021 - Present',
+      'Owned the merchant payments funnel end to end across onboarding and activation.',
+      'Ran experiments on the onboarding flow and reported the results every week.',
+      'Wrote SQL against the warehouse for the weekly activation reporting.',
+    ].join('\n'),
+  )
+
+  it.each(['no-quantified-impact', 'no-links', 'resume-length'])(
+    'asks for %s rather than filling it in',
+    (id) => {
+      const fix = fixFor(id, sections)
+      expect(fix?.kind).toBe('ask')
+    },
+  )
+
+  it('promises not to invent a figure, in so many words', () => {
+    const fix = fixFor('no-quantified-impact', sections)
+    expect(fix?.kind).toBe('ask')
+    expect(fix && 'note' in fix ? fix.note : '').toMatch(/will not invent/i)
+  })
+})

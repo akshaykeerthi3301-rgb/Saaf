@@ -1127,6 +1127,42 @@ which is true of roughly half. Some findings are about ABSENCE — `no-email`
 cannot quote a line that is not there — so the sentence was corrected rather
 than evidence being forced onto checks that have none.
 
+### The half nobody else can build (Phase 5)
+
+Three things this product holds that a résumé tool without an index structurally
+cannot, all of them previously buried.
+
+**The live-jobs count moved under the gauge.** It was the third card down,
+beneath two panels explaining the score — so the single hardest thing here to
+copy sat below the parts anyone can copy. Verified 2026-09-14: **85 live jobs at
+50%+ of 150 Product Manager postings.**
+
+⚠️ **It is still behind a click, deliberately.** This is the heaviest read on
+any public unauthenticated surface in the product — up to 150 postings with
+their requirements — so running it on every upload would turn a free tool into
+an expensive one. What changed is that the OFFER is concrete beforehand: *"We
+hold 199 Product Manager postings from company hiring boards"*, taken from
+`role-keywords.json` at no cost. And with no role chosen it now PROMPTS for one
+rather than rendering a greyed-out button, which was a dead end on the one
+feature no competitor has.
+
+**The market panel stands on its own.** It was reachable only when
+`role-vocabulary` both fired AND happened to be the selected check — and that
+rule fires only when more than half the role's vocabulary is missing, so a
+candidate whose résumé was merely three-quarters right never saw it at all. It
+is a property of the ROLE, not of any finding. Verified live: *engineering 81% ·
+162 ads, platform 69% · 138 ads, strategy 65% · 130 ads* — measured document
+frequencies, not a recommended-keywords list.
+
+**The refusal is stated where the whole report can see it.** Three checks are
+deliberately ASKS rather than fixes — a missing figure, a missing link, a résumé
+too short — because none can be repaired without inventing something. The
+category leader markets exactly that class of change as "AI rewrite suggestions"
+for quantifying impact, which means a model proposing a number for somebody
+else's achievement. That position lived inside one finding's card; it now closes
+the rail. `resume-fix.test.ts` pins all three as asks and pins the wording, so
+the day one quietly becomes an `edit` the suite says so.
+
 **Migration `0024` adds `score_model`.** A v1 score and a v2 score are not the
 same kind of number, and `0023` exists specifically to power a "was 57, now 84"
 line. `npm run rescore:saved` recomputes every stored row from its `body` text —

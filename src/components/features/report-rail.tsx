@@ -86,6 +86,104 @@ export function ReportRail({
       <Gauge score={score} baseline={moved ? baseline : undefined} />
 
       {/*
+        ⚠️ THE ONLY NUMBER ON THIS PAGE THAT IS ABOUT THE MARKET RATHER THAN THE
+        FILE, and the one a résumé tool without an index cannot print. It sits
+        directly under the gauge because "74/100" is a property of a document
+        and "85 live jobs" is the thing the document was for — and because it
+        was previously the third card down, below two panels explaining the
+        score, which buried the single hardest thing here to copy.
+
+        ⚠️ STILL BEHIND A CLICK, DELIBERATELY. This is the heaviest read on any
+        public unauthenticated surface in the product — up to 150 postings with
+        their requirements — so running it on every upload would turn a free
+        tool into an expensive one. What changed is that the OFFER is now
+        concrete before the click: the postings count comes from
+        role-keywords.json and costs nothing to print, so the reader knows what
+        they are asking for rather than being invited to press a button that
+        explains itself afterwards.
+
+        Count only — the roles behind it are what signing in buys. See
+        src/lib/services/index-match.ts for why that is a moat decision rather
+        than a growth one.
+      */}
+      <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+          Live jobs you match
+        </span>
+        {indexMatch ? (
+          <>
+            <p className="mt-1 font-mono text-3xl tabular-nums text-primary">
+              {indexBaseline !== undefined && indexBaseline !== indexMatch.strong ? (
+                <>
+                  <span className="text-lg text-muted-foreground">{indexBaseline}</span>
+                  <span className="text-lg text-muted-foreground"> → </span>
+                  <span className="text-accent">{indexMatch.strong}</span>
+                </>
+              ) : (
+                indexMatch.strong
+              )}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              scoring {indexMatch.threshold}%+ of the {indexMatch.scoped} {targetRole} postings we
+              indexed. Sign in to see them.
+            </p>
+            <button
+              type="button"
+              onClick={onCheckIndex}
+              disabled={checkingIndex}
+              className="mt-2 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
+            >
+              {checkingIndex ? 'Re-checking…' : 'Re-check after your fixes'}
+            </button>
+          </>
+        ) : targetRole ? (
+          <>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              We hold <span className="font-mono tabular-nums text-primary">{postings ?? 'live'}</span>{' '}
+              {targetRole} postings from company hiring boards. See how many this résumé actually scores
+              against — before and after you fix it.
+            </p>
+            <button
+              type="button"
+              onClick={onCheckIndex}
+              disabled={checkingIndex}
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
+            >
+              {checkingIndex ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" aria-hidden="true" /> Scoring against the index…
+                </>
+              ) : (
+                <>
+                  <Briefcase className="size-3" aria-hidden="true" /> Count them
+                </>
+              )}
+            </button>
+          </>
+        ) : (
+          /*
+            ⚠️ A PROMPT, NOT A DISABLED BUTTON. Without a role this used to render
+            the same invitation with the control greyed out and no explanation —
+            a dead end on the one feature here that no competitor has.
+          */
+          <>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              We index live postings from company hiring boards and can tell you how many this résumé
+              scores against. Pick the role you are after and the count is one click away.
+            </p>
+            <button
+              type="button"
+              onClick={onChangeRole}
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-4"
+            >
+              <Briefcase className="size-3" aria-hidden="true" /> Choose a role
+            </button>
+          </>
+        )}
+      </div>
+
+
+      {/*
         ⚠️ HALF THE SCORE, AND THE HALF THAT WAS INVISIBLE UNTIL NOW.
         `parseSections` has always counted the lines it could not place, and
         sections.ts has always said a surface above ought to report it. None
@@ -130,72 +228,6 @@ export function ReportRail({
           {postings ? `measured across ${postings} postings · change` : 'choose a role · change'}
         </span>
       </button>
-
-      {/*
-        ⚠️ THE ONLY NUMBER HERE THAT IS ABOUT THE MARKET RATHER THAN THE FILE,
-        and the one a résumé tool without an index cannot print. It sits beside
-        the score on purpose: "79/100" is a property of a document, "60 of 150
-        live jobs" is the thing the document was for.
-
-        Count only — the roles behind it are what signing in buys. See
-        src/lib/services/index-match.ts for why that is a moat decision rather
-        than a growth one.
-      */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Live jobs you match
-        </span>
-        {indexMatch ? (
-          <>
-            <p className="mt-1 font-mono text-2xl tabular-nums text-primary">
-              {indexBaseline !== undefined && indexBaseline !== indexMatch.strong ? (
-                <>
-                  <span className="text-base text-muted-foreground">{indexBaseline}</span>
-                  <span className="text-base text-muted-foreground"> → </span>
-                  <span className="text-accent">{indexMatch.strong}</span>
-                </>
-              ) : (
-                indexMatch.strong
-              )}
-            </p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              scoring {indexMatch.threshold}%+ of the {indexMatch.scoped} {targetRole} postings we
-              indexed. Sign in to see them.
-            </p>
-            <button
-              type="button"
-              onClick={onCheckIndex}
-              disabled={checkingIndex}
-              className="mt-2 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
-            >
-              {checkingIndex ? 'Re-checking…' : 'Re-check after your fixes'}
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              We index live postings from company hiring boards. See how many this résumé actually
-              scores against — before and after you fix it.
-            </p>
-            <button
-              type="button"
-              onClick={onCheckIndex}
-              disabled={checkingIndex || !targetRole}
-              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-4 disabled:opacity-50"
-            >
-              {checkingIndex ? (
-                <>
-                  <Loader2 className="size-3 animate-spin" aria-hidden="true" /> Scoring against the index…
-                </>
-              ) : (
-                <>
-                  <Briefcase className="size-3" aria-hidden="true" /> Count them
-                </>
-              )}
-            </button>
-          </>
-        )}
-      </div>
 
       <nav className="flex flex-col gap-4" aria-label="Checks">
         {ORDER.filter((key) => report.categories.some((c) => c.key === key)).map((key) => {
@@ -279,9 +311,23 @@ export function ReportRail({
         })}
       </nav>
 
+      {/*
+        ⚠️ THE SECOND SENTENCE IS THE SHARPEST HONEST CONTRAST THIS PRODUCT CAN
+        DRAW, and until now it was only visible inside one finding's card. Three
+        checks here are deliberately ASKS rather than fixes — a missing figure, a
+        missing link, a résumé too short — because none can be repaired without
+        inventing something. The category leader markets exactly that class of
+        change as "AI rewrite suggestions" for quantifying impact, which means a
+        model proposing a number for somebody else's achievement.
+
+        Saying so where the whole report can see it costs nothing and is the
+        difference between a tool that makes a résumé look better and one that
+        makes it truer.
+      */}
       <p className="border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
         Nothing here is locked. Every check opens, every finding that has a line to quote shows it, and there is no
-        paid tier to upgrade to.
+        paid tier to upgrade to. Where a fix would need a figure you have not given us — a number, a percentage, a
+        link — we ask you for it and will not invent one.
       </p>
     </aside>
   )

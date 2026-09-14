@@ -19,7 +19,7 @@ import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import { TEMPLATES, DEFAULT_TEMPLATE, type TemplateId } from '@/lib/resume-templates'
 import type { IndexMatchCount } from '@/lib/services/index-match'
 import { ReportRail } from '@/components/features/report-rail'
-import { FindingDetail } from '@/components/features/finding-detail'
+import { FindingDetail, MarketColumn } from '@/components/features/finding-detail'
 import {
   checkResume, marketCoverage, rolesWithKeywords, MIN_RESUME_CHARS,
   type LayoutFacts,
@@ -145,8 +145,9 @@ export function AtsFlow() {
   const visibleFindings = (report?.findings ?? []).filter((f) => !skipped.has(f.id))
   const activeFinding = visibleFindings.find((f) => f.id === selected) ?? visibleFindings[0]
   const activeFix = activeFinding && sections ? fixFor(activeFinding.id, sections) : null
+  /** Empty rather than undefined: every reader of this now just checks length. */
   const coverage =
-    targetRole && sections ? marketCoverage(targetRole, sectionsToText(sections)) : undefined
+    targetRole && sections ? marketCoverage(targetRole, sectionsToText(sections)) : []
 
   function pick(f: File | undefined) {
     if (!f) return
@@ -574,7 +575,6 @@ export function AtsFlow() {
               <FindingDetail
                 finding={activeFinding}
                 fix={activeFix}
-                coverage={activeFinding.id === 'role-vocabulary' ? coverage : undefined}
                 appliedEdits={appliedEdits}
                 onApplyEdit={acceptEdit}
                 onApplyLayout={rebuildLayout}
@@ -659,6 +659,19 @@ export function AtsFlow() {
                   ours and never appears in the document you download.
                 </p>
               </section>
+            )}
+
+            {/*
+              The market panel, standing on its own rather than hiding inside a
+              finding. It answers a question about the ROLE — what do employers
+              hiring for this actually write — which is true regardless of which
+              check the reader is looking at, and is the one thing on this page
+              built from data a résumé tool without an index cannot obtain.
+            */}
+            {targetRole && coverage.length > 0 && (
+              <div className="mt-6">
+                <MarketColumn coverage={coverage} />
+              </div>
             )}
 
             {/* The whole-document rewrite stays, demoted: it is the shortcut for

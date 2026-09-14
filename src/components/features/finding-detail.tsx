@@ -25,7 +25,6 @@ import type { Fix, FixEdit } from '@/lib/resume-fix'
 export function FindingDetail({
   finding,
   fix,
-  coverage,
   appliedEdits,
   onApplyEdit,
   onApplyLayout,
@@ -37,7 +36,6 @@ export function FindingDetail({
   finding: AtsFinding
   fix: Fix | null
   /** Only for the tailoring finding — the market column. */
-  coverage?: TermCoverage[]
   appliedEdits: Set<string>
   onApplyEdit: (edit: FixEdit, key: string) => void
   onApplyLayout: () => void
@@ -61,7 +59,6 @@ export function FindingDetail({
         )}
       </div>
 
-      {coverage && coverage.length > 0 && <MarketColumn coverage={coverage} />}
 
       {fix?.kind === 'edit' && (
         <div className="flex flex-col gap-3">
@@ -181,7 +178,16 @@ function AskFix({ fix, onAnswer }: { fix: Extract<Fix, { kind: 'ask' }>; onAnswe
  * from the one job ad a competitor's tailoring reads. Every figure here comes
  * from scripts/build-role-keywords.ts counting real postings.
  */
-function MarketColumn({ coverage }: { coverage: TermCoverage[] }) {
+/**
+ * ⚠️ NO LONGER RENDERED INSIDE A FINDING, AND IT SHOULD NEVER HAVE BEEN.
+ * This panel was reachable only when `role-vocabulary` both FIRED and happened
+ * to be the selected check — and that rule fires only when more than half the
+ * role's vocabulary is missing. A candidate whose résumé was merely
+ * three-quarters right never saw the one panel on the page built from an index
+ * no competitor has. It is a property of the ROLE, not of any finding, so it
+ * stands on its own in the report.
+ */
+export function MarketColumn({ coverage }: { coverage: TermCoverage[] }) {
   const missing = coverage.filter((c) => !c.present)
   const have = coverage.filter((c) => c.present)
 
