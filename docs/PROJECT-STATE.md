@@ -1466,6 +1466,65 @@ type it into Naukri. We read employer postings, and employers do not write it
 down. **That gap is not closable from this supply, and the analysis was wrong to
 imply it was.**
 
+### Stage U — the interview-prep engine was never correct, only untested (2026-09-15)
+
+Second epic in Build #2 cancelled by measurement, and the more uncomfortable of
+the two. `docs/ROADMAP.md` called `src/lib/interview-prep.ts` *"the highest-value
+unshipped asset in the repo"* — 312 lines, fully deterministic, unit-tested, five
+grounded questions each carrying the posting sentence it came from, and reachable
+from nothing. It was built, the page was written, the nav item was unlocked, and
+it rendered correctly on the first try.
+
+**Then it was pointed at 60 real postings.**
+
+| | |
+|---|---|
+| skill-gap questions | **224 of 286** |
+| every other kind combined | 62 |
+| non-skill questions per role, average | **0.9** |
+| roles yielding ≥2 non-skill questions | **6 of 60** |
+
+And the skill-gap questions read, verbatim:
+
+> How much have you worked with **Poland**?
+> How much have you worked with **Denmark**?
+> How much have you worked with **collaborate Teams**?
+
+`extractSkillPhrases()` cannot tell a technology from a country, a company name
+or a sentence fragment. It slices prose on commas inside any line containing the
+word "experience", and a capital letter is the only signal it has that something
+is a skill — which "Poland", "CRED" and "Determination" all carry.
+
+⚠️ **THE HEADER COMMENT WAS TRUE AND INSUFFICIENT.** It reads *"Nothing is
+generated, so nothing can be invented."* Both halves are correct. **Deterministic
+nonsense is still nonsense**, and being unable to hallucinate is not the same as
+being right. This product's whole argument is that a number you can check beats a
+number you cannot — and it just spent a day discovering that a *checkable* claim
+can still be wrong. The unit tests passed throughout, because they test the
+assembly logic against fixtures somebody wrote, not against the index.
+
+**Why it survived so long:** it was reachable from nothing. The nav item was
+locked, so no session ever saw its output, so the crudeness the author explicitly
+accepted — *"a false positive costs one question the candidate skips"* — was
+never tested against the case that breaks it. That reasoning holds for one bad
+question inside a good list. It does not hold when 78% of the list is bad.
+
+**Kept from the attempt:** two real bugs, found only by rendering it. Soft traits
+("curious", "learn", "wants to grow") and sentence fragments ("reduce risk.
+fact", "000 global organizations") passed every filter; and `skillGaps()` joined
+the role title to the description with a **space** rather than a newline, so the
+title was sliced on its own commas and offered back as a gap — the posting
+"Manager II, Software Engineering" listed **"Manager II"** as a skill the
+candidate was missing. Six regression tests pin both, built from the strings the
+live index actually produced.
+
+**Reverted:** the page, the nav unlock, and the `listScoredRoles` service.
+`/copilot` and `/resume` were added to the proxy matcher and that stays — they
+are `(app)` pages that self-guard in the page body and were missing a session
+refresh, which is an unrelated real fix.
+
+**The blocker is TASK-080**, a skill vocabulary. `role-keywords.json` is not it.
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.

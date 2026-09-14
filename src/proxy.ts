@@ -52,5 +52,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/today/:path*', '/applications/:path*', '/profile/:path*', '/start/:path*', '/dev/:path*'],
+  // ⚠️ AN (app) PAGE NOT LISTED HERE STILL WORKS, WHICH IS WHY THIS DRIFTS.
+  // There is no src/app/(app)/layout.tsx, so each page self-guards in its own
+  // body — /copilot and /resume both do, and both are missing from this list.
+  // They are protected, but by convention rather than by the matcher, and the
+  // difference shows up as a missing session REFRESH rather than as an open
+  // page. Add a new (app) route here in the same commit that creates it.
+  matcher: [
+    '/today/:path*', '/applications/:path*', '/profile/:path*', '/start/:path*',
+    '/dev/:path*', '/copilot/:path*', '/resume/:path*',
+  ],
 }

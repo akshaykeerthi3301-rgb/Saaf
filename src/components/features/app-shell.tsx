@@ -35,10 +35,14 @@ const NAV: {
   { label: 'Job Tracker', href: '/applications', icon: Grid2X2 },
   { label: 'Résumé', href: '/resume', icon: FileText },
   { label: 'Copilot Diagnostic', href: '/copilot', icon: Gauge },
-  // ⚠️ LOCKED, NOT HIDDEN — and the distinction is the point. An item that
-  // looks available and goes nowhere is a promise the product breaks on click.
-  // A lock says "this is coming and it is not ready", which is true, and is how
-  // the design itself drew it.
+  // ⚠️ UNLOCKED ON 2026-09-15, THEN RE-LOCKED THE SAME DAY. The page was built
+  // and rendered; buildPrepPlan() is deterministic and its unit tests pass. Run
+  // against 60 real postings from the live index it produced 224 skill-gap
+  // questions out of 286, and the skill-gap questions read "How much have you
+  // worked with Poland?" — the phrase extractor cannot tell a technology from a
+  // country or a company name. Strip that kind and the average is 0.9 questions
+  // a role. Deterministic nonsense is still nonsense. See TASK-071 in
+  // docs/ROADMAP.md; it needs a skill vocabulary, not a better heuristic.
   { label: 'Interview Prep', icon: MessageCircle, locked: 'Not built yet' },
   { label: 'Index audit', href: '/audit', icon: ShieldCheck },
 ]

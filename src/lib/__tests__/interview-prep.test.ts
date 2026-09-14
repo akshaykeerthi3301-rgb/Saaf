@@ -170,3 +170,62 @@ describe('the fabrication guarantee', () => {
     }
   })
 })
+
+/**
+ * Every string below was produced by this module against a REAL posting in the
+ * live index on 2026-09-15, the first day /interview-prep rendered it. They are
+ * grouped because they share one cause: prose sliced on commas and handed back
+ * to the candidate as a list of their skill gaps.
+ */
+describe('skill phrases are skills, not sentence fragments', () => {
+  const gapsFor = (description: string) =>
+    buildPrepPlan(
+      { currentTitle: 'Product Manager', employer: 'Acme', yearsExperience: 3, skills: [], domain: null, credential: null },
+      { title: 'Product Manager', company: 'Acme', description },
+    ).gaps
+
+  it('drops soft traits a posting repeats about everyone', () => {
+    const gaps = gapsFor('Required skills: curious, wants to grow, learn, collaborative, customer success-driven')
+    for (const bad of ['curious', 'learn', 'collaborative']) {
+      expect(gaps).not.toContain(bad)
+    }
+  })
+
+  it('drops a fragment that spans a sentence boundary', () => {
+    // Observed verbatim: "reduce risk. fact"
+    expect(gapsFor('Experience with lower costs, reduce risk. fact-checking teams')).not.toContain('reduce risk. fact')
+  })
+
+  it('drops a thousands separator split on its own comma', () => {
+    // "10,000 global organizations" becomes "000 global organizations"
+    const gaps = gapsFor('Experience serving 10,000 global organizations across markets')
+    expect(gaps.some((g) => /^\d/.test(g))).toBe(false)
+  })
+
+  it('keeps real technologies, which is the point of the filter', () => {
+    const gaps = gapsFor('Strong experience with SSAS, Azure, Kubernetes and Power BI')
+    expect(gaps).toContain('SSAS')
+    expect(gaps).toContain('Azure')
+  })
+
+  it('never offers the role title back as a skill gap', () => {
+    // Measured on the live index: "Manager II, Software Engineering" listed
+    // "Manager II" as a gap, because the title and the description's first line
+    // were joined with a space and read as one line.
+    const plan = buildPrepPlan(
+      { currentTitle: 'Engineer', employer: 'Acme', yearsExperience: 3, skills: [], domain: null, credential: null },
+      { title: 'Manager II, Software Engineering', company: 'Acme', description: 'Strong experience with Kubernetes' },
+    )
+    expect(plan.gaps).not.toContain('Manager II')
+    expect(plan.gaps.join(' ')).not.toContain('Manager II')
+  })
+
+  it('never renders a gap the candidate already holds', () => {
+    const plan = buildPrepPlan(
+      { currentTitle: 'Data Engineer', employer: 'Acme', yearsExperience: 4, skills: ['Azure'], domain: null, credential: null },
+      { title: 'Data Engineer', company: 'Acme', description: 'Strong experience with SSAS, Azure and Kubernetes' },
+    )
+    expect(plan.gaps).not.toContain('Azure')
+    expect(plan.strengths).toContain('Azure')
+  })
+})

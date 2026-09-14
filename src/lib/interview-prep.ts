@@ -75,7 +75,12 @@ function confident(reqs: TypedRequirement[], kind: TypedRequirement['kind']) {
  * candidate's confidence instead of at their CV.
  */
 function skillGaps(me: CandidateFacts, role: RoleFacts): string[] {
-  const text = `${role.title} ${role.description ?? ''}`
+  // ⚠️ NEWLINE, NOT A SPACE. extractSkillPhrases splits on newlines, so joining
+  // with a space makes the title and the description's first line into one
+  // line — and the title then gets sliced on its own commas and offered back
+  // as a gap. Measured 2026-09-15: the role "Manager II, Software Engineering"
+  // listed "Manager II" as a skill the candidate was missing.
+  const text = `${role.title}\n${role.description ?? ''}`
   const held = new Set(me.skills.map((s) => s.toLowerCase().trim()))
   const gaps: string[] = []
 
@@ -98,11 +103,50 @@ function skillGaps(me: CandidateFacts, role: RoleFacts): string[] {
  * Crude on purpose — a false positive costs one question the candidate skips,
  * a taxonomy costs a maintenance surface and still misses whatever is new.
  */
+/**
+ * ⚠️ SOFT TRAITS ARE NOT SKILLS, AND THE POSTING SAYS THEM CONSTANTLY.
+ * Every Indian posting is full of "curious", "collaborative", "wants to grow".
+ * They survive every structural filter — short, alphabetic, one word — and they
+ * are the single largest source of nonsense here.
+ */
+const NOT_A_SKILL = new Set([
+  'curious', 'learn', 'learning', 'grow', 'growth', 'collaborative', 'collaboration',
+  'motivated', 'passionate', 'driven', 'consistent', 'complexity', 'ownership',
+  'communication', 'teamwork', 'leadership', 'detail', 'oriented', 'proactive',
+  'flexible', 'adaptable', 'dynamic', 'excellent', 'good', 'great', 'ability',
+  'work', 'working', 'team', 'teams', 'role', 'roles', 'job', 'business',
+  'applicable', 'preferred', 'required', 'plus', 'etc', 'years', 'year', 'month',
+  'months', 'minimum', 'maximum', 'understanding', 'developing', 'develop',
+  'including', 'various', 'other', 'others', 'new', 'must', 'should', 'will',
+])
+
+/**
+ * Candidate skill phrases out of a posting, without a taxonomy.
+ *
+ * Postings list skills in two shapes and this reads both: a comma-separated run
+ * inside a requirement line, and a capitalised proper noun (SQL, Figma, Python).
+ *
+ * ⚠️ IT WAS "CRUDE ON PURPOSE" AND THE REASONING BROKE WHEN IT WAS SURFACED.
+ * The original comment argued a false positive costs only "one question the
+ * candidate skips". That holds for a QUESTION, where a bad phrase sits inside a
+ * sentence and reads as clumsy. It does not hold for the gaps list on
+ * /interview-prep, which prints the phrases bare under "Be ready for these" —
+ * and on 2026-09-15, the first day this module was reachable from anywhere, it
+ * produced: "curious", "wants to grow", "learn", "take control", "then as
+ * applicable", "reduce risk. fact" and "000 global organizations".
+ *
+ * That is prose sliced on commas and presented to a candidate as analysis of
+ * their gaps. The module had been built, tested and correct-looking for days
+ * because nothing rendered it. The filters below are the cost of showing it.
+ */
 function extractSkillPhrases(text: string): string[] {
   const out: string[] = []
   for (const line of text.split(/[\n;]/)) {
     if (!/\b(experience|skills?|proficien|knowledge|familiar|expertise|strong)\b/i.test(line)) continue
     for (const part of line.split(/[,/]| and /i)) {
+      // A fragment spanning a sentence boundary is two half-thoughts, never a
+      // skill — "reduce risk. fact" came from exactly this.
+      if (/\.\s/.test(part)) continue
       const p = part
         // Leading list markers first: a bullet arrives as "-   Kubernetes" and
         // rendering that back to the candidate as a skill name looks broken.
@@ -114,9 +158,20 @@ function extractSkillPhrases(text: string): string[] {
         .replace(/[^A-Za-z0-9+#.\s-]/g, '')
         .replace(/\s{2,}/g, ' ')
         .trim()
-      if (p.length >= 2 && p.length <= 28 && p.split(/\s+/).length <= 3 && /[A-Za-z]/.test(p)) {
-        out.push(p)
-      }
+
+      if (p.length < 2 || p.length > 28) continue
+      const words = p.split(/\s+/)
+      if (words.length > 3 || !/[A-Za-z]/.test(p)) continue
+      // "000 global organizations" — a thousands separator split on its comma.
+      if (/^\d/.test(p)) continue
+      // Every token a soft trait or filler means the phrase carries no skill.
+      if (words.every((w) => NOT_A_SKILL.has(w.toLowerCase()))) continue
+      // The surviving signal that separates a skill from a sentence fragment:
+      // a proper noun or an acronym somewhere in it, as the POSTING wrote it.
+      // "SSAS", "Azure", "Power BI" keep their capital; "wants to grow" and
+      // "take control" do not have one to keep.
+      if (!words.some((w) => /^[A-Z]/.test(w) || /^[A-Z0-9+#.]{2,}$/.test(w))) continue
+      out.push(p)
     }
   }
   return [...new Set(out)]
