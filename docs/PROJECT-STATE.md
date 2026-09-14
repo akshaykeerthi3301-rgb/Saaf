@@ -1384,19 +1384,23 @@ column. `npm run bench:match` before and after: identical, 0 components paying
 out at 90%+. `npm run bench`: 26 documents, no delta. 521 tests, lint 0 errors,
 RLS verified.
 
-### Deployed 2026-09-14 — Stage R and Stage S, five days late
+### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.
 Migration `0025` applied by the founder; `npm run reclassify:roles -- --write`
 moved 2,653 roles out of `other`.
 
-⚠️ **The scorer fixes reached users today, not on 2026-09-14 when they were
-written.** Stage R landed in the repository and sat there through five days of
-further work — the 28-point constant and the 74% "strong match" on zero skill
-overlap were fixed for nobody that whole time. The gap was invisible because
-`docs/HANDOFF.md` opened by describing a branch instead of a deploy. Committing
-is not shipping, and this repository has now demonstrated that at a cost of five
+**Written and shipped the same day.** Every commit since the 2026-09-09 deploy
+is dated 2026-09-14 (`git log --date=short f98f6b4..HEAD`) — this section first
+claimed a five-day shipping lag, which was wrong and is corrected here rather
+than quietly deleted. Five days separated the two *deploys*; no fix waited five
 days.
+
+⚠️ **The hazard it mistook is still real.** For most of 2026-09-14 the repository
+held two scorer fixes the live site did not, and `docs/HANDOFF.md` described that
+state as "on a branch" rather than "not deployed". Committing is not shipping.
+The distance between them is measured against the deploy record, not against the
+commit log, and both are cheap to check.
 
 Verified in a real browser against production, not by curl:
 

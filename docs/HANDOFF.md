@@ -19,13 +19,17 @@ believing it — this line went stale once already.
 browser against production. Migration `0025` is applied and its backfill has run.
 Everything in the table below is live.
 
-⚠️ **It took five days.** Stage R's scorer fixes were written on 2026-09-14 and
-reached users on 2026-09-14 — the 28-point constant and the 74% "strong match" on
-zero skill overlap were fixed in the repository and fixed for nobody in between,
-while further work piled on top. The gap was invisible because this file opened
-by describing a *branch* instead of a *deploy*. **Committing is not shipping, and
-this block is where that gets noticed or missed.** Whoever edits it next: say
-what is live, not what is written.
+⚠️ **The five-day figure this block briefly carried was wrong, and the
+correction is the useful part.** Every commit since the 2026-09-09 deploy is
+dated 2026-09-14 — check it with `git log --date=short f98f6b4..HEAD`. Stage R
+was written and shipped the same day. What was five days old was the *previous
+deploy*, not any unshipped fix.
+
+The real hazard stands, though: for most of today the repository held two scorer
+fixes the live site did not have, and this block said "on a branch" rather than
+"not deployed". **Committing is not shipping, and this block is where that gets
+noticed or missed.** Whoever edits it next: say what is live, not what is
+written — and put a date next to it.
 
 **`main` is 23 commits ahead of `origin/main` and that is the one chore still
 open.** The remote is a backup and does not deploy — pushing is not deploying and
