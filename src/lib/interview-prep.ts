@@ -104,77 +104,46 @@ function skillGaps(me: CandidateFacts, role: RoleFacts): string[] {
  * a taxonomy costs a maintenance surface and still misses whatever is new.
  */
 /**
- * ⚠️ SOFT TRAITS ARE NOT SKILLS, AND THE POSTING SAYS THEM CONSTANTLY.
- * Every Indian posting is full of "curious", "collaborative", "wants to grow".
- * They survive every structural filter — short, alphabetic, one word — and they
- * are the single largest source of nonsense here.
+ * The measured skill vocabulary. Built by scripts/build-skill-vocabulary.ts
+ * against the live index and committed as data, the same way
+ * role-keywords.json is — this module must stay pure, and a test asserts it.
  */
-const NOT_A_SKILL = new Set([
-  'curious', 'learn', 'learning', 'grow', 'growth', 'collaborative', 'collaboration',
-  'motivated', 'passionate', 'driven', 'consistent', 'complexity', 'ownership',
-  'communication', 'teamwork', 'leadership', 'detail', 'oriented', 'proactive',
-  'flexible', 'adaptable', 'dynamic', 'excellent', 'good', 'great', 'ability',
-  'work', 'working', 'team', 'teams', 'role', 'roles', 'job', 'business',
-  'applicable', 'preferred', 'required', 'plus', 'etc', 'years', 'year', 'month',
-  'months', 'minimum', 'maximum', 'understanding', 'developing', 'develop',
-  'including', 'various', 'other', 'others', 'new', 'must', 'should', 'will',
-])
+import SKILL_DATA from '@/lib/taxonomy/skills.json'
+const SKILLS = new Set(Object.keys(SKILL_DATA.terms))
 
 /**
- * Candidate skill phrases out of a posting, without a taxonomy.
+ * Skill terms a posting actually names.
  *
- * Postings list skills in two shapes and this reads both: a comma-separated run
- * inside a requirement line, and a capitalised proper noun (SQL, Figma, Python).
+ * ⚠️ IT MATCHES A VOCABULARY. IT NO LONGER SLICES PROSE, AND THAT IS THE FIX.
+ * The previous version split any line containing the word "experience" on its
+ * commas and treated a capital letter as evidence of a skill. Pointed at 60
+ * real postings on 2026-09-15 it asked candidates "How much have you worked
+ * with Poland?" — because Poland, CRED, Coupang Eats and Determination all
+ * carry a capital. 224 of 286 questions were that shape and the surface was
+ * reverted the same day (Stage U).
  *
- * ⚠️ IT WAS "CRUDE ON PURPOSE" AND THE REASONING BROKE WHEN IT WAS SURFACED.
- * The original comment argued a false positive costs only "one question the
- * candidate skips". That holds for a QUESTION, where a bad phrase sits inside a
- * sentence and reads as clumsy. It does not hold for the gaps list on
- * /interview-prep, which prints the phrases bare under "Be ready for these" —
- * and on 2026-09-15, the first day this module was reachable from anywhere, it
- * produced: "curious", "wants to grow", "learn", "take control", "then as
- * applicable", "reduce risk. fact" and "000 global organizations".
+ * The vocabulary earns its entries by DISPERSION: a term is in it because at
+ * least 12 distinct employers in our own index capitalise it mid-sentence.
+ * A company name cannot pass that however often it is repeated — all its
+ * mentions sit on one board — and an English word cannot pass it either,
+ * because its capitals are nearly all sentence-initial. Places and employers
+ * are additionally excluded from data the repo already holds.
  *
- * That is prose sliced on commas and presented to a candidate as analysis of
- * their gaps. The module had been built, tested and correct-looking for days
- * because nothing rendered it. The filters below are the cost of showing it.
+ * Casing comes back as the POSTING wrote it, so a candidate reads "Kubernetes"
+ * and not "kubernetes".
  */
 function extractSkillPhrases(text: string): string[] {
-  const out: string[] = []
-  for (const line of text.split(/[\n;]/)) {
-    if (!/\b(experience|skills?|proficien|knowledge|familiar|expertise|strong)\b/i.test(line)) continue
-    for (const part of line.split(/[,/]| and /i)) {
-      // A fragment spanning a sentence boundary is two half-thoughts, never a
-      // skill — "reduce risk. fact" came from exactly this.
-      if (/\.\s/.test(part)) continue
-      const p = part
-        // Leading list markers first: a bullet arrives as "-   Kubernetes" and
-        // rendering that back to the candidate as a skill name looks broken.
-        .replace(/^[\s\u2022*\u2013\u2014-]+/, '')
-        .replace(/\b(experience|with|in|of|strong|proficient|knowledge|familiarity|expertise|and|the|a|an)\b/gi, '')
-        // Trailing category nouns: the skill is "data analysis", not
-        // "data analysis skills".
-        .replace(/\b(skills?|tools?|technologies|platforms?)\b/gi, '')
-        .replace(/[^A-Za-z0-9+#.\s-]/g, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim()
-
-      if (p.length < 2 || p.length > 28) continue
-      const words = p.split(/\s+/)
-      if (words.length > 3 || !/[A-Za-z]/.test(p)) continue
-      // "000 global organizations" — a thousands separator split on its comma.
-      if (/^\d/.test(p)) continue
-      // Every token a soft trait or filler means the phrase carries no skill.
-      if (words.every((w) => NOT_A_SKILL.has(w.toLowerCase()))) continue
-      // The surviving signal that separates a skill from a sentence fragment:
-      // a proper noun or an acronym somewhere in it, as the POSTING wrote it.
-      // "SSAS", "Azure", "Power BI" keep their capital; "wants to grow" and
-      // "take control" do not have one to keep.
-      if (!words.some((w) => /^[A-Z]/.test(w) || /^[A-Z0-9+#.]{2,}$/.test(w))) continue
-      out.push(p)
-    }
+  const seen = new Map<string, string>()
+  for (const m of text.matchAll(/\b([A-Za-z][A-Za-z0-9+#.]{1,19})\b/g)) {
+    const raw = m[1]
+    const k = raw.toLowerCase()
+    if (!SKILLS.has(k)) continue
+    // First spelling wins, and a capitalised one beats a lowercase one — the
+    // posting's own heading is usually where the proper casing is.
+    const prev = seen.get(k)
+    if (!prev || (/^[a-z]/.test(prev) && /^[A-Z]/.test(raw))) seen.set(k, raw)
   }
-  return [...new Set(out)]
+  return [...seen.values()]
 }
 
 /**

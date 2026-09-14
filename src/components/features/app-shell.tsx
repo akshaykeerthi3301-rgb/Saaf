@@ -35,15 +35,13 @@ const NAV: {
   { label: 'Job Tracker', href: '/applications', icon: Grid2X2 },
   { label: 'Résumé', href: '/resume', icon: FileText },
   { label: 'Copilot Diagnostic', href: '/copilot', icon: Gauge },
-  // ⚠️ UNLOCKED ON 2026-09-15, THEN RE-LOCKED THE SAME DAY. The page was built
-  // and rendered; buildPrepPlan() is deterministic and its unit tests pass. Run
-  // against 60 real postings from the live index it produced 224 skill-gap
-  // questions out of 286, and the skill-gap questions read "How much have you
-  // worked with Poland?" — the phrase extractor cannot tell a technology from a
-  // country or a company name. Strip that kind and the average is 0.9 questions
-  // a role. Deterministic nonsense is still nonsense. See TASK-071 in
-  // docs/ROADMAP.md; it needs a skill vocabulary, not a better heuristic.
-  { label: 'Interview Prep', icon: MessageCircle, locked: 'Not built yet' },
+  // ⚠️ UNLOCKED, RE-LOCKED, AND UNLOCKED AGAIN — ALL ON 2026-09-15, AND THE
+  // MIDDLE STEP IS THE ONE WORTH KNOWING. The engine behind it asked "How much
+  // have you worked with Poland?" in 78% of its questions, because it guessed a
+  // skill from a capital letter. It now matches a vocabulary mined from the
+  // index by employer-dispersion (TASK-080), measured at 4.1% noise against 60
+  // live postings. If that number is ever unknown again, re-lock this.
+  { label: 'Interview Prep', href: '/interview-prep', icon: MessageCircle },
   { label: 'Index audit', href: '/audit', icon: ShieldCheck },
 ]
 

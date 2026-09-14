@@ -85,3 +85,32 @@ export async function getCookieContext(
     },
   }
 }
+
+/** One row of the role picker on /interview-prep. */
+export type ScoredRoleOption = { id: string; title: string; company: string; score: number | null }
+
+/**
+ * The candidate's scored roles, best first, for choosing which one to prepare for.
+ *
+ * ⚠️ IT READS `gate_results`, NOT `roles`. Preparation only means something
+ * against a posting we have actually scored for THIS candidate — the plan is
+ * built from the gap between their profile and that posting. Listing the index
+ * would offer preparation for roles we never compared them to.
+ *
+ * Runs on the caller's client, so RLS scopes it to auth.uid() by policy rather
+ * than by the .eq() below; the filter is for correctness, the policy is security.
+ */
+export async function listScoredRoles(userId: string, limit = 50): Promise<ScoredRoleOption[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('gate_results')
+    .select('role_id, score, roles(title, company_name)')
+    .eq('user_id', userId)
+    .order('score', { ascending: false, nullsFirst: false })
+    .limit(limit)
+
+  type Row = { role_id: string; score: number | null; roles: { title: string; company_name: string | null } | null }
+  return ((data ?? []) as unknown as Row[])
+    .filter((r) => r.roles)
+    .map((r) => ({ id: r.role_id, title: r.roles!.title, company: r.roles!.company_name ?? '', score: r.score }))
+}

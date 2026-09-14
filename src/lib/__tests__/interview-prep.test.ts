@@ -202,10 +202,28 @@ describe('skill phrases are skills, not sentence fragments', () => {
     expect(gaps.some((g) => /^\d/.test(g))).toBe(false)
   })
 
-  it('keeps real technologies, which is the point of the filter', () => {
-    const gaps = gapsFor('Strong experience with SSAS, Azure, Kubernetes and Power BI')
-    expect(gaps).toContain('SSAS')
-    expect(gaps).toContain('Azure')
+  it('keeps real technologies, which is the point of the vocabulary', () => {
+    const gaps = gapsFor('Strong experience with Docker, Azure, Kubernetes and Terraform')
+    for (const tech of ['Docker', 'Azure', 'Kubernetes', 'Terraform']) {
+      expect(gaps).toContain(tech)
+    }
+  })
+
+  it('drops foreign places, which is the bug that started all of this', () => {
+    // "How much have you worked with Poland?" — 2026-09-15, live index.
+    // locations.ts only knew Indian places; the vocabulary builder excludes
+    // countries explicitly. See scripts/build-skill-vocabulary.ts.
+    const gaps = gapsFor('Collaborate with teams in Poland, Denmark, Germany and Austria')
+    for (const place of ['Poland', 'Denmark', 'Germany', 'Austria']) {
+      expect(gaps).not.toContain(place)
+    }
+  })
+
+  it('keeps a technology whose vendor is also an employer in our registry', () => {
+    // Docker, Figma, MongoDB, Stripe, Twilio, Databricks and Snowflake are all
+    // boards in registry/boards.json. The first vocabulary excluded every
+    // employer name and deleted the most valuable terms in the set.
+    expect(gapsFor('Experience with Docker and Snowflake required')).toContain('Docker')
   })
 
   it('never offers the role title back as a skill gap', () => {

@@ -60,6 +60,6 @@ export const config = {
   // page. Add a new (app) route here in the same commit that creates it.
   matcher: [
     '/today/:path*', '/applications/:path*', '/profile/:path*', '/start/:path*',
-    '/dev/:path*', '/copilot/:path*', '/resume/:path*',
+    '/dev/:path*', '/copilot/:path*', '/resume/:path*', '/interview-prep/:path*',
   ],
 }
