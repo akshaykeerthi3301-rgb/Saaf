@@ -14,18 +14,23 @@ clean, every gate passing. **There is nothing to merge and no branch to check
 out.** If a future session reads "the work is on a branch", re-measure before
 believing it — this line went stale once already.
 
-⚠️ **Still true, and it is the part that matters: nothing is deployed.** The
-last *recorded* deploy is 2026-09-09 (`Record the 2026-09-09 deploy`), which
-predates every commit in the table below. On that record the live site is still
-running the **old scorer** — the 28-point constant and the 74% "strong match" on
-zero skill overlap are fixed in the repository and **not fixed for anyone who
-opens https://saaf-ten.vercel.app**. Verify against Vercel rather than against
-this line, then deploy by `docs/RUNBOOK.md` (and §2 A5 below — stage a copy
-without `.git`, never `--prebuilt`).
+~~⚠️ **Still true, and it is the part that matters: nothing is deployed.**~~
+✅ **DEPLOYED 2026-09-14**, `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`, verified in a
+browser against production. Migration `0025` is applied and its backfill has run.
+Everything in the table below is live.
 
-**`main` is also 19 commits ahead of `origin/main`.** The remote is a backup and
-does not deploy, so pushing is not deploying and deploying does not push. They
-are two separate chores.
+⚠️ **It took five days.** Stage R's scorer fixes were written on 2026-09-14 and
+reached users on 2026-09-14 — the 28-point constant and the 74% "strong match" on
+zero skill overlap were fixed in the repository and fixed for nobody in between,
+while further work piled on top. The gap was invisible because this file opened
+by describing a *branch* instead of a *deploy*. **Committing is not shipping, and
+this block is where that gets noticed or missed.** Whoever edits it next: say
+what is live, not what is written.
+
+**`main` is 23 commits ahead of `origin/main` and that is the one chore still
+open.** The remote is a backup and does not deploy — pushing is not deploying and
+deploying does not push. Production is current; GitHub is not. `git push origin
+main` when wanted.
 
 ```
 git log --oneline f98f6b4..HEAD          # the nine commits, oldest first
@@ -96,16 +101,14 @@ not rescore on load.
 
 ---
 
-## ⏳ Migration 0025 — PENDING, and it must go first
+## ✅ Migration 0025 — applied by the founder, 2026-09-14
 
-`supabase/migrations/0025_role_functions.sql` widens `roles.function` to allow
-`sales`, `operations`, `support` and `design`. **Apply it by hand in the Supabase
-SQL editor**, then:
-
-```
-npm run reclassify:roles            # dry run — prints the table, writes nothing
-npm run reclassify:roles -- --write # apply
-```
+`supabase/migrations/0025_role_functions.sql` widened `roles.function` to allow
+`sales`, `operations`, `support` and `design`. **Applied, and the backfill has
+run** — `npm run reclassify:roles -- --write` moved 2,653 roles out of `other`,
+which fell from 44.3% to 32.9%. The coverage panel now names nine functions, with
+Sales third at 1,390, verified signed-in in a browser. **Nothing further to do
+here**; the nightly ingest classifies on write, so the script is not needed again.
 
 ⚠️ **ORDER IS NOT OPTIONAL, AND GETTING IT WRONG LOSES POSTINGS.**
 `roles.function` carries a CHECK constraint naming the six values migration 0001
@@ -186,7 +189,7 @@ labelled `v1` until you run it.
 
 ## ✅ Migration 0023 applied — 2026-09-09
 
-`resume_documents` is live. ~~**No migration is pending.**~~ **Stale — `0025` is pending as of 2026-09-14, see above.** True of 0023 on the day it was written; this is a dated block, not a live status line.
+`resume_documents` is live. ~~**No migration is pending.**~~ **This is a dated block, not a live status line** — check §2 A1 for the current answer, which has been wrong here twice.
 
 Verified after applying, end to end:
 
@@ -335,7 +338,7 @@ A session cannot do these — they need your accounts, your browser, or your car
 
 | # | Action | Needed for | Notes |
 |---|---|---|---|
-| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **`0025_role_functions.sql` IS PENDING as of 2026-09-14** and must be applied before the next deploy, or the nightly ingest drops every sales, operations, support and design posting. ~~No migration is pending as of 2026-09-08~~ — `0018` (`role_requirements.max_years`) was recorded here as outstanding but is APPLIED; verified by selecting the column against the live database. Over-qualification is scored. Re-check by query rather than by this line, which went stale once already |
+| A1 | **Run migrations** in the Supabase SQL editor | every schema change | A session copies the SQL to your clipboard and opens the editor; you paste and Run. **No migration is pending as of 2026-09-14** — `0025` was applied and backfilled the same day. ~~No migration is pending as of 2026-09-08~~ — `0018` (`role_requirements.max_years`) was recorded here as outstanding but is APPLIED; verified by selecting the column against the live database. Over-qualification is scored. Re-check by query rather than by this line, which went stale once already |
 | A2 | **Configure Resend as SMTP in Supabase** | magic-link sign-in | Project Settings → Authentication → SMTP. Host `smtp.resend.com`, port `465`, user `resend`, password = your `re_` key. **Status: unverified — please confirm** |
 | A3 | ~~Create the GitHub repo and push~~ | — | ✅ Done 2026-09-03. 26 commits at `akshaykeerthi3301-rgb/Saaf`, private. Commit emails rewritten to GitHub's noreply address so the founder's real address stays private |
 | A4 | ~~Add the Actions secret~~ | — | ✅ Secrets set, but **Actions are disabled on this account** (`HTTP 422`). The scheduler moved to Vercel Cron. See D5 |
