@@ -105,6 +105,37 @@ not rescore on load.
 
 ---
 
+## ⚡ Resuming after 2026-09-15? Build #2 is deployed and waiting on you.
+
+**Live: `dpl_ALc6MEYG1KUt6a6YGt8MLUNwyUAa`.** Phase 8 is 7/14 and **every task a
+session can do without real users is finished.** No migration is pending — Build
+#2 shipped no schema change, because both epics that needed one were cancelled by
+their own measurements.
+
+**Two tasks are left and both are yours.** They have now outlasted six phases.
+
+| | What | Why it blocks everything |
+|---|---|---|
+| **TASK-075** | Buy a domain, verify it in Resend | Email sign-in reaches nobody. Google OAuth is the only working door, so every beta user must have a Google account |
+| **TASK-076** | Put it in front of 10–100 candidates | Engineering, data, product — what the index serves (engineering 39.2%, HR 1.6%) |
+
+⚠️ **Build #2 cancelled two of its own epics, and that is the headline.** Both
+were cancelled by measurement, not by opinion, and both had looked finished:
+
+- **Salary scoring** — 2.2% of 3,468 live India roles carry any salary at all.
+  The probe's first version said 27.4% and was wrong. `npm run probe:salary`.
+- **Interview prep** — described here as the highest-value unshipped asset. Run
+  against 60 real postings it asks *"How much have you worked with Poland?"* in
+  78% of its questions. Reverted the same day. See PROJECT-STATE Stage U.
+
+**What that pattern means for the next session:** this repository keeps producing
+things that pass their tests, read correctly, and are wrong against the live
+index. The tests are written against fixtures somebody wrote. **Point it at the
+index before believing it**, and the four open judgment calls at the end of Phase
+8 are not decidable at all without TASK-076.
+
+---
+
 ## ✅ Migration 0025 — applied by the founder, 2026-09-14
 
 `supabase/migrations/0025_role_functions.sql` widened `roles.function` to allow
