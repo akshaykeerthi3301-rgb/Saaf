@@ -112,6 +112,15 @@ export async function saveResume(input: {
     sections: input.sections,
     body: input.body,
     score: input.score,
+    /**
+     * ⚠️ STAMPED ON EVERY WRITE, INCLUDING UPDATES. The column defaults to 'v1'
+     * because a row arriving without one predates the model change by
+     * definition — which makes it the wrong default for anything we write now.
+     * An updated row is rescored above by the same code path as a new one, so
+     * it is a v2 score and has to say so, or the backfill will keep finding it.
+     * See migration 0024 and scripts/rescore-saved.ts.
+     */
+    score_model: 'v2' as const,
     updated_at: new Date().toISOString(),
   }
 
