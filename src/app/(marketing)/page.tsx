@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowUpRight, Check, FileUp, Sparkles } from 'lucide-react'
-import { AuditStrip } from '@/components/features/audit-strip'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
 
 /**
@@ -136,20 +135,24 @@ export default function Landing() {
 
           <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.05em] text-primary sm:text-6xl lg:text-7xl">
             {/*
-              ⚠️ "100% TAILORED." WAS CUT FROM HERE, 2026-09-14. It was a
-              completeness figure nothing measures — the same invented number as
-              the "Profile Strength: 92%" dial /copilot refuses to draw, on the
-              one page whose whole argument is that our arithmetic can be
-              checked. The landing page had already advertised one scoring bug
-              this way ("Work mode 7/7 · Credential 10/10"); this was the second
-              instance of the same habit. The sub-headline below carries the
-              real promise, and it is checkable.
+              ⚠️ "AI" ATTACHES TO THE COPILOT, NEVER TO THE SCORE, AND THE SPLIT
+              IS LOAD-BEARING. The locked rule is that a model READS and never
+              DECIDES: the LLM reads skills and domain off a résumé and writes
+              drafts, while scoring is deterministic arithmetic. A reader who
+              concludes the score is AI has lost the one claim the product rests
+              on — that every number can be checked. So the headline says
+              copilot and the line under it says arithmetic.
+
+              ⚠️ "100% TAILORED." WAS CUT FROM HERE, 2026-09-14 — a completeness
+              figure nothing measures, on the page arguing against numbers you
+              cannot check. Do not reintroduce a figure here.
             */}
-            Precision Career Copilot for India. <span className="text-accent">Zero Spam.</span>
+            AI career copilot for <span className="text-accent">India.</span>
           </h1>
 
-          <p className="mt-7 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Roles that fit, each with the arithmetic behind the score.
+          <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            Roles ranked against your résumé — and the score is arithmetic, not a model. Every
+            component opens into the line from the posting it was read from.
           </p>
 
           {/*
@@ -266,7 +269,15 @@ export default function Landing() {
           </article>
         </div>
 
-        <AuditStrip />
+        {/* ⚠️ <AuditStrip /> WAS REMOVED HERE, 2026-09-15, on a founder call to
+            keep the page minimal. Worth knowing what went: it was the page's
+            only first-party verifiable evidence — live indexed / matched /
+            strong counts — and it was put here deliberately INSTEAD of a logo
+            bar, per the landing-page spec's own rule that you either show the
+            logos or remove the section. With it gone the page carries no proof
+            of any kind, so the /audit link in the footer is now load-bearing
+            rather than convenient. Do not remove that too without replacing it
+            with something. The component still exists and still works. */}
       </section>
 
       {/* Value props */}
@@ -274,10 +285,10 @@ export default function Landing() {
         {/* The problem */}
         <section className="py-16 sm:py-20">
           <SectionHeading>The match wasn’t missing. It was unexplained.</SectionHeading>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
-            A portal called you a Top Applicant for a role asking fifteen years. You have two. You
-            spent the forty minutes anyway, and heard nothing.
-          </p>
+          {/* The explanatory paragraph was cut 2026-09-15 for the minimal-copy
+              pass. The CITED QUOTE stays: it is external evidence about the
+              category rather than a claim about us, and with the audit strip
+              gone it is the only evidence left above the fold. */}
           <blockquote className="mt-8 rounded-2xl border border-border bg-card p-6">
             <p className="text-lg font-medium tracking-[-0.02em] text-primary">
               “not even one call.”
@@ -300,15 +311,12 @@ export default function Landing() {
               ['Scored against you, not the posting', 'Your years, city, work mode and credential all move the number.'],
               ['Every score opens up', 'Each part, with the line from the posting it was read from.'],
               ['Nobody can find you here', 'File deleted after parsing. No employer contacted. Delete in one click.'],
+              // Folded up from its own section in the minimal-copy pass. The
+              // claim is load-bearing and short; a full section for one
+              // sentence was the thing being trimmed, not the sentence.
+              ['Free, and not free-for-now', 'No card, no ads, no paid tier. It stays at ₹0.'],
             ]}
           />
-        </section>
-
-        <section className="border-t border-border py-16 sm:py-20">
-          <SectionHeading>Free. Not free-for-now.</SectionHeading>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground">
-            No card, no ads, no paid tier. It stays at ₹0.
-          </p>
         </section>
 
         <section id="faq" className="scroll-mt-8 border-t border-border py-16 sm:py-20">

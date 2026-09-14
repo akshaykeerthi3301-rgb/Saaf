@@ -32,8 +32,12 @@ export const metadata: Metadata = {
    * chain as the sitemap — see src/lib/site.ts.
    */
   metadataBase: new URL(siteUrl()),
-  title: 'Saaf — Precision Career Copilot for India',
-  description: 'Find high-precision career matches in India without the application spam.',
+  // Tracks the <h1> on the landing page. They drifted apart once already —
+  // the hero changed and this did not — and the title is what a share card and
+  // a search result show, so it is the half more people see.
+  title: 'Saaf — AI career copilot for India',
+  description:
+    'Roles ranked against your résumé, with the arithmetic behind every score shown. Free ATS résumé checker, no account needed.',
   // Real icons from the saaf-ai design export, replacing the Next.js scaffold
   // favicon. icon.svg is the scalable one; the PNGs cover browsers that ignore
   // SVG favicons, and apple-icon covers an iOS home-screen bookmark.
