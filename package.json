@@ -20,7 +20,11 @@
     "registry:workday": "tsx scripts/discover-workday.ts",
     "ingest": "tsx --env-file=.env.local ingest/run.ts",
     "audit:security": "bash scripts/security-audit.sh",
-    "verify:onboarding": "tsx --env-file=.env.local scripts/verify-onboarding.ts"
+    "verify:onboarding": "tsx --env-file=.env.local scripts/verify-onboarding.ts",
+    "bench": "tsx scripts/bench-ats.ts",
+    "bench:fixtures": "tsx bench/make-fixtures.ts",
+    "rescore:saved": "tsx --env-file=.env.local scripts/rescore-saved.ts",
+    "bench:samples": "bash scripts/fetch-samples.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -54,8 +58,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.11",
+    "dictionary-en-gb": "^3.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "nspell": "^2.1.5",
     "prettier": "^3.9.6",
     "tsx": "^4.23.13",
     "typescript": "^5",

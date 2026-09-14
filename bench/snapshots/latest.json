@@ -1,0 +1,132 @@
+{
+  "real/Akshay_Keerthi_Figr.docx": {
+    "score": 76,
+    "experience": 4,
+    "lines": 38
+  },
+  "real/Akshay_Keerthi_Figr_Founder's office.docx": {
+    "score": 78,
+    "experience": 4,
+    "lines": 38
+  },
+  "real/Akshay_Keerthi_Resume_A_.pdf": {
+    "score": 83,
+    "experience": 3,
+    "lines": 67
+  },
+  "real/Akshay_Keerthi_Resume_A_Consulting (1).pdf": {
+    "score": 83,
+    "experience": 3,
+    "lines": 67
+  },
+  "real/Akshay_Keerthi_Resume_A_Consulting.pdf": {
+    "score": 83,
+    "experience": 3,
+    "lines": 64
+  },
+  "real/Akshay_Keerthi_Resume_B_FinTech.pdf": {
+    "score": 83,
+    "experience": 3,
+    "lines": 66
+  },
+  "real/Akshay_Keerthi_Resume_FINAL.pdf": {
+    "score": 94,
+    "experience": 5,
+    "lines": 97
+  },
+  "real/Akshay_Keerthi_Resume_FINAL2.pdf": {
+    "score": 94,
+    "experience": 5,
+    "lines": 97
+  },
+  "real/Akshay_Resume.pdf": {
+    "score": 94,
+    "experience": 5,
+    "lines": 97
+  },
+  "samples/uw-climate.pdf": {
+    "score": 0,
+    "experience": 0,
+    "lines": 0
+  },
+  "samples/uw-consulting.pdf": {
+    "score": 86,
+    "experience": 4,
+    "lines": 43
+  },
+  "samples/uw-cv.pdf": {
+    "score": 69,
+    "experience": 8,
+    "lines": 72
+  },
+  "samples/uw-grad.pdf": {
+    "score": 85,
+    "experience": 6,
+    "lines": 45
+  },
+  "samples/uw-health.pdf": {
+    "score": 84,
+    "experience": 4,
+    "lines": 41
+  },
+  "samples/uw-law.pdf": {
+    "score": 0,
+    "experience": 0,
+    "lines": 0
+  },
+  "samples/uw-marketing.pdf": {
+    "score": 72,
+    "experience": 4,
+    "lines": 46
+  },
+  "samples/uw-nonprofit.pdf": {
+    "score": 81,
+    "experience": 2,
+    "lines": 45
+  },
+  "samples/uw-science.pdf": {
+    "score": 74,
+    "experience": 2,
+    "lines": 41
+  },
+  "samples/uw-tech.pdf": {
+    "score": 84,
+    "experience": 5,
+    "lines": 45
+  },
+  "samples/uw-undergrad.pdf": {
+    "score": 72,
+    "experience": 4,
+    "lines": 43
+  },
+  "synthetic/headings-odd.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 19
+  },
+  "synthetic/rohan.docx": {
+    "score": 70,
+    "experience": 0,
+    "lines": 14
+  },
+  "synthetic/rohan.pdf": {
+    "score": 70,
+    "experience": 0,
+    "lines": 15
+  },
+  "synthetic/single-column.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 19
+  },
+  "synthetic/table-layout.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 17
+  },
+  "synthetic/two-column.pdf": {
+    "score": 74,
+    "experience": 2,
+    "lines": 36
+  }
+}

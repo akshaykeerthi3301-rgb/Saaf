@@ -1,0 +1,54 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1595 >>
+stream
+BT /F2 16 Tf 1 0 0 1 56 740 Tm (PRIYA IYER) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 726 Tm (Bengaluru, Karnataka | priya.iyer@example.com | +91 98450 12345) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 712 Tm (linkedin.com/in/priyaiyer) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 688 Tm (ABOUT ME) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 674 Tm (Product manager with 6 years in payments and lending, working on UPI rails and card issuing.) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 650 Tm (WHERE I'VE WORKED) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 636 Tm (Senior Product Manager at Razorpay) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 622 Tm (Mar 2022 - Present) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 608 Tm (" Led the UPI autopay rollout to 1.2 million merchants, lifting recurring collections by 18%.) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 594 Tm (" Cut merchant onboarding drop-off by 34% by rebuilding the KYC step.) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 580 Tm (" Ran the pricing experiment that added 2.4 crore in annual revenue.) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 558 Tm (Product Manager at Zeta) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 544 Tm (Jul 2019 - Feb 2022) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 530 Tm (" Shipped a card-issuing console adopted by 40 banks across India and the Gulf.) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 516 Tm (" Interviewed 60 customers to rebuild the disputes flow, cutting tickets by 22%.) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 492 Tm (SCHOOLING) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 478 Tm (B.Tech Computer Science, NIT Trichy, 2019) Tj ET
+BT /F2 10 Tf 1 0 0 1 56 454 Tm (WHAT I KNOW) Tj ET
+BT /F1 10 Tf 1 0 0 1 56 440 Tm (SQL, Mixpanel, Figma, A/B testing, Jira, Amplitude, Python, Product analytics) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001898 00000 n 
+0000001995 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2097
+%%EOF

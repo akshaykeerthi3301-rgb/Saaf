@@ -1,0 +1,75 @@
+{
+  "$comment": "Ground truth per document. Synthetic entries share one r\u00e9sum\u00e9 across layouts; `group` ties them together for the invariance gate. The rohan.* pair is the original repo fixture, kept here because it is the document that proved the PDF/DOCX split (34 vs 65) and must never regress. Real entries are hand-written once per CV.",
+  "documents": {
+    "synthetic/single-column.pdf": {
+      "group": "priya",
+      "columns": 1,
+      "experienceEntries": 2,
+      "educationEntries": 1,
+      "skillsAtLeast": 6,
+      "name": "PRIYA IYER",
+      "email": "priya.iyer@example.com",
+      "forbidFindings": [
+        "multi-column",
+        "single-blob",
+        "missing-sections"
+      ]
+    },
+    "synthetic/headings-odd.pdf": {
+      "group": "priya",
+      "columns": 1,
+      "experienceEntries": 2,
+      "educationEntries": 1,
+      "skillsAtLeast": 6,
+      "name": "PRIYA IYER",
+      "email": "priya.iyer@example.com",
+      "forbidFindings": [
+        "multi-column",
+        "single-blob",
+        "missing-sections"
+      ]
+    },
+    "synthetic/two-column.pdf": {
+      "group": "priya-2col",
+      "columns": 2,
+      "experienceEntries": 2,
+      "educationEntries": 1,
+      "skillsAtLeast": 6,
+      "name": "PRIYA IYER",
+      "email": "priya.iyer@example.com",
+      "expectFindings": [
+        "multi-column"
+      ]
+    },
+    "synthetic/table-layout.pdf": {
+      "group": "priya",
+      "columns": 1,
+      "experienceEntries": 2,
+      "educationEntries": 1,
+      "skillsAtLeast": 6,
+      "name": "PRIYA IYER",
+      "email": "priya.iyer@example.com",
+      "forbidFindings": [
+        "multi-column",
+        "single-blob",
+        "missing-sections"
+      ]
+    },
+    "synthetic/rohan.pdf": {
+      "group": "rohan",
+      "columns": 1,
+      "educationEntries": 1,
+      "skillsAtLeast": 7,
+      "name": "Rohan Sharma",
+      "email": "rohan.sharma@example.com"
+    },
+    "synthetic/rohan.docx": {
+      "group": "rohan",
+      "columns": 1,
+      "educationEntries": 1,
+      "skillsAtLeast": 7,
+      "name": "Rohan Sharma",
+      "email": "rohan.sharma@example.com"
+    }
+  }
+}
