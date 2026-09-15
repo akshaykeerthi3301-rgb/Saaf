@@ -138,6 +138,60 @@ index before believing it**, and the four open judgment calls at the end of Phas
 
 ---
 
+## ⚡ THERE ARE TWO GIT REMOTES NOW, AND THE GITHUB ACCOUNT IS FLAGGED (2026-09-15)
+
+**`git push` alone still goes to GitHub. GitLab needs `git push gitlab main`.**
+Neither deploys anything — production is Vercel, by CLI, and is unaffected by
+both.
+
+| Remote | URL | Why it exists |
+|---|---|---|
+| `origin` | `github.com/akshaykeerthi3301-rgb/Saaf` | The original. Still works for push |
+| `gitlab` | `gitlab.com/akshaykeerthi3301/Saaf` | Added 2026-09-15 so colleagues can be granted access at all |
+
+⚠️ **THE GITHUB ACCOUNT IS FLAGGED BY GITHUB'S ABUSE DETECTION, AND IT IS NOT
+NEW.** Verified 2026-09-15 with an anonymous positive control:
+
+- The profile and all 8 public repos **404 to logged-out visitors**; the same
+  test returns 200 for `torvalds`, `vercel` and `supabase`, so the test is real.
+- `/users/akshaykeerthi3301-rgb` 404s **even authenticated**, while the same
+  endpoint returns data for other users.
+- Adding a collaborator is refused at **read, write, maintain AND admin** —
+  HTTP 422 `User could not be added`. The block is total, not permission-level.
+- **Push, private repo access and the API still work.** That is why this went
+  unnoticed.
+
+⚠️ **ACTIONS HAVE BEEN DISABLED ON THIS ACCOUNT SINCE LATE AUGUST**, which a
+session already recorded on 2026-09-03 in the header of
+`.github/workflows/daily-ingest.yml` — *"Actions has been disabled for this
+user"*, still true today. **That is why ingest runs on Vercel Cron and must stay
+there.** Do not try to move scheduling back to Actions.
+
+**Most likely cause, inferred and NOT confirmed** — GitHub never publishes a
+reason. `oloop-sandbox-spike` (2026-08-17, two commits) dispatches a workflow to
+a **self-hosted runner**, writes Python at runtime, executes it, and measures
+dispatch-to-result latency. Structurally that is indistinguishable from using
+Actions as a general compute service, which is the most-policed abuse on the
+platform. Secondary signal: `derivatives-bot` is **60 of 79 commits** authored by
+a bot on a daily schedule. A support appeal is open with GitHub (agent "Tessa").
+
+⚠️ **DO NOT CREATE A SECOND GITHUB ACCOUNT TO GET AROUND THIS.** It is a Terms
+of Service violation in itself and identical repository content is among the
+clearest signals GitHub matches accounts on. Moving to another host is fine and
+is not evasion.
+
+### A full backup exists and was verified by restore
+
+`~/Desktop/projects/github-backup/2026-09-15/` — all 12 repos as mirrors, 327
+commits, plus `manifest.json` and `RESTORE.md`. **Verified rather than assumed:**
+restoring `Saaf.git` produced tree hash `ec2efcb0`, identical to the live working
+copy. ⚠️ It holds **only what was committed** — `.env.local`,
+`bench/corpus/real/`, the `productos/` templates and `extension-key/key.pem` are
+gitignored and are on the Mac alone. **The extension key is still in a session
+scratchpad; if it is lost the extension ID changes and every install breaks.**
+
+---
+
 ## ⚡ Resuming after TASK-083? The blocker below is still the blocker.
 
 **Nothing changed about the deploy situation and nothing new is waiting on you
