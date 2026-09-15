@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Saaf \u2014 score any job posting",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Score any job posting against your resume, see the missing keywords, and fill the application form. Never submits. Reads only the page you are on.",
   "permissions": [
     "storage",
@@ -92,5 +92,12 @@
   "action": {
     "default_title": "Saaf",
     "default_popup": "popup.html"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuURGSzvQrj5FuWAQCwE1Mj5oFgpHabHU2uoquodzrB8hByBtIhhHn+7ThDv3rm8TemKjqNejzBdTmEx0A6UjbFCvjfhEmsnds9laxhdLpTG6QnwgKJ1xxVYiKGb2o5sDnobRx8Ib/le7tvVqgkvZOowGL2DnVaBaDU7A0S0W0E+d8WVn69Lbjn1cOflfbZqEFfLxAcrvrLWFRx+N7hsqwgYb4PgzjYMUpedRU4NZc084Fol9Ilwd9psJYd9W6fOtWhnVXkOdCGwxejIj9Nrn4lJ9NKU8O/hk15+Ldq1eFFzdGDiElq2d2lZnd7xa53r5L3NnEbPc7PuNdEFcZd0qyQIDAQAB",
+  "externally_connectable": {
+    "matches": [
+      "https://saaf-ten.vercel.app/*",
+      "http://localhost/*"
+    ]
   }
 }

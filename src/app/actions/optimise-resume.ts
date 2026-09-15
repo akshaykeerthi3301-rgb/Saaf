@@ -176,9 +176,25 @@ export async function optimiseResume(
      * think we fixed — would be a different measurement wearing the same label,
      * and the number would drift from the one the candidate can reproduce by
      * pasting the result back into the checker.
+     *
+     * ⚠️ `jdText` WAS MISSING HERE UNTIL 2026-09-15, AND THE COMMENT ABOVE WAS
+     * THEREFORE FALSE. The baseline check passes it (actions/ats-check.ts:109)
+     * and this one did not, so `jd-missing-standard` could never be raised
+     * against a rewrite. A candidate who pasted a posting was shown an "after"
+     * score computed by a check that skipped one of the rules their "before"
+     * was measured with. Worth 0-1 points — measured — but the point was never
+     * the points: the finding disappeared, so the one question they came with,
+     * *did the rewrite close the gap to THIS posting*, had no answer on screen.
+     *
+     * ⚠️ `layout` IS STILL DELIBERATELY NOT PASSED, AND THAT IS NOT THE SAME
+     * OMISSION. Layout describes the geometry of the FILE THEY UPLOADED. The
+     * rewrite replaces it with a single-column document built from sections, so
+     * charging it the two-column penalty would understate a real improvement —
+     * see the LAYOUT_DRIVEN note in ats-check.ts, which drops the same penalty
+     * when reporting what fixing that finding is worth.
      */
     const text = sectionsToText(result.sections)
-    const projected = checkResume(text, targetRole)
+    const projected = checkResume(text, targetRole, undefined, jdText)
 
     return {
       ok: true,

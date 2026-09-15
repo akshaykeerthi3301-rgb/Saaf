@@ -973,3 +973,77 @@ B.Tech, Computer Science, VIT Vellore, 1998`
     }
   })
 })
+
+/**
+ * The before/after comparison on /tools/ats-checker.
+ *
+ * ⚠️ THE TWO SCORES MUST BE MEASURED BY THE SAME RULES, WITH ONE NAMED
+ * EXCEPTION. The baseline (actions/ats-check.ts) passes targetRole, layout and
+ * jdText. The projected score after a rewrite (actions/optimise-resume.ts)
+ * passed only targetRole until 2026-09-15, so `jd-missing-standard` could never
+ * be raised against a rewrite and the "after" number came from a check that
+ * skipped a rule the "before" was measured with.
+ *
+ * `layout` stays out on purpose and is NOT the same bug — the rewrite replaces
+ * a two-column upload with a single-column document, so charging it the
+ * geometry penalty of the file it replaced would understate a real gain.
+ */
+describe('the before/after comparison is measured by the same rules', () => {
+  const RESUME = `Priya Iyer
+priya.iyer@example.com | +91 98765 43210 | linkedin.com/in/priyaiyer
+Bengaluru, India
+
+Summary
+Analyst with five years in payments operations.
+
+Experience
+
+Operations Analyst at Razorpay
+Mar 2021 - Present
+Owned the merchant onboarding queue end to end across activation and review.
+Ran weekly reporting that cut manual effort by 14%.
+
+Skills
+Excel, SQL
+
+Education
+B.Tech, VIT Vellore, 2017`
+
+  const JD = `Backend Engineer. You will lead software development across our
+platform, designing cloud services and writing production code. Strong
+engineering and technical systems background required.`
+
+  it('raises jd-missing-standard only when the posting is passed', () => {
+    const ids = (jd?: string) =>
+      checkResume(RESUME, 'Backend Engineer', undefined, jd).findings.map((f) => f.id)
+    expect(ids(JD)).toContain('jd-missing-standard')
+    expect(ids()).not.toContain('jd-missing-standard')
+  })
+
+  it('scores lower with the posting than without it, for the same document', () => {
+    // Small — measured at one point — but it must not be ZERO, or the two
+    // surfaces could diverge again without any test noticing.
+    const withJd = checkResume(RESUME, 'Backend Engineer', undefined, JD).readability.score
+    const without = checkResume(RESUME, 'Backend Engineer').readability.score
+    expect(withJd).toBeLessThan(without)
+  })
+
+  it('a rewrite that changes nothing does not move the score', () => {
+    // The property the whole before/after headline rests on. Same text, same
+    // role, same posting, run twice — the projected path must reproduce the
+    // baseline exactly rather than approximately.
+    const before = checkResume(RESUME, 'Backend Engineer', undefined, JD)
+    const after = checkResume(RESUME, 'Backend Engineer', undefined, JD)
+    expect(after.readability.score).toBe(before.readability.score)
+    expect(after.findings.map((f) => f.id).sort()).toEqual(before.findings.map((f) => f.id).sort())
+  })
+
+  it('does not charge a rewrite for the uploaded file\'s column geometry', () => {
+    // Deliberate asymmetry, pinned so nobody "fixes" it into symmetry.
+    const twoColumn = checkResume(RESUME, 'Backend Engineer', { columns: 2, lines: 40, pages: 1 } as never, JD)
+    const rebuilt = checkResume(RESUME, 'Backend Engineer', undefined, JD)
+    expect(twoColumn.readability.score).toBeLessThan(rebuilt.readability.score)
+    expect(twoColumn.findings.map((f) => f.id)).toContain('multi-column')
+    expect(rebuilt.findings.map((f) => f.id)).not.toContain('multi-column')
+  })
+})

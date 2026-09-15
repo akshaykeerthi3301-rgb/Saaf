@@ -56,6 +56,11 @@ export default async function ProfilePage() {
           credential: profile.credential ?? 'none',
           workModePreference: profile.work_mode_preference ?? 'no_preference',
           salaryExpectation: profile.salary_expectation ?? '',
+          fullName: profile.full_name ?? '',
+          phone: profile.phone ?? '',
+          linkedinUrl: profile.linkedin_url ?? '',
+          portfolioUrl: profile.portfolio_url ?? '',
+          noticePeriod: profile.notice_period ?? '',
         }} />
       </div>
     </AppShell>

@@ -18,6 +18,7 @@ type Initial = {
   /** Extras beyond the primary role, and the candidate's own keywords (0022). */
   extraRoles: string[]; keywords: string[]
   workModePreference: string; salaryExpectation: string
+  fullName: string; phone: string; linkedinUrl: string; portfolioUrl: string; noticePeriod: string
 }
 
 const WORK_MODE_OPTIONS = [
@@ -50,6 +51,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       // an explicit "no preference" is a real answer here, not an omission.
       workModePreference: f.workModePreference as 'remote' | 'hybrid' | 'onsite' | 'no_preference',
       salaryExpectation: f.salaryExpectation,
+      fullName: f.fullName, phone: f.phone, linkedinUrl: f.linkedinUrl,
+      portfolioUrl: f.portfolioUrl, noticePeriod: f.noticePeriod,
     })
     setBusy(false)
     if (!res.ok) setError(res.error)
@@ -128,6 +131,32 @@ export function ProfileForm({ initial }: { initial: Initial }) {
             Never withholds a role — only reorders.
           </p>
         </div>
+
+        {/*
+          ⚠️ THESE FIVE ARE FOR THE BROWSER EXTENSION AND FOR NOTHING ELSE.
+          The scorer reads none of them — no component moves because a phone
+          number is present. They exist so the extension can fill an application
+          form from the account instead of asking the candidate to type their
+          own name into a popup, which is duplicate entry of a fact Saaf could
+          already have known. Optional throughout.
+        */}
+        <p className="pt-2 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+          For filling application forms
+        </p>
+        <p className="-mt-2 text-sm leading-6 text-muted-foreground">
+          Only used by the browser extension, and only when you press Fill. Never scored, never
+          shown to an employer by us.
+        </p>
+        <Input label="Full name" value={f.fullName}
+          onChange={(e) => setF({ ...f, fullName: e.target.value })} />
+        <Input label="Phone" value={f.phone}
+          onChange={(e) => setF({ ...f, phone: e.target.value })} />
+        <Input label="LinkedIn URL" value={f.linkedinUrl}
+          onChange={(e) => setF({ ...f, linkedinUrl: e.target.value })} />
+        <Input label="Portfolio or GitHub" value={f.portfolioUrl}
+          onChange={(e) => setF({ ...f, portfolioUrl: e.target.value })} />
+        <Input label="Notice period" value={f.noticePeriod}
+          onChange={(e) => setF({ ...f, noticePeriod: e.target.value })} />
 
         <Input label="Salary expectation" value={f.salaryExpectation}
           onChange={(e) => setF({ ...f, salaryExpectation: e.target.value })}

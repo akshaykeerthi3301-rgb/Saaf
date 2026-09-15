@@ -32,6 +32,16 @@ const schema = z.object({
   // whatever's already stored alone) from "explicitly cleared."
   workModePreference: z.enum(['remote', 'hybrid', 'onsite', 'no_preference']).optional(),
   salaryExpectation: z.string().optional(),
+  /**
+   * Contact details, for the browser extension to fill application forms with.
+   * The scorer reads none of them. Optional throughout: a candidate who never
+   * installs the extension is never asked, and onboarding does not change.
+   */
+  fullName: z.string().trim().max(120).optional(),
+  phone: z.string().trim().max(40).optional(),
+  linkedinUrl: z.string().trim().max(300).optional(),
+  portfolioUrl: z.string().trim().max(300).optional(),
+  noticePeriod: z.string().trim().max(60).optional(),
   portals: z.array(z.string()).optional(),
 })
 
@@ -109,6 +119,11 @@ export async function confirmProfile(input: ConfirmInput) {
     // on /profile. See supabase/migrations/0009_preferences.sql.
     ...(v.workModePreference !== undefined ? { work_mode_preference: v.workModePreference } : {}),
     ...(v.salaryExpectation !== undefined ? { salary_expectation: v.salaryExpectation || null } : {}),
+    ...(v.fullName !== undefined ? { full_name: v.fullName || null } : {}),
+    ...(v.phone !== undefined ? { phone: v.phone || null } : {}),
+    ...(v.linkedinUrl !== undefined ? { linkedin_url: v.linkedinUrl || null } : {}),
+    ...(v.portfolioUrl !== undefined ? { portfolio_url: v.portfolioUrl || null } : {}),
+    ...(v.noticePeriod !== undefined ? { notice_period: v.noticePeriod || null } : {}),
     portals_used: v.portals ?? null,
     // True only for a sign-in method that actually confirmed the address —
     // Google today. Instant sign-in (src/lib/instant-signin.ts) never sets
