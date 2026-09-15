@@ -131,8 +131,12 @@ const SKILLS = new Set(Object.keys(SKILL_DATA.terms))
  *
  * Casing comes back as the POSTING wrote it, so a candidate reads "Kubernetes"
  * and not "kubernetes".
+ *
+ * Exported for `/api/extension/score`, which reports the terms a posting names
+ * that the résumé does not — the "missing keywords" a candidate expects from
+ * any tool in this category. Same vocabulary, same guarantees, one definition.
  */
-function extractSkillPhrases(text: string): string[] {
+export function extractSkillPhrases(text: string): string[] {
   const seen = new Map<string, string>()
   for (const m of text.matchAll(/\b([A-Za-z][A-Za-z0-9+#.]{1,19})\b/g)) {
     const raw = m[1]

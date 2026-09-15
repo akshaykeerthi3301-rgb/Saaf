@@ -108,6 +108,19 @@ const NOT_SKILLS = new Set([
   'notice','fortune','chief','directors','designer','architect','vp','svp','avp','evp',
   'ii','iii','iv','vi','vii','viii','ix','xi','xii','li','ltd','llp',
   /**
+   * ⚠️ INVESTOR NAMES AND COUNTRY ABBREVIATIONS RIDE IN ON "ABOUT US"
+   * BOILERPLATE. Every funded company's posting says "backed by Lightspeed,
+   * Sequoia and Accel" and "the largest platform in the U.S.", so these clear
+   * employer-dispersion easily — they appear across hundreds of unrelated
+   * boards precisely because they are not that board's own name. Found when
+   * the extension's missing-keywords list told a candidate their résumé was
+   * missing "U.S" and "Lightspeed".
+   */
+  'u.s','u.k','u.a.e','usa','uae','emea','apj','anz',
+  'lightspeed','sequoia','accel','tiger','softbank','sapphire','insight','bessemer',
+  'andreessen','benchmark','greylock','matrix','nexus','elevation','blume','kalaari',
+  'ventures','partners','capital','holdings','fund','funds','investors','backed',
+  /**
    * ⚠️ DOCUMENT FURNITURE. Postings are forms, and the form's own labels are
    * capitalised mid-sentence on almost every board: "Job Title:", "Reports To:",
    * "(4 x bullets max)". They clear dispersion trivially — every employer uses

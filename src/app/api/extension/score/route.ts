@@ -6,6 +6,7 @@ import {
   matchJdToResume, JdMatchError,
   MIN_JD_CHARS, MIN_RESUME_CHARS, MAX_JD_CHARS, MAX_RESUME_CHARS,
 } from '@/lib/jd-match'
+import { extractSkillPhrases } from '@/lib/interview-prep'
 
 /**
  * Score a job posting the candidate is looking at, from the browser extension.
@@ -119,10 +120,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
      * copy in the extension may state a component count.
      */
     const result = await matchJdToResume(parsed.data)
+
+    /**
+     * Missing keywords — the one thing every tool in this category shows and
+     * this endpoint did not. Both lists come from the SAME measured vocabulary
+     * the interview-prep engine uses (src/lib/taxonomy/skills.json, mined by
+     * employer-dispersion), so a term appears here only because at least twelve
+     * distinct employers in our own index name it. That is what stops this
+     * degenerating into "your résumé is missing the word synergy".
+     */
+    const held = new Set((result.facts.skills ?? []).map((k) => k.toLowerCase()))
+    const named = extractSkillPhrases(`${parsed.data.jdTitle ?? ''}\n${parsed.data.jdText}`)
+    const missing = named.filter((t) => !held.has(t.toLowerCase())).slice(0, 8)
+    const matched = named.filter((t) => held.has(t.toLowerCase())).slice(0, 8)
+
     return NextResponse.json(
       {
         ok: true,
         total: result.breakdown.total,
+        matched,
+        missing,
         components: result.breakdown.components,
         confidence: result.breakdown.confidence,
         reason: result.reason,

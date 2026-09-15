@@ -72,3 +72,31 @@ extension needs no account.
 
 Not submitted to the Chrome Web Store. Review takes days to weeks and is outside
 our control, so it must never sit on a critical path.
+
+## Parity with Jobright's extension, and the two gaps that stay
+
+Measured against their Chrome Web Store listing on 2026-09-15 (200,000+ users,
+4.9★). **Their extension fills but does not auto-submit either** — *"instantly
+completes every field... so you can submit an application in seconds"* — so the
+locked "never applies on your behalf" decision costs us nothing here.
+
+| Jobright | Saaf |
+|---|---|
+| One-click autofill, "thousands of ATS sites" | ✅ 32 host patterns across 22 ATS platforms |
+| Match score on the posting | ✅ and every component opens into the posting's own sentence |
+| Missing keywords / ATS gaps | ✅ from a vocabulary mined out of our index, not a generic word list |
+| Track the application | ✅ via a link into the Saaf tracker |
+| AI tailored résumé in the extension | ❌ **budget** — see below |
+| Insider connections / referrals | ❌ **structurally impossible** — see below |
+
+**Tailored résumé is a budget limit, not a design one.** It exists on the web
+app. Groq's free tier is 8,000 tokens a minute shared across every environment,
+so a per-posting generator serves roughly three people a minute site-wide. It
+returns when there is a paid tier.
+
+**Insider connections cannot be built and should not be promised.** It needs a
+graph of who works where — which means LinkedIn, whose User Agreement §8.2
+prohibits exactly the overlay this extension performs, and whose enforcement
+falls on the candidate's own account. Jobright can offer it because they operate
+a people database we have deliberately not built. This is the one place where
+Saaf is behind for a reason it should keep.
