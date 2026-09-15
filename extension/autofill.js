@@ -37,7 +37,10 @@
    *               want to work here" is the auto-apply failure mode in miniature.
    */
   const REFUSALS = [
-    { re: /\b(salary|compensation|ctc|expected\s*pay|expected\s*salary|current\s*ctc|desired\s*(pay|salary)|remuneration|package)\b/i,
+    // "Total Target Cash expectation" is a real Bluevine/Greenhouse field and it
+    // contains none of salary, CTC, pay or compensation. Any *expectation* of
+    // *cash* is money; so is a "band", a "range" and an "in hand" figure.
+    { re: /\b(salary|compensation|ctc|cost\s*to\s*company|remuneration|package|payout|in\s*hand|take\s*home|target\s*cash|expected\s*(pay|cash|amount)|(pay|cash|comp)\s*expectation|expectation\b.*\bcash|cash\b.*\bexpectation|desired\s*(pay|salary)|\bpay\s*(range|band|expectation))\b/i,
       reason: 'salary — yours to set, and we hold no figure we trust' },
     // ⚠️ STEMS NEED NO TRAILING \b. `\bdisab\b` never matched "Disability" —
     // the boundary requires a non-word character and the word continues. Caught
@@ -66,10 +69,19 @@
     { key: 'portfolio',       re: /\b(portfolio|website|personal\s*site|github|behance|dribbble)\b/i },
     { key: 'currentTitle',    re: /\b(current\s*(job\s*)?title|current\s*role|present\s*designation|job\s*title|designation)\b/i },
     { key: 'currentEmployer', re: /\b(current\s*(employer|company|organisation|organization)|present\s*employer|employer|company\s*name)\b/i },
-    { key: 'yearsExperience', re: /\b(years?\s*of\s*experience|total\s*experience|experience\s*\(years?\)|yrs\s*exp)\b/i },
+    // "How many years of total work experience do you have?" is the real
+    // Greenhouse wording and `years of experience` does not match it — there are
+    // two words in between. Allow any short run between "years of" and
+    // "experience".
+    { key: 'yearsExperience', re: /\b(years?\s*of\s*(\w+\s+){0,3}experience|total\s*experience|experience\s*\(years?\)|yrs\s*exp|how\s*many\s*years)\b/i },
     { key: 'noticePeriod',    re: /\b(notice\s*period|availability|when\s*can\s*you\s*(start|join)|joining\s*time)\b/i },
     { key: 'city',            re: /\b(city|current\s*location|location|based\s*in|town)\b/i },
-    { key: 'workAuth',        re: /\b(work\s*authoriz|work\s*authoris|right\s*to\s*work|visa\s*status|legally\s*authorized)\b/i },
+    // ⚠️ NO TRAILING \b — THIRD TIME THIS EXACT MISTAKE APPEARED IN THIS FILE.
+    // `work\s*authoris\b` never matches "Work authorisation status", because
+    // the boundary needs a non-word character and the word carries on. Same
+    // shape as `\bdisab\b` failing on "Disability". **A stem takes \b at the
+    // START only.** Grep this file for `\b/i` before adding a pattern.
+    { key: 'workAuth',        re: /\b(work\s*authoriz|work\s*authoris|right\s*to\s*work|visa\s*status|legally\s*authoriz)/i },
   ]
 
   /**
@@ -114,11 +126,33 @@
    * `currentEmployer` and the money refusal — and the refusal has to win. When
    * the two disagree, not filling is always the safe answer.
    */
+  /**
+   * ⚠️ A YES/NO QUESTION IS NEVER ANSWERED WITH A FACT, AND THIS IS THE ONE THAT
+   * ACTUALLY WENT WRONG ON A REAL FORM. Bluevine's Greenhouse application asks
+   * "Are you currently based in Bengaluru ?" as a free-text box. That matches
+   * the `city` pattern via "based in", so the first version wrote **Bengaluru**
+   * into it — where the employer expected "Yes". A recruiter reads a non-answer
+   * and the candidate never sees why.
+   *
+   * We hold facts, not answers to questions about those facts, and turning one
+   * into the other is inference. So an interrogative box is skipped and left to
+   * the candidate, whatever else it matches.
+   */
+  const INTERROGATIVE = /^\s*(are|do|did|does|have|has|will|would|can|could|is|were|was)\s+you\b|\?\s*\*?\s*$/i
+
   function classify(signals) {
     if (!signals) return null
     for (const r of REFUSALS) if (r.re.test(signals)) return { refused: true, reason: r.reason }
-    for (const f of FIELDS) if (f.re.test(signals)) return { key: f.key }
-    return null
+    const field = FIELDS.find((f) => f.re.test(signals))
+    if (!field) return null
+    // A question wins over the field match, except where the question IS the
+    // field — "How many years of experience do you have?" wants the number, and
+    // "What is your notice period?" wants the period. Those ask for a value; a
+    // yes/no asks for a judgement.
+    if (INTERROGATIVE.test(signals) && !['yearsExperience', 'noticePeriod'].includes(field.key)) {
+      return { refused: true, reason: 'a yes/no question — we hold facts, not answers' }
+    }
+    return { key: field.key }
   }
 
   /** Values for each key, from the stored profile. Undefined means "no value". */

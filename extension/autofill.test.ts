@@ -68,7 +68,9 @@ describe('what it fills', () => {
     ['Portfolio / Website', 'portfolio'], ['Current Job Title', 'currentTitle'],
     ['Current Employer', 'currentEmployer'], ['Total Experience (years)', 'yearsExperience'],
     ['Notice Period', 'noticePeriod'], ['Current Location', 'city'],
-    ['Are you legally authorized to work', 'workAuth'],
+    // Statement form fills. The INTERROGATIVE form of the same question does
+    // not — see "the yes/no guard applies to work authorisation too" below.
+    ['Work authorisation status', 'workAuth'],
   ])('%s → %s', (label, key) => {
     expect(A.classify(label)?.key).toBe(key)
   })
@@ -95,7 +97,7 @@ describe('what it fills', () => {
       'First Name', 'Last Name', 'Full Name', 'Email Address', 'Mobile Number',
       'Current Employer', 'Current Job Title', 'Total Experience (years)',
       'Notice Period', 'Current Location', 'LinkedIn', 'Portfolio / Website',
-      'Are you legally authorized to work',
+      'Work authorisation status',
     ]) {
       const v = A.classify(label)
       expect(v?.refused, `${label} was refused`).toBeUndefined()
@@ -224,5 +226,65 @@ describe('fillForm, against a form', () => {
     const res = A.fillForm({ ...PROFILE, portfolio: '' }, docOf([el]))
     expect(el.value).toBe('')
     expect(res.filled).toHaveLength(0)
+  })
+})
+
+/**
+ * Captured from a REAL Greenhouse application form on 2026-09-15 — Bluevine
+ * India, "Senior Software Engineer - Platform Tools". Every case below was a
+ * miss or a wrong fill on the first run against it, and none was findable on
+ * the hand-written form above.
+ */
+describe('a real Greenhouse form, 2026-09-15', () => {
+  it('refuses "Total Target Cash expectation", which names no money word', () => {
+    // Contains neither salary, nor CTC, nor pay, nor compensation. It went
+    // unmatched and therefore unreported: left blank by luck, not by rule.
+    const v = A.classify('What is your Total Target Cash expectation?*')
+    expect(v?.refused).toBe(true)
+    expect(v?.reason).toMatch(/salary/)
+  })
+
+  it('still refuses the plainly worded one beside it', () => {
+    expect(A.classify('What is your current CTC ?*')?.refused).toBe(true)
+  })
+
+  it('never answers a yes/no question with a fact', () => {
+    // ⚠️ THE ONE THAT ACTUALLY WENT WRONG. "Are you currently based in
+    // Bengaluru ?" is a free-text box matching `city` through "based in", so
+    // the first version wrote "Bengaluru" where the employer wanted "Yes".
+    const v = A.classify('Are you currently based in Bengaluru ?*')
+    expect(v?.key).toBeUndefined()
+    expect(v?.refused).toBe(true)
+    expect(v?.reason).toMatch(/yes\/no/)
+  })
+
+  it('still answers a question that asks for a value, not a judgement', () => {
+    // The interrogative guard must not swallow these two, or the filler loses
+    // the only two fields on an Indian form worth filling.
+    expect(A.classify('How many years of total work experience do you have?*')?.key)
+      .toBe('yearsExperience')
+    expect(A.classify('What is your notice period ?*')?.key).toBe('noticePeriod')
+  })
+
+  it('reads "years of TOTAL WORK experience", with words in between', () => {
+    expect(A.classify('How many years of total work experience do you have?')?.key)
+      .toBe('yearsExperience')
+    expect(A.classify('Years of experience')?.key).toBe('yearsExperience')
+  })
+
+  it('leaves the reCAPTCHA box and the file inputs alone', () => {
+    expect(A.classify('g-recaptcha-response')).toBeNull()
+    expect(A.isFillable({ tagName: 'INPUT', type: 'file' })).toBe(false)
+  })
+})
+
+describe('the yes/no guard applies to work authorisation too', () => {
+  it('refuses the interrogative form and fills the statement form', () => {
+    // We hold "Indian citizen"; the employer asked "yes or no". Writing the
+    // former into the latter is the Bengaluru mistake with a different label,
+    // and an earlier test in this file asserted the buggy behaviour until the
+    // real Greenhouse form exposed the pattern.
+    expect(A.classify('Are you legally authorized to work in India?')?.refused).toBe(true)
+    expect(A.classify('Work authorisation status')?.key).toBe('workAuth')
   })
 })
