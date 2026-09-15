@@ -31,10 +31,12 @@ fixes the live site did not have, and this block said "on a branch" rather than
 noticed or missed.** Whoever edits it next: say what is live, not what is
 written — and put a date next to it.
 
-**`main` is 23 commits ahead of `origin/main` and that is the one chore still
-open.** The remote is a backup and does not deploy — pushing is not deploying and
-deploying does not push. Production is current; GitHub is not. `git push origin
-main` when wanted.
+~~**`main` is 23 commits ahead of `origin/main` and that is the one chore still
+open.**~~ **Stale — corrected 2026-09-15. It was 1, and it is now 0: everything
+is pushed.** The remote is a backup and does not deploy — pushing is not
+deploying and deploying does not push. Production is *behind* `main`; GitHub is
+current. Re-measure with `git rev-list --count origin/main..main` rather than
+trusting this line, which has now gone stale once.
 
 ```
 git log --oneline f98f6b4..HEAD          # the nine commits, oldest first
