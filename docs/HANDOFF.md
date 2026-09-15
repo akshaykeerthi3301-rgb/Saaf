@@ -136,6 +136,82 @@ index before believing it**, and the four open judgment calls at the end of Phas
 
 ---
 
+## ⛔ STOP — read this before deploying anything (2026-09-15, end of session)
+
+**`main` is NOT deployable right now.** Production is fine and is a few commits
+behind; deploying `main` as it stands would break profile saving.
+
+### The one blocker
+
+`supabase/migrations/0027_profile_contact_fields.sql` is **written and not
+applied**, and code that depends on it is already committed.
+`src/app/actions/confirm-profile.ts:122-126` writes `phone`, `linkedin_url`,
+`portfolio_url` and `notice_period`. Those four columns **do not exist in the
+live database**, so a profile save would fail with a PostgREST error the moment
+this reaches production.
+
+```
+1. Apply 0027 by hand in the Supabase SQL editor
+2. npm run verify:rls
+3. Open /profile signed in and SAVE — the four new boxes must persist
+4. Only then deploy
+```
+
+⚠️ **`full_name` already exists in the live database and is in no migration.**
+It is one of **12 undocumented columns** on `profiles` — `headline`,
+`current_city`, `current_state`, `target_job_functions`, `years_of_experience`,
+`master_resume`, `master_resume_text`, `target_job_types`, `target_location`,
+`open_to_remote`, `resume_storage_path`, `onboarding_completed_at`. All are
+empty (`{}`, `[]`, `0`, `false`, null) and nothing reads them. Note
+`years_of_experience` duplicates the column the app actually uses,
+`years_experience`. **A fresh database built from the migration files will not
+match production.** Worth a cleanup migration; not urgent.
+
+### Two things committed under a misleading message
+
+`fecfcc6` says "Measure the rewrite by the same rules…" and its score fix is
+real, but an over-broad `git add -A` also swept in migration 0027, the profile
+contact fields, `extension/config.js`, the manifest changes and three scratch
+files from `.tmp-key/`. The scratch files are now removed and gitignored; the
+private key was never committed (`.gitignore:51` `*.pem` caught it). Nothing is
+lost — just don't trust that commit's subject line to describe its contents.
+
+---
+
+## ⏳ The browser extension is HALF-MIGRATED to account sign-in
+
+Shipped and working: **v0.2.0**, standalone, no account. The founder has it
+installed and has tested it on a Greenhouse posting. It scores any posting on 32
+ATS hosts and fills application forms from details typed into its own popup.
+
+**In progress and NOT finished: v0.3.0**, which reads the candidate's Saaf
+account instead of asking them to retype. Done so far:
+
+| | |
+|---|---|
+| ✅ Extension identity pinned | id `idbookligbjgjhnohmgpklloakhoecpd`; the `key` is in `manifest.json` |
+| ✅ `externally_connectable` | the web app is allowed to message the extension |
+| ✅ `extension/config.js` | Supabase URL + anon key, both public by design |
+| ✅ Profile contact fields | form + action + migration 0027 (**unapplied — see above**) |
+| ❌ **The connect page** | nothing at `/extension`; no button that hands the session over |
+| ❌ **Token handling** | no `onMessageExternal` in the service worker, no refresh |
+| ❌ **Reading the account** | autofill still uses the popup, not `profiles` |
+
+⚠️ **The private signing key is NOT in the repo** — correctly, since it is a
+secret. It sits in this session's scratchpad at `extension-key/key.pem`. **If it
+is lost the extension ID changes**, which breaks `externally_connectable` and
+every install. Regenerating is easy; migrating installs is not. Move it
+somewhere durable.
+
+⚠️ **The founder's own account has NO saved résumé** (`resume_documents` is empty
+for them). So the account-backed extension cannot score from a stored résumé.
+The profile itself is rich — 20 skills, title, employer, years, city, preferred
+role, and 206 scored roles — so **score from the PROFILE the way `/today` does,
+not from résumé text.** That is the design change the connect work was heading
+towards and it is not yet reflected in the code.
+
+---
+
 ## ✅ Migration 0026 — applied by the founder, 2026-09-15
 
 `supabase/migrations/0026_recruiter_foundation.sql`. **Applied and verified.**

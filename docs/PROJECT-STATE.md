@@ -1566,6 +1566,50 @@ endpoint on production: 200, total 55, four components, and the source quote
 *"Minimum 3 years of experience with Python, Docker and AWS."* read back out of
 the posting.
 
+### Stage W — the Résumé Studio begins, and two of my own claims were wrong (2026-09-15)
+
+The founder walked a competitor's résumé-tailoring flow and rejected ours
+wholesale: *"not the least satisfied with our current UI, mechanism and anything
+related to it. The idea remains the same."* Phase 9 in `docs/ROADMAP.md`.
+
+**The finding that shapes the work: almost none of it is an AI problem.** Their
+five-beat funnel — score, gap table, section picker, generation, before/after —
+is four screens of arithmetic and one model call. We already own every engine.
+A whole-document rewrite is **~1,360 tokens** (`resume-rewrite.ts:366`), not the
+6,000–10,000 I first told the founder; at 8,000/minute shared that is ~5 rewrites
+a minute, tight rather than fatal.
+
+⚠️ **TWO CORRECTIONS TO MY OWN PLAN, BOTH FOUND BY MEASURING BEFORE BUILDING.**
+
+1. The plan said the projected score "rises substantially" because `jdText` was
+   missing from the after-check. **Measured: 0–1 point.** The bug was real — the
+   finding disappeared entirely, so a candidate who pasted a posting had nothing
+   answering *did the rewrite close the gap to this job* — but the magnitude was
+   invented and is corrected in the plan file.
+2. The plan also called the missing `layout` argument a bug. **It is not.** A
+   rewrite replaces a two-column upload with a single-column document built from
+   `ResumeSections`; charging it the old geometry would understate a real gain,
+   and `ats-check.ts:1613-1625` already drops the same penalty when pricing that
+   finding. A test now pins the asymmetry so a future session does not "fix" it
+   into symmetry.
+
+**The design collision, resolved by reading rather than assuming.** I told the
+founder the design system is "monochrome, flat, square-cornered" and it is not —
+**that was retired 2026-09-07** and `docs/DESIGN.md` has superseded it since.
+⚠️ **`PROJECT-STATE.md:102` still asserts the retired system and is stale**; the
+row should be corrected rather than worked around. What survives from it is the
+part that matters here: the named anti-reference is a résumé tool measured at
+196 shadowed elements, 8 radii, 4 gradients and 2 banned typefaces, positioned as
+*"applies for you while you sleep."* The screenshots sit close to that profile.
+**Take the flow; leave the rainbow gauge, the red alarm and the urgency banner.**
+
+**Commit hygiene failure worth recording.** `fecfcc6`'s subject describes only
+the score fix; an over-broad `git add -A` also swept in migration 0027, the
+profile contact fields, the extension manifest changes and three scratch files
+from `.tmp-key/`. The scratch files are removed and gitignored and the private
+key was never committed, but the commit's message does not describe its
+contents. `git add -A` after a long session is how that happens.
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.

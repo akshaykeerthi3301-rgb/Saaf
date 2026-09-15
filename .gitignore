@@ -92,3 +92,10 @@ bench/corpus/real/
 # redistribute — kept locally, never committed. Re-fetch with
 # `npm run bench:samples`.
 bench/corpus/samples/
+
+# Scratch directories used while generating the browser extension's signing key.
+# `*.pem` above already keeps the PRIVATE key out; these are the derived public
+# artefacts, which are build scratch rather than source and were committed by an
+# over-broad `git add -A` on 2026-09-15.
+.tmp-key/
+.tmp-probe/
