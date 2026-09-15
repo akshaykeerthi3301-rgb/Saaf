@@ -71,9 +71,21 @@ export function GapTable({ table, roleName }: { table: GapTableData; roleName?: 
           the posting is SILENT on among the things it asks for. A posting that
           states nothing about a qualification has not asked for one.
         */}
-        {table.gaps === 0
-          ? 'Your résumé answers everything this posting states.'
-          : `${table.gaps} ${table.gaps === 1 ? 'thing' : 'things'} this posting states ${table.gaps === 1 ? 'is' : 'are'} not answered on your résumé.`}
+        {table.gaps > 0
+          ? `${table.gaps} ${table.gaps === 1 ? 'thing' : 'things'} this posting states ${table.gaps === 1 ? 'is' : 'are'} not answered on your résumé.`
+          : table.unknowns > 0
+            ? /*
+                ⚠️ WEAKER ON PURPOSE WHEN ROWS ARE UNKNOWN. "Answers everything
+                this posting states" read as a clean bill of health while two of
+                four rows said "not stated" — measured in a browser 2026-09-15
+                against an advert that asked for "6+ years building distributed
+                systems". `extractAll()` will not read a bar from that phrasing
+                without "of experience", and refusing a low-confidence
+                extraction is the gate engine's documented policy. The table is
+                right to stay silent; the headline was wrong to sound certain.
+              */
+              'Nothing this posting clearly states goes unanswered on your résumé.'
+            : 'Your résumé answers everything this posting states.'}
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {/*

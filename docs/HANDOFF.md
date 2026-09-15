@@ -192,6 +192,41 @@ scratchpad; if it is lost the extension ID changes and every install breaks.**
 
 ---
 
+## ⚡ Resuming after TASK-084? Phase 9 is 4/5 and NONE of it is live.
+
+**The Résumé Studio's first four stages are built, tested and committed. They
+are not deployed, and they cannot be until migration `0027` is applied** — see
+the ⛔ section below, which is unchanged and still correct.
+
+**What is live vs. what is written, 2026-09-15:** production still serves the
+OLD three-screen report (`input → report → preview`). The five-stage flow, the
+gap table and the section picker exist only on `main` and on GitLab. Walked end
+to end in a local browser against the dev server, with and without a target
+role; that is not production.
+
+**What a session picking up TASK-085 needs to know:**
+
+- The flow is `input → score → gap → choose → apply → preview`. `input` is
+  deliberately **not** a numbered stage; the stepper counts the five things done
+  with a score, not the upload.
+- Stage 3 (`choose`) already collects `selection.sections` and
+  `selection.terms`. **TASK-085 should spend against that selection rather than
+  rewriting the whole document** — that is the entire reason the stage exists.
+- `reorderSkills()` is exported and wired as the free path. Keep it labelled
+  **no model**; a ₹0 product that buries its free option looks like an upsell.
+- ⚠️ **`RewriteResult.reverted` must keep rendering.** `ats-flow.tsx` calls it
+  "the persuasive half" and it is the clearest proof the fabrication guard is a
+  filter and not a badge.
+
+⚠️ **THE PATTERN FROM THE LAST TWO TASKS, STATED PLAINLY BECAUSE IT KEEPS
+PAYING:** the plan of record has now been measurably wrong **four times** —
+Stage W's two, Stage X's cut fourth row, and Stage Y's "24 of 31 checks". Every
+one was caught by measuring or by opening the page, never by a passing test.
+`npm test` is 621 green and would have shipped all four. **Point it at the index
+or at a browser before believing it.**
+
+---
+
 ## ⚡ Resuming after TASK-083? The blocker below is still the blocker.
 
 **Nothing changed about the deploy situation and nothing new is waiting on you

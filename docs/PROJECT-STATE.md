@@ -1704,6 +1704,73 @@ opens `skills.json`.
 **`npm run bench` DELTA none**, 26 documents. Walked in a browser end to end,
 both the posting path and the no-posting empty state. **No migration.**
 
+### Stage Y — the five-step flow, and three numbers that were nearly wrong (2026-09-15)
+
+TASK-084. `ats-flow.tsx`'s `Step` goes from `input | report | preview` to
+`input → score → gap → choose → apply → preview`, with `ui/stepper.tsx`
+rendered once across the five. The founder's objection to the old UI was that
+nothing told you where you were; there are now five named stages and a bar.
+
+⚠️ **STAGE 1'S SENTENCE IS NOT THE ONE THE PLAN SPECIFIED, AND THE PLAN WAS
+WRONG AGAIN.** It asked for *"68 — a parser reads 91% of your document, and what
+it reads matches this role on 24 of 31 checks."* Measured before building:
+
+| Category | Checks | About the role? |
+|---|---|---|
+| ATS essentials · Sections · Content · Red flags · Bias · Seniority | **37** | No — the document |
+| **Job tailoring** | **3** | Yes |
+
+Describing all 40 as role-matching would put a number on screen meaning
+something other than what it says. The headline now states the two halves the
+score is genuinely made of — `PARSE_WEIGHT = 0.35` of parse coverage, plus the
+category assessment — and counts the role's three **separately and in smaller
+type**: *"Only 3 of those checks are about Backend Engineer specifically, and
+you pass 1."* That is the third plan claim in two tasks that measurement
+corrected (see Stage X, and Stage W's two).
+
+⚠️ **TWO OF MY OWN COPY CLAIMS WERE FALSE AND WERE CAUGHT BY OPENING THE PAGE,
+NOT BY A TEST.** Both would have passed every gate:
+
+1. Stage 3's skills card promised *"your score updates immediately"*. Clicked in
+   a browser, the score stayed at **96** — correctly, because the checks count
+   whether a term is PRESENT and the same eight words are present in either
+   order. The card now says so outright: *"This will not change your score…
+   it changes what a recruiter skimming the first line sees."*
+2. The gap table's headline read *"Your résumé answers everything this posting
+   states"* while **two of its four rows said "not stated"**. Softened to
+   *"Nothing this posting clearly states goes unanswered"* whenever a row is
+   unknown.
+
+⚠️ **AND ONE THING THAT LOOKED LIKE A BUG AND WAS THE SYSTEM WORKING.** Against
+an advert saying *"6+ years building distributed systems"* the Experience row
+reported **does not say**. `extractAll()` will not read a bar from that phrasing
+without the words "of experience" — verified by running both variants — and
+refusing a low-confidence extraction is `src/gates/`'s documented policy, since
+"a wrong refusal is worse than a wrong match". The table was right to stay
+silent. The headline above it was wrong to sound certain, which is what got
+fixed.
+
+**The stepper's marks are 15/35/50/80/100, not even fifths.** `ui/stepper.tsx`
+states in its own header that the percentages belong to the caller because a bar
+jumping in even quarters "lies about how much is left". Reading a score and a
+gap table is quick; stage 4's finding loop is where the time actually goes, so
+the bar moves least across it.
+
+**Stage 3 exists to make cost visible before it is spent.** Stages 1–4 are free;
+stage 5 is the only model call on this path at ~1,360 tokens against a shared
+8,000/minute ceiling. `reorderSkills()` is now exported and offered there under
+a **no model** badge — a stable sort that adds nothing and removes nothing, so
+it cannot fabricate and needs no grounding guard. Nothing is pre-ticked:
+defaulting every section on would make a full-document rewrite the option chosen
+by nobody. Verified in a browser — `Python, Django, Postgres, SQL, AWS, Docker,
+React, Git` became `Python · AWS · Docker · Django · Postgres · SQL · React ·
+Git`, eight in and eight out.
+
+**Gates:** `npm test` 621 (was 613, +8) · `npm run lint` 0 errors ·
+`npm run typecheck` clean · `npm run verify:rls` all checks ·
+**`npm run bench` DELTA none**, 26 documents. All five stages walked in a
+browser, with and without a target role. **No migration.**
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.

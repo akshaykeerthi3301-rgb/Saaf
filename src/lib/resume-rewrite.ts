@@ -261,8 +261,16 @@ function prompt(sections: ResumeSections, me: CandidateFacts, role: RoleFacts): 
   ].join('\n')
 }
 
-/** Skills the role names come first; nothing is added and nothing is removed. */
-function reorderSkills(skills: string[], role: RoleFacts): { skills: string[]; changed: boolean } {
+/**
+ * Skills the role names come first; nothing is added and nothing is removed.
+ *
+ * ⚠️ EXPORTED FOR THE RÉSUMÉ STUDIO'S STAGE 3, AND IT COSTS NOTHING. This is
+ * the whole of "tailor my skills section" with no model call at all — it is a
+ * stable sort against words the posting already uses. The Studio offers it
+ * beside options that DO spend tokens, so the distinction has to be visible:
+ * a candidate should be able to take the free improvement and stop there.
+ */
+export function reorderSkills(skills: string[], role: RoleFacts): { skills: string[]; changed: boolean } {
   const hay = `${role.title} ${role.description ?? ''}`.toLowerCase()
   const named = skills.filter((s) => hay.includes(s.toLowerCase()))
   if (named.length === 0 || named.length === skills.length) return { skills, changed: false }

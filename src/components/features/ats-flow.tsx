@@ -7,6 +7,7 @@ import {
   ShieldCheck, Sparkles, Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, Eyebrow } from '@/components/ui/card'
 import { Combobox } from '@/components/ui/combobox'
 import { ResumePreview } from '@/components/features/resume-preview'
 import { readResumeFile } from '@/app/actions/read-resume-file'
@@ -21,6 +22,9 @@ import type { IndexMatchCount } from '@/lib/services/index-match'
 import { ReportRail } from '@/components/features/report-rail'
 import { FindingDetail, MarketColumn } from '@/components/features/finding-detail'
 import { GapTable } from '@/components/features/gap-table'
+import { ScoreHeadline } from '@/components/features/score-headline'
+import { SectionPicker, type SectionKey, type Selection } from '@/components/features/section-picker'
+import { Stepper } from '@/components/ui/stepper'
 import {
   checkResume, marketCoverage, rolesWithKeywords, MIN_RESUME_CHARS,
   type LayoutFacts,
@@ -29,6 +33,7 @@ import {
 import { buildGapTable } from '@/lib/gap-table'
 import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { fixFor, applyEdit, applyDateNormalisation, type FixEdit } from '@/lib/resume-fix'
+import { reorderSkills } from '@/lib/resume-rewrite'
 import type { BulletChange } from '@/lib/resume-rewrite'
 
 /**
@@ -65,7 +70,32 @@ const LABEL = 'mb-2 block text-sm font-semibold text-primary'
 const ROLES = rolesWithKeywords()
 const ROLE_GROUPS = [{ label: 'Roles we measure postings for', options: ROLES.map((value) => ({ value })) }]
 
-type Step = 'input' | 'report' | 'preview'
+/**
+ * The five-beat funnel, plus the input that feeds it.
+ *
+ * ⚠️ `input` IS NOT A NUMBERED STAGE. The stepper counts the five things the
+ * candidate does with their score; the upload is what they do to get one. A
+ * six-step bar that starts at "step 1 of 6: choose a file" makes the flow look
+ * longer than it is, and the plan's own diagram numbers from SCORE.
+ */
+type Step = 'input' | 'score' | 'gap' | 'choose' | 'apply' | 'preview'
+
+const STAGES = ['score', 'gap', 'choose', 'apply', 'preview'] as const
+const STAGE_NAMES = ['Your score', 'This job', 'What to change', 'Fix it', 'Rewrite'] as const
+
+/**
+ * ⚠️ NOT 20/40/60/80/100. `ui/stepper.tsx` says in its own header that the
+ * percentages are the caller's because "a bar that jumps in even quarters
+ * through uneven stages lies about how much is left". Reading a score and
+ * reading a gap table are quick; working through the findings in stage 4 is
+ * where the time actually goes, so the bar moves least across it.
+ */
+const STAGE_MARKS = [15, 35, 50, 80, 100] as const
+
+function stageIndex(step: Step): number {
+  const i = (STAGES as readonly string[]).indexOf(step)
+  return i === -1 ? 0 : i + 1
+}
 
 type Optimised = {
   sections: ResumeSections
@@ -125,6 +155,15 @@ export function AtsFlow() {
   const [indexMatch, setIndexMatch] = useState<IndexMatchCount>()
   const [indexBaseline, setIndexBaseline] = useState<number>()
   const [checkingIndex, setCheckingIndex] = useState(false)
+  /**
+   * Stage 3's answer: which sections and which terms the candidate chose.
+   *
+   * ⚠️ IT STARTS EMPTY AND THAT IS DELIBERATE. Pre-ticking every section would
+   * make the default a full-document rewrite — the most expensive option, at
+   * ~1,360 tokens against a shared 8,000/minute ceiling — chosen by nobody.
+   */
+  const [selection, setSelection] = useState<Selection>({ sections: new Set(), terms: new Set() })
+  const [skillsReordered, setSkillsReordered] = useState(false)
   const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -216,7 +255,7 @@ export function AtsFlow() {
       setSections(parseSections(text))
       setBaseline(res.readability.score)
       setSelected(res.findings[0]?.id)
-      setStep('report')
+      setStep('score')
     })
   }
 
@@ -298,6 +337,49 @@ export function AtsFlow() {
       i === 0 ? { ...e, bullets: [...e.bullets, value] } : e,
     )
     rescore({ ...sections, experience })
+  }
+
+  function toggleSection(key: SectionKey) {
+    setSelection((prev) => {
+      const next = new Set(prev.sections)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return { ...prev, sections: next }
+    })
+  }
+
+  function toggleTerm(term: string) {
+    setSelection((prev) => {
+      const next = new Set(prev.terms)
+      if (next.has(term)) next.delete(term)
+      else next.add(term)
+      return { ...prev, terms: next }
+    })
+  }
+
+  /**
+   * The one improvement on this whole path that costs nothing.
+   *
+   * ⚠️ IT ADDS NOTHING AND REMOVES NOTHING — `reorderSkills()` is a stable sort
+   * that moves the terms this posting already names to the front. So it cannot
+   * fabricate, needs no fabrication guard, and re-scores through the identical
+   * `checkResume()` the rest of the flow uses. A candidate can take this and
+   * stop, which is why stage 3 labels it "no model" rather than burying it.
+   */
+  function applySkillOrder() {
+    if (!sections) return
+    const { skills, changed } = reorderSkills(sections.skills, {
+      title: targetRole,
+      // ⚠️ EMPTY, NOT A PLACEHOLDER. reorderSkills matches skills against
+      // `${title} ${description}`; putting anything here would let an employer
+      // name reorder the candidate's skills, which is nonsense. The checker
+      // path has no company and does not need one.
+      company: '',
+      description: jdText.trim() || null,
+    })
+    if (!changed) return
+    rescore({ ...sections, skills })
+    setSkillsReordered(true)
   }
 
   function skipFinding(findingId: string) {
@@ -413,8 +495,29 @@ export function AtsFlow() {
     })
   }
 
+  const stage = stageIndex(step)
+  const onStage = step !== 'input'
+  /** Move between stages. Kept in one place so the stepper and the buttons
+   *  can never disagree about what "next" means. */
+  const go = (to: Step) => {
+    setStep(to)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="mt-8">
+      {/*
+        ⚠️ ONE STEPPER FOR THE WHOLE FLOW, RENDERED ONCE. The five stages used
+        to be three unlabelled screens, and the founder's objection to the old
+        UI was that nothing told you where you were or what was coming. The
+        percentages are uneven on purpose — see STAGE_MARKS.
+      */}
+      {onStage && (
+        <div className="mb-8">
+          <Stepper step={stage} marks={STAGE_MARKS} names={STAGE_NAMES} label="Résumé Studio progress" />
+        </div>
+      )}
+
       {/* ---------------------------------------------------------------- 1 */}
       {step === 'input' && (
         <form onSubmit={check}>
@@ -570,7 +673,147 @@ export function AtsFlow() {
       )}
 
       {/* ---------------------------------------------------------------- 2 */}
-      {step === 'report' && report && (
+      {/* ------------------------------------------------- 1 · YOUR SCORE */}
+      {step === 'score' && report && (
+        <div data-report>
+          <ScoreHeadline report={report} baseline={baseline} targetRole={targetRole || undefined} />
+
+          {/*
+            What our own parser recovered. It sits under the score because it is
+            the evidence FOR the parse half of it — a field missing here is a
+            field a real applicant tracking system plausibly misses too.
+          */}
+          <Card className="mt-6">
+            <Eyebrow>What a parser read out of your file</Eyebrow>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              {[
+                ['Current title', report.read.currentTitle],
+                ['Employer', report.read.employer],
+                ['City', report.read.city],
+                [
+                  'Years of experience',
+                  report.read.yearsExperience !== undefined ? String(report.read.yearsExperience) : undefined,
+                ],
+              ].map(([label, value]) => (
+                <div key={label as string} className="flex justify-between gap-3 border-b border-border pb-2">
+                  <dt className="text-sm text-muted-foreground">{label}</dt>
+                  <dd className={`text-right text-sm ${value ? 'text-primary' : 'italic text-muted-foreground'}`}>
+                    {value || 'nothing'}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Card>
+
+          <StageNav
+            onNext={() => go('gap')}
+            nextLabel={jdText.trim() ? 'See how you match this job' : 'Continue'}
+            onBack={() => go('input')}
+            backLabel="Check a different file"
+          />
+        </div>
+      )}
+
+      {/* --------------------------------------------------- 2 · THIS JOB */}
+      {step === 'gap' && report && (
+        <div data-report>
+            {/*
+            ⚠️ STAGE 2 SITS AT THE TOP OF THIS PANE, AND THE POSITION IS THE
+            POINT OF TASK-083. The founder's objection to the old screen was
+            that the thing a candidate came for was "demoted to the page
+            bottom", and the one question they arrive with is "does my résumé
+            answer THIS job?". Answering it below a scrolling list of
+            formatting findings answers it after they have left.
+          */}
+          {gapTable ? (
+            <div className="mb-6">
+              <GapTable table={gapTable} roleName={targetRole || undefined} />
+            </div>
+          ) : (
+            <div className="mb-6 rounded-2xl border border-dashed border-input bg-card p-5 shadow-sm">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                This job, beside your résumé
+              </p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Paste the posting you are aiming at and we will lay it beside your résumé, one row
+                per dimension — the title, the years it asks for, the skills it names and any
+                qualification it states — each opening into the sentence it was read from. It
+                costs nothing and no model runs.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowJd(true)
+                  setStep('input')
+                }}
+                className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
+              >
+                Paste a job description
+              </button>
+            </div>
+          )}
+
+          <StageNav onNext={() => go('choose')} nextLabel="Choose what to change" onBack={() => go('score')} />
+        </div>
+      )}
+
+      {/* -------------------------------------------- 3 · WHAT TO CHANGE */}
+      {step === 'choose' && report && sections && (
+        <div data-report>
+          <SectionPicker
+            sections={sections}
+            terms={gapTable?.rows.find((r) => r.id === 'skills')?.terms ?? []}
+            selection={selection}
+            onToggleSection={toggleSection}
+            onToggleTerm={toggleTerm}
+          />
+
+          {/*
+            ⚠️ THE FREE ONE IS OFFERED HERE, NOT SAVED FOR STAGE 5. Reordering
+            skills is a stable sort with no model behind it, so making the
+            candidate walk two more screens to reach it would be dressing a free
+            improvement up as the reward for a paid-looking flow.
+          */}
+          {selection.sections.has('skills') && !skillsReordered && (
+            <Card className="mt-6" tone="accent">
+              <Eyebrow tone="accent">Free, and instant</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-primary">
+                Reorder your skills so the ones this posting names come first. Nothing is added and
+                nothing is removed — it is a sort, not a rewrite.
+              </p>
+              {/*
+                ⚠️ IT DOES NOT MOVE THE SCORE, AND SAYING SO IS THE POINT. A
+                first version of this card promised "your score updates
+                immediately"; measured in a browser on 2026-09-15 it stayed at
+                96, because our checks count whether a term is PRESENT and the
+                same eight words are present in either order. Leaving that claim
+                up would have been a small lie on the one screen whose whole
+                argument is that we only tell you things you can check.
+              */}
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                This will not change your score — the same words are on the page either way. It
+                changes what a recruiter skimming the first line of your skills section sees.
+              </p>
+              <Button type="button" className="mt-4" onClick={applySkillOrder}>
+                Reorder my skills
+              </Button>
+            </Card>
+          )}
+          {skillsReordered && (
+            <Card className="mt-6" tone="accent">
+              <p className="text-sm leading-6 text-primary">
+                <CheckCircle2 className="mr-1.5 inline size-4 text-accent" aria-hidden="true" />
+                Skills reordered — the ones this posting names now come first. Your score is
+                unchanged, as expected: reordering moves nothing a check is counting.
+              </p>
+            </Card>
+          )}
+
+          <StageNav onNext={() => go('apply')} nextLabel="Fix what is outstanding" onBack={() => go('gap')} />
+        </div>
+      )}
+
+      {step === 'apply' && report && (
         <div
           // Read by ToolPage via :has() — see the note there. The report and the
           // document need the width the "before you paste" column is holding.
@@ -593,42 +836,6 @@ export function AtsFlow() {
           />
 
           <div className="min-w-0">
-            {/*
-              ⚠️ STAGE 2 SITS AT THE TOP OF THIS PANE, AND THE POSITION IS THE
-              POINT OF TASK-083. The founder's objection to the old screen was
-              that the thing a candidate came for was "demoted to the page
-              bottom", and the one question they arrive with is "does my résumé
-              answer THIS job?". Answering it below a scrolling list of
-              formatting findings answers it after they have left.
-            */}
-            {gapTable ? (
-              <div className="mb-6">
-                <GapTable table={gapTable} roleName={targetRole || undefined} />
-              </div>
-            ) : (
-              <div className="mb-6 rounded-2xl border border-dashed border-input bg-card p-5 shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  This job, beside your résumé
-                </p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Paste the posting you are aiming at and we will lay it beside your résumé, one row
-                  per dimension — the title, the years it asks for, the skills it names and any
-                  qualification it states — each opening into the sentence it was read from. It
-                  costs nothing and no model runs.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowJd(true)
-                    setStep('input')
-                  }}
-                  className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
-                >
-                  Paste a job description
-                </button>
-              </div>
-            )}
-
             {activeFinding ? (
               <FindingDetail
                 finding={activeFinding}
@@ -760,6 +967,13 @@ export function AtsFlow() {
                     </span>
                   )}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => go('choose')}
+                  className="text-sm font-semibold text-muted-foreground underline underline-offset-4 hover:text-primary"
+                >
+                  Back
+                </button>
                 <button
                   type="button"
                   onClick={() => setStep('input')}
@@ -899,7 +1113,7 @@ export function AtsFlow() {
           <div className="mt-6 flex flex-wrap gap-4">
             <button
               type="button"
-              onClick={() => setStep('report')}
+              onClick={() => setStep('apply')}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground underline underline-offset-4 hover:text-primary"
             >
               <RotateCcw className="size-3.5" aria-hidden="true" />
@@ -921,6 +1135,48 @@ export function AtsFlow() {
  * our own model wrote and our own filter threw out is worth something, because
  * it is evidence against ourselves.
  */
+/**
+ * Forward and back between stages.
+ *
+ * ⚠️ BACK IS A LINK, NEXT IS A BUTTON, AND THAT ASYMMETRY IS THE POINT.
+ * `docs/DESIGN.md` allows one solid primary action per screen; two equally
+ * weighted buttons make the candidate decide which direction the product
+ * wants, which is a decision the product should already have made.
+ */
+function StageNav({
+  onNext,
+  nextLabel,
+  onBack,
+  backLabel = 'Back',
+}: {
+  onNext?: () => void
+  nextLabel?: string
+  onBack?: () => void
+  backLabel?: string
+}) {
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-4">
+      {onNext && nextLabel ? (
+        <Button type="button" onClick={onNext}>
+          <span className="inline-flex items-center gap-2">
+            {nextLabel}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </span>
+        </Button>
+      ) : null}
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-semibold text-muted-foreground underline underline-offset-4 hover:text-primary"
+        >
+          {backLabel}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 function Changes({ changes, reverted }: { changes: BulletChange[]; reverted: BulletChange[] }) {
   const kept = changes.filter((c) => c.kept)
   if (changes.length === 0) return null
