@@ -136,6 +136,32 @@ index before believing it**, and the four open judgment calls at the end of Phas
 
 ---
 
+## ⚡ Resuming after TASK-083? The blocker below is still the blocker.
+
+**Nothing changed about the deploy situation and nothing new is waiting on you
+from this session.** The gap table (Phase 9 TASK-083) is committed, adds **no
+migration**, and is unreachable in production until `0027` is applied — because
+everything on `main` is. Read the ⛔ section immediately below; it is unchanged
+and still correct.
+
+**What is live vs. what is written, as of 2026-09-15:** the gap table is
+**written and committed, not deployed**. It was walked end to end in a local
+browser against the dev server — both the posting path and the no-posting empty
+state — and verified against five real postings from the live index. None of
+that is production.
+
+**The one new thing worth knowing** is a judgement made against the plan, and it
+should not be silently reversed: the plan's fourth table row was **cut** after it
+printed six employer names and prose fragments against real postings. Ten prose
+terms (`familiarity`, `science`, `computer`, `san`, …) are now filtered out of
+the skill vocabulary at read time. **When `skills.json` is next rebuilt**
+(`npx tsx scripts/build-skill-vocabulary.ts`, scans 13,919 descriptions), the
+same ten are already in the build script's `NOT_SKILLS`, so the read-time filter
+in `src/lib/taxonomy/skills.ts` becomes a no-op and should be deleted then —
+**not before.** Full reasoning: `docs/PROJECT-STATE.md` Stage X.
+
+---
+
 ## ⛔ STOP — read this before deploying anything (2026-09-15, end of session)
 
 **`main` is NOT deployable right now.** Production is fine and is a few commits

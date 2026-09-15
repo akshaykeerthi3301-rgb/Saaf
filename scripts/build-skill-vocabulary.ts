@@ -96,6 +96,33 @@ const NOT_SKILLS = new Set([
    * employers, so they clear both filters cleanly. Closed set, so a list is the
    * right tool.
    */
+  /**
+   * ⚠️ MEASURED 2026-09-15 (TASK-083), NOT GUESSED. The gap table put the
+   * vocabulary on screen as "skills this posting names", and
+   * `scripts/verify-gap-table.ts` plus a scan of 391 live descriptions showed
+   * these in the top hundred by frequency, every one of them prose or a place
+   * fragment rather than a skill:
+   *
+   *   familiarity  96/391 postings   "Familiarity with Kubernetes"
+   *   science      98                 the back half of "Computer Science"
+   *   computer     96                 the front half of the same
+   *   certified    25                 "Certified Scrum Master"
+   *   statement    12                 boilerplate
+   *   states       15                 "United States"
+   *   san          14                 "San Francisco" — a PLACE fragment, and
+   *                                   the exact shape of the Poland defect
+   *   workplaces   11 · generative 14 · sr 12
+   *
+   * They clear both structural filters honestly: a hundred employers write
+   * "Familiarity with…" and capitalise it at the head of a bullet. A wordlist
+   * is the right tool for the same reason it is right for the function words
+   * above — the set is small, closed, and found by measurement.
+   *
+   * ⚠️ `skills.json` HAS NOT BEEN REBUILT SINCE THIS LINE WAS ADDED, so
+   * `src/lib/taxonomy/skills.ts` filters the same words at read time. Rebuilding
+   * makes that runtime list a no-op; delete it then, not before.
+   */
+  'familiarity','science','computer','certified','statement','states','san','workplaces','generative','sr',
   'poland','germany','france','denmark','sweden','norway','finland','netherlands','belgium','austria',
   'switzerland','spain','portugal','italy','greece','ireland','scotland','wales','england','britain',
   'america','americas','canada','mexico','brazil','argentina','chile','colombia','peru',

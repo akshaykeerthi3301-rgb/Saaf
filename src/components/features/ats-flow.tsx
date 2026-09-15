@@ -20,11 +20,13 @@ import { TEMPLATES, DEFAULT_TEMPLATE, type TemplateId } from '@/lib/resume-templ
 import type { IndexMatchCount } from '@/lib/services/index-match'
 import { ReportRail } from '@/components/features/report-rail'
 import { FindingDetail, MarketColumn } from '@/components/features/finding-detail'
+import { GapTable } from '@/components/features/gap-table'
 import {
   checkResume, marketCoverage, rolesWithKeywords, MIN_RESUME_CHARS,
   type LayoutFacts,
   type AtsReport,
 } from '@/lib/ats-check'
+import { buildGapTable } from '@/lib/gap-table'
 import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { fixFor, applyEdit, applyDateNormalisation, type FixEdit } from '@/lib/resume-fix'
 import type { BulletChange } from '@/lib/resume-rewrite'
@@ -148,6 +150,26 @@ export function AtsFlow() {
   /** Empty rather than undefined: every reader of this now just checks length. */
   const coverage =
     targetRole && sections ? marketCoverage(targetRole, sectionsToText(sections)) : []
+
+  /**
+   * Stage 2, and it is recomputed on every accepted fix for free.
+   *
+   * ⚠️ IT NEEDS A POSTING AND THERE IS NO FALLBACK, deliberately. The columns
+   * are headed "This job" and "Your résumé"; with no posting there is no job,
+   * and filling the left column with the role's average would put a sentence on
+   * screen that no employer wrote. The market panel below already answers the
+   * role-level question honestly, so the empty state here is an invitation to
+   * paste, not a worse version of the table.
+   */
+  const gapTable =
+    report && sections && jdText.trim()
+      ? buildGapTable({
+          jdText: jdText.trim(),
+          targetRole: targetRole || undefined,
+          resumeText: sectionsToText(sections),
+          read: report.read,
+        })
+      : undefined
 
   function pick(f: File | undefined) {
     if (!f) return
@@ -571,6 +593,42 @@ export function AtsFlow() {
           />
 
           <div className="min-w-0">
+            {/*
+              ⚠️ STAGE 2 SITS AT THE TOP OF THIS PANE, AND THE POSITION IS THE
+              POINT OF TASK-083. The founder's objection to the old screen was
+              that the thing a candidate came for was "demoted to the page
+              bottom", and the one question they arrive with is "does my résumé
+              answer THIS job?". Answering it below a scrolling list of
+              formatting findings answers it after they have left.
+            */}
+            {gapTable ? (
+              <div className="mb-6">
+                <GapTable table={gapTable} roleName={targetRole || undefined} />
+              </div>
+            ) : (
+              <div className="mb-6 rounded-2xl border border-dashed border-input bg-card p-5 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  This job, beside your résumé
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Paste the posting you are aiming at and we will lay it beside your résumé, one row
+                  per dimension — the title, the years it asks for, the skills it names and any
+                  qualification it states — each opening into the sentence it was read from. It
+                  costs nothing and no model runs.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowJd(true)
+                    setStep('input')
+                  }}
+                  className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
+                >
+                  Paste a job description
+                </button>
+              </div>
+            )}
+
             {activeFinding ? (
               <FindingDetail
                 finding={activeFinding}

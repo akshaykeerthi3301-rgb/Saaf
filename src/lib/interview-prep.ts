@@ -1,6 +1,7 @@
 import { extractAll } from '@/gates/extract'
 import { CONFIDENCE_THRESHOLD, type TypedRequirement } from '@/gates/types'
 import { groundingFailure, matchedSkills, type CandidateFacts, type RoleFacts } from '@/lib/tailor'
+import { extractSkillPhrases } from '@/lib/taxonomy/skills'
 
 /**
  * Cookie's interview prep — five questions built from THIS candidate's actual
@@ -96,59 +97,18 @@ function skillGaps(me: CandidateFacts, role: RoleFacts): string[] {
 }
 
 /**
- * Candidate skill phrases out of a posting, without a taxonomy.
+ * The measured skill vocabulary lives in `lib/taxonomy/skills.ts` and is
+ * re-exported here.
  *
- * Postings list skills in two shapes and this reads both: a comma-separated run
- * inside a requirement line, and a capitalised proper noun (SQL, Figma, Python).
- * Crude on purpose — a false positive costs one question the candidate skips,
- * a taxonomy costs a maintenance surface and still misses whatever is new.
+ * ⚠️ IT MOVED, IT DID NOT CHANGE. The résumé gap table needs the same terms,
+ * and a résumé surface importing from an interview-question generator is the
+ * wrong way round. One file opens `skills.json`; this re-export keeps
+ * `/api/extension/score` and every other existing caller working unchanged.
+ * The full account of why this matches a vocabulary instead of slicing prose —
+ * the "How much have you worked with Poland?" defect of 2026-09-15 — is on the
+ * function itself.
  */
-/**
- * The measured skill vocabulary. Built by scripts/build-skill-vocabulary.ts
- * against the live index and committed as data, the same way
- * role-keywords.json is — this module must stay pure, and a test asserts it.
- */
-import SKILL_DATA from '@/lib/taxonomy/skills.json'
-const SKILLS = new Set(Object.keys(SKILL_DATA.terms))
-
-/**
- * Skill terms a posting actually names.
- *
- * ⚠️ IT MATCHES A VOCABULARY. IT NO LONGER SLICES PROSE, AND THAT IS THE FIX.
- * The previous version split any line containing the word "experience" on its
- * commas and treated a capital letter as evidence of a skill. Pointed at 60
- * real postings on 2026-09-15 it asked candidates "How much have you worked
- * with Poland?" — because Poland, CRED, Coupang Eats and Determination all
- * carry a capital. 224 of 286 questions were that shape and the surface was
- * reverted the same day (Stage U).
- *
- * The vocabulary earns its entries by DISPERSION: a term is in it because at
- * least 12 distinct employers in our own index capitalise it mid-sentence.
- * A company name cannot pass that however often it is repeated — all its
- * mentions sit on one board — and an English word cannot pass it either,
- * because its capitals are nearly all sentence-initial. Places and employers
- * are additionally excluded from data the repo already holds.
- *
- * Casing comes back as the POSTING wrote it, so a candidate reads "Kubernetes"
- * and not "kubernetes".
- *
- * Exported for `/api/extension/score`, which reports the terms a posting names
- * that the résumé does not — the "missing keywords" a candidate expects from
- * any tool in this category. Same vocabulary, same guarantees, one definition.
- */
-export function extractSkillPhrases(text: string): string[] {
-  const seen = new Map<string, string>()
-  for (const m of text.matchAll(/\b([A-Za-z][A-Za-z0-9+#.]{1,19})\b/g)) {
-    const raw = m[1]
-    const k = raw.toLowerCase()
-    if (!SKILLS.has(k)) continue
-    // First spelling wins, and a capitalised one beats a lowercase one — the
-    // posting's own heading is usually where the proper casing is.
-    const prev = seen.get(k)
-    if (!prev || (/^[a-z]/.test(prev) && /^[A-Z]/.test(raw))) seen.set(k, raw)
-  }
-  return [...seen.values()]
-}
+export { extractSkillPhrases } from '@/lib/taxonomy/skills'
 
 /**
  * Build the prep plan.

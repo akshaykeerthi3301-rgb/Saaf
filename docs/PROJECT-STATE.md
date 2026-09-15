@@ -1610,6 +1610,100 @@ from `.tmp-key/`. The scratch files are removed and gitignored and the private
 key was never committed, but the commit's message does not describe its
 contents. `git add -A` after a long session is how that happens.
 
+### Stage X — the gap table, and the row that had to be cut to ship it (2026-09-15)
+
+TASK-083, the Résumé Studio's Stage 2: the posting beside the résumé, one row
+per dimension, each opening into the sentence it was read from. Zero tokens —
+everything is retrieval and arithmetic over text the candidate supplied, so the
+screen works with the model switched off.
+
+⚠️ **THE PLAN'S FOURTH ROW WAS CUT, AND THE MEASUREMENT THAT CUT IT IS THE
+POINT OF THIS ENTRY.** The plan specified a "keywords" row built from
+`jdVersusMarket().specific` — words a posting repeats that the role's vocabulary
+does not carry. Pointed at five real live postings on 2026-09-15
+(`npx tsx --env-file=.env.local scripts/verify-gap-table.ts`) it printed,
+verbatim:
+
+```
+Their own words   ·Xylem  ·Availity  ·Guidehouse  ·WEKA  ·Weka  ·Precisely
+                  ·What  ·All  ·None  ·Required  ·ideas.  ·channels.  ·e.g.
+```
+
+Six employer names, the same employer twice in two casings, and prose
+fragments. **That is Stage U's "How much have you worked with Poland?" arriving
+a second time through a different door**, and it would have shipped had the task
+not gated on live postings rather than on a green suite.
+
+It could not be filtered into shape, and the reason is structural rather than
+effortful: what makes the skills row trustworthy is **dispersion measured across
+employers**, and a single advert has no dispersion to measure. That is this
+product's own stated position — *"a single ad is a sample of one"*. The row was
+replaced with **Qualification**, read by `extractAll()` with a `sourceQuote`,
+silent (`not stated`) on most engineering postings. Four rows, all retrieved,
+all quotable.
+
+⚠️ **THE VOCABULARY ITSELF CARRIES PROSE, AND TEN TERMS ARE NOW FILTERED.**
+Putting `skills.json` on screen for the first time exposed junk that the build's
+structural filters let through. Measured over **391 live descriptions**:
+
+| Term | Postings | What it actually is |
+|---|---|---|
+| `science` | 98/391 | the back half of "Computer Science" |
+| `familiarity` | 96 | "Familiarity with Kubernetes" |
+| `computer` | 96 | the front half of the same |
+| `certified` | 25 | "Certified Scrum Master" |
+| `states` | 15 | "United States" |
+| `san` | 14 | **"San Francisco" — a place fragment** |
+| `statement` · `generative` · `workplaces` · `sr` | 11–14 each | prose |
+
+They clear both structural filters honestly: a hundred employers write
+"Familiarity with…" and capitalise it at the head of a bullet.
+
+⚠️ **`capRatio` IS NOT THE DISCRIMINATOR, AND THAT WAS CHECKED RATHER THAN
+ASSUMED.** Every junk term above sits at 0.62–0.70 and a 0.8 threshold looks
+clean until you read what it removes: **`.NET` (0.62)**, `pandas`, `agile`,
+`shell`, `server` — all real — while keeping `street`, `hat`, `zoom`, `eastern`.
+The distribution does not separate prose from skills. A closed, measured list is
+the honest tool, so the ten words went into `NOT_SKILLS` in
+`scripts/build-skill-vocabulary.ts` **and** into a read-time filter in
+`src/lib/taxonomy/skills.ts`. **The runtime filter exists only because
+`skills.json` has not been rebuilt since** — a rebuild scans 13,919 descriptions
+and moves every count in these docs. Delete the runtime set the day it is
+rebuilt, not before.
+
+**Two smaller defects, both found by the gate rather than by review:**
+
+1. **Term matching used a word boundary that excluded `.`, `+` and `#`**, which
+   looked more careful and was wrong — the vocabulary stores ".NET" under the
+   key `net`, so a résumé saying ".NET" never matched. Letters and digits alone
+   still block every case that matters (`ai` in `email`, `cd` in `cdn`, `java`
+   in `javascript`). A test pins both directions.
+2. **The same term printed in two rows with opposite advice.**
+   `jdVersusMarket()` subtracts only the six generic terms in
+   `role-keywords.json`; it has never seen the 1,134-term skill vocabulary, so
+   Kubernetes appeared as both "fix this first" and "do not reshape your résumé
+   around it". Moot once the row was cut, and the dedupe stays as the record.
+
+**Measured after, 2026-09-15:** 5 live postings, **43 terms shown, 0 places and
+0 company names** (checked against `CITIES` + `INDIAN_STATES` +
+`registry/boards.json`, rebuilt independently in the verify script). A
+**positive control** proves the ✓ path fires — 12/12 terms found when the résumé
+is built from the posting's own terms — because "0 of your terms are present" is
+exactly what a broken matcher prints and is indistinguishable from an honest
+answer about a badly-matched candidate. That is the trap migration 0026's RLS
+check fell into.
+
+**`extractSkillPhrases()` moved** from `lib/interview-prep.ts` to
+`lib/taxonomy/skills.ts`, unchanged, with a re-export so
+`/api/extension/score` is untouched. A résumé surface importing from an
+interview-question generator is the wrong dependency direction; one file now
+opens `skills.json`.
+
+**Gates:** `npm test` 613 (was 595, +18) · `npm run lint` 0 errors ·
+`npm run typecheck` clean · `npm run verify:rls` all checks ·
+**`npm run bench` DELTA none**, 26 documents. Walked in a browser end to end,
+both the posting path and the no-posting empty state. **No migration.**
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.
