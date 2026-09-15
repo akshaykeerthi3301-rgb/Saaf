@@ -1525,6 +1525,47 @@ refresh, which is an unrelated real fix.
 
 **The blocker is TASK-080**, a skill vocabulary. `role-keywords.json` is not it.
 
+### Stage V — an ignore pattern deployed a 404, twice, in two files (2026-09-15)
+
+`/api/extension/score` shipped, passed every local test, typechecked, and
+returned **404 in production**. Nothing failed. The route was simply not in the
+upload.
+
+**The cause is one rule implemented in two tools.** Both rsync's `--exclude` and
+`.vercelignore` treat a pattern with no leading slash as matching a directory of
+that name **at any depth**. Adding `extension` to keep the browser extension out
+of the deploy therefore also removed `src/app/api/extension/`:
+
+```
+--exclude 'extension'   →  also deletes src/app/api/extension/
+extension/              →  also excludes src/app/api/extension/
+```
+
+Both are now anchored — `--exclude '/extension'` and `/extension/` — along with
+every other pattern in both files.
+
+⚠️ **THE SAME FLAW WAS ALREADY LIVE AND HAD BEEN FOR A DAY.** `bench` was added
+to both files on 2026-09-14 to stop the founder's real résumés being uploaded.
+It worked, and it was also silently excluding **`src/app/dev/bench`** from every
+deploy since. Invisible only because that page 404s in production by design, so
+the symptom was indistinguishable from the intent.
+
+**Why local checks could not catch it.** `npm test`, `npm run lint`,
+`npm run typecheck` and the dev server all read the repository. The exclusion
+happens between the repository and the upload, so every gate passes and the
+artifact is still wrong. **A missing file deploys as a 404, not as an error** —
+there is no failure anywhere in the chain to notice.
+
+`docs/RUNBOOK.md` now carries three pre-deploy checks rather than one: the
+existing secrets/corpus `find`, an existence test on a known route file, and a
+`diff` of `src/` between the repo and the staged copy. The third is the general
+one — it catches the next exclude that eats something nobody thought to test.
+
+**Deployed `dpl_Bj8K4espy8x63hM2sRfdaEfn39nt`**, verified by calling the
+endpoint on production: 200, total 55, four components, and the source quote
+*"Minimum 3 years of experience with Python, Docker and AWS."* read back out of
+the posting.
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.

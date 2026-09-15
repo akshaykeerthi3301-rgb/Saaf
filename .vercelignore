@@ -12,17 +12,17 @@
 # material is licensed, the design export is a reference, and since worktrees
 # started landing under .claude/ a deploy was carrying a second full checkout
 # of the repo.
-.claude/
-productos/
-saaf-ai/
-docs/
-scripts/
+/.claude/
+/productos/
+/saaf-ai/
+/docs/
+/scripts/
 *.local.md
 
 # The harvested candidate list is 4 MB+ and is read by nothing at runtime — only
 # by scripts/qualify-boards.ts, which is excluded above. registry/boards.json is
 # NOT excluded and must not be: ingest/run.ts reads it on every cron run.
-registry/candidates.json
+/registry/candidates.json
 
 # ⚠️ THE BENCH CORPUS IS PERSONAL DATA AND MUST NEVER BE UPLOADED.
 # bench/corpus/real/ holds nine of the founder's own résumés — full name, employer
@@ -39,11 +39,23 @@ registry/candidates.json
 # excluded above. The product's whole promise is that a résumé is parsed and
 # dropped; shipping the founder's own into a public deployment would break it in
 # the most literal way available.
-bench/
+/bench/
 
+# ⚠️⚠️ EVERY PATTERN IN THIS FILE IS ANCHORED WITH A LEADING SLASH, AND THAT IS
+# LOAD-BEARING. .vercelignore uses .gitignore semantics: a pattern with no
+# leading slash matches a directory of that name at ANY DEPTH.
+#
+# On 2026-09-15 `extension/` was added here to keep the browser extension out of
+# the upload, and it also excluded `src/app/api/extension/` — so the new scoring
+# endpoint deployed as a 404 while passing every local test and every typecheck.
+# Nothing failed; the route simply was not in the upload. The identical mistake
+# was made in the RUNBOOK's rsync on the same day, and `bench/` had been quietly
+# excluding `src/app/dev/bench` ever since it was added.
+#
+# `/name/` means "only at the repository root". Use it for all of these.
+#
 # The browser extension is a separate build target, loaded unpacked or shipped
 # through the Chrome Web Store. Nothing in src/ imports it and Next never serves
-# it — it is not under public/ — so uploading it only adds weight to every
-# deploy. Its one dependency on the web app is the /api/extension/score URL,
-# which is a string in service-worker.js, not an import.
-extension/
+# it, so uploading it only adds weight. Its one dependency on the web app is the
+# /api/extension/score URL, which is a string in service-worker.js, not an import.
+/extension/

@@ -78,8 +78,15 @@ rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
 
-# Prove it before you deploy — this should print nothing:
-find $SP -path '*corpus*' -o -name '.env*' -o -name '*.pem'
+# Prove it before you deploy. THREE checks, and the second two exist because a
+# missing file deploys as a 404 rather than as an error — nothing fails, the
+# endpoint is simply not there.
+find $SP -path '*corpus*' -o -name '.env*' -o -name '*.pem'   # must print nothing
+test -e $SP/src/app/api/extension/score/route.ts && echo "api route staged" || echo "BROKEN: an exclude ate a route"
+diff <(find . -path ./node_modules -prune -o -path ./.git -prune -o -path ./.next -prune -o -type f -print | grep '^\./src/' | sort) \
+     <(cd $SP && find . -type f | grep '^\./src/' | sort) >/dev/null \
+  && echo "src/ is complete" || echo "BROKEN: src/ differs from the repo"
+
 (cd $SP && npx vercel deploy --prod)
 
 # Permanent fix — after this, plain `npx vercel --prod` works:
