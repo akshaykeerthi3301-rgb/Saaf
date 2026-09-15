@@ -250,6 +250,37 @@ export function rewriteFailure(
   return groundingFailure(masked, me, role)
 }
 
+/**
+ * Drop a sentence the rewrite repeated verbatim.
+ *
+ * ⚠️ MEASURED IN A BROWSER 2026-09-15, ON THE SUMMARY-ONLY PATH TASK-085 ADDED.
+ * Rule 8 of the prompt asks for "two or three sentences". Given a thin original
+ * — "Backend engineer, three years, payments." — the model padded to two by
+ * saying the same thing twice: *"Backend engineer with five years of experience
+ * in payments. Backend engineer with five years of experience in payments."*
+ * A résumé carrying a duplicated line is worse than the one it replaced, and
+ * `rewriteFailure()` never looked for this because it checks for INVENTED
+ * content, not repeated content.
+ *
+ * ⚠️ IT ONLY REMOVES, SO IT CANNOT FABRICATE. That is what makes fixing it here
+ * legitimate rather than a second, unguarded edit of model output: every
+ * sentence in the result was already in the input, and the first occurrence
+ * wins so the order the model chose is preserved.
+ */
+function dropRepeatedSentences(text: string): string {
+  const seen = new Set<string>()
+  const kept: string[] = []
+  for (const raw of text.split(/(?<=[.!?])\s+/)) {
+    const sentence = raw.trim()
+    if (!sentence) continue
+    const key = sentence.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    if (seen.has(key)) continue
+    seen.add(key)
+    kept.push(sentence)
+  }
+  return kept.join(' ')
+}
+
 function prompt(
   sections: ResumeSections,
   me: CandidateFacts,
@@ -442,7 +473,7 @@ export async function rewriteResume(input: {
   const wholeText = sections.experience.flatMap((e) => e.bullets).join(' ')
   let summary = sections.summary
   if (scope.summary && typeof parsed.summary === 'string' && parsed.summary.trim().length > 20) {
-    const candidate = parsed.summary.trim()
+    const candidate = dropRepeatedSentences(parsed.summary.trim())
     const fail = rewriteFailure(candidate, `${wholeText} ${sections.summary ?? ''}`, facts, role)
     /**
      * ⚠️ A KEPT SUMMARY IS NOW RECORDED TOO, AND IT NEVER USED TO BE. Only

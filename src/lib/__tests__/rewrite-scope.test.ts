@@ -175,6 +175,77 @@ describe('rewriteResume scope', () => {
     expect(r!.reverted).toEqual([])
   })
 
+  it('still throws out a fabricated summary under a scope — "the persuasive half"', async () => {
+    /**
+     * ⚠️ THE PLAN'S ONE EXPLICIT "DO NOT LOSE THIS". `RewriteResult.reverted`
+     * is what `ats-flow.tsx` calls "the persuasive half": our own model wrote a
+     * line and our own filter refused it, shown with the reason. It is the
+     * clearest demonstration that the fabrication guard is a filter and not a
+     * badge, and scoping must not quietly bypass it.
+     */
+    const llm = await import('@/lib/parse/llm')
+    vi.mocked(llm.callJsonModel).mockResolvedValueOnce({
+      // A figure that appears nowhere in the candidate's own document.
+      raw: JSON.stringify({ summary: 'Backend engineer who grew revenue 240% across 14 markets.' }),
+      provider: 'groq' as const,
+    })
+    const r = await rewriteResume({
+      sections: SECTIONS,
+      facts: ME,
+      role: ROLE,
+      scope: { summary: true, experience: false },
+    })
+    expect(r!.reverted).toHaveLength(1)
+    expect(r!.reverted[0].reason).toBeTruthy()
+    // The candidate keeps what they wrote.
+    expect(r!.sections.summary).toBe(SECTIONS.summary)
+  })
+
+  it('drops a sentence the model repeated verbatim', async () => {
+    /**
+     * ⚠️ FOUND IN A BROWSER, NOT BY A TEST. Prompt rule 8 asks for "two or
+     * three sentences"; given a thin original the model padded to two by
+     * repeating itself word for word. A résumé carrying a duplicated line is
+     * worse than the one it replaced, and the fabrication guard never looked
+     * for this because it checks for INVENTED content, not repeated content.
+     */
+    const llm = await import('@/lib/parse/llm')
+    const line = 'Backend engineer with three years of experience in payments.'
+    vi.mocked(llm.callJsonModel).mockResolvedValueOnce({
+      raw: JSON.stringify({ summary: `${line} ${line}` }),
+      provider: 'groq' as const,
+    })
+    const r = await rewriteResume({
+      sections: SECTIONS,
+      facts: ME,
+      role: ROLE,
+      scope: { summary: true, experience: false },
+    })
+    expect(r!.sections.summary).toBe(line)
+  })
+
+  it('keeps two genuinely different sentences', async () => {
+    const llm = await import('@/lib/parse/llm')
+    vi.mocked(llm.callJsonModel).mockResolvedValueOnce({
+      raw: JSON.stringify({
+        // ⚠️ Every capitalised word here is already in the candidate's own
+        // bullet. A fixture using "Django" — which is on their skills list but
+        // NOT in any bullet — is correctly rejected by the guard, which is how
+        // this test first failed.
+        summary: 'Backend engineer with three years in payments. Built payment APIs in Python.',
+      }),
+      provider: 'groq' as const,
+    })
+    const r = await rewriteResume({
+      sections: SECTIONS,
+      facts: ME,
+      role: ROLE,
+      scope: { summary: true, experience: false },
+    })
+    expect(r!.sections.summary).toContain('Built payment APIs in Python')
+    expect(r!.sections.summary).toContain('three years in payments')
+  })
+
   it('a summary-only rewrite works on a résumé with no experience section', async () => {
     // The "no work experience" guard applies to bullets, not to prose. Refusing
     // here would block the one thing such a candidate can still improve.

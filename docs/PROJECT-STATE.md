@@ -1817,12 +1817,28 @@ BROWSER:**
    nothing to protect against. It is now charged only when a model will run,
    verified by reordering skills successfully while still inside a live lockout.
 
+⚠️ **AND A THIRD, FOUND ONLY BY READING THE OUTPUT ON SCREEN.** Prompt rule 8
+asks for "two or three sentences". Given a thin original — *"Backend engineer,
+three years, payments."* — the model padded to two by saying the same thing
+twice, verbatim:
+
+> *"Backend engineer with five years of experience in payments. Backend
+> engineer with five years of experience in payments."*
+
+`rewriteFailure()` never looked for this, because it checks for **invented**
+content and this is **repeated** content. A résumé carrying a duplicated line is
+worse than the one it replaced. `dropRepeatedSentences()` now removes an exact
+repeat before the guard runs — it only ever removes, so it cannot fabricate, and
+the first occurrence wins so the model's chosen order survives. The
+summary-only path made this visible; nothing says it could not already happen on
+a whole-document rewrite.
+
 **Not built, and said so rather than shipped worse:** the conversational refine
 box. It is a chat loop against a 1,360-token budget with no upper bound on
 turns, and it is the one mechanic in the competitor's screenshots with no
 grounded equivalent here. Revisit when there is a paid tier.
 
-**Gates:** `npm test` 630 (was 621, +9) · `npm run lint` 0 errors ·
+**Gates:** `npm test` 633 (was 621, +12) · `npm run lint` 0 errors ·
 `npm run typecheck` clean · `npm run verify:rls` all checks ·
 **`npm run bench` DELTA none**, 26 documents. Walked in a browser: skills-only
 (no model, no rate-limit charge), summary-only (model ran, every bullet
