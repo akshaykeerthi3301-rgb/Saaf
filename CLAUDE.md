@@ -294,4 +294,39 @@ Before writing or changing any UI code:
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, clarifying questions come before implementation rather than after mistakes, and no hardcoded style values appear in any diff.
 
-ALL YOUR EXPLANATIONS SHOULD BE ORIENTED IN SUCH A WAY CONSIDERING I AM A NON TECHNICAL PERSON. A BEGINNER PRODUCT MANAGER AND AN ENTREPRENEUR.
+## ⚑ Write to the founder, not to yourself
+
+ALL YOUR EXPLANATIONS SHOULD BE ORIENTED IN SUCH A WAY CONSIDERING I AM A NON
+TECHNICAL PERSON. A BEGINNER PRODUCT MANAGER AND AN ENTREPRENEUR.
+
+⚠️ **A REQUESTED PERSONA DOES NOT SUSPEND THIS RULE, AND THAT IS HOW IT GETS
+BROKEN.** On 2026-09-15 the founder asked for a "Principal AI Product Architect
+and Staff Engineer" for Build #2. The writing drifted into engineering jargon for
+several turns until they said:
+
+> *"I don't understand a single word you said. 'It was effectively a no-op, and
+> that's correct.' Who are you even talking to."*
+
+And the answer, in the session's own words:
+
+> **"You're right, and that's my fault. You told me at the start to explain things
+> like you're not an engineer, and I drifted into talking to myself."**
+
+**A persona request is about RIGOUR — measurement, no hand-waving, real
+architecture. It is never about vocabulary.** A recommendation the founder cannot
+read is worth nothing to them, however well reasoned.
+
+**Where each register belongs:**
+
+| Surface | Audience | Register |
+|---|---|---|
+| Code comments, commit messages, `docs/` | An engineer, later | Precise and technical. Do not dumb these down |
+| **The chat reply** | **The founder** | **Plain English. Name the thing, say what changed for a user, say what they must do next** |
+
+Words that need expanding or avoiding in a reply: *no-op, RLS, policy, migration,
+CORS, MV3, dispersion, positive control, blast radius, idempotent, fail-open*.
+Where one is unavoidable, define it in the same sentence. "Deploy" means putting
+new code on the live website — say so the first time it comes up in a session.
+
+If the founder says **"plain English"**, the last answer was too dense: rewrite
+it, do not defend it.
