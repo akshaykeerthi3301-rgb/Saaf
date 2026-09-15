@@ -78,22 +78,27 @@ async function main() {
   )
 
   /**
-   * ⚠️ THE INDEX POLICIES ARE `using (true)`, AND NOTHING HERE EVER EXERCISED
-   * THEM. `roles` and `role_requirements` grant SELECT to every authenticated
-   * account (0002:16-20). That is correct today because every authenticated
-   * account is a candidate — and it is the single assumption a recruiter-side
-   * product breaks on day one, because `roles` carries company_name and
-   * apply_url and largely reconstructs the registry the `boards` table exists
-   * to protect.
+   * ⚠️ THE INDEX POLICIES WERE `using (true)` UNTIL MIGRATION 0026, AND NOTHING
+   * HERE EVER EXERCISED THEM. `roles` and `role_requirements` granted SELECT to
+   * every authenticated account (0002:16-20), which was correct only while every
+   * authenticated account was a candidate — the single assumption a recruiter
+   * account breaks on day one, because `roles` carries company_name and
+   * apply_url and largely reconstructs the registry `boards` exists to protect.
    *
-   * Asserting anon gets nothing is the half that can be checked before that
-   * account type exists. When it does exist, the probe to add here is R reading
-   * `roles` — and this comment is the reason it will be obvious that it must.
+   * 0026 (applied 2026-09-15) narrows both to `public.account_type() =
+   * 'candidate'`. The check below is the anon half; the half that matters is the
+   * POSITIVE control further down, because the failure mode of that migration is
+   * every shortlist silently returning zero rows rather than any error.
+   *
+   * ⚠️ STILL MISSING, AND IT WILL MATTER: no probe holds a RECRUITER jwt, because
+   * no account can be one yet. The policy fails OPEN towards candidates by
+   * design, so the first recruiter account is what actually tests it. Add user R
+   * here on the day that becomes possible.
    */
   const anonRoles = await anon('roles?select=id,company_name&limit=1')
   const anonRoleRows = anonRoles.status < 400 ? await anonRoles.json() : []
   check(
-    'roles: anon is DENIED (policy is `to authenticated using (true)` — every signed-in account reads the whole index)',
+    'roles: anon is DENIED (policy is `account_type() = candidate` since 0026)',
     anonRoles.status >= 400 || (Array.isArray(anonRoleRows) && anonRoleRows.length === 0),
     `http ${anonRoles.status}`,
   )

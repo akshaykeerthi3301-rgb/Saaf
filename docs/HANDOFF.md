@@ -136,15 +136,22 @@ index before believing it**, and the four open judgment calls at the end of Phas
 
 ---
 
-## ⏳ Migration 0026 — PENDING, and it is the highest-risk one yet
+## ✅ Migration 0026 — applied by the founder, 2026-09-15
 
-`supabase/migrations/0026_recruiter_foundation.sql`. **Apply by hand in the
-Supabase SQL editor**, then immediately:
+`supabase/migrations/0026_recruiter_foundation.sql`. **Applied and verified.**
 
-```
-npm run verify:rls        # the positive control below is the one that matters
-```
-…and **open `/today` in a browser** while signed in.
+| Check | Result |
+|---|---|
+| `candidate_discoverability` exists | ✅ — proves the migration actually ran, which the positive control alone does not |
+| `npm run verify:rls` | ✅ all checks, including `roles: a signed-in CANDIDATE can still read the index (0026 positive control)` |
+| `/today` in a browser, signed in | ✅ **456 matched roles, 219 in Bengaluru**, scores intact |
+
+⚠️ **Both checks were needed and neither was sufficient.** The positive control
+passes identically whether the new policy works *or* the migration never ran, so
+the table-existence probe is what distinguishes them. And `verify:rls` mints a
+fresh probe user with no shortlist, so it proves `roles` reads but never
+exercises the `gate_results → roles` join that `/today` actually depends on —
+which is the join a policy problem would bite first.
 
 ⚠️ **THE FAILURE MODE IS NOT AN ERROR.** This migration replaces the two policies
 that let a signed-in account read the index — `roles` and `role_requirements`
