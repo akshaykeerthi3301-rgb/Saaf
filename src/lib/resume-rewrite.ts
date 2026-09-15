@@ -52,30 +52,65 @@ export type RewriteResult = {
   changes: BulletChange[]
   /** Rewrites the guard refused, lifted out of `changes` for the UI. */
   reverted: BulletChange[]
-  provider: Provider
+  /**
+   * Which provider answered — or **null when no model ran at all**, which is
+   * the skills-only path. A surface that prints a provider label must check
+   * this: naming a provider that was never called would be a small lie on the
+   * one screen whose whole argument is that the model boundary is visible.
+   */
+  provider: Provider | null
   /** Skills reordered to lead with the ones the role actually names. */
   skillsReordered: boolean
 }
 
 export class RewriteError extends Error {}
 
-const SCHEMA = {
-  type: 'object',
-  properties: {
-    summary: { type: 'string' },
-    entries: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          index: { type: 'number' },
-          bullets: { type: 'array', items: { type: 'string' } },
-        },
-        required: ['index', 'bullets'],
-      },
+/**
+ * Which sections the MODEL is asked to rewrite.
+ *
+ * ⚠️ SKILLS IS ABSENT ON PURPOSE AND THAT IS THE WHOLE IDEA. `reorderSkills()`
+ * is a stable sort against words the posting already uses — it always runs, it
+ * costs nothing, and it cannot fabricate. Only prose needs a model, so only
+ * prose can be scoped. A scope with neither flag set makes **no model call at
+ * all**; see the early return in `rewriteResume`.
+ *
+ * ⚠️ THE DEFAULT IS BOTH, WHICH IS THE OLD WHOLE-DOCUMENT BEHAVIOUR. Callers
+ * that do not care keep working unchanged; the Studio's stage 3 is what
+ * narrows it.
+ */
+export type RewriteScope = { summary?: boolean; experience?: boolean }
+
+const ENTRIES_SCHEMA = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      index: { type: 'number' },
+      bullets: { type: 'array', items: { type: 'string' } },
     },
+    required: ['index', 'bullets'],
   },
-  required: ['summary', 'entries'],
+}
+
+/**
+ * ⚠️ THE SCHEMA NARROWS WITH THE SCOPE, IT DOES NOT JUST FILTER AFTERWARDS.
+ * Asking for `entries` and discarding them would pay for every bullet in output
+ * tokens and then throw them away — the opposite of what stage 3 promises. A
+ * summary-only rewrite must not carry an experience array in `required`, or a
+ * schema-constrained provider is obliged to generate one.
+ */
+function schemaFor(scope: Required<RewriteScope>) {
+  const properties: Record<string, unknown> = {}
+  const required: string[] = []
+  if (scope.summary) {
+    properties.summary = { type: 'string' }
+    required.push('summary')
+  }
+  if (scope.experience) {
+    properties.entries = ENTRIES_SCHEMA
+    required.push('entries')
+  }
+  return { type: 'object', properties, required }
 }
 
 const SYSTEM =
@@ -215,7 +250,12 @@ export function rewriteFailure(
   return groundingFailure(masked, me, role)
 }
 
-function prompt(sections: ResumeSections, me: CandidateFacts, role: RoleFacts): string {
+function prompt(
+  sections: ResumeSections,
+  me: CandidateFacts,
+  role: RoleFacts,
+  scope: Required<RewriteScope>,
+): string {
   const entries = sections.experience
     .map((e, i) => {
       const head = [e.title, e.employer, e.dates].filter(Boolean).join(' · ')
@@ -236,10 +276,24 @@ function prompt(sections: ResumeSections, me: CandidateFacts, role: RoleFacts): 
     `years of experience: ${me.yearsExperience ?? 'unknown'}`,
     `skills: ${me.skills.join(', ') || 'unknown'}`,
     '',
+    /**
+     * ⚠️ OUT-OF-SCOPE SECTIONS ARE STILL SHOWN, AND THAT IS NOT WASTE. The
+     * summary summarises the experience, so rewriting it without seeing the
+     * bullets produces a paragraph grounded in nothing — and `rewriteFailure()`
+     * would then reject it, spending the tokens for no output. What the scope
+     * changes is what the model is asked to RETURN, which is where the output
+     * cost and the schema obligation live.
+     */
     sections.summary ? `THEIR CURRENT SUMMARY:\n${sections.summary}` : 'They have no summary section.',
     '',
     'THEIR EXPERIENCE, BY ENTRY:',
     entries,
+    '',
+    scope.summary && scope.experience
+      ? 'REWRITE THE SUMMARY AND EVERY BULLET.'
+      : scope.summary
+        ? 'REWRITE THE SUMMARY ONLY. Do not return entries; the bullets above are context and stay exactly as they are.'
+        : 'REWRITE THE BULLETS ONLY. Do not return a summary; the one above stays exactly as it is.',
     '',
     'REWRITE RULES — these are absolute:',
     '1. Rewrite each bullet using ONLY the facts in that same bullet. You may reorder,',
@@ -257,7 +311,11 @@ function prompt(sections: ResumeSections, me: CandidateFacts, role: RoleFacts): 
     '8. The summary is two or three sentences, in the first person implied (no "I"),',
     '   naming the candidate\'s real title, real years and real domain.',
     '',
-    'Return JSON: { "summary": string, "entries": [{ "index": number, "bullets": string[] }] }',
+    scope.summary && scope.experience
+      ? 'Return JSON: { "summary": string, "entries": [{ "index": number, "bullets": string[] }] }'
+      : scope.summary
+        ? 'Return JSON: { "summary": string }'
+        : 'Return JSON: { "entries": [{ "index": number, "bullets": string[] }] }',
   ].join('\n')
 }
 
@@ -282,10 +340,43 @@ export async function rewriteResume(input: {
   sections: ResumeSections
   facts: CandidateFacts
   role: RoleFacts
+  /** Defaults to the whole document, which is the behaviour this always had. */
+  scope?: RewriteScope
 }): Promise<RewriteResult | null> {
   const { sections, facts, role } = input
+  const scope: Required<RewriteScope> = {
+    summary: input.scope?.summary ?? true,
+    experience: input.scope?.experience ?? true,
+  }
 
-  if (sections.experience.length === 0) {
+  /**
+   * ⚠️ THE FREE PATH, AND IT RETURNS BEFORE ANY MODEL IS TOUCHED. A candidate
+   * who picked only "Skills" in stage 3 has asked for a stable sort, and stage
+   * 3 promised them in writing that no model would run. Reaching the provider
+   * here — even to discard the answer — would make that copy false and would
+   * spend ~1,360 tokens of an 8,000/minute site-wide ceiling on nothing.
+   *
+   * `provider` is null rather than a label, because naming a provider that was
+   * never called is exactly the kind of small lie this surface exists to avoid.
+   */
+  if (!scope.summary && !scope.experience) {
+    const { skills, changed } = reorderSkills(sections.skills, role)
+    return {
+      sections: { ...sections, skills },
+      changes: [],
+      reverted: [],
+      provider: null,
+      skillsReordered: changed,
+    }
+  }
+
+  /**
+   * ⚠️ THE GUARD IS SCOPED TOO. Refusing a summary-only rewrite because the
+   * document has no experience section would block the one thing such a
+   * candidate can still improve. It only applies when bullets are what was
+   * asked for.
+   */
+  if (scope.experience && sections.experience.length === 0) {
     throw new RewriteError(
       'We could not find a work-experience section to rewrite. That is itself the finding — ' +
         'a system reading this file finds no roles either.',
@@ -293,9 +384,9 @@ export async function rewriteResume(input: {
   }
 
   const answer = await callJsonModel({
-    prompt: prompt(sections, facts, role),
+    prompt: prompt(sections, facts, role, scope),
     system: SYSTEM,
-    schema: SCHEMA,
+    schema: schemaFor(scope),
     temperature: 0.2,
     /**
      * ⚠️ SIZED FOR THE SLOW LEG, NOT THE FAST ONE. Groq answers this prompt in
@@ -329,7 +420,8 @@ export async function rewriteResume(input: {
   }
 
   const changes: BulletChange[] = []
-  const experience = sections.experience.map((entry, i) => {
+  // Out of scope means untouched, not "rewritten and rejected".
+  const experience = !scope.experience ? sections.experience : sections.experience.map((entry, i) => {
     const proposed = byIndex.get(i) ?? []
     const bullets = entry.bullets.map((original, j) => {
       const next = proposed[j]
@@ -349,11 +441,26 @@ export async function rewriteResume(input: {
    */
   const wholeText = sections.experience.flatMap((e) => e.bullets).join(' ')
   let summary = sections.summary
-  if (typeof parsed.summary === 'string' && parsed.summary.trim().length > 20) {
+  if (scope.summary && typeof parsed.summary === 'string' && parsed.summary.trim().length > 20) {
     const candidate = parsed.summary.trim()
     const fail = rewriteFailure(candidate, `${wholeText} ${sections.summary ?? ''}`, facts, role)
+    /**
+     * ⚠️ A KEPT SUMMARY IS NOW RECORDED TOO, AND IT NEVER USED TO BE. Only
+     * REJECTED summaries were pushed here, so a summary the guard accepted
+     * changed the document and appeared in no change list. That was invisible
+     * while every rewrite also rewrote bullets — the list was never empty. It
+     * stopped being invisible the moment TASK-085 made "summary only" a thing a
+     * candidate can choose: they pressed "Rewrite your summary", it worked, and
+     * the result screen showed them nothing at all.
+     */
+    changes.push({
+      entry: -1,
+      original: sections.summary ?? '',
+      rewritten: candidate,
+      kept: !fail,
+      reason: fail ?? undefined,
+    })
     if (!fail) summary = candidate
-    else changes.push({ entry: -1, original: sections.summary ?? '', rewritten: candidate, kept: false, reason: fail })
   }
 
   const { skills, changed } = reorderSkills(sections.skills, role)

@@ -192,7 +192,46 @@ scratchpad; if it is lost the extension ID changes and every install breaks.**
 
 ---
 
-## ⚡ Resuming after TASK-084? Phase 9 is 4/5 and NONE of it is live.
+## ⚡ PHASE 9 IS COMPLETE (5/5) AND NONE OF IT IS LIVE.
+
+**The whole Résumé Studio — five stages, the gap table, the section picker, the
+scoped rewrite — is built, tested and pushed to both remotes. Production still
+serves the OLD three-screen report.** It cannot ship until migration `0027` is
+applied; see the ⛔ section below, unchanged and still correct. That migration
+has now been outstanding for seven sessions and is the only thing between this
+work and a user.
+
+**What is live vs. what is written, 2026-09-15:** nothing from Phase 9 is live.
+Every stage was walked in a local browser against the dev server, with and
+without a target role, and both rewrite paths were exercised for real. That is
+not production.
+
+### The one thing to know before touching the rewrite
+
+**Scoping the prose barely saves anything, and the copy must not claim it does.**
+Measured with a pasted posting: summary-only **8%** cheaper, experience-only
+**2%**. The prompt is ~895 of ~997 tokens and cannot shrink — a summary
+rewritten without sight of the bullets is grounded in nothing and
+`rewriteFailure()` rejects it, spending the tokens for no output. **Skills-only
+is the only real saving (100%) because it makes no model call**, and a test
+asserts zero calls because stage 3 prints that promise on screen.
+
+⚠️ **The rate limit is now charged ONLY when a model will run.** Do not move
+`checkRateLimit` back to the top of `optimise-resume.ts` — it was there, and it
+locked candidates out of the free skills reorder for seven minutes.
+
+⚠️ **`provider` can be `null`.** Any surface printing a provider label must
+check it, or it will claim "Written with Groq" over a stable sort.
+
+⚠️ **THE PLAN OF RECORD HAS NOW BEEN MEASURABLY WRONG FIVE TIMES** — Stage W's
+two, Stage X's cut fourth row, Stage Y's "24 of 31 checks", and Stage Z's cost
+premise. Every one was caught by measuring or by opening the page, never by a
+test. `npm test` is 630 green and would have shipped all five. **Point it at the
+index or at a browser before believing it.**
+
+---
+
+## ⚡ Resuming after TASK-084? (superseded by the block above)
 
 **The Résumé Studio's first four stages are built, tested and committed. They
 are not deployed, and they cannot be until migration `0027` is applied** — see

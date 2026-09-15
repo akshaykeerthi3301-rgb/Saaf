@@ -103,6 +103,9 @@ type Optimised = {
   reverted: BulletChange[]
   projected: AtsReport
   providerLabel: string
+  /** Null when no model ran — the skills-only path. */
+  provider: 'model' | null
+  rewrote: ('summary' | 'experience')[]
   target: 'job-description' | 'role-vocabulary'
 }
 
@@ -266,6 +269,12 @@ export function AtsFlow() {
         resumeText,
         targetRole,
         jdText: jdText.trim() || undefined,
+        /**
+         * ⚠️ UNDEFINED WHEN NOTHING WAS PICKED, WHICH MEANS THE WHOLE DOCUMENT.
+         * A candidate who skipped stage 3 still gets the old behaviour rather
+         * than a rewrite that silently does nothing.
+         */
+        sections: selection.sections.size > 0 ? [...selection.sections] : undefined,
       })
       if (!res.ok) {
         setError(res.error)
@@ -277,6 +286,8 @@ export function AtsFlow() {
         reverted: res.reverted,
         projected: res.projected,
         providerLabel: res.providerLabel,
+        provider: res.provider,
+        rewrote: res.rewrote,
         target: res.target,
       })
       setStep('preview')
@@ -494,6 +505,44 @@ export function AtsFlow() {
       URL.revokeObjectURL(url)
     })
   }
+
+  /**
+   * What the rewrite button will actually do, given stage 3's answer.
+   *
+   * ⚠️ IT NAMES THE SECTIONS RATHER THAN SAYING "REWRITE EVERYTHING". The
+   * founder's complaint about the old screen was a take-it-or-leave-it button
+   * at the page bottom; a candidate who ticked Summary should read "Rewrite
+   * your summary", not be asked again to rewrite the whole document.
+   */
+  const rewriteScope = (() => {
+    const picked = [...selection.sections]
+    const prose = picked.filter((k) => k !== 'skills')
+    if (picked.length === 0) {
+      return {
+        usesModel: true,
+        cta: 'Rewrite everything',
+        label: 'Or rewrite the whole thing at once',
+        body: 'Every line, in one pass.',
+      }
+    }
+    if (prose.length === 0) {
+      return {
+        usesModel: false,
+        cta: 'Apply the skills reorder',
+        label: 'Reorder your skills',
+        body: 'A sort, not a rewrite — nothing is added and nothing is removed.',
+      }
+    }
+    const names = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(
+      prose.map((k) => (k === 'summary' ? 'your summary' : 'your experience')),
+    )
+    return {
+      usesModel: true,
+      cta: `Rewrite ${names}`,
+      label: `Rewrite ${names}`,
+      body: `Only ${names} — the rest of your document is left exactly as it is.`,
+    }
+  })()
 
   const stage = stageIndex(step)
   const onStage = step !== 'input'
@@ -943,13 +992,32 @@ export function AtsFlow() {
                 somebody who does not want to work through the list. */}
             <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6">
               <h3 className="text-lg font-semibold tracking-[-0.03em] text-primary">
-                Or rewrite the whole thing at once
+                {rewriteScope.label}
               </h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Every line rewritten against{' '}
-                {jdText.trim() ? 'the job description you pasted' : `${targetRole || 'the role'} postings we index`}, in
-                one pass, with each change shown beside what it replaced.
+                {rewriteScope.body}{' '}
+                Rewritten against{' '}
+                {jdText.trim() ? 'the job description you pasted' : `${targetRole || 'the role'} postings we index`}, with
+                each change shown beside what it replaced.
               </p>
+              {/*
+                ⚠️ NO "CHEAPER" CLAIM HERE, AND THAT IS A MEASUREMENT, NOT
+                MODESTY. Scoping the prose was expected to cut cost sharply.
+                Measured 2026-09-15: with a pasted posting a summary-only
+                rewrite is **8% cheaper** and experience-only **2%**, because
+                the prompt is ~895 of ~997 tokens and it must still carry the
+                whole document — a summary rewritten without sight of the
+                bullets is grounded in nothing and the guard rejects it. The
+                only real saving is skills-only, which reaches no provider at
+                all. Telling a candidate that picking one section "saves a lot"
+                would be a number we cannot support.
+              */}
+              {!rewriteScope.usesModel && (
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  You picked only Skills, so no model runs at all — this is the reorder from the
+                  previous step and nothing else.
+                </p>
+              )}
               {!targetRole && (
                 <p className="mt-3 text-xs font-semibold text-primary">Pick a target role first.</p>
               )}
@@ -963,7 +1031,7 @@ export function AtsFlow() {
                   ) : (
                     <span className="inline-flex items-center gap-2">
                       <Sparkles className="size-4" aria-hidden="true" />
-                      Rewrite everything
+                      {rewriteScope.cta}
                     </span>
                   )}
                 </Button>
@@ -1015,7 +1083,16 @@ export function AtsFlow() {
               {optimised.target === 'job-description'
                 ? 'Tailored to the job description you pasted.'
                 : `Tailored to ${targetRole} postings.`}{' '}
-              Written with {optimised.providerLabel}.
+              {/*
+                ⚠️ NO PROVIDER NAME WHEN NO PROVIDER RAN. The skills-only path
+                returns `provider: null`, and printing "Written with Groq" over
+                a stable sort would be a false claim on the one screen whose
+                whole argument is that the model boundary is visible where it
+                actually is.
+              */}
+              {optimised.provider
+                ? `Written with ${optimised.providerLabel}.`
+                : 'No model ran — your skills were reordered and nothing else was touched.'}
             </p>
           </div>
 

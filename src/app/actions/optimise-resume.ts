@@ -7,7 +7,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { extractFields } from '@/lib/parse/extract'
 import { PROVIDER_LABEL, ModelBusyError } from '@/lib/parse/llm'
 import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
-import { rewriteResume, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
+import { rewriteResume, RewriteError, type BulletChange, type RewriteScope } from '@/lib/resume-rewrite'
 import { checkResume, roleVocabulary, MIN_RESUME_CHARS, MAX_RESUME_CHARS, type AtsReport } from '@/lib/ats-check'
 import type { CandidateFacts, RoleFacts } from '@/lib/tailor'
 
@@ -45,6 +45,15 @@ const schema = z.object({
   /** Optional. Present means "tailor to this posting" rather than to the role. */
   jdText: z.string().trim().max(20_000).optional(),
   company: z.string().trim().max(200).optional(),
+  /**
+   * Which sections the Résumé Studio's stage 3 selected.
+   *
+   * ⚠️ OMITTED MEANS THE WHOLE DOCUMENT, WHICH IS THE OLD BEHAVIOUR. Every
+   * caller that predates the Studio keeps working. `skills` is accepted but
+   * needs no model — `reorderSkills()` always runs — so a request naming only
+   * skills reaches no provider at all.
+   */
+  sections: z.array(z.enum(['summary', 'skills', 'experience'])).optional(),
 })
 
 export type OptimiseResumeResponse =
@@ -60,6 +69,10 @@ export type OptimiseResumeResponse =
       providerLabel: string
       /** What the rewrite was aimed at, named honestly on the surface. */
       target: 'job-description' | 'role-vocabulary'
+      /** Null when no model ran — the skills-only path. The surface says so. */
+      provider: 'model' | null
+      /** Which sections were actually put through a model. */
+      rewrote: ('summary' | 'experience')[]
     }
   | { ok: false; error: string }
 
@@ -85,24 +98,50 @@ async function callerKey(): Promise<string> {
 export async function optimiseResume(
   input: z.input<typeof schema>,
 ): Promise<OptimiseResumeResponse> {
-  const limit = checkRateLimit(await callerKey(), OPTIMISE_LIMIT)
-  if (!limit.ok) {
-    const mins = Math.ceil(limit.retryAfterSeconds / 60)
-    return {
-      ok: false,
-      error:
-        `You have rewritten a few résumés in a short while. Try again in ` +
-        `${mins === 1 ? 'a minute' : `${mins} minutes`}. The check itself is not limited — ` +
-        `re-run that as often as you like while you edit.`,
-    }
-  }
-
   const parsed = schema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'We could not read that.' }
   }
 
-  const { resumeText, targetRole, jdText, company } = parsed.data
+  const { resumeText, targetRole, jdText, company, sections: chosen } = parsed.data
+
+  /**
+   * ⚠️ THE SCOPE IS WHAT MAKES THE RATE LIMIT FAIR. Three rewrites per ten
+   * minutes was sized against a whole-document pass; a candidate who only wants
+   * their summary sharpened was paying the same allowance for a tenth of the
+   * work. Narrowing the scope narrows the spend — see the measured figures in
+   * PROJECT-STATE Stage Z.
+   */
+  const scope: RewriteScope | undefined = chosen
+    ? { summary: chosen.includes('summary'), experience: chosen.includes('experience') }
+    : undefined
+
+  /**
+   * ⚠️ THE LIMIT IS CHARGED ONLY WHEN A MODEL WILL ACTUALLY RUN, AND THE
+   * ORDERING HERE IS THE FIX. This check used to be the first statement in the
+   * function, before the input was even parsed — correct when every call was a
+   * whole-document rewrite. TASK-085 made "Skills only" a thing a candidate can
+   * pick, and that path reaches no provider and spends no tokens, so charging
+   * it locked people out of a free feature: found in a browser on 2026-09-15
+   * after three skills reorders returned "try again in 7 minutes".
+   *
+   * The allowance exists to protect an 8,000 tokens/minute ceiling. Something
+   * that consumes none of it has nothing to protect against.
+   */
+  const usesModel = !scope || scope.summary || scope.experience
+  if (usesModel) {
+    const limit = checkRateLimit(await callerKey(), OPTIMISE_LIMIT)
+    if (!limit.ok) {
+      const mins = Math.ceil(limit.retryAfterSeconds / 60)
+      return {
+        ok: false,
+        error:
+          `You have rewritten a few résumés in a short while. Try again in ` +
+          `${mins === 1 ? 'a minute' : `${mins} minutes`}. The check itself is not limited — ` +
+          `re-run that as often as you like while you edit, and reordering your skills is always free.`,
+      }
+    }
+  }
 
   try {
     const sections = parseSections(resumeText)
@@ -161,7 +200,7 @@ export async function optimiseResume(
           : null,
     }
 
-    const result = await rewriteResume({ sections, facts, role })
+    const result = await rewriteResume({ sections, facts, role, scope })
     if (!result) {
       return {
         ok: false,
@@ -203,7 +242,18 @@ export async function optimiseResume(
       changes: result.changes,
       reverted: result.reverted,
       projected,
-      providerLabel: PROVIDER_LABEL[result.provider],
+      /**
+       * ⚠️ EMPTY STRING WHEN NOTHING RAN, NOT A PROVIDER NAME. `result.provider`
+       * is null on the skills-only path; indexing PROVIDER_LABEL with it would
+       * have thrown, and defaulting to a name would have printed "rewritten by
+       * Groq" over a stable sort that touched no model.
+       */
+      providerLabel: result.provider ? PROVIDER_LABEL[result.provider] : '',
+      provider: result.provider ? 'model' : null,
+      rewrote: [
+        ...(scope?.summary ?? true ? (['summary'] as const) : []),
+        ...(scope?.experience ?? true ? (['experience'] as const) : []),
+      ],
       target: jdText?.trim() ? 'job-description' : 'role-vocabulary',
     }
   } catch (e) {

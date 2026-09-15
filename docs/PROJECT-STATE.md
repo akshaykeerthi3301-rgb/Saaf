@@ -1771,6 +1771,63 @@ Git`, eight in and eight out.
 **`npm run bench` DELTA none**, 26 documents. All five stages walked in a
 browser, with and without a target role. **No migration.**
 
+### Stage Z — the scoped rewrite, and a saving that mostly is not there (2026-09-15)
+
+TASK-085, the last of Phase 9. `rewriteResume()` takes a `scope` so stage 3's
+selection decides what the model is asked to return, and `optimise-resume.ts`
+passes it through.
+
+⚠️ **THE PLAN'S PREMISE — "cost tracks what was selected" — IS MUCH WEAKER THAN
+IT SOUNDS, AND THE MEASUREMENT IS THE POINT OF THIS ENTRY.** Measured
+2026-09-15 on a short CV with a pasted posting:
+
+| Scope | Model call | Prompt | Output | Total | Saving |
+|---|---|---|---|---|---|
+| summary + experience (old) | yes | 895 | 102 | 997 | — |
+| experience only | yes | 895 | 85 | 980 | **2%** |
+| summary only | yes | 895 | 18 | 913 | **8%** |
+| **skills only** | **NO** | 0 | 0 | **0** | **100%** |
+
+Without a posting the prompt drops to ~539 and summary-only reaches 13%. **The
+prompt dominates and cannot shrink**: a summary summarises the experience, so
+rewriting it without sight of the bullets produces a paragraph grounded in
+nothing, which `rewriteFailure()` then rejects — spending the tokens for no
+output. What the scope narrows is what the model must RETURN, and the schema is
+narrowed with it so a provider is not obliged to generate bullets we discard.
+
+**So the real win is the skills-only path making no call at all**, which is what
+makes stage 3's printed promise ("no model") true rather than decorative. A test
+asserts zero calls; `provider` comes back `null` and the result screen says *"No
+model ran"* instead of naming a provider that never answered.
+
+⚠️ **TWO DEFECTS THIS TASK EXPOSED RATHER THAN INTRODUCED, BOTH FOUND IN A
+BROWSER:**
+
+1. **A KEPT summary rewrite was recorded nowhere.** `changes.push` ran only when
+   the guard REJECTED a summary, so an accepted one changed the document and
+   appeared in no change list. Invisible while every rewrite also rewrote
+   bullets — the list was never empty. Glaring the moment "summary only" became
+   selectable: the candidate pressed the button, it worked, and the result
+   screen showed them nothing.
+2. **The rate limit charged the free path.** `checkRateLimit` was the first
+   statement in the action, before the input was parsed — correct when every
+   call was a whole-document rewrite. Three skills reorders returned *"try again
+   in 7 minutes"* for work that reaches no provider. The allowance exists to
+   protect an 8,000 tokens/minute ceiling; something consuming none of it has
+   nothing to protect against. It is now charged only when a model will run,
+   verified by reordering skills successfully while still inside a live lockout.
+
+**Not built, and said so rather than shipped worse:** the conversational refine
+box. It is a chat loop against a 1,360-token budget with no upper bound on
+turns, and it is the one mechanic in the competitor's screenshots with no
+grounded equivalent here. Revisit when there is a paid tier.
+
+**Gates:** `npm test` 630 (was 621, +9) · `npm run lint` 0 errors ·
+`npm run typecheck` clean · `npm run verify:rls` all checks ·
+**`npm run bench` DELTA none**, 26 documents. Walked in a browser: skills-only
+(no model, no rate-limit charge), summary-only (model ran, every bullet
+untouched). **No migration.**
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.
