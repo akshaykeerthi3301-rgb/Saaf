@@ -1,5 +1,7 @@
 'use client'
 
+import { Gauge } from '@/components/ui/gauge'
+import { Card } from '@/components/ui/card'
 import { Briefcase, Loader2 } from 'lucide-react'
 import type { AtsReport, AtsCategory } from '@/lib/ats-check'
 import type { IndexMatchCount } from '@/lib/services/index-match'
@@ -83,8 +85,14 @@ export function ReportRail({
 
   return (
     <aside className="flex flex-col gap-5 lg:sticky lg:top-6 lg:self-start">
-      <Gauge score={score} baseline={moved ? baseline : undefined} />
-
+      {/* The card wrapper stays here; the arc itself is now ui/gauge.tsx so
+          the Résumé Studio draws the same one rather than a third. */}
+      <Card className="text-center">
+        <Gauge score={score} baseline={baseline} label="Your ATS score" caption="out of 100" />
+        {moved ? (
+          <p className="font-mono text-xs tabular-nums text-muted-foreground">as you fix</p>
+        ) : null}
+      </Card>
       {/*
         ⚠️ THE ONLY NUMBER ON THIS PAGE THAT IS ABOUT THE MARKET RATHER THAN THE
         FILE, and the one a résumé tool without an index cannot print. It sits
@@ -330,42 +338,6 @@ export function ReportRail({
         link — we ask you for it and will not invent one.
       </p>
     </aside>
-  )
-}
-
-/** Their gauge, drawn as a half-ring. SVG so it inherits the theme tokens. */
-function Gauge({ score, baseline }: { score: number; baseline?: number }) {
-  const r = 52
-  const circumference = Math.PI * r
-  const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference
-
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Your ATS score
-      </span>
-      <svg viewBox="0 0 130 74" className="mx-auto mt-2 w-[150px]" role="img" aria-label={`${score} out of 100`}>
-        <path d="M13 65 A 52 52 0 0 1 117 65" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="10" strokeLinecap="round" />
-        <path
-          d="M13 65 A 52 52 0 0 1 117 65"
-          fill="none"
-          stroke="var(--color-accent)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${circumference}`}
-        />
-        <text x="65" y="60" textAnchor="middle" className="fill-primary font-mono" fontSize="26" fontWeight="500">
-          {score}
-        </text>
-      </svg>
-      {baseline !== undefined ? (
-        <p className="font-mono text-xs tabular-nums text-accent">
-          {baseline} → {score} as you fix
-        </p>
-      ) : (
-        <p className="font-mono text-xs tabular-nums text-muted-foreground">out of 100</p>
-      )}
-    </div>
   )
 }
 
