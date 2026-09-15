@@ -35,6 +35,28 @@ API. Reading one in the user's own browser adds no access we do not already have
 | Never sends | Browsing history, page URLs from unlisted hosts, anything from an unlisted host |
 | Never does | Click, submit, apply, or navigate on your behalf |
 
+## Form autofill
+
+Press **“Fill what we can”** on a posting. It is a button and never automatic —
+filling a form on page load is both surprising and the shape of the auto-apply
+behaviour this product refuses.
+
+It fills name, email, phone, city, current title and employer, years of
+experience, notice period, LinkedIn and portfolio — from the details you typed
+into the extension, which never leave your machine.
+
+**It will not fill, and tells you so on the card:**
+
+| Refused | Why |
+|---|---|
+| Salary and CTC expectations | Yours to set, and we hold no figure we trust |
+| Gender, caste, religion, marital status, disability, veteran status, date of birth | Yours alone to answer, and several are unlawful to require in India |
+| "Why do you want to work here", cover letters, essays | Free text the employer asked *you* |
+| Passwords, Aadhaar, PAN, bank details | Never entered by us |
+
+It also never overwrites an answer you already typed, never touches a dropdown
+(a wrong choice there is invisible to you), and **never presses Submit**.
+
 The server holds nothing. `/api/extension/score` reads no database and writes no
 row — it scores the text in the request and forgets it, which is why the
 extension needs no account.

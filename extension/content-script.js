@@ -54,6 +54,10 @@ function mount() {
       .q{margin-top:8px;padding:7px 9px;background:#f8fafc;border-radius:8px;
         font-size:11px;color:#475569;max-height:82px;overflow:auto}
       button{all:unset;cursor:pointer;color:#0f766e;font-weight:600;font-size:11px;margin-top:10px}
+      button:disabled{color:#94a3b8;cursor:default}
+      .fill{margin-top:10px;padding-top:9px;border-top:1px solid #f1f5f9}
+      .refused{margin-top:6px;font-size:10px;color:#64748b}
+      .refused li{margin:2px 0}
     </style>
     <div class="card"><div class="muted">Saaf</div><div id="body">Scoring…</div></div>`
   return root
@@ -78,12 +82,53 @@ function render(root, data) {
     ${quote ? `<div class="q">Read from the posting: “${quote.slice(0, 180)}”</div>` : ''}`
 }
 
+/**
+ * The autofill control.
+ *
+ * ⚠️ IT IS A BUTTON, AND IT IS NEVER AUTOMATIC. Filling a stranger's form on
+ * page load is both surprising and the shape of the auto-apply behaviour this
+ * product refuses. The candidate asks; we fill; they read it and press Submit
+ * themselves. Nothing here clicks, submits or navigates.
+ *
+ * ⚠️ THE REFUSALS ARE RENDERED, NOT SWALLOWED. A filler that silently leaves
+ * gaps looks broken. One that says "salary — yours to set" is making the
+ * argument the rest of the product makes.
+ */
+function mountAutofill(root) {
+  const doc = document
+  const hasForm = doc.querySelector('input[type="email"], input[type="tel"], form input[type="text"]')
+  if (!hasForm) return
+
+  const wrap = doc.createElement('div')
+  wrap.className = 'fill'
+  const btn = doc.createElement('button')
+  btn.textContent = 'Fill what we can →'
+  wrap.appendChild(btn)
+  root.querySelector('.card').appendChild(wrap)
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true
+    const { profile } = await chrome.storage.local.get('profile')
+    if (!profile || !profile.fullName) {
+      wrap.innerHTML = '<div class="refused">Add your details in the Saaf extension first.</div>'
+      return
+    }
+    const res = globalThis.SaafAutofill.fillForm(profile, doc)
+    const refusedList = res.refused.length
+      ? `<div class="refused">Left for you:<ul>${res.refused.map((r) => `<li>${r.reason}</li>`).join('')}</ul></div>`
+      : ''
+    wrap.innerHTML =
+      `<div class="refused"><b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> ` +
+      `Check them before you submit — we never do.</div>${refusedList}`
+  })
+}
+
 ;(function run() {
   const jdText = readPosting()
   if (jdText.length < MIN_JD_CHARS) return
   const root = mount()
   chrome.runtime.sendMessage(
     { type: 'saaf:score', jdText, jdTitle: readTitle() },
-    (data) => render(root, data),
+    (data) => { render(root, data); mountAutofill(root) },
   )
 })()
