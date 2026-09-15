@@ -72,9 +72,20 @@ SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
 # from bench/corpus/real/ into a world-readable /tmp directory ready for upload.
 # `.vercelignore` now also carries `bench/` — two layers, because the staged copy
 # sitting in /tmp is its own exposure even if Vercel never receives it.
+#
+# ⚠️ THE LEADING SLASH ON EACH DIRECTORY IS LOAD-BEARING. rsync matches an
+# UNANCHORED pattern at EVERY depth, not just the transfer root. On 2026-09-16
+# this list read `--exclude 'extension'` and `--exclude 'bench'` without the
+# slash, and they silently ate:
+#     src/app/api/extension/score/route.ts   ← the extension scoring API
+#     src/app/dev/bench/page.tsx
+# A missing route deploys as a 404, not as a failure, so the build would have
+# gone out green with the endpoint simply absent. Checks 2 and 3 below caught
+# it. `.git`, `node_modules` and `.next` stay UNANCHORED on purpose — a nested
+# one should also go. `.env`/`.env.*` likewise: every one, at any depth.
 rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
-  --exclude '.claude' --exclude 'productos' --exclude 'saaf-ai' --exclude 'docs' \
-  --exclude 'bench' --exclude 'extension' \
+  --exclude '/.claude' --exclude '/productos' --exclude '/saaf-ai' --exclude '/docs' \
+  --exclude '/bench' --exclude '/extension' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
 

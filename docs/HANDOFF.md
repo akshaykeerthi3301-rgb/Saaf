@@ -192,7 +192,45 @@ scratchpad; if it is lost the extension ID changes and every install breaks.**
 
 ---
 
-## ⚡ PHASE 9 IS COMPLETE (5/5) AND NONE OF IT IS LIVE.
+## ✅ DEPLOYED 2026-09-16 — `dpl_ARvB3JR54u71LNmvLYkNpvUCnbDN`
+
+**Migration `0027` was applied by the founder on 2026-09-15 and the whole
+Résumé Studio is LIVE at https://saaf-ten.vercel.app.** Verified in a browser
+against production, not by grepping HTML:
+
+| Checked on production | Result |
+|---|---|
+| Five-stage flow, `STEP 1 OF 5` → `STEP 4 OF 5` | ✅ |
+| Stage 1 headline | ✅ "A parser reads 100% … 35 of 40 checks came back clean" |
+| Gap table rows | ✅ title · experience · skills · qualification |
+| Section picker | ✅ |
+| `POST /api/extension/score` | ✅ **400**, i.e. the route exists and validated |
+| `/`, `/audit`, `/api/audit/today`, `/tools/ats-checker` | ✅ 200 |
+| `/api/dev-signin` | ✅ **404** — the dev door is correctly shut in production |
+
+⚠️ **THE PROFILE SAVE WAS NOT TESTED ON PRODUCTION AND HERE IS WHY.**
+`/api/dev-signin` 404s there by design, and email sign-in still needs the domain
+(TASK-075), so there is no way to reach `/profile` signed in. It **was** verified
+end to end on localhost against the SAME live Supabase database — all five
+columns written, read back, confirmed by query — and production runs the same
+code against the same schema. Treat it as verified-by-proxy, not verified-live.
+**Founder: sign in with Google and save your profile once to close this.**
+
+⚠️ **THE DEPLOY NEARLY SHIPPED A 404, AND THE RUNBOOK WAS THE BUG.** Its rsync
+excludes were UNANCHORED — `--exclude 'extension'` and `--exclude 'bench'` match
+that name at every depth, so they ate `src/app/api/extension/score/route.ts` and
+`src/app/dev/bench/page.tsx`. A missing route deploys as a 404, not a failure;
+the build would have gone out green with the scoring endpoint simply absent.
+**Checks 2 and 3 in the runbook caught it** — they exist for precisely this and
+they earned their place. `docs/RUNBOOK.md` now anchors every directory exclude
+with a leading slash. Do not remove those slashes.
+
+**Still true:** `main` is pushed to both remotes. Production is current with
+`main` as of this deploy.
+
+---
+
+## ⚡ (historic) PHASE 9 WAS COMPLETE AND NOT LIVE — resolved by the deploy above.
 
 **The whole Résumé Studio — five stages, the gap table, the section picker, the
 scoped rewrite — is built, tested and pushed to both remotes. Production still

@@ -1844,6 +1844,40 @@ grounded equivalent here. Revisit when there is a paid tier.
 (no model, no rate-limit charge), summary-only (model ran, every bullet
 untouched). **No migration.**
 
+### Deployed 2026-09-16 — the whole Résumé Studio, and a runbook that nearly shipped a 404
+
+**https://saaf-ten.vercel.app**, `dpl_ARvB3JR54u71LNmvLYkNpvUCnbDN`, region
+`bom1`. Migration `0027` applied by the founder 2026-09-15 and verified four
+ways — read, write, a positive control on each — before anything was deployed.
+Phase 9 (5/5) is live: the five-stage flow, the gap table, the section picker
+and the scoped rewrite.
+
+⚠️ **THE RUNBOOK'S RSYNC EXCLUDES WERE UNANCHORED, AND THAT IS A REAL DEFECT
+CAUGHT BY ITS OWN CHECKS.** rsync matches an unanchored pattern at every depth,
+so `--exclude 'extension'` and `--exclude 'bench'` — written to skip the
+top-level browser-extension folder and the résumé corpus — also removed:
+
+```
+src/app/api/extension/score/route.ts   ← the extension scoring API
+src/app/dev/bench/page.tsx
+```
+
+**A missing route deploys as a 404, not as an error.** The build would have
+succeeded, the deploy would have reported Ready, and the endpoint would simply
+not have existed. Checks 2 and 3 in the runbook — "an exclude ate a route" and
+"src/ differs from the repo" — are the only reason this was seen, and they were
+added for exactly this class of failure. Every directory exclude is now anchored
+with a leading slash; `.git`, `node_modules`, `.next` and `.env*` stay
+unanchored deliberately, because a nested one should also go.
+
+⚠️ **THE PROFILE SAVE IS VERIFIED BY PROXY, NOT ON PRODUCTION.**
+`/api/dev-signin` correctly 404s in production and email sign-in still needs the
+domain (TASK-075), so `/profile` cannot be reached signed in. The save was
+verified end to end on localhost against the same live Supabase database — five
+columns written, read back, confirmed by query — and production runs the same
+code against the same schema. That is a sound inference and it is not a
+live test; the distinction is recorded rather than blurred.
+
 ### Deployed 2026-09-14 — Stage R and Stage S, same day
 
 **https://saaf-ten.vercel.app**, deployment `dpl_5Ky6uK4tafD6gb9ujfdzvXusf29Z`.
