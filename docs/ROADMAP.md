@@ -520,6 +520,38 @@ then puts it in front of people.
   Files: `supabase/migrations/0026_recruiter_foundation.sql` ⏳ **PENDING — founder applies by hand**, `scripts/verify-rls.ts`
   Notes: **Ships no recruiter UI, no search index, and no way to become a recruiter.** Account type lives in `auth.users.app_metadata` and never in `profiles` — `profiles` is owner-writable through one `for all` policy, so a type column there would be **self-assignable privilege escalation**. `account_type()` defaults to `candidate` when the claim is absent, so the migration needs no backfill and changes nothing for any existing account. It **narrows `roles`/`role_requirements` from `using (true)`**, which is the highest-blast-radius change in Build #2: every authenticated read of the index goes through it, and the failure mode is not an error but **every shortlist silently returning zero rows**. ⚠️ **It fails OPEN towards candidates on purpose** — with zero recruiter accounts the cost of failing open is zero and the cost of failing closed is the whole product; revisit that line first when recruiters exist. `candidate_discoverability` is opt-in, default absent, revocable via `revoked_at` rather than delete (a withdrawal has to be provable), stores the consent text as shown, and has **no recruiter read policy at all**. `verify:rls` gains the positive control that catches the empty-shortlist failure. **Apply, then run `npm run verify:rls` and open `/today` in a browser.**
 
+### Plan vs. reality — reconciled 2026-09-15
+
+The Build #2 plan (`~/.claude/plans/…`, unversioned) proposed five epics over
+four weeks. **Two were cancelled by their own gates, two were pulled forward
+from Build #2.5, and one is untouched.** Recorded because the drift is the
+interesting part, and because the plan file will not survive the session.
+
+| Plan epic | Planned | Actual |
+|---|---|---|
+| 1 · Salary intelligence | P0, weeks 1–2 | ❌ **Cancelled by its own gate.** 2.2% of 3,468 India roles carry any salary. The gate said <5% means do not score |
+| 4 · Career Audit | P0, week 3 | ◐ **Partly, and differently.** Interview prep shipped (071 + 080). The *gating* half was closed without code: the wall already sits at the keep and the download |
+| 2 · Chrome extension | Build #2.5 | ✅ **Pulled forward.** Shipped as TASK-077 |
+| 5 · Recruiter bridge | Build #2.5 | ✅ **Pulled forward.** Shipped as TASK-079; migration `0026` pending |
+| 3 · Application copilot | P1, Build #2.5 | ⬜ **Untouched.** TASK-078, still capped by the 8,000 tokens/minute ceiling |
+
+**What the plan got right.** The measurement gates. Both cancellations were
+decided by a number rather than an argument, and both saved real weeks — the
+salary epic would have built a scorer component with nothing to read, and the
+interview-prep epic nearly shipped *"How much have you worked with Poland?"* to
+candidates.
+
+**What the plan got wrong.** It rated the extension and the recruiter bridge as
+weeks 5–10 work and both took part of one day, because the hard parts turned out
+to be decisions rather than code: the extension needed no auth once the résumé
+stayed in `chrome.storage.local`, and the recruiter bridge is four policies and a
+consent table. It also called `interview-prep.ts` "the highest-value unshipped
+asset in the repo" on the strength of reading it, and it was 78% broken.
+
+**The pattern, three builds running: the binding constraint is not code.** Two
+epics cancelled by measurement, a 404 shipped by an ignore pattern, and the two
+tasks that have outlasted six phases are both things only the founder can do.
+
 ### Open judgment calls — need real candidates, not a session
 
 Not tasks. Each was found by measurement and none is decidable without users.
