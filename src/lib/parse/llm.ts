@@ -48,8 +48,9 @@ const GROQ_MODEL = 'openai/gpt-oss-20b'
  * the only symptom was Groq's rate limit having no safety net behind it.
  *
  * An env override means the next deprecation is a variable change rather than a
- * deploy, and providerUnavailable() below makes a dead model loud instead of
- * silent.
+ * deploy. ~~providerUnavailable() below makes a dead model loud~~ — no such
+ * function was ever written; since 2026-09-23 logModelFailure() does it, and a
+ * 404 now logs as `{"kind":"http","status":404}` instead of vanishing.
  */
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash'
 const TIMEOUT_MS = 12_000
@@ -165,12 +166,15 @@ export async function readResumeWithModel(text: string): Promise<LlmFields | nul
   const prompt = PROMPT + stripContactDetails(text).slice(0, MAX_CHARS)
 
   for (const provider of chain) {
+    const started = Date.now()
     try {
       const raw = provider === 'groq' ? await callGroq(prompt) : await callGemini(prompt)
-      if (!raw) continue
+      if (!raw) { logModelFailure({ caller: 'parse-resume', provider, kind: 'empty', ms: Date.now() - started }); continue }
       const fields = normalise(JSON.parse(raw))
       if (fields) return fields
-    } catch {
+      logModelFailure({ caller: 'parse-resume', provider, kind: 'schema', ms: Date.now() - started })
+    } catch (e) {
+      logModelFailure({ caller: 'parse-resume', provider, ...failureOf(e), ms: Date.now() - started })
       // Deliberately silent per provider: the regex parser's result stands, and
       // the candidate confirms every field regardless. A model outage is not a
       // failed upload. Try the next one before giving up on the whole chain.
@@ -206,6 +210,60 @@ export async function readResumeWithModel(text: string): Promise<LlmFields | nul
  * document for our budget. A capacity limit is our problem and has to read like
  * one.
  */
+/**
+ * Why a model call produced nothing, in one server-log line.
+ *
+ * ⚠️ EVERY FAILURE PATH IN THIS FILE USED TO RETURN NULL SILENTLY. "Rewrite
+ * everything" failed once on 2026-09-23 with Groq answering a probe at 200 in
+ * 0.25 s, and nothing anywhere said whether that was a timeout, a 5xx, an empty
+ * reply or JSON that did not parse — so the cause was unknowable after the fact
+ * (docs/QA-AUDIT.md QA-26, TASK-105). The silence was right for the CANDIDATE —
+ * a model outage is not their failure, and callers still degrade — and wrong
+ * for the people who have to fix it.
+ *
+ * ⚠️ NEVER THE PROMPT, THE RÉSUMÉ OR THE REPLY. Provider, kind, HTTP status,
+ * latency and which caller — enough to count and diagnose, nothing a
+ * candidate wrote. The same promise the parse makes about the file.
+ */
+export type ModelFailure = 'rate-limited' | 'http' | 'timeout' | 'network' | 'empty' | 'bad-json' | 'schema'
+
+export function logModelFailure(e: { caller: string; provider: Provider; kind: ModelFailure; status?: number; code?: string; ms?: number }): void {
+  console.warn(`[model] ${JSON.stringify(e)}`)
+}
+
+export class ProviderHttpError extends Error {
+  constructor(readonly status: number, readonly code?: string) {
+    super(`provider returned ${status}`)
+  }
+}
+
+/**
+ * The provider's own short error code from a failed response — e.g. Groq's
+ * `json_validate_failed`. ONLY the code: Groq's error body also carries
+ * `failed_generation`, the model's output built from a candidate's résumé, and
+ * that must never reach a log.
+ */
+export async function httpFailure(res: Response): Promise<ProviderHttpError> {
+  let code: string | undefined
+  try {
+    const body = (await res.json()) as { error?: { code?: unknown; status?: unknown } }
+    const raw = body.error?.code ?? body.error?.status
+    if (typeof raw === 'string' && /^[\w.-]{1,40}$/.test(raw)) code = raw
+  } catch {
+    // Not JSON — the status alone is logged.
+  }
+  return new ProviderHttpError(res.status, code)
+}
+
+/** Classify a thrown error from a provider attempt. */
+export function failureOf(e: unknown): { kind: ModelFailure; status?: number; code?: string } {
+  if (e instanceof ProviderRateLimited) return { kind: 'rate-limited', status: 429 }
+  if (e instanceof ProviderHttpError) return { kind: 'http', status: e.status, ...(e.code ? { code: e.code } : {}) }
+  if (e instanceof SyntaxError) return { kind: 'bad-json' }
+  if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) return { kind: 'timeout' }
+  return { kind: 'network' }
+}
+
 export class ModelBusyError extends Error {
   constructor(readonly retryAfterSeconds: number) {
     super('Every configured model provider is rate limited right now.')
@@ -227,20 +285,26 @@ export async function callJsonModel(opts: {
   schema: object
   temperature?: number
   timeoutMs?: number
+  /** Which feature is asking — goes into the failure log, nothing else. */
+  caller?: string
 }): Promise<{ raw: string; provider: Provider } | null> {
   const chain = providerChain()
   const temperature = opts.temperature ?? 0.2
   const timeout = opts.timeoutMs ?? TIMEOUT_MS
   let throttled: ProviderRateLimited | undefined
 
+  const caller = opts.caller ?? 'json'
   for (const provider of chain) {
+    const started = Date.now()
     try {
       const raw =
         provider === 'groq'
           ? await callGroqJson(opts.prompt, opts.system, opts.schema, temperature, timeout)
           : await callGeminiJson(opts.prompt, opts.schema, temperature, timeout)
       if (raw) return { raw, provider }
+      logModelFailure({ caller, provider, kind: 'empty', ms: Date.now() - started })
     } catch (e) {
+      logModelFailure({ caller, provider, ...failureOf(e), ms: Date.now() - started })
       /**
        * ⚠️ A 429 IS REMEMBERED RATHER THAN SWALLOWED, and this is exactly what
        * the fallback chain is for: a second vendor has its own quota, so being
@@ -249,7 +313,7 @@ export async function callJsonModel(opts: {
        * then it hears "busy", not "broken".
        */
       if (e instanceof ProviderRateLimited) throttled = e
-      // Anything else stays silent per provider, like readResumeWithModel.
+      // Anything else moves on to the next provider — logged above, never raised.
     }
   }
 
@@ -280,6 +344,26 @@ async function callGroqJson(
     body: JSON.stringify({
       model: GROQ_MODEL,
       temperature,
+      /**
+       * ⚠️ THE REPLY WAS BEING CUT OFF, AND THIS IS THE FIX — measured, not
+       * guessed (docs/QA-AUDIT.md QA-26, TASK-105; `npm run probe:rewrite`).
+       * gpt-oss reasons before it answers, and the reasoning shares the reply's
+       * token budget. On a whole résumé the default budget ran out mid-JSON:
+       * Groq answered `400 json_validate_failed` on ~60% of attempts, and
+       * every one fell to a Gemini fallback that was itself returning 503 and
+       * 429 — the intermittent "We could not rewrite it just now".
+       * Variants tried on 2026-09-23, same document:
+       *   default budget, default reasoning ....... ~50% json_validate_failed
+       *   strict json_schema ......................... no better — reverted
+       *   reasoning_effort 'low' ...................... 6/6 ok, but ~65% of
+       *     proposed lines then failed the fabrication guard (31% at default)
+       *   max_completion_tokens 8192 (this) ........... 8/8 ok, 0 json
+       *     failures, ~15% reverted
+       * The cost is tokens: full reasoning makes a rewrite a large share of
+       * the 8,000-a-minute free tier, so back-to-back rewrites now meet 429s
+       * sooner — which the callers already report as "busy", not "broken".
+       */
+      max_completion_tokens: 8192,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: `${system} Reply with JSON only, matching: ${JSON.stringify(schema)}` },
@@ -289,7 +373,9 @@ async function callGroqJson(
     signal: AbortSignal.timeout(timeoutMs),
   })
   throwIfThrottled(res)
-  if (!res.ok) return undefined
+  // Thrown rather than `return undefined` so the chain can log the status;
+  // either way it moves on to the next provider.
+  if (!res.ok) throw await httpFailure(res)
   return ((await res.json()) as OpenAiResponse).choices?.[0]?.message?.content
 }
 
@@ -312,7 +398,9 @@ async function callGeminiJson(
     },
   )
   throwIfThrottled(res)
-  if (!res.ok) return undefined
+  // Thrown rather than `return undefined` so the chain can log the status;
+  // either way it moves on to the next provider.
+  if (!res.ok) throw await httpFailure(res)
   return ((await res.json()) as GeminiResponse).candidates?.[0]?.content?.parts?.[0]?.text
 }
 
@@ -341,7 +429,7 @@ async function callGroq(prompt: string): Promise<string | undefined> {
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   })
-  if (!res.ok) return undefined
+  if (!res.ok) throw await httpFailure(res)
   const json = (await res.json()) as OpenAiResponse
   return json.choices?.[0]?.message?.content
 }
@@ -363,7 +451,7 @@ async function callGemini(prompt: string): Promise<string | undefined> {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     }
   )
-  if (!res.ok) return undefined
+  if (!res.ok) throw await httpFailure(res)
   const json = (await res.json()) as GeminiResponse
   return json.candidates?.[0]?.content?.parts?.[0]?.text
 }

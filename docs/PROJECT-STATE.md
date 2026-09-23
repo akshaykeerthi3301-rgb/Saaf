@@ -2007,6 +2007,29 @@ The fixes each give the fact ONE source (`coverageNote`, `IndexMatchCount.capped
 roadmap's own plan got (b) wrong — "150 most recent" — and reading the query
 before writing the copy is what caught it.
 
+**TASK-097 → TASK-106, same day.** Built, walked in a browser (or measured,
+where there is no screen), and committed one by one; none deployed. The ones
+worth carrying:
+
+- **TASK-106, P0 security — email sign-in opened any existing account.** Instant
+  sign-in (2026-09-03, chosen to hold ₹0 without a sending domain) minted a
+  session for any typed address; its commit weighed that only as a digest risk.
+  Reproduced with a throwaway user (new → `signup`; again → `magiclink`, same
+  id). Now an email may start an account, never open one. **Live until deployed.**
+- **TASK-105 — the rewrite's intermittent failure was the model running out of
+  room.** gpt-oss's reasoning shares the reply budget; ~60% of Groq attempts on a
+  whole résumé ended `400 json_validate_failed`. `max_completion_tokens: 8192`:
+  8/8. `reasoning_effort: 'low'` also fixed reliability but doubled the share of
+  lines the fabrication guard had to revert — measured, and rejected for that.
+  Lesson kept: every model failure path returned null silently for weeks; the
+  first thing that made this findable was a log line.
+- **TASK-104 — the landing page's weight is tools, not the page.** ~168 KB of
+  ~328 KB compressed is PostHog + Sentry; LCP does not change without them.
+- **TASK-101 — every remaining contrast failure is the accent green**, and the
+  two uses pull opposite ways (TASK-101b, founder).
+- **TASK-097 — suggest only a role the index holds postings for** — the
+  shortlist's own question, not the taxonomy's.
+
 **Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
 2026-09-07); Next refuses to run on it. Every check above ran on the pinned
 v22.23.2 via a PATH prefix.

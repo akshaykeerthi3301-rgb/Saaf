@@ -24,7 +24,7 @@ is the evidence those tasks point back to.
 | QA-23, QA-24 landing weight, no CSP | **Measured and partly addressed (Sentry deferred; PostHog is a founder call), CSP report-only — not deployed** — TASK-104 |
 | QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
-| QA-26 intermittent rewrite failure, unlogged | Open — TASK-105 |
+| QA-26 intermittent rewrite failure, unlogged | **Fixed and measured (8/8 after, ~40–60% failing before), not deployed** — TASK-105 |
 | **QA-27 email sign-in opened any existing account** | **Fixed, verified on localhost, committed, NOT deployed — live on production until deployed** — TASK-106 |
 | QA-03 email sign-in | Open — founder-only (TASK-075) |
 | Everything else | Open — ROADMAP Phase 11 |

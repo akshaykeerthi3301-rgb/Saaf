@@ -1,4 +1,4 @@
-import { activeProvider, type Provider } from './parse/llm'
+import { activeProvider, failureOf, httpFailure, logModelFailure, type Provider } from './parse/llm'
 
 /**
  * Draft an application, and then refuse to show the parts that cannot be
@@ -237,7 +237,7 @@ async function call(p: string, provider: Provider): Promise<string | undefined> 
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
-    if (!res.ok) return undefined
+    if (!res.ok) throw await httpFailure(res)
     return ((await res.json()) as OpenAiResponse).choices?.[0]?.message?.content
   }
 
@@ -253,7 +253,7 @@ async function call(p: string, provider: Provider): Promise<string | undefined> 
       signal: AbortSignal.timeout(TIMEOUT_MS),
     },
   )
-  if (!res.ok) return undefined
+  if (!res.ok) throw await httpFailure(res)
   return ((await res.json()) as GeminiResponse).candidates?.[0]?.content?.parts?.[0]?.text
 }
 
@@ -268,9 +268,13 @@ export async function draftApplication(me: CandidateFacts, role: RoleFacts): Pro
 
   const matched = matchedSkills(me, role)
 
+  const started = Date.now()
   try {
     const raw = await call(prompt(me, role, matched), provider)
-    if (!raw) return null
+    if (!raw) {
+      logModelFailure({ caller: 'tailor', provider, kind: 'empty', ms: Date.now() - started })
+      return null
+    }
     const parsed = JSON.parse(raw) as { bullets?: unknown; coverNote?: unknown }
 
     const candidates = Array.isArray(parsed.bullets)
@@ -297,7 +301,9 @@ export async function draftApplication(me: CandidateFacts, role: RoleFacts): Pro
       provider,
       dropped: noteFail && note ? [...dropped, { text: note, reason: noteFail }] : dropped,
     }
-  } catch {
+  } catch (e) {
+    // The drawer still says "you can apply directly"; the log says why (TASK-105).
+    logModelFailure({ caller: 'tailor', provider, ...failureOf(e), ms: Date.now() - started })
     return null
   }
 }

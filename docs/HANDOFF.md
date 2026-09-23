@@ -40,15 +40,17 @@ Why, and the six parts of the "Jobright parity" prompt that were declined:
 ~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23.** ~~Still
 not deployed, not pushed.~~ **Deployed (with `71a5922`); still not pushed.**
 
-## ⏳ 2026-09-23 (later) — TASK-091–096 BUILT, NOT DEPLOYED (091–095 committed `8b5e794`, `61ca20e`, `6c1c6ff`; 096 not committed)
+## ⏳ 2026-09-23 (end of day) — TASK-091 → TASK-106 all COMMITTED, NONE DEPLOYED (~~096 not committed~~)
 
 TASK-091 (large upload no longer crashes), TASK-092 (branded error, not-found
 and loading screens) and TASK-093 (Jobs page 19.2 s → 2.9 s first load) are in
 the working tree, walked in a browser on localhost / a local production build,
 with every gate green (test 657, lint 0 errors, typecheck, bench, bench:match).
-**Nothing of this is on the live site yet.** Until it is, a 4.5–5 MB résumé
-still crashes the live checker. To ship: commit, then the RUNBOOK deploy — no
-migration, no backfill, no env change needed.
+**Nothing of this is on the live site yet.** Until it is: anyone can sign in
+as any user by email (TASK-106), a 4.5–5 MB résumé crashes the live checker,
+a normal checker session is refused its rewrite, and the rewrite itself fails
+about half the time. To ship: the RUNBOOK deploy — no migration, no backfill,
+no env change needed. Everything is committed on `main` (not pushed).
 
 ## ⚡ 2026-09-23 — QA pass done; two decisions need the founder
 

@@ -1,4 +1,4 @@
-import { callJsonModel, type Provider } from '@/lib/parse/llm'
+import { callJsonModel, logModelFailure, type Provider } from '@/lib/parse/llm'
 import { groundingFailure, type CandidateFacts, type RoleFacts } from '@/lib/tailor'
 import type { ResumeSections } from '@/lib/parse/sections'
 
@@ -418,6 +418,7 @@ export async function rewriteResume(input: {
     prompt: prompt(sections, facts, role, scope),
     system: SYSTEM,
     schema: schemaFor(scope),
+    caller: 'rewrite-document',
     temperature: 0.2,
     /**
      * ⚠️ SIZED FOR THE SLOW LEG, NOT THE FAST ONE. Groq answers this prompt in
@@ -435,6 +436,7 @@ export async function rewriteResume(input: {
   try {
     parsed = JSON.parse(answer.raw) as { summary?: unknown; entries?: unknown }
   } catch {
+    logModelFailure({ caller: 'rewrite-document', provider: answer.provider, kind: 'bad-json' })
     return null
   }
 
@@ -541,6 +543,7 @@ export async function rewriteOneBullet(
     ].join('\n'),
     system: 'You sharpen a single résumé line. You never invent facts.',
     schema: { type: 'object', properties: { line: { type: 'string' } }, required: ['line'] },
+    caller: 'rewrite-bullet',
     temperature: 0.2,
     timeoutMs: 20_000,
   })
@@ -549,9 +552,13 @@ export async function rewriteOneBullet(
   let line: string
   try {
     const parsed = JSON.parse(answer.raw) as { line?: unknown }
-    if (typeof parsed.line !== 'string') return null
+    if (typeof parsed.line !== 'string') {
+      logModelFailure({ caller: 'rewrite-bullet', provider: answer.provider, kind: 'schema' })
+      return null
+    }
     line = parsed.line.trim()
   } catch {
+    logModelFailure({ caller: 'rewrite-bullet', provider: answer.provider, kind: 'bad-json' })
     return null
   }
 
