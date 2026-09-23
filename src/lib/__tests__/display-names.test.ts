@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { displayEmployer, displayCity } from '../display-names'
+import { displayEmployer, displayCity, requirementLabel } from '../display-names'
 
 /**
  * ⚠️ EVERY CASE HERE WAS ON THE LIVE SHORTLIST ON 2026-09-14, and the counts
@@ -66,5 +66,21 @@ describe('city names', () => {
   it('leaves a city it has no opinion about', () => {
     expect(displayCity('Indore')).toBe('Indore')
     expect(displayCity('')).toBe('')
+  })
+})
+
+describe('requirementLabel', () => {
+  it('names every kind the extractor emits in words, never as the enum', () => {
+    for (const kind of ['experience_years', 'credential', 'location', 'work_authorisation', 'channel_budget', 'institute_tier', 'hr_track', 'title_seniority']) {
+      const label = requirementLabel(kind)
+      expect(label).not.toMatch(/_/)
+      expect(label).not.toBe(kind)
+    }
+    expect(requirementLabel('experience_years')).toBe('Experience asked for')
+    expect(requirementLabel('title_seniority')).toBe('Seniority')
+  })
+
+  it('turns a kind added later into words rather than rendering nothing', () => {
+    expect(requirementLabel('notice_period')).toBe('Notice period')
   })
 })

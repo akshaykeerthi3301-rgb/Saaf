@@ -1,4 +1,5 @@
 import type { ScoreComponent } from '@/match/score'
+import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 
 /**
  * The score, its band, and the two components carrying most of it.
@@ -35,7 +36,7 @@ import type { ScoreComponent } from '@/match/score'
  * it is on the reason line and inside the breakdown. It is no longer the headline.
  */
 export function bandFor(score: number): string {
-  if (score >= 75) return 'High-precision match'
+  if (score >= HIGH_PRECISION_MIN) return 'High-precision match'
   if (score >= 60) return 'Strong match'
   if (score >= 45) return 'Worth a look'
   return 'Long shot'
@@ -79,7 +80,7 @@ export function FitRing({
   className?: string
 }) {
   const band = bandFor(score)
-  const strong = score >= 75
+  const strong = score >= HIGH_PRECISION_MIN
   const headline = headlineComponents(components)
 
   const r = 34

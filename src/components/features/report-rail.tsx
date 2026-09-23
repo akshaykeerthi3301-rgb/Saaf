@@ -3,7 +3,7 @@
 import { Gauge } from '@/components/ui/gauge'
 import { Card } from '@/components/ui/card'
 import { Briefcase, Loader2 } from 'lucide-react'
-import type { AtsReport, AtsCategory } from '@/lib/ats-check'
+import { coverageNote, type AtsReport, type AtsCategory } from '@/lib/ats-check'
 import type { IndexMatchCount } from '@/lib/services/index-match'
 
 /**
@@ -132,8 +132,8 @@ export function ReportRail({
               )}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              scoring {indexMatch.threshold}%+ of the {indexMatch.scoped} {targetRole} postings we
-              indexed. Sign in to see them.
+              scoring {indexMatch.threshold}%+ of the {indexMatch.scoped} {targetRole} postings{' '}
+              {indexMatch.capped ? 'whose titles match most closely' : 'we hold'}. Sign in to see them.
             </p>
             <button
               type="button"
@@ -147,9 +147,17 @@ export function ReportRail({
         ) : targetRole ? (
           <>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              We hold <span className="font-mono tabular-nums text-primary">{postings ?? 'live'}</span>{' '}
-              {targetRole} postings from company hiring boards. See how many this résumé actually scores
-              against — before and after you fix it.
+              {/* "Measured", not "hold": `postings` is the snapshot the role's
+                  vocabulary was built from, not a live count (QA-05). */}
+              {postings ? (
+                <>
+                  We measured <span className="font-mono tabular-nums text-primary">{postings}</span>{' '}
+                  {targetRole} postings from company hiring boards.
+                </>
+              ) : (
+                <>We hold {targetRole} postings from company hiring boards.</>
+              )}{' '}
+              See how many this résumé actually scores against — before and after you fix it.
             </p>
             <button
               type="button"
@@ -207,14 +215,10 @@ export function ReportRail({
       */}
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          What a parser could read
+          What a typical ATS could read
         </span>
         <p className="mt-1 font-mono text-2xl tabular-nums text-primary">{report.coverage.rate}%</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {report.coverage.fieldsMissing.length === 0
-            ? `Every field we look for came out clean, and ${report.coverage.linesPlaced} of ${report.coverage.linesTotal} lines landed in a section.`
-            : `We could not find your ${new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(report.coverage.fieldsMissing)}.`}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{coverageNote(report.coverage, report.read)}</p>
         {report.coverage.atsRisk.length > 0 && (
           <p className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
             Reduced because this document uses{' '}

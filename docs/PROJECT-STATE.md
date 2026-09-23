@@ -1996,6 +1996,17 @@ one address, where an IP key makes strangers exhaust each other. Résumé
 parsing now requires a session (CLAUDE.md's "gap to close first") and degrades
 to the deterministic reader past its limit rather than refusing the upload.
 
+**TASK-096 — five places one fact had two names.** Worth recording as a class,
+not five bugs: every one was a number or a label true in its own function and
+contradicted by a neighbour computed elsewhere — two readings both called "a
+parser", a live count capped at 150 beside a stored snapshot of 199, a `>= 75`
+written six times and named "strong" twice while cards call 60–74 "Strong
+match", an enum printed raw, and gating-era refusal labels on a public page.
+The fixes each give the fact ONE source (`coverageNote`, `IndexMatchCount.capped`,
+`HIGH_PRECISION_MIN`, `requirementLabel`) rather than rewording one side. The
+roadmap's own plan got (b) wrong — "150 most recent" — and reading the query
+before writing the copy is what caught it.
+
 **Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
 2026-09-07); Next refuses to run on it. Every check above ran on the pinned
 v22.23.2 via a PATH prefix.

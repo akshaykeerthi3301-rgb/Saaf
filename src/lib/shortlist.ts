@@ -1,4 +1,5 @@
 import { locationRank, type ScoreBreakdown } from '@/match/score'
+import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 
 /**
  * How /today arranges a candidate's scored roles: which are new, which section
@@ -130,7 +131,7 @@ export function arrangeShortlist<T extends ArrangeableRow>(
 
   const newCount = rows.filter(isNew).length
   const visibleRows = opts.onlyNew ? rows.filter(isNew) : rows
-  const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
+  const strong = rows.filter((r) => (r.score ?? 0) >= HIGH_PRECISION_MIN).length
 
   const near = visibleRows.filter((r) => locationRank(r.score_breakdown) <= 1)
   const far = visibleRows.filter((r) => locationRank(r.score_breakdown) > 1)

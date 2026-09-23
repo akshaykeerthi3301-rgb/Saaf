@@ -44,8 +44,14 @@ export const STRONG_MATCH = 50
 const SCOPE_LIMIT = 150
 
 export type IndexMatchCount = {
-  /** Postings whose title matched the target role at all. */
+  /** Postings scored: every title match, or the SCOPE_LIMIT closest when there are more. */
   scoped: number
+  /**
+   * True when `scoped` is the cap rather than everything that matched. The
+   * card used to call these "the 150 postings we indexed" beside "we hold 199"
+   * (docs/QA-AUDIT.md QA-05) — 150 is the closest title matches, not the index.
+   */
+  capped: boolean
   /** Of those, how many the résumé scores at or above the True-Fit line. */
   strong: number
   /** Where the line sits, so the surface never hard-codes it. */
@@ -62,6 +68,7 @@ export async function countIndexMatches(
   })
   return {
     scoped: scored.length,
+    capped: scored.length >= SCOPE_LIMIT,
     strong: scored.filter((r) => r.score >= STRONG_MATCH).length,
     threshold: STRONG_MATCH,
   }

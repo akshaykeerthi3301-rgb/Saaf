@@ -4,6 +4,7 @@ import { ArrowRight, Calculator, TrendingUp } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import type { ScoreBreakdown } from '@/match/score'
+import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 
 /**
  * The copilot diagnostic.
@@ -112,7 +113,7 @@ export default async function CopilotPage() {
     },
   }
 
-  const strong = scored.filter((r) => (r.score ?? 0) >= 75).length
+  const strong = scored.filter((r) => (r.score ?? 0) >= HIGH_PRECISION_MIN).length
   const weakest = components[0]
 
   return (
@@ -130,7 +131,9 @@ export default async function CopilotPage() {
                 <span className="font-mono tabular-nums text-primary">{scored.length}</span> roles
                 against your profile.{' '}
                 <span className="font-mono tabular-nums text-primary">{strong}</span>{' '}
-                {strong === 1 ? 'is' : 'are'} a strong match.
+                {/* The card's own band name. "Strong match" is 60–74 on the card, so
+                    "3 are a strong match" contradicted seven cards (QA-10). */}
+                {strong === 1 ? 'is a high-precision match' : 'are high-precision matches'}.
                 {weakest ? (
                   <>
                     {' '}The component costing you most across all of them is{' '}

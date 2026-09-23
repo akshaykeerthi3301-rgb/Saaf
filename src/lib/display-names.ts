@@ -145,3 +145,29 @@ export function displayCity(stored: string | null | undefined): string {
    */
   return CANONICAL_CITY[raw.toLowerCase()] ?? raw
 }
+
+/**
+ * A requirement kind as the candidate should read it.
+ *
+ * The Insights disclosure printed `r.kind` raw — "EXPERIENCE_YEARS",
+ * "TITLE_SENIORITY" — the database's enum leaking onto the product's most
+ * explanatory surface (docs/QA-AUDIT.md QA-17). Keyed by string rather than
+ * RequirementKind so a kind added later still renders as words, not as nothing.
+ */
+const REQUIREMENT_LABELS: Record<string, string> = {
+  experience_years: 'Experience asked for',
+  credential: 'Credential',
+  location: 'Location',
+  work_authorisation: 'Work authorisation',
+  channel_budget: 'Budget owned',
+  institute_tier: 'Institute',
+  hr_track: 'HR track',
+  title_seniority: 'Seniority',
+}
+
+export function requirementLabel(kind: string): string {
+  const known = REQUIREMENT_LABELS[kind]
+  if (known) return known
+  const words = kind.replace(/_/g, ' ').trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}

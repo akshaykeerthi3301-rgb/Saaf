@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { checkResume, categoryOf, marketCoverage, jdVersusMarket, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
+import { checkResume, categoryOf, coverageNote, marketCoverage, jdVersusMarket, AtsCheckError, MIN_RESUME_CHARS } from '../ats-check'
 
 /**
  * TASK-061 — the ATS checker, proved against documents with known defects.
@@ -1045,5 +1045,61 @@ engineering and technical systems background required.`
     expect(twoColumn.readability.score).toBeLessThan(rebuilt.readability.score)
     expect(twoColumn.findings.map((f) => f.id)).toContain('multi-column')
     expect(rebuilt.findings.map((f) => f.id)).not.toContain('multi-column')
+  })
+})
+
+/**
+ * QA-04: step 1 said "Current title: Systems Engineer" and step 4 said "We
+ * could not find your job title" about the same file. Both were true — one is
+ * what we read, the other what a typical ATS recovers — and the page must say
+ * which is which rather than contradict itself.
+ */
+describe('coverageNote — never "read" and "could not find" for one field', () => {
+  const coverage = (fieldsMissing: string[]) => ({
+    linesPlaced: 8, linesTotal: 12, fieldsFound: [], fieldsMissing, atsRisk: [], rate: 41,
+  })
+
+  it('names a field we read but an ATS would not as exactly that', () => {
+    const note = coverageNote(coverage(['phone', 'job title', 'employer', 'dates']), {
+      currentTitle: 'Systems Engineer', employer: 'Infosys',
+    })
+    expect(note).toBe(
+      'We could not find your phone and dates. Your job title and employer are in the text, ' +
+        'but not laid out as a work-experience entry an ATS can pick out.',
+    )
+  })
+
+  it('still says "could not find" for a field nobody read', () => {
+    expect(coverageNote(coverage(['job title']), {})).toBe('We could not find your job title.')
+    expect(coverageNote(coverage(['employer']), { currentTitle: 'PM' })).toBe('We could not find your employer.')
+  })
+
+  it('keeps the clean-document sentence', () => {
+    expect(coverageNote(coverage([]), {})).toMatch(/^Every field we look for came out clean, and 8 of 12 lines/)
+  })
+
+  it('holds on a real check of a résumé with no experience heading', () => {
+    // The shape of the synthetic fixture that showed the contradiction live.
+    const text = [
+      'Rohan Sharma',
+      'Bengaluru, Karnataka, India',
+      'rohan.sharma@example.com',
+      'Systems Engineer at Infosys',
+      'Jun 2024 - Present',
+      "Working on a banking client's maintenance project. Java, Spring Boot, Oracle.",
+      'Handled production incidents and release coordination for a retail banking platform.',
+      'EDUCATION',
+      'B.E. Computer Science, Visvesvaraya Technological University, 2023',
+      'SKILLS',
+      'Java, Spring Boot, SQL, Python, Git, Jenkins, REST APIs',
+    ].join('\n')
+    const report = checkResume(text)
+    const note = coverageNote(report.coverage, report.read)
+    // The premise of the defect: we DID read both, and an ATS would not have.
+    expect(report.read.currentTitle).toBeTruthy()
+    expect(report.read.employer).toBeTruthy()
+    expect(report.coverage.fieldsMissing).toEqual(expect.arrayContaining(['job title', 'employer']))
+    expect(note).not.toMatch(/could not find[^.]*(job title|employer)/)
+    expect(note).toMatch(/job title and employer are in the text/)
   })
 })

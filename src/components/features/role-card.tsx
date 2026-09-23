@@ -5,7 +5,9 @@ import { TrackRole } from '@/components/features/track-role'
 import { FitRing, bandFor } from '@/components/ui/fit-ring'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import { postedAgo, postedOn } from '@/lib/day'
+import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 import type { ScoreBreakdown } from '@/match/score'
+import { requirementLabel } from '@/lib/display-names'
 
 /** One requirement the extractor read out of a posting, with the sentence it
  *  came from. Lived in the retired `row.tsx` alongside the three-outcome role
@@ -95,7 +97,7 @@ export function RoleCard({
     }, {}),
   )
   const components = breakdown?.components ?? []
-  const strongBand = score >= 75
+  const strongBand = score >= HIGH_PRECISION_MIN
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -213,7 +215,7 @@ export function RoleCard({
                     {shownRequirements.map((r, i) => (
                       <div key={i}>
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          {r.kind}
+                          {requirementLabel(r.kind)}
                           {r.confidence < CONFIDENCE_THRESHOLD ? ' · read with low confidence' : ''}
                         </p>
                         {r.kind === 'location' && profileCity && (

@@ -582,7 +582,8 @@ export default async function TodayPage({
                   'matched',
                 ],
                 ...(holding.kind === 'complete' ? [] : [[rows.length.toLocaleString('en-IN'), 'scored']]),
-                [strong.toLocaleString('en-IN'), 'strong'],
+                // The card band's name for the same line — "strong" is 60–74 on a card (QA-10).
+                [strong.toLocaleString('en-IN'), 'high-precision'],
               ].map(([value, label]) => (
                 <div key={label} className="flex items-baseline justify-between gap-3">
                   <dt className="text-xs text-muted-foreground">{label}</dt>

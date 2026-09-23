@@ -754,7 +754,7 @@ export function AtsFlow() {
             field a real applicant tracking system plausibly misses too.
           */}
           <Card className="mt-6">
-            <Eyebrow>What a parser read out of your file</Eyebrow>
+            <Eyebrow>What we read out of your file</Eyebrow>
             <dl className="mt-3 grid gap-3 sm:grid-cols-2">
               {[
                 ['Current title', report.read.currentTitle],
@@ -933,7 +933,7 @@ export function AtsFlow() {
 
                 <div className="mt-6 border-t border-border pt-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    What a parser read out of it
+                    What we read out of it
                   </p>
                   <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                     {[

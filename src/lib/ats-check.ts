@@ -265,6 +265,43 @@ export const MAX_RESUME_CHARS = 20_000
 export class AtsCheckError extends Error {}
 
 /**
+ * The sentence under "What a typical ATS could read".
+ *
+ * ⚠️ TWO READINGS OF ONE FILE, AND THE PAGE USED TO CALL BOTH "A PARSER".
+ * `report.read` is what WE found — resumeFacts falls back to a line such as
+ * "Systems Engineer at Infosys" wherever it sits. `coverage` is what a typical
+ * ATS recovers, which needs a title and employer inside a work-experience entry
+ * it can pick out. On a résumé with no experience heading, step 1 said "Current
+ * title: Systems Engineer" and step 4 said "We could not find your job title"
+ * — both true, and together a contradiction on a page whose whole claim is
+ * that it shows its working (docs/QA-AUDIT.md QA-04; the same family as
+ * keepStillTrue in src/lib/jd-match.ts). A field we read but an ATS would not
+ * is now named as exactly that.
+ */
+export function coverageNote(coverage: ParseCoverage, read: AtsReport['read']): string {
+  if (coverage.fieldsMissing.length === 0) {
+    return `Every field we look for came out clean, and ${coverage.linesPlaced} of ${coverage.linesTotal} lines landed in a section.`
+  }
+  const weRead: Record<string, boolean> = {
+    'job title': Boolean(read.currentTitle),
+    employer: Boolean(read.employer),
+  }
+  const inTextOnly = coverage.fieldsMissing.filter((f) => weRead[f])
+  const missing = coverage.fieldsMissing.filter((f) => !weRead[f])
+  const list = (xs: string[]) => new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(xs)
+
+  const parts: string[] = []
+  if (missing.length) parts.push(`We could not find your ${list(missing)}.`)
+  if (inTextOnly.length) {
+    parts.push(
+      `Your ${list(inTextOnly)} ${inTextOnly.length === 1 ? 'is' : 'are'} in the text, but not laid out as a ` +
+        'work-experience entry an ATS can pick out.',
+    )
+  }
+  return parts.join(' ')
+}
+
+/**
  * ⚠️ THE SCORE IS NO LONGER `100 − Σ {high: 18, medium: 9, low: 4}`, AND THAT
  * FLAT SUBTRACTIVE SHAPE WAS WHY IT NEVER RESEMBLED A REAL ATS SCORE.
  *

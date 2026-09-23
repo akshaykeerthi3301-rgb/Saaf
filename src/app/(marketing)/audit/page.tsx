@@ -1,19 +1,17 @@
 import { DocPage } from '@/components/features/doc-page'
 import { getLatestAudit } from '@/lib/services/audit'
+import { requirementLabel } from '@/lib/display-names'
 
 export const revalidate = 3600
 
-const LABEL: Record<string, string> = {
-  title_seniority: 'Title above your band',
-  experience_years: 'Years of experience',
-  credential: 'Credential not held',
-  location: 'Location',
-  work_authorisation: 'Work authorisation',
-  channel_budget: 'Channel or budget scale',
-  institute_tier: 'Institute tier',
-  hr_track: 'Recruitment vs generalist',
-  unstated: 'Unstated',
-}
+/*
+ * ~~A local LABEL map: "Title above your band", "Credential not held".~~
+ * Replaced 2026-09-23 (docs/QA-AUDIT.md QA-21). Those were refusal reasons
+ * from the gating product (Stage A reversed it), in the second person, on a
+ * public page read by visitors who have no band and hold no credential. The
+ * counts are postings that STATE each requirement, so each row is the
+ * requirement's name — the same name the job card's Insights uses.
+ */
 
 /**
  * The contrarian belief, shipped as a feature.
@@ -50,7 +48,7 @@ export default async function AuditPage() {
               {reasons.map(([k, v]) => (
                 <tr key={k}>
                   <td className="border-b border-border py-3 text-sm text-primary">
-                    {LABEL[k] ?? k}
+                    {requirementLabel(k)}
                   </td>
                   <td className="border-b border-border py-3 text-right font-mono text-sm tabular-nums text-primary">
                     {fmt(v)}

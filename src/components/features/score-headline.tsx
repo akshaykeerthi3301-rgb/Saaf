@@ -63,11 +63,13 @@ export function ScoreHeadline({
         <div className="min-w-0 text-center sm:text-left">
           <Eyebrow>Your ATS score</Eyebrow>
           {/*
-            The two halves, in the order the score is computed: what a parser
-            could interpret at all, then what the interpretable part contained.
+            The two halves, in the order the score is computed: what a typical
+            ATS could interpret at all, then what the interpretable part
+            contained. "A typical ATS", not "a parser": the page also shows what
+            WE read, and the two differ by design (coverageNote, QA-04).
           */}
           <p className="mt-2 text-lg leading-7 text-primary">
-            A parser reads{' '}
+            A typical ATS reads{' '}
             <span className="font-mono font-semibold tabular-nums">{report.coverage.rate}%</span> of
             your document, and{' '}
             <span className="font-mono font-semibold tabular-nums">

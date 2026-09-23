@@ -13,6 +13,7 @@ import {
 } from '@/lib/jd-match-constants'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import { TailorPanel } from '@/components/features/tailor-panel'
+import { requirementLabel } from '@/lib/display-names'
 
 /**
  * TASK-060 step 3 — the paste-a-JD surface.
@@ -355,7 +356,7 @@ function JdResult({ result }: { result: Result }) {
                   {shownRequirements.map((r, i) => (
                     <div key={i}>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                        {r.kind}
+                        {requirementLabel(r.kind)}
                         {r.confidence < CONFIDENCE_THRESHOLD ? ' · read with low confidence' : ''}
                       </p>
                       {/* Plain text, never dangerouslySetInnerHTML — this is

@@ -7,6 +7,7 @@ import {
   type ApplicationStatus,
 } from '@/app/actions/applications'
 import { istDay } from '@/lib/day'
+import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 
 export type Application = {
   id: string
@@ -224,7 +225,7 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
                             {r.score !== undefined ? (
                               <span
                                 className={`mt-2 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold tabular-nums ${
-                                  r.score >= 75 ? 'bg-accent/10 text-accent' : 'bg-secondary text-muted-foreground'
+                                  r.score >= HIGH_PRECISION_MIN ? 'bg-accent/10 text-accent' : 'bg-secondary text-muted-foreground'
                                 }`}
                                 title="Your match score for this role"
                               >
