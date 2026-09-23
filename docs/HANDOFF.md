@@ -2,7 +2,7 @@
 
 ---
 
-## 🔴 2026-09-23 — DEPLOY TASK-106 FIRST: email sign-in opened any existing account
+## ✅ 2026-09-23 — ~~DEPLOY TASK-106 FIRST~~ DEPLOYED `dpl_CmXXH16qoaxUiWyVvtBthbWB2soS`: email sign-in no longer opens an existing account
 
 On the live site today, typing someone's email on /signin signs you in AS
 THEM — their profile, phone, salary expectation, saved résumés, tracker, and
@@ -11,11 +11,14 @@ the delete-account button. Instant sign-in (no inbox round-trip, chosen on
 for an existing address the token it mints is that account's session.
 Reproduced with a throwaway account; nothing real was touched.
 
-**The fix is committed and not deployed** (TASK-106): email sign-in now only
-creates NEW accounts and sends anyone with an existing account to Google. All
-8 real accounts are Gmail or Google-capable, so nobody real is locked out.
-**Say "deploy" and it goes out with TASK-091 to TASK-104.** Until then, the
-exposure stands.
+~~**The fix is committed and not deployed**~~ **Live since 2026-09-23**
+(commit `466c419`, deployment `dpl_CmXXH16qoaxUiWyVvtBthbWB2soS`), verified ON
+PRODUCTION with a throwaway address: first use → new account, /start; the same
+address again → "That email already has a Saaf account… sign in with Google",
+no session. Throwaway deleted; 9 accounts, as before. The exposure window was
+2026-09-03 → 2026-09-23. Nothing in the logs available to a session shows
+whether it was ever used — if that matters, Supabase's auth logs for that
+window are where to look (founder account).
 
 ---
 
@@ -40,17 +43,20 @@ Why, and the six parts of the "Jobright parity" prompt that were declined:
 ~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23.** ~~Still
 not deployed, not pushed.~~ **Deployed (with `71a5922`); still not pushed.**
 
-## ⏳ 2026-09-23 (end of day) — TASK-091 → TASK-106 all COMMITTED, NONE DEPLOYED (~~096 not committed~~)
+## ✅ 2026-09-23 (end of day) — TASK-091 → TASK-106 DEPLOYED `dpl_CmXXH16qoaxUiWyVvtBthbWB2soS` (~~NONE DEPLOYED~~)
 
 TASK-091 (large upload no longer crashes), TASK-092 (branded error, not-found
 and loading screens) and TASK-093 (Jobs page 19.2 s → 2.9 s first load) are in
 the working tree, walked in a browser on localhost / a local production build,
 with every gate green (test 657, lint 0 errors, typecheck, bench, bench:match).
-**Nothing of this is on the live site yet.** Until it is: anyone can sign in
-as any user by email (TASK-106), a 4.5–5 MB résumé crashes the live checker,
-a normal checker session is refused its rewrite, and the rewrite itself fails
-about half the time. To ship: the RUNBOOK deploy — no migration, no backfill,
-no env change needed. Everything is committed on `main` (not pushed).
+~~Nothing of this is on the live site yet.~~ **All of it is live** (commit
+`466c419`). Verified on production: every public route answers (unknown route →
+branded 404; `/api/dev-signin` → 404), the report-only CSP header is sent,
+signed-out `/applications` sets the `saaf_next` cookie (Secure, HttpOnly), the
+TASK-106 refusal works end to end, and a 4.7 MB file on the checker shows "over
+4 MB" with no crash. Signed-in screens are verified on localhost against the
+same database — Google sign-in on production is the founder's alone. `main` is
+not pushed.
 
 ## ⚡ 2026-09-23 — QA pass done; two decisions need the founder
 

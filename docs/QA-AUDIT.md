@@ -9,23 +9,23 @@ is the evidence those tasks point back to.
 
 | Finding | State (2026-09-23) |
 |---|---|
-| QA-01 upload crash | **Fixed, verified on localhost, not deployed** — TASK-091 |
-| QA-02 `/today` speed | **Fixed, verified on a local production build, not deployed** — TASK-093. Cold-cache case unverified |
-| QA-12 error / not-found / loading screens | **Fixed, verified on localhost, not deployed** — TASK-092 |
-| QA-06 500 cap shown as a total | **Fixed, verified on localhost, not deployed** — TASK-094 |
-| QA-04, QA-05, QA-10, QA-17, QA-21 one fact, two names | **Fixed, verified on localhost, not deployed** — TASK-096 |
-| QA-09 non-job pre-filled as target role | **Fixed, verified on localhost, not deployed** — TASK-097 |
-| QA-11 Newest sorted by first-shown | **Fixed, verified on localhost, not deployed** — TASK-098 |
-| QA-13 review drawer not a real dialog | **Fixed, verified on localhost, not deployed** — TASK-099 |
-| QA-14, QA-15, QA-16 one-click finality, stale count, any-scheme links | **Fixed, verified on localhost, not deployed** — TASK-100 |
-| QA-18, QA-19, QA-25 phone overlap, tap size, contrast, input types | **Fixed except the accent green (TASK-101b, founder decision), verified on localhost, not deployed** — TASK-101 |
-| QA-20 interview-prep picker and product-name skills | **Fixed, verified on localhost, not deployed** — TASK-102 |
-| QA-22 sign-in forgot the destination | **Fixed, partly verified (redirect + cookie; Google round trip unwalked), not deployed** — TASK-103 |
-| QA-23, QA-24 landing weight, no CSP | **Measured and partly addressed (Sentry deferred; PostHog is a founder call), CSP report-only — not deployed** — TASK-104 |
-| QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
-| QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
-| QA-26 intermittent rewrite failure, unlogged | **Fixed and measured (8/8 after, ~40–60% failing before), not deployed** — TASK-105 |
-| **QA-27 email sign-in opened any existing account** | **Fixed, verified on localhost, committed, NOT deployed — live on production until deployed** — TASK-106 |
+| QA-01 upload crash | **Fixed and deployed, verified on production** — TASK-091 |
+| QA-02 `/today` speed | **Fixed, verified on a local production build, deployed 2026-09-23** — TASK-093. Cold-cache case unverified |
+| QA-12 error / not-found / loading screens | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-092 |
+| QA-06 500 cap shown as a total | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-094 |
+| QA-04, QA-05, QA-10, QA-17, QA-21 one fact, two names | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-096 |
+| QA-09 non-job pre-filled as target role | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-097 |
+| QA-11 Newest sorted by first-shown | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-098 |
+| QA-13 review drawer not a real dialog | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-099 |
+| QA-14, QA-15, QA-16 one-click finality, stale count, any-scheme links | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-100 |
+| QA-18, QA-19, QA-25 phone overlap, tap size, contrast, input types | **Fixed except the accent green (TASK-101b, founder decision), verified on localhost, deployed 2026-09-23** — TASK-101 |
+| QA-20 interview-prep picker and product-name skills | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-102 |
+| QA-22 sign-in forgot the destination | **Fixed, partly verified (redirect + cookie; Google round trip unwalked), deployed 2026-09-23** — TASK-103 |
+| QA-23, QA-24 landing weight, no CSP | **Measured and partly addressed (Sentry deferred; PostHog is a founder call), CSP report-only — deployed 2026-09-23** — TASK-104 |
+| QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-095 |
+| QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, deployed 2026-09-23** — TASK-095 |
+| QA-26 intermittent rewrite failure, unlogged | **Fixed and measured (8/8 after, ~40–60% failing before), deployed 2026-09-23** — TASK-105 |
+| **QA-27 email sign-in opened any existing account** | **Fixed and deployed 2026-09-23, verified on production** — TASK-106 |
 | QA-03 email sign-in | Open — founder-only (TASK-075) |
 | Everything else | Open — ROADMAP Phase 11 |
 

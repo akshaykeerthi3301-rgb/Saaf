@@ -2030,6 +2030,11 @@ worth carrying:
 - **TASK-097 — suggest only a role the index holds postings for** — the
   shortlist's own question, not the taxonomy's.
 
+**Deployed 2026-09-23, `dpl_CmXXH16qoaxUiWyVvtBthbWB2soS` (commit `466c419`):**
+TASK-091 → TASK-106 are live. TASK-106's refusal and TASK-091's size message
+were verified on production itself; the rest on localhost against the same
+database. The account-takeover window was 2026-09-03 → 2026-09-23.
+
 **Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
 2026-09-07); Next refuses to run on it. Every check above ran on the pinned
 v22.23.2 via a PATH prefix.
