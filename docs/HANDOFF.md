@@ -59,6 +59,7 @@ gate it**:
 | Decision | Why it is yours | Gates |
 |---|---|---|
 | **The accent green and accessibility.** White text on it measures 4.48:1 (floor 4.5); green text on the score ring's dark panel 3.66:1. The first wants a darker green, the second a lighter one | It is the brand's one colour, and `docs/DESIGN.md` is law — a session may not move a token unasked. Options are in TASK-101b | TASK-101b |
+| **Load analytics later on the landing page?** PostHog is ~99 KB of the page's load window and most of its remaining 120–150 ms of blocking time; it does not delay the hero (LCP unchanged without it) | Deferring it to first interaction loses pageviews of visitors who leave within seconds — the number a launch funnel is measured by. Speed vs. measurement is yours to trade | TASK-104 follow-up |
 | **Raise the 500-role shortlist cap?** Disclosing it is now built (TASK-094). Measured: **6 of 9 users are at the cap**; your own search matches 5,368 | A bigger cap is a product choice about list length vs precision. Since TASK-093 only the rendered cards are read whole, so page weight no longer grows with the cap — but the nightly scoring time and `gate_results` rows do | a follow-up to TASK-094 |
 
 **Live-site facts from the pass that you should know without reading the audit:**

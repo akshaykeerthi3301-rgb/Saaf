@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { cspReportOnly } from "./src/lib/csp";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -15,6 +16,24 @@ const nextConfig: NextConfig = {
       // production failure instead of hiding it. The résumé cap is 4 MB.
       bodySizeLimit: "4.5mb",
     },
+  },
+  // The rest of the security headers live in vercel.json; this one needs the
+  // environment, so it is built here. Report-only — see src/lib/csp.ts.
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: cspReportOnly({
+              sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+              posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+            }),
+          },
+        ],
+      },
+    ];
   },
 };
 
