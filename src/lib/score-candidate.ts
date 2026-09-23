@@ -74,11 +74,18 @@ export type ScoredRole = {
   breakdown: ScoreBreakdown
 }
 
-export async function scoreAgainstIndex(
-  db: SupabaseClient,
-  candidate: CandidateProfile,
-  opts: { openToAdjacent: boolean; limit?: number },
-): Promise<ScoredRole[]> {
+/**
+ * The candidate's profile → the search the index is scoped by.
+ *
+ * Exported so the shortlist's "of N" count (src/lib/services/shortlist.ts)
+ * asks the database the SAME question the scorer asked. Two derivations of
+ * which roles match would let the count and the list disagree about the same
+ * candidate. Null when the profile names no role.
+ */
+export function candidateSearch(
+  candidate: Pick<CandidateProfile, 'preferredRole' | 'preferredRoles'>,
+  openToAdjacent: boolean,
+) {
   /**
    * One list, or several — the same code path either way.
    *
@@ -101,7 +108,7 @@ export async function scoreAgainstIndex(
     seen.add(k)
     return true
   })
-  if (preferredAll.length === 0) return []
+  if (preferredAll.length === 0) return null
   const preferred = preferredAll[0]
 
   // Strict by default, and that default is the product decision: a candidate
@@ -116,7 +123,23 @@ export async function scoreAgainstIndex(
     .split(/\s+/)
     .filter(Boolean)
 
-  const adjacent = opts.openToAdjacent && terms.length > 1
+  const adjacent = openToAdjacent && terms.length > 1
+
+  /** What roles_for_candidates() is called with. */
+  const searches = preferredAll.map((r) =>
+    adjacent ? r.toLowerCase().replace(/[^a-z0-9&+ ]+/g, ' ').trim() : r,
+  )
+  return { preferredAll, preferred, terms, adjacent, searches }
+}
+
+export async function scoreAgainstIndex(
+  db: SupabaseClient,
+  candidate: CandidateProfile,
+  opts: { openToAdjacent: boolean; limit?: number },
+): Promise<ScoredRole[]> {
+  const search = candidateSearch(candidate, opts.openToAdjacent)
+  if (!search) return []
+  const { preferredAll, preferred, terms, adjacent } = search
   const cap = opts.limit ?? MAX_ROLES_PER_CANDIDATE
 
   // ONE string literal, deliberately long. Supabase infers the row type by
@@ -163,9 +186,7 @@ export async function scoreAgainstIndex(
    */
   const ranked = await db
     .rpc('roles_for_candidates', {
-      searches: preferredAll.map((r) =>
-        adjacent ? r.toLowerCase().replace(/[^a-z0-9&+ ]+/g, ' ').trim() : r,
-      ),
+      searches: search.searches,
       adjacent,
       max_rows: cap,
     })

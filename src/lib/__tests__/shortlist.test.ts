@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { ScoreBreakdown } from '@/match/score'
 import {
-  arrangeShortlist, cardsToShow, withinReach,
+  arrangeShortlist, cardsToShow, holdingLine, withinReach,
   CARDS_PER_BUCKET, SHOW_MORE_STEP, type ArrangeableRow,
 } from '../shortlist'
 
@@ -126,5 +126,26 @@ describe('how many cards render', () => {
     const [near, far] = arrangeShortlist(many(338), new Map(), { ...base, show: 'all' }).sections
     expect(far.visible).toHaveLength(CARDS_PER_BUCKET)
     expect(near.visible).toHaveLength(0)
+  })
+})
+
+describe('holdingLine — the 500 cap is never printed as a total', () => {
+  it('under the cap, the list is everything', () => {
+    expect(holdingLine(162, 500, null)).toEqual({ kind: 'complete', scored: 162 })
+    expect(holdingLine(162, 500, 9999)).toEqual({ kind: 'complete', scored: 162 })
+  })
+
+  it('at the cap with a count, states both numbers and the gap', () => {
+    // Founder's live search, 2026-09-23.
+    expect(holdingLine(500, 500, 5368)).toEqual({ kind: 'capped', scored: 500, matched: 5368, unscored: 4868 })
+  })
+
+  it('at the cap without a count, says it is capped rather than inventing a number', () => {
+    expect(holdingLine(500, 500, null)).toEqual({ kind: 'capped-unknown', scored: 500 })
+  })
+
+  it('does not announce a cap the index has since shrunk below', () => {
+    expect(holdingLine(500, 500, 500)).toEqual({ kind: 'complete', scored: 500 })
+    expect(holdingLine(500, 500, 480)).toEqual({ kind: 'complete', scored: 500 })
   })
 })

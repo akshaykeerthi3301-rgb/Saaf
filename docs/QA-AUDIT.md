@@ -12,6 +12,7 @@ is the evidence those tasks point back to.
 | QA-01 upload crash | **Fixed, verified on localhost, not deployed** — TASK-091 |
 | QA-02 `/today` speed | **Fixed, verified on a local production build, not deployed** — TASK-093. Cold-cache case unverified |
 | QA-12 error / not-found / loading screens | **Fixed, verified on localhost, not deployed** — TASK-092 |
+| QA-06 500 cap shown as a total | **Fixed, verified on localhost, not deployed** — TASK-094 |
 | QA-03 email sign-in | Open — founder-only (TASK-075) |
 | Everything else | Open — ROADMAP Phase 11 |
 

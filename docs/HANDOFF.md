@@ -23,7 +23,7 @@ Why, and the six parts of the "Jobright parity" prompt that were declined:
 ~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23.** ~~Still
 not deployed, not pushed.~~ **Deployed (with `71a5922`); still not pushed.**
 
-## ⏳ 2026-09-23 (later) — the three code P0s are BUILT, NOT DEPLOYED, NOT COMMITTED
+## ⏳ 2026-09-23 (later) — the three code P0s are BUILT, NOT DEPLOYED (~~NOT COMMITTED~~ — committed `8b5e794`); TASK-094 built, not committed
 
 TASK-091 (large upload no longer crashes), TASK-092 (branded error, not-found
 and loading screens) and TASK-093 (Jobs page 19.2 s → 2.9 s first load) are in
@@ -42,7 +42,7 @@ gate it**:
 | Decision | Why it is yours | Gates |
 |---|---|---|
 | **Darken the accent green slightly?** White text on it measures 4.49:1; the accessibility floor is 4.5:1 | It is the brand's one colour, and `docs/DESIGN.md` is law — a session may not move a token unasked | TASK-101 |
-| **Raise the 500-role shortlist cap?** Disclosing it ("Top 500 of N") needs no decision and will be built | A bigger cap is a product choice about list length vs precision, and costs page weight until TASK-093 lands | the second half of TASK-094 |
+| **Raise the 500-role shortlist cap?** Disclosing it is now built (TASK-094). Measured: **6 of 9 users are at the cap**; your own search matches 5,368 | A bigger cap is a product choice about list length vs precision. Since TASK-093 only the rendered cards are read whole, so page weight no longer grows with the cap — but the nightly scoring time and `gate_results` rows do | a follow-up to TASK-094 |
 
 **Live-site facts from the pass that you should know without reading the audit:**
 a résumé between 4.5 and 5 MB crashes the live checker to a blank error page

@@ -146,6 +146,45 @@ export async function readCards(
 }
 
 /**
+ * How many roles in the index match the candidate's search — the number the
+ * scorer's 500-row cap is taken from. Asked of roles_for_candidates() itself,
+ * with the same arguments the scorer passed (candidateSearch() in
+ * src/lib/score-candidate.ts), so the count and the list cannot disagree
+ * about what matches.
+ *
+ * ⚠️ NULL IS AN ANSWER, NOT AN ERROR. Measured 2026-09-23: ~0.25 s warm, 3.2 s
+ * on the first call of a cold connection. /today must not wait on that, so
+ * past `timeoutMs` the page says the list is capped without the number rather
+ * than holding the whole render. A missing function (unapplied migration)
+ * lands here too.
+ */
+export async function countMatchingRoles(
+  searches: string[],
+  adjacent: boolean,
+  timeoutMs = 1500,
+): Promise<number | null> {
+  const supabase = await createClient()
+  // ⚠️ TWO ARGUMENTS, NOT AN OBJECT, ON PURPOSE. candidateSearch() returns more
+  // than the function takes, and PostgREST resolves an RPC by its argument
+  // NAMES: the first version spread that object and asked for
+  // roles_for_candidates(adjacent, max_rows, preferred, …), which does not
+  // exist. As a HEAD request that failed silently — 204, no count, no error —
+  // and the page said "500+" for everyone. The type checker accepted the wider
+  // object structurally; positional parameters make the mistake unwritable.
+  const counted = supabase
+    .rpc(
+      'roles_for_candidates',
+      { searches, adjacent, max_rows: 100_000 },
+      { count: 'exact', head: true },
+    )
+    .select('id')
+    .then(({ count, error }) => (error ? null : count ?? null))
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const late = new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), timeoutMs) })
+  return Promise.race([counted, late]).finally(() => clearTimeout(timer))
+}
+
+/**
  * How many scored roles meet the candidate's work-mode preference. Needs the
  * breakdown's components for every row, so it is read only for a candidate who
  * set a preference — and runs alongside the card read rather than before it.

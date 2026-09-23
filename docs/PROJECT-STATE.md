@@ -1973,6 +1973,17 @@ committed.** Evidence per task is in ROADMAP Phase 11. What is worth carrying:
 - `/today` had no tests; `src/lib/__tests__/shortlist.test.ts` (12) now pins its
   arithmetic, written before the reads moved. Page query sites 25 → **22**.
 
+**TASK-094 — the cap, measured before it was disclosed.** 6 of 9 profiles hold
+exactly 500 scored roles; the founder's search matches 5,368 with adjacent
+roles on (42 strict). So the cap is not an edge case — it is most users'
+shortlist, and "Showing 500 roles matched" was describing the top 9% of the
+founder's matches as all of them. The page now names both numbers and the
+remedy that moves them. The count reuses `roles_for_candidates()` through the
+scorer's own `candidateSearch()`; the lesson worth keeping is the bug in its
+first version — an RPC resolved by argument NAMES, a wider object spread into
+it, and a HEAD request that turned "no such function" into a silent null. A
+type checker cannot see it; opening the page did.
+
 **Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
 2026-09-07); Next refuses to run on it. Every check above ran on the pinned
 v22.23.2 via a PATH prefix.

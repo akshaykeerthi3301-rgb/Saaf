@@ -10,8 +10,9 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countWorkModeMatches, readCards, readShortlist } from '@/lib/services/shortlist'
-import { arrangeShortlist, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readCards, readShortlist } from '@/lib/services/shortlist'
+import { arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
+import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -70,7 +71,7 @@ export default async function TodayPage({
   const [{ data: profile }, shortlist] = await Promise.all([
     supabase
       .from('profiles')
-      .select('preferred_role, confirmed_at, city, work_mode_preference, years_experience')
+      .select('preferred_role, preferred_roles, open_to_adjacent, confirmed_at, city, work_mode_preference, years_experience')
       .eq('id', user.id)
       .single(),
     readShortlist(user.id),
@@ -102,18 +103,32 @@ export default async function TodayPage({
   // times. Counted from the stored breakdowns, so it is the real number.
   const wantsMode = profile.work_mode_preference && profile.work_mode_preference !== 'no_preference'
 
+  // At the cap, ask how many roles the same search matches — built exactly as
+  // src/lib/evaluate-user.ts builds it for the scorer, so both describe one set.
+  const capSearch = rows.length >= MAX_ROLES_PER_CANDIDATE
+    ? candidateSearch(
+        { preferredRole: profile.preferred_role ?? undefined, preferredRoles: profile.preferred_roles ?? undefined },
+        profile.open_to_adjacent === true,
+      )
+    : null
+
   /**
    * The cards on screen are read whole here, and only they are — see
    * src/lib/services/shortlist.ts. Coverage only on the thin path: a
    * well-served shortlist never pays for those counts, and the message they
-   * feed only renders below 10 strong matches. The three are independent, so
-   * they run together.
+   * feed only renders below 10 strong matches. The match count only at the
+   * cap. All independent, so they run together.
    */
-  const [{ cards, requirements }, coverage, modeMatches] = await Promise.all([
+  const [{ cards, requirements }, coverage, modeMatches, matched] = await Promise.all([
     readCards(user.id, arranged.flatMap((s) => s.visible)),
     strong < 10 ? coverageByFunction() : Promise.resolve([]),
     wantsMode ? countWorkModeMatches(user.id) : Promise.resolve(0),
+    capSearch ? countMatchingRoles(capSearch.searches, capSearch.adjacent) : Promise.resolve(null),
   ])
+  const holding = holdingLine(rows.length, MAX_ROLES_PER_CANDIDATE, matched)
+  // At the cap the list is the top of a larger set, and the tab must not call
+  // it "All" two lines above a sentence saying it is not (QA-05's lesson).
+  const allLabel = holding.kind === 'complete' ? 'All matches' : 'Top matches'
 
   // Every requirement extracted for the role — a wrong score is debugged by
   // seeing what was read, not just the number it produced. Read only for the
@@ -208,7 +223,7 @@ export default async function TodayPage({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
               {[
-                { key: 'all', label: 'All matches', count: rows.length, href: '/today' },
+                { key: 'all', label: allLabel, count: rows.length, href: '/today' },
                 { key: 'new', label: `New in ${NEW_WITHIN_DAYS} days`, count: newCount, href: '/today?tab=new' },
               ].map((t) => {
                 const active = (t.key === 'new') === onlyNew
@@ -241,7 +256,7 @@ export default async function TodayPage({
           {onlyNew && visibleCount === 0 ? (
             <p className="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
               Nothing new in the last {NEW_WITHIN_DAYS} days. Your {rows.length} matches are all
-              still there under <Link href="/today" className="font-semibold text-primary underline underline-offset-4">All matches</Link> —
+              still there under <Link href="/today" className="font-semibold text-primary underline underline-offset-4">{allLabel}</Link> —
               a quiet few days is our coverage, not a verdict on you.
             </p>
           ) : null}
@@ -286,9 +301,48 @@ export default async function TodayPage({
             </div>
           ) : null}
 
-          <p className="mb-4 text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-primary">{visibleCount}</span>{' '}
-            {visibleCount === 1 ? 'role' : 'roles'} matched to your baseline.
+          {/* ⚠️ AT THE CAP THIS SENTENCE SAYS SO. The scorer takes the roles whose
+              titles rank closest to the candidate's search, 500 at most, and
+              "Showing 500 roles matched" read as the whole market — 6 of 9
+              profiles sat at exactly 500 on 2026-09-23 (QA-06). The remedy
+              named is the one that actually moves the number. */}
+          <p className="mb-4 text-sm leading-6 text-muted-foreground">
+            {holding.kind === 'complete' || onlyNew ? (
+              <>
+                Showing <span className="font-semibold text-primary">{visibleCount}</span>{' '}
+                {visibleCount === 1 ? 'role' : 'roles'} matched to your baseline.
+              </>
+            ) : (
+              <>
+                Showing the <span className="font-semibold text-primary">{holding.scored}</span> closest title
+                matches
+                {holding.kind === 'capped' ? (
+                  <>
+                    {' '}of <span className="font-semibold text-primary">{holding.matched.toLocaleString('en-IN')}</span>{' '}
+                    roles that fit your baseline.
+                  </>
+                ) : (
+                  ' to your baseline.'
+                )}
+              </>
+            )}
+            {holding.kind !== 'complete' ? (
+              <>
+                {' '}
+                {holding.kind === 'capped' ? (
+                  <>
+                    The other <span className="font-semibold text-primary">{holding.unscored.toLocaleString('en-IN')}</span> rank
+                    lower on title and were not scored.
+                  </>
+                ) : (
+                  'More roles fit than we scored.'
+                )}{' '}
+                <Link href="/profile" className="font-semibold text-primary underline underline-offset-4">
+                  {profile.open_to_adjacent ? 'Turning off adjacent roles' : 'A more specific role'}
+                </Link>{' '}
+                narrows the list.
+              </>
+            ) : null}
           </p>
 
           {/* Sort and filter. Plain links, so the whole control set costs no
@@ -517,7 +571,17 @@ export default async function TodayPage({
             <dl className="space-y-3">
               {[
                 [(indexed ?? 0).toLocaleString('en-IN'), 'indexed'],
-                [rows.length.toLocaleString('en-IN'), 'matched'],
+                // At the cap "matched" is the index's count and "scored" is the
+                // list — two numbers, each named for what it is.
+                [
+                  holding.kind === 'capped'
+                    ? holding.matched.toLocaleString('en-IN')
+                    : holding.kind === 'capped-unknown'
+                      ? `${rows.length.toLocaleString('en-IN')}+`
+                      : rows.length.toLocaleString('en-IN'),
+                  'matched',
+                ],
+                ...(holding.kind === 'complete' ? [] : [[rows.length.toLocaleString('en-IN'), 'scored']]),
                 [strong.toLocaleString('en-IN'), 'strong'],
               ].map(([value, label]) => (
                 <div key={label} className="flex items-baseline justify-between gap-3">

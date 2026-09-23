@@ -72,6 +72,33 @@ export type ArrangeOptions = {
   now?: number
 }
 
+/**
+ * What the page may say about how many roles it holds for the candidate.
+ *
+ * ⚠️ 500 IS A CAP, AND IT USED TO BE PRINTED AS A TOTAL. The scorer takes the
+ * 500 roles whose titles rank closest to the candidate's search and scores
+ * those (src/lib/score-candidate.ts). Measured 2026-09-23: 6 of 9 profiles sit
+ * exactly at 500, and the founder's search matches 5,368. "Showing 500 roles
+ * matched" read as the whole market (docs/QA-AUDIT.md QA-06), against a
+ * locked decision that no role is silently hidden.
+ *
+ * `matched` is null when the count was not available in time; the page then
+ * says the list is capped without inventing a number.
+ */
+export type HoldingLine =
+  | { kind: 'complete'; scored: number }
+  | { kind: 'capped'; scored: number; matched: number; unscored: number }
+  | { kind: 'capped-unknown'; scored: number }
+
+export function holdingLine(scored: number, cap: number, matched: number | null): HoldingLine {
+  if (scored < cap) return { kind: 'complete', scored }
+  if (matched === null) return { kind: 'capped-unknown', scored }
+  // The index moves between the nightly score and this render; a count that
+  // no longer exceeds the list is not a cap worth announcing.
+  if (matched <= scored) return { kind: 'complete', scored }
+  return { kind: 'capped', scored, matched, unscored: matched - scored }
+}
+
 /** The experience standings "Within reach" keeps. The page's comment on the
  *  control says why `short` and `over` count. */
 export function withinReach(r: ArrangeableRow): boolean {
