@@ -54,6 +54,12 @@
   --color-paper-muted: var(--paper-muted);
   --color-paper-rule: var(--paper-rule);
   --color-paper: var(--paper);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-score-high: var(--score-high);
+  --color-score-mid: var(--score-mid);
+  --color-score-low: var(--score-low);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -121,6 +127,15 @@
      works in both themes without either one naming a colour of its own. */
   --glass: oklch(1 0 0 / 72%);
 
+  /* Brand gradient ends (indigo → violet) and the three score bands the match
+     ring colours by. Added 2026-09-23 with the dark default; see .dark. */
+  --brand: oklch(0.511 0.262 276.966);
+  --brand-2: oklch(0.496 0.265 301.924);
+  --brand-foreground: oklch(0.985 0 0);
+  --score-high: oklch(0.596 0.145 163.225);
+  --score-mid: oklch(0.666 0.179 58.318);
+  --score-low: oklch(0.577 0.245 27.325);
+
   /* The only raw variables any screen reads. Tailwind v4's font-sans and
      font-mono utilities resolve through these names, so setting them here is
      what points those utilities at the two self-hosted faces wired up in
@@ -142,13 +157,13 @@
    ONE PASS — all 33, not the handful a given screen happens to read. A parity
    check enforces it; if you add a token to :root, add it here in the same edit.
 
-   ⚠️ NOTHING APPLIES `.dark` YET. This is a palette, not a switch: no screen
-   changes appearance until something sets the class on <html>. That is
-   deliberate — it lets the palette land and be reviewed without restyling a
-   product that is live and whose light system is the one documented in
-   docs/DESIGN.md and verified in a browser.
+   ~~⚠️ NOTHING APPLIES `.dark` YET.~~ **SWITCHED ON 2026-09-23** (founder
+   direction, the Jobright-parity pass): src/app/layout.tsx sets `dark` on
+   <html>, so this block IS the shipped system and :root is the fallback a
+   future light toggle would use. Every token still has both values.
 
-   THE LOOK: a true OLED ground (#000) with surfaces lifted just off it, and
+   THE LOOK (2026-09-08, superseded by the zinc values below): a true OLED
+   ground (#000) with surfaces lifted just off it, and
    hairlines carried as low-alpha WHITE rather than as a grey. `--border` is
    `oklch(1 0 0 / 8%)`, so `border-border` composites over whatever sits
    beneath it — which is what makes a 1px edge read as a micro-border on black
@@ -160,12 +175,14 @@
 .dark {
   color-scheme: dark;
 
-  /* Ground and surfaces. Pure black is the page; cards are lifted, not tinted,
-     so an OLED panel keeps the ground genuinely unlit. */
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.97 0.004 240);
-  --card: oklch(0.16 0.006 250);
-  --card-foreground: oklch(0.97 0.004 240);
+  /* THE ZINC SYSTEM, 2026-09-23. Founder direction: the Jobright-style dark
+     workspace — zinc-950 ground (#09090b), zinc-900 surfaces (#18181b),
+     zinc-800 edges (#27272a), indigo→violet as the one chromatic family.
+     Replaces the OLED #000 palette of 2026-09-08, which was never switched on. */
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
 
   /* Identical to the light values, deliberately — see the note in :root. The
      document does not have a dark mode, so neither does its preview. */
@@ -174,53 +191,60 @@
   --paper-muted: oklch(0.52 0.012 250);
   --paper-rule: oklch(0.87 0.008 250);
 
-  --popover: oklch(0.19 0.007 250);
-  --popover-foreground: oklch(0.97 0.004 240);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
 
   /* --primary is the INK in this system — headings, and the fill of a solid
      button. It inverts wholesale: light ink on dark ground, dark label on a
      light button. Getting this pair backwards is precisely the pale-on-pale
      failure recorded above. */
-  --primary: oklch(0.97 0.004 240);
-  --primary-foreground: oklch(0.17 0.02 250);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.141 0.005 285.823);
 
-  --secondary: oklch(0.23 0.008 250);
-  --secondary-foreground: oklch(0.93 0.006 240);
-  --muted: oklch(0.23 0.008 250);
-  /* Lifted well above the 0.5 the light theme uses: the same lightness that
-     reads as quiet on #F1F4F8 is unreadable on #000. */
-  --muted-foreground: oklch(0.72 0.014 245);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.92 0.004 286.32);
+  --muted: oklch(0.274 0.006 286.033);
+  /* zinc-400: 7.8:1 on zinc-950, 6.4:1 on a zinc-900 card. */
+  --muted-foreground: oklch(0.705 0.015 286.067);
 
-  /* The one chromatic value, raised for a dark ground. The light theme's
-     0.54 lightness is a hole on black. */
-  --accent: oklch(0.76 0.15 163);
-  --accent-foreground: oklch(0.17 0.03 160);
-  --destructive: oklch(0.68 0.19 25);
+  /* indigo-400 as the accent, because the accent is used as TEXT (eyebrows,
+     links) as often as a fill, and indigo-500 is 4.3:1 on zinc-950. */
+  --accent: oklch(0.673 0.182 276.935);
+  --accent-foreground: oklch(0.141 0.005 285.823);
+  --destructive: oklch(0.704 0.191 22.216);
 
-  /* Hairlines as low-alpha white — the micro-border. Alpha, not a grey, so it
-     composites over the surface beneath and stays correct on both the pure
-     black ground and a lifted card. */
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.76 0.15 163);
+  /* Hairlines as low-alpha white — composites to ~#27272a over the ground. */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.673 0.182 276.935);
 
-  --chart-1: oklch(0.76 0.15 163);
-  --chart-2: oklch(0.97 0.004 240);
-  --chart-3: oklch(0.72 0.014 245);
-  --chart-4: oklch(0.5 0.02 245);
-  --chart-5: oklch(1 0 0 / 14%);
+  --chart-1: oklch(0.673 0.182 276.935);
+  --chart-2: oklch(0.627 0.265 303.9);
+  --chart-3: oklch(0.705 0.015 286.067);
+  --chart-4: oklch(0.442 0.017 285.786);
+  --chart-5: oklch(1 0 0 / 15%);
 
-  --sidebar: oklch(0.13 0.005 250);
-  --sidebar-foreground: oklch(0.97 0.004 240);
-  --sidebar-primary: oklch(0.97 0.004 240);
-  --sidebar-primary-foreground: oklch(0.17 0.02 250);
-  --sidebar-accent: oklch(0.23 0.008 250);
-  --sidebar-accent-foreground: oklch(0.93 0.006 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.76 0.15 163);
+  --sidebar: oklch(0.141 0.005 285.823);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.585 0.233 277.117);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.673 0.182 276.935);
 
-  /* Glass reads as the card colour at partial opacity; see the .glass utility. */
-  --glass: oklch(0.16 0.006 250 / 68%);
+  /* zinc-900 at 80% — the `bg-zinc-900/80 backdrop-blur-md` of the brief. */
+  --glass: oklch(0.21 0.006 285.885 / 80%);
+
+  /* indigo-500 → purple-600, the gradient on the logo, primary actions and
+     the high score ring. White label on either end clears 4.5:1. */
+  --brand: oklch(0.585 0.233 277.117);
+  --brand-2: oklch(0.558 0.288 302.321);
+  --brand-foreground: oklch(0.985 0 0);
+  /* emerald-400 / amber-400 / red-400: the ring bands (>= 85, 60–84, < 60). */
+  --score-high: oklch(0.765 0.177 163.223);
+  --score-mid: oklch(0.828 0.189 84.429);
+  --score-low: oklch(0.704 0.191 22.216);
 }
 
 @layer base {
@@ -266,6 +290,61 @@
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     backdrop-filter: blur(16px) saturate(180%);
   }
+
+  /* The brand gradient as a surface: logo badge, primary actions. */
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, var(--brand), var(--brand-2));
+    color: var(--brand-foreground);
+  }
+  .text-brand-gradient {
+    background-image: linear-gradient(135deg, var(--accent), var(--brand-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* The hover halo: a brand-tinted edge and a soft glow beneath. */
+  .glow-hover {
+    transition: box-shadow 200ms var(--ease-out-quint), border-color 200ms var(--ease-out-quint);
+  }
+  .glow-hover:hover, .glow-selected {
+    border-color: color-mix(in oklch, var(--brand) 55%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--brand) 35%, transparent),
+      0 10px 40px -12px color-mix(in oklch, var(--brand) 55%, transparent);
+  }
+
+  /* Two range inputs stacked into one dual-handle slider. The inputs ignore
+     the pointer so the track underneath stays visible; only the thumbs take it. */
+  .range-dual {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    pointer-events: none;
+  }
+  .range-dual::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: var(--brand-foreground);
+    border: 3px solid var(--brand);
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--brand) 25%, transparent);
+    cursor: grab;
+  }
+  .range-dual::-moz-range-thumb {
+    pointer-events: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: var(--brand-foreground);
+    border: 3px solid var(--brand);
+    cursor: grab;
+  }
+  .range-dual:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--ring); outline-offset: 2px; }
 
   /* Respect the platform setting. A candidate who has asked their OS to reduce
      motion has asked every product on it, including this one. */

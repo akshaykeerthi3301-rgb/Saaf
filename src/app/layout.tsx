@@ -53,7 +53,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${jetbrainsMono.variable}`}>
+    // `dark` is the shipped system since 2026-09-23 — see the .dark block in globals.css.
+    <html lang="en" className={`dark ${publicSans.variable} ${jetbrainsMono.variable}`}>
       <body>
         <AnalyticsProvider />
         {children}

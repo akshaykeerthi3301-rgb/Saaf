@@ -7,7 +7,9 @@ description: >
   single 0.8rem radius scale, and one soft shadow used only on cards. It
   replaced a monochrome, zero-shadow, square-cornered system derived from
   zerodha.tech — see "What was retired, and why" for what that cost and what
-  survived it.
+  survived it. ⚠️ SINCE 2026-09-23 THE SHIPPED LOOK IS `colors-dark` (zinc +
+  indigo→violet, TASK-107): the light palette and its prose below describe the
+  fallback. Component specs and spacing are unchanged and still law.
 colors:
   # oklch, exactly as they sit in src/app/globals.css. Hex equivalents are
   # approximate and are here only to make the values readable at a glance.
@@ -30,44 +32,59 @@ colors:
   input:                 "oklch(0.89 0.018 235)"    # field borders
   ring:                  "oklch(0.54 0.12 163)"     # focus ring == accent
 colors-dark:
-  # Added 2026-09-08. OPT-IN AND NOT YET THE DEFAULT: these live under `.dark`
-  # in src/app/globals.css and nothing sets that class, so no shipped screen
-  # changes appearance until something does. The light palette above remains
-  # the shipped system.
+  # ~~Added 2026-09-08. OPT-IN AND NOT YET THE DEFAULT~~ — SWITCHED ON AND
+  # RETUNED 2026-09-23 (founder direction, the workspace parity pass, ROADMAP
+  # TASK-107, PROJECT-STATE Stage AD). src/app/layout.tsx sets `dark` on <html>,
+  # so these values ARE the shipped system; the light palette above is kept in
+  # full as the fallback a future theme toggle would use.
   #
   # ⚠️ EVERY LIGHT TOKEN HAS A VALUE HERE, IN ONE PASS. A partial palette is a
-  # real defect this project has already had: a declared `dark` variant with no
-  # values flipped ink to near-white while the ground stayed light, rendering
-  # the landing page's call to action as pale text on a pale button — invisible,
-  # with a green build. src/app/__tests__/theme-tokens.test.ts now fails if a
-  # token is added to one palette and not the other.
+  # real defect this project has already had. src/app/__tests__/theme-tokens.test.ts
+  # fails if a token is added to one palette and not the other.
   #
-  # THE GROUND IS TRUE BLACK, not a near-black grey, so an OLED panel keeps it
-  # genuinely unlit. Surfaces are lifted off it rather than tinted.
-  background:            "oklch(0 0 0)"             # #000000 — OLED ground
-  foreground:            "oklch(0.97 0.004 240)"
-  card:                  "oklch(0.16 0.006 250)"    # lifted, not tinted
-  card-foreground:       "oklch(0.97 0.004 240)"
-  popover:               "oklch(0.19 0.007 250)"
-  popover-foreground:    "oklch(0.97 0.004 240)"
-  primary:               "oklch(0.97 0.004 240)"    # ink inverts wholesale
-  primary-foreground:    "oklch(0.17 0.02 250)"     # dark label on a light button
-  secondary:             "oklch(0.23 0.008 250)"
-  secondary-foreground:  "oklch(0.93 0.006 240)"
-  muted:                 "oklch(0.23 0.008 250)"
-  muted-foreground:      "oklch(0.72 0.014 245)"    # lifted from 0.5; 0.5 is unreadable on #000
-  accent:                "oklch(0.76 0.15 163)"     # raised from 0.54, which is a hole on black
-  accent-foreground:     "oklch(0.17 0.03 160)"
-  destructive:           "oklch(0.68 0.19 25)"
-  border:                "oklch(1 0 0 / 8%)"        # MICRO-BORDER: low-alpha white, not a grey
-  input:                 "oklch(1 0 0 / 14%)"
-  ring:                  "oklch(0.76 0.15 163)"
+  # THE ZINC SYSTEM. Ground zinc-950 (#09090b), surfaces zinc-900 (#18181b),
+  # hairlines low-alpha white compositing to ~zinc-800 (#27272a). The 2026-09-08
+  # OLED #000 values are superseded (see git history for them).
+  background:            "oklch(0.141 0.005 285.823)"  # ~#09090B — zinc-950
+  foreground:            "oklch(0.985 0 0)"            # ~#FAFAFA
+  card:                  "oklch(0.21 0.006 285.885)"   # ~#18181B — zinc-900
+  card-foreground:       "oklch(0.985 0 0)"
+  popover:               "oklch(0.21 0.006 285.885)"
+  popover-foreground:    "oklch(0.985 0 0)"
+  primary:               "oklch(0.985 0 0)"            # ink inverts wholesale
+  primary-foreground:    "oklch(0.141 0.005 285.823)"
+  secondary:             "oklch(0.274 0.006 286.033)"  # ~#27272A — zinc-800
+  secondary-foreground:  "oklch(0.92 0.004 286.32)"
+  muted:                 "oklch(0.274 0.006 286.033)"
+  muted-foreground:      "oklch(0.705 0.015 286.067)"  # zinc-400: 7.8:1 on ground
+  accent:                "oklch(0.673 0.182 276.935)"  # indigo-400 — used as TEXT, so the lighter one
+  accent-foreground:     "oklch(0.141 0.005 285.823)"
+  destructive:           "oklch(0.704 0.191 22.216)"   # system errors ONLY
+  border:                "oklch(1 0 0 / 10%)"          # MICRO-BORDER: low-alpha white
+  input:                 "oklch(1 0 0 / 15%)"
+  ring:                  "oklch(0.673 0.182 276.935)"
+brand:
+  # Added 2026-09-23, in BOTH palettes. The one gradient: logo badge, primary
+  # actions, active tab, selected card. `.bg-brand-gradient` sets its own label
+  # colour (brand-foreground), so a gradient button never needs a text class.
+  brand:            { dark: "oklch(0.585 0.233 277.117)", light: "oklch(0.511 0.262 276.966)" }  # indigo-500 / -700
+  brand-2:          { dark: "oklch(0.558 0.288 302.321)", light: "oklch(0.496 0.265 301.924)" }  # purple-600 / -700
+  brand-foreground: { dark: "oklch(0.985 0 0)",           light: "oklch(0.985 0 0)" }
+  utilities: ".bg-brand-gradient · .text-brand-gradient · .glow-hover / .glow-selected (brand halo) · .range-dual (dual-handle slider)"
+score-bands:
+  # The match ring (src/components/ui/score-ring.tsx) and nothing else colours by
+  # score. High starts at HIGH_PRECISION_MIN (75), the same line as the
+  # "High-precision match" label — never a separate threshold, or the ring and
+  # the label disagree on one card (measured: an 81 at an 85 cut drew amber).
+  score-high: { dark: "oklch(0.765 0.177 163.223)", light: "oklch(0.596 0.145 163.225)", from: 75 }  # emerald
+  score-mid:  { dark: "oklch(0.828 0.189 84.429)",  light: "oklch(0.666 0.179 58.318)",  from: 60 }  # amber
+  score-low:  { dark: "oklch(0.704 0.191 22.216)",  light: "oklch(0.577 0.245 27.325)",  below: 60 } # red
 surfaces:
   # `--glass` is each theme's card colour at partial opacity, so the .glass
   # utility names no colour of its own and inverts for free.
   glass:
     token-light: "oklch(1 0 0 / 72%)"
-    token-dark:  "oklch(0.16 0.006 250 / 68%)"
+    token-dark:  "oklch(0.21 0.006 285.885 / 80%)"   # zinc-900/80 — the brief's bg-zinc-900/80
     utility: ".glass — backdrop-filter: blur(16px) saturate(180%)"
     note: >
       backdrop-filter is progressively enhanced. A browser without it renders

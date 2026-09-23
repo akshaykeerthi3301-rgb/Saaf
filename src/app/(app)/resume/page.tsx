@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, RefreshCw, ShieldCheck } from 'lucide-react'
+import { FileText, RefreshCw, ShieldCheck, Sparkles, Wand2 } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { listResumes, type SavedResume } from '@/lib/services/resume-documents'
@@ -80,7 +80,7 @@ export default async function ResumePage() {
   ]
 
   return (
-    <AppShell title="Résumé" initials={initials}>
+    <AppShell title="AI Resume Builder" eyebrow="Your résumés" initials={initials}>
       <div className="mx-auto max-w-3xl p-5 sm:p-8">
         {/* The promise this screen exists under, stated first rather than in a
             footnote — and narrowed, not dropped, on 2026-09-09. */}
@@ -97,6 +97,25 @@ export default async function ResumePage() {
               replace it, and delete it here, and deleting your account takes it with it.
             </p>
           </div>
+        </div>
+
+        {/* The two ways to work on a résumé, side by side: build and check it,
+            or aim a saved one at a specific role. */}
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Link href="/tools/ats-checker" className="glow-hover flex gap-3 rounded-2xl border border-border bg-card p-4">
+            <span className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-xl"><Wand2 className="size-4" /></span>
+            <span>
+              <span className="block text-sm font-semibold text-primary">Build &amp; check a résumé</span>
+              <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">Upload, see what a parser reads, fix it, save it here.</span>
+            </span>
+          </Link>
+          <Link href="/resume/tailor" className="glow-hover flex gap-3 rounded-2xl border border-border bg-card p-4">
+            <span className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-xl"><Sparkles className="size-4" /></span>
+            <span>
+              <span className="block text-sm font-semibold text-primary">Tailor to a role</span>
+              <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">A saved résumé beside an AI-tailored version, every change marked.</span>
+            </span>
+          </Link>
         </div>
 
         <SavedResumes resumes={saved} />

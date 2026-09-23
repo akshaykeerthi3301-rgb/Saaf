@@ -68,13 +68,15 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // ⚠️ AN (app) PAGE NOT LISTED HERE STILL WORKS, WHICH IS WHY THIS DRIFTS.
-  // There is no src/app/(app)/layout.tsx, so each page self-guards in its own
-  // body — /copilot and /resume both do, and both are missing from this list.
-  // They are protected, but by convention rather than by the matcher, and the
-  // difference shows up as a missing session REFRESH rather than as an open
-  // page. Add a new (app) route here in the same commit that creates it.
+  // Each page self-guards in its own body (src/app/(app)/layout.tsx, added
+  // 2026-09-23, reads the account but is NOT an auth gate). A page missing
+  // from this list is still protected, by convention rather than by the
+  // matcher, and the difference shows up as a missing session REFRESH rather
+  // than as an open page. Add a new (app) route here in the same commit that
+  // creates it — /cover-letter and /outreach were, 2026-09-23.
   matcher: [
     '/today/:path*', '/applications/:path*', '/profile/:path*', '/start/:path*',
     '/dev/:path*', '/copilot/:path*', '/resume/:path*', '/interview-prep/:path*',
+    '/cover-letter/:path*', '/outreach/:path*',
   ],
 }

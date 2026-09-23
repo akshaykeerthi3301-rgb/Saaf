@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCookieContext, listScoredRoles } from '@/lib/services/cookie'
 import { buildPrepPlan, type PrepQuestion } from '@/lib/interview-prep'
 import { displayEmployer } from '@/lib/display-names'
+import { PracticeBox } from '@/components/features/practice-box'
 
 /**
  * Interview prep.
@@ -27,6 +28,32 @@ import { displayEmployer } from '@/lib/display-names'
  * ⚠️ THE ROLE COMES FROM `gate_results`, NEVER THE WHOLE INDEX — see listScoredRoles().
  */
 export const metadata = { title: 'Interview prep — Saaf' }
+
+/**
+ * Behavioural questions asked in almost every interview, added to the
+ * posting-specific ones so a practice session reaches the brief's 5–10.
+ * Generic by design and labelled so: they carry no claim about this posting.
+ */
+const BEHAVIOURAL: { id: string; question: string; because: string; answerWith: string }[] = [
+  {
+    id: 'b-conflict',
+    question: 'Tell me about a time you disagreed with a colleague or stakeholder. What did you do?',
+    because: 'Asked in most interviews, to see how you handle friction without damaging the work.',
+    answerWith: 'The disagreement in one line, how you understood their view, what you proposed, and how it ended.',
+  },
+  {
+    id: 'b-failure',
+    question: 'Describe something that did not go to plan. What did you learn?',
+    because: 'Interviewers use it to test ownership and honesty.',
+    answerWith: 'A real miss that was yours, what you changed straight away, and what you do differently now.',
+  },
+  {
+    id: 'b-priorities',
+    question: 'How do you decide what to work on when everything is urgent?',
+    because: 'A standard check on judgement and communication under pressure.',
+    answerWith: 'Your rule of thumb, one example of applying it, and how you told people what would wait.',
+  },
+]
 
 const KIND_LABEL: Record<PrepQuestion['kind'], string> = {
   experience: 'Experience', 'skill-gap': 'Gap', 'skill-strength': 'Strength',
@@ -83,8 +110,8 @@ export default async function InterviewPrepPage({
               ) : null}
             </p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Built from this posting&apos;s own words and your confirmed profile. Nothing here is
-              generated.
+              Questions are built from this posting&apos;s own words and your confirmed profile —
+              nothing in them is generated. Practise any answer below for a score and feedback.
             </p>
           </div>
         </div>
@@ -119,7 +146,7 @@ export default async function InterviewPrepPage({
             <p className="text-sm leading-6 text-muted-foreground">{ctx.error}</p>
           </div>
         ) : (
-          <PrepBody me={ctx.context.me} role={ctx.context.role} />
+          <PrepBody me={ctx.context.me} role={ctx.context.role} roleId={selected.id} />
         )}
       </div>
     </AppShell>
@@ -127,10 +154,11 @@ export default async function InterviewPrepPage({
 }
 
 function PrepBody({
-  me, role,
+  me, role, roleId,
 }: {
   me: Parameters<typeof buildPrepPlan>[0]
   role: Parameters<typeof buildPrepPlan>[1]
+  roleId: string
 }) {
   const plan = buildPrepPlan(me, role)
 
@@ -177,6 +205,28 @@ function PrepBody({
             <p className="mt-3 text-sm leading-6 text-primary">
               <span className="font-semibold">Answer with: </span>{q.answerWith}
             </p>
+            <PracticeBox roleId={roleId} question={q.question} />
+          </div>
+        ))}
+      </div>
+
+      <h2 className="mt-8 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+        Behavioural — asked almost everywhere
+      </h2>
+      <div className="mt-4 space-y-3">
+        {BEHAVIOURAL.map((q) => (
+          <div key={q.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-semibold text-primary">{q.question}</p>
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Behavioural
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{q.because}</p>
+            <p className="mt-3 text-sm leading-6 text-primary">
+              <span className="font-semibold">Answer with: </span>{q.answerWith}
+            </p>
+            <PracticeBox roleId={roleId} question={q.question} />
           </div>
         ))}
       </div>

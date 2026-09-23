@@ -2,6 +2,42 @@
 
 ---
 
+## ⏳ 2026-09-23 (late) — the Jobright-style workspace is BUILT, NOT MERGED, NOT LIVE
+
+**What exists:** the whole parity pass (dark zinc/indigo look, three-column
+workspace, job feed with filter pills and a match-analysis panel, résumé
+tailoring studio, cover-letter studio, outreach drafts, scored mock interviews,
+six-stage tracker with drag-and-drop and a table view, new onboarding) is on the
+branch **`jobright-parity`**, committed. **Nothing of it is on `main` and
+nothing is on the live site.** Checked on localhost against the live database;
+every test row was removed afterwards. Details: ROADMAP Phase 12, PROJECT-STATE
+Stage AD.
+
+**What only you can do, in this order (TASK-117):**
+
+1. **Decide you want it live.** It changes how every screen looks and
+   un-parks the co-pilot — both were your calls to reverse, and both are
+   recorded as reversed.
+2. **Apply migration `supabase/migrations/0028_workspace_records.sql`** in the
+   Supabase SQL editor (paste the whole file). Until it is applied: the
+   "Applying" column refuses moves (and says why), the tracker's record fields
+   (date applied, résumé version, salary, interview date), seniority / target
+   cities / pay floor, and the sidebar status do not save. Everything else works.
+3. **Run `npm run verify:rls`** after applying — 0028 adds no policies, but
+   this is the standing check.
+4. **Merge `jobright-parity` into `main` and deploy** (a session can run the
+   deploy on your go-ahead — `saaf` project, rsync without `.git`).
+5. **Walk sign-up once on the live site** with a throwaway account — the full
+   onboarding (upload → preferences → the new summary screen) was not walked
+   end to end, because doing it locally would have re-confirmed your own profile.
+
+**Known limit you should know before it goes out:** the AI drafts are checked
+for invented numbers, employers, years and qualifications — but not for
+invented *activities* (a draft said "I have led full-cycle recruiting"). The
+existing quick-draft panel has the same limit. Recorded, not fixed.
+
+---
+
 ## ✅ 2026-09-23 — ~~DEPLOY TASK-106 FIRST~~ DEPLOYED `dpl_CmXXH16qoaxUiWyVvtBthbWB2soS`: email sign-in no longer opens an existing account
 
 On the live site today, typing someone's email on /signin signs you in AS

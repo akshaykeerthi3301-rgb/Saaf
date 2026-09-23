@@ -77,7 +77,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 | **Employer access / B2B portal** | A later phase. **Do not build or design anything toward it** — no schema, no consent surface, no discoverability flag, no UI. When it returns, the opt-in consent model has to be designed first, because four of the five personas are employed and hiding their search. |
 | **WhatsApp channel** | A later phase, and the right channel for India. **Do not build or design it now.** It also bills per conversation, so it needs a budget decision before any work starts. ⚠️ The landing page currently carries a "WhatsApp Nudges" card at the founder's request — that copy must go live or come off before the deploy hold lifts. |
 | **The daily digest** *(parked 2026-09-08)* | Built and working — `ingest/digest.ts`, wired to a Vercel cron. Parked for THREE reasons, and the weakest one is the one usually given. **(1)** It cannot reach anyone: Resend delivers only to the founder's own address until a domain is verified, and the founder has chosen to stay on Google sign-in with no domain for now. **(2)** At fewer than ten beta users an automated daily email is the wrong tool — a founder's own message beats a cron job at that scale and tells you far more. **(3)** ⚠️ COVERAGE IS TOO UNEVEN TO PROMISE A DAILY ANYTHING. Measured 2026-09-08 against the live index: an HR candidate matches **15 roles total**, marketing 131, consulting 219, engineering 500 (capped). A daily digest would tell an HR candidate "nothing new matched today" almost every day — honest, and indistinguishable from a dead product. **Not parked because volume is thin overall** — 21,813 roles is plenty, and the digest was deliberately built to send on empty days, which is its stated differentiator. Reversal conditions, all three: a verified domain, more users than can be messaged by hand, and a week of post-scale-up data showing the real per-candidate discovery rate. That last one may say **weekly** rather than daily — the board rotation is ~8 days, so the calendar is the wrong cadence to copy. |
-| **The co-pilot — tailored résumés, cover letters, interview prep** *(parked 2026-09-06)* | On hold until the matching itself is trusted. The order is deliberate and worth keeping: a co-pilot that writes beautifully about a badly-chosen role makes the wrong application faster, which is the category failure this product exists to avoid. **Nothing to build or design here yet.** The provider is wired and fast enough for it (Groq, ~1.4s on a résumé), so this is a sequencing decision rather than a capability gap. Reconsider once scores are demonstrably right. ⚠️ The landing page's "Review & Approve" card is part of this and carries the same go-live-or-come-off condition. |
+| **The co-pilot — tailored résumés, cover letters, interview prep** *(parked 2026-09-06; **un-parked by founder direction 2026-09-23 — Stage AD**)* | ~~On hold until the matching itself is trusted.~~ **Built 2026-09-23 on `jobright-parity` (Stage AD); the reasoning below is kept because the order it argues for was overruled, not refuted.** On hold until the matching itself is trusted. The order is deliberate and worth keeping: a co-pilot that writes beautifully about a badly-chosen role makes the wrong application faster, which is the category failure this product exists to avoid. **Nothing to build or design here yet.** The provider is wired and fast enough for it (Groq, ~1.4s on a résumé), so this is a sequencing decision rather than a capability gap. Reconsider once scores are demonstrably right. ⚠️ The landing page's "Review & Approve" card is part of this and carries the same go-live-or-come-off condition. |
 
 ---
 
@@ -1851,7 +1851,7 @@ untouched). **No migration.**
 email sync, company insights, applicant counts). Checked against the repo rather
 than acknowledged: stack, résumé parsing, split score, tailoring with the
 fabrication guard, a form-filling extension and the tracker board all exist.
-**Founder chose 2026-09-23: close the real gaps in Saaf, no rebuild.** Declined,
+~~**Founder chose 2026-09-23: close the real gaps in Saaf, no rebuild.**~~ **Reversed the same evening — Stage AD.** Declined,
 and why — so a later session handed the same prompt does not re-derive this:
 
 | Declined | Why |
@@ -2160,6 +2160,74 @@ fifteen minutes — the documented symptom of Vercel refusing a commit author it
 does not recognise. `--prebuilt` from a partial staging copy does not work
 either: the traced bundle reaches back into `node_modules` and `.next` by path.
 What works is rsyncing the sources without `.git` and letting Vercel build.
+
+### Stage AD — the workspace parity pass: two parked decisions reversed, the legal limits held (2026-09-23)
+
+**The direction.** The founder brought a second, larger "full Jobright.ai
+replication" brief the same evening Stage AA had declined a rebuild, and — asked
+to choose between closing gaps, a dark rebrand, or reversing locked decisions —
+answered "continue to execute my direction". Built on branch `jobright-parity`
+(TASK-107 → TASK-116, ROADMAP Phase 12). **Not merged, not deployed.**
+
+**Reversed by founder direction, 2026-09-23** (struck, not deleted, where they stood):
+
+| Was | Now |
+|---|---|
+| Stage AA: "close the real gaps in Saaf, no rebuild" | Rebuild of the signed-in workspace to the Jobright layout |
+| Dark rebrand parked (memory `saaf-dark-rebrand-parked`, DESIGN.md light system is law) | Zinc-950/900/800 + indigo→violet switched on for the whole app — done the way the parking note required: tokens in both palettes, one class on `<html>`, no per-screen colours |
+| The co-pilot parked until matching is trusted (2026-09-06) | Cover letters, outreach and mock-interview scoring built; every draft grounded, every tool degrades to a template |
+
+**Held, and what was built instead** — so a later session handed the same brief
+does not re-derive this:
+
+| The brief asked for | Built instead | Why |
+|---|---|---|
+| LinkedIn Import URL | Upload of the PDF LinkedIn itself exports ("More → Save to PDF") | Fetching a profile URL is scraping; LinkedIn ToS, *hiQ v. LinkedIn* |
+| Cold LinkedIn InMail to named people | Contact TYPES + a link to LinkedIn's own people search, opened by the candidate; drafts they copy | We hold no people data and will not scrape it |
+| Quick Apply / Easy Apply | Opens the employer's form and files the role as Applying; "Easy Apply" = one-page, no-account ATS hosts | Never applies on the candidate's behalf (permanent) |
+| Salary > $X pill; salary on cards | No pill, no chip; pay floor collected for the tracker only | 2.2% of postings state pay, nothing extracts it (Stage T) |
+| Glassdoor rating, funding stage | Company snapshot from our own index (open roles in India, cities, ATS) + culture tags quoted from the posting | No free licensed source |
+| Profile Health Score | A visible weighted checklist of 11 fields summing to 100 | A number from nothing visible is what /copilot refuses; this one shows every point |
+| Ring green > 85% | Green from 75 (`HIGH_PRECISION_MIN`) | At 85, an 81 drew amber under "High-precision match" — two verdicts on one card |
+| Exact Jobright UI | Jobright's information architecture, Saaf's name and tokens | Copying another company's trade dress is a brand and legal risk |
+
+**Found and fixed while building — each worth more than the feature line:**
+
+1. **The tailoring studio rewrote a résumé's facts to match the profile.** With
+   profile facts (2 years) the model turned a saved résumé's "6 years in
+   payments" into "2 years", and the guard passed it — 2 is not more than 2.
+   Facts now come from the document (`extractFields(body)`), as
+   `optimise-resume.ts` already did. Found by opening the page, not by a test.
+2. **`groundingFailure()` cannot judge prose.** It exempts only the first word
+   of what it is given, so a paragraph fails on every sentence-initial "That" or
+   "Most", and on `[Hiring Manager]` tags. `groundText()` strips tags and checks
+   per sentence; invented employers and figures still fail (tested). ⚠️ **The
+   existing review drawer passes a three-sentence cover note to it whole** —
+   `src/lib/tailor.ts` — and so probably drops good notes; not changed here.
+3. **The grounding filter does not catch invented ACTIVITIES.** Checked live: a
+   Groq cover letter said "I have led full-cycle recruiting" — no figure, no
+   employer, no tenure, no credential, so it passed. Same limit in the review
+   drawer. The UI says every sentence was *checked*, not *verified*; the gap is
+   real and open.
+4. **Every new tracker write was going into `src/app/`** (8 new `supabase.from`
+   sites; invariant 3 says do not add a 25th). Moved to
+   `src/lib/services/{applications,workspace}.ts` before commit; the action file
+   is back to its original 5.
+5. **The onboarding panel's hard-coded light gradient** (`oklch(0.95 …)`) would
+   have put the now-white heading on a pale ground under `.dark`. The token test
+   only bans hex and palette classes, so it did not catch an inline `oklch()`.
+
+**Measured on localhost against the live database, 2026-09-23** (founder account;
+every test row added was removed — tracker 0, saved résumés 0, as found):
+tests 772 pass (50 files; +23 new), lint 0 errors / 23 warnings (all
+pre-existing), typecheck clean, `npm run bench` 26 documents 0 misses, build
+green. `bench:match` not run — the scorer is untouched. Feed pills
+`easy+min80` → 2 of 500. Panel switch with no reload. Phone sheet Escape/focus
+at 375 px. Drop Saved→Applied persisted; Applying refused pre-0028 with its
+reason; bulk move → "On tracker · Interviewing" on the feed. **Not walked:** the
+full sign-up flow (would re-confirm the founder's profile), Export Word/PDF
+downloads, native pointer drag (the preview's synthetic drag does not fire
+HTML5 DnD — verified with dispatched drag events).
 
 ### Deliberate residue — do not "tidy" these away
 

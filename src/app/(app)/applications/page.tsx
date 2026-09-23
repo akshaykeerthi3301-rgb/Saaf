@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationBoard, type Application } from '@/components/features/application-board'
+import { readApplicationRecords } from '@/lib/services/workspace'
+import { listResumes } from '@/lib/services/resume-documents'
 
 /**
  * The tracker.
@@ -22,7 +24,7 @@ export default async function ApplicationsPage() {
 
   const { data, error } = await supabase
     .from('applications')
-    .select('id, company, title, apply_url, status, note, follow_up_on, role_id')
+    .select('id, company, title, apply_url, status, note, follow_up_on, role_id, updated_at')
     .order('updated_at', { ascending: false })
 
   /**
@@ -43,6 +45,13 @@ export default async function ApplicationsPage() {
     for (const g of scored ?? []) if (g.score !== null) scoreFor.set(g.role_id, g.score)
   }
 
+  // The 0028 record fields and the saved résumé labels, both read through
+  // services and both soft: a missing migration or table leaves the board working.
+  const [{ records, stored }, resumes] = await Promise.all([
+    readApplicationRecords(),
+    listResumes(user.id).catch(() => []),
+  ])
+
   const rows: Application[] = (data ?? []).map((r) => ({
     id: r.id,
     company: r.company,
@@ -52,6 +61,12 @@ export default async function ApplicationsPage() {
     note: r.note,
     followUpOn: r.follow_up_on,
     score: r.role_id ? scoreFor.get(r.role_id) : undefined,
+    updatedAt: r.updated_at,
+    appliedOn: records.get(r.id)?.appliedOn ?? null,
+    resumeVersion: records.get(r.id)?.resumeVersion ?? null,
+    salaryNote: records.get(r.id)?.salaryNote ?? null,
+    interviewOn: records.get(r.id)?.interviewOn ?? null,
+    statusChangedAt: records.get(r.id)?.statusChangedAt ?? null,
   }))
 
   // From the signed-in address rather than a second query just for two letters.
@@ -59,7 +74,7 @@ export default async function ApplicationsPage() {
 
 
   return (
-    <AppShell title="Job Tracker" initials={initials}>
+    <AppShell title="Application Tracker" eyebrow="Your pipeline" initials={initials}>
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
         {/* The empty state, the follow-up badge and the tracked count live in
             ApplicationBoard now, counted from its own state — computed here
@@ -72,7 +87,7 @@ export default async function ApplicationsPage() {
             We couldn&apos;t load your applications. That&apos;s our problem, not a result — try again shortly.
           </p>
         ) : (
-          <ApplicationBoard initial={rows} />
+          <ApplicationBoard initial={rows} resumeLabels={resumes.map((r) => r.label)} recordsStored={stored} />
         )}
       </div>
     </AppShell>

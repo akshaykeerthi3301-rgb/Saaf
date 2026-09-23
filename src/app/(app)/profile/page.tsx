@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileForm } from '@/components/features/profile-form'
+import { PreferencesPanel } from '@/components/features/preferences-panel'
+import { readPreferences } from '@/lib/services/workspace'
+import { profileHealth } from '@/lib/profile-health'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -30,10 +33,20 @@ export default async function ProfilePage() {
   if (!profile) redirect('/start')
 
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
+  const prefs = await readPreferences(user.id)
+  const health = profileHealth({
+    currentTitle: profile.current_title, employer: profile.employer,
+    yearsExperience: profile.years_experience === null ? null : Number(profile.years_experience),
+    city: profile.city, preferredRole: profile.preferred_role,
+    extraRoles: (profile.preferred_roles ?? []).filter((r: string) => r.toLowerCase() !== (profile.preferred_role ?? '').toLowerCase()),
+    skills: profile.skills ?? [], workMode: profile.work_mode_preference,
+    seniority: prefs.seniority, salaryMin: prefs.salaryMin,
+  })
 
   return (
-    <AppShell title="Profile & settings" initials={initials}>
-      <div className="mx-auto max-w-2xl p-5 sm:p-8">
+    <AppShell title="Profile & Preferences" eyebrow="Your baseline" initials={initials}>
+      <div className="mx-auto max-w-3xl p-5 sm:p-8">
+        <PreferencesPanel initial={prefs} health={health} />
         {/* Header says "Profile & settings"; an eyebrow and a headline saying it
             again were removed. The one line kept is the one a reader could not
             work out on their own — that saving re-runs the scoring. */}

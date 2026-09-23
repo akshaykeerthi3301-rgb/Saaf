@@ -165,6 +165,23 @@ export async function readPostedDates(roleIds: string[]): Promise<Map<string, st
 }
 
 /**
+ * role_id → apply URL, for the Easy Apply filter. Read only when that filter is
+ * on, for the same reason as readPostedDates: the thin read has no roles join.
+ */
+export async function readApplyUrls(roleIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) => supabase.from('roles').select('id, apply_url').in('id', ids)),
+  )
+  for (const { data } of results) {
+    for (const r of (data ?? []) as { id: string; apply_url: string }[]) out.set(r.id, r.apply_url)
+  }
+  return out
+}
+
+/**
  * How many roles in the index match the candidate's search — the number the
  * scorer's 500-row cap is taken from. Asked of roles_for_candidates() itself,
  * with the same arguments the scorer passed (candidateSearch() in

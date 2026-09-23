@@ -15,7 +15,7 @@ import { AppShell } from '@/components/features/app-shell'
  */
 export default function TodayLoading() {
   return (
-    <AppShell title="Jobs" initials="">
+    <AppShell title="Job Search Feed" eyebrow="AI job matches" initials="">
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8" role="status" aria-live="polite">
         <span className="sr-only">Loading your matches…</span>
         <div aria-hidden="true" className="animate-pulse motion-reduce:animate-none">

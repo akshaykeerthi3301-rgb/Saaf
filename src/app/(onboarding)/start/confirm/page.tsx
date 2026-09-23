@@ -82,7 +82,8 @@ export default function ConfirmPage() {
       skills,
       domain: fields.domain,
     } })
-    router.push('/start/matching')
+    // Step 5, the preference matrix, sits between this and the first shortlist.
+    router.push('/start/preferences')
   }
 
 

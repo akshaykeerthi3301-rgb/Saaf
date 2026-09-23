@@ -12,12 +12,26 @@ import type { ParsedFields } from '@/lib/parse/extract'
  */
 const KEY = 'saaf.onboarding'
 
+export type OnboardingPrefs = {
+  extraRoles: string[]
+  workMode: 'remote' | 'hybrid' | 'onsite' | 'no_preference'
+  targetCities: string[]
+  salaryMin: number | null
+  salaryMax: number | null
+  salaryCurrency: 'INR' | 'USD' | 'EUR'
+  seniority: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | null
+}
+
 export type OnboardingDraft = {
   portals?: string[]
   fields?: ParsedFields
   warnings?: string[]
   /** The current title, only when the index holds postings for it. See suggestedRoleFor(). */
   suggestedRole?: string
+  /** How the profile arrived — résumé file, LinkedIn PDF, or typed in. */
+  source?: 'resume' | 'linkedin' | 'scratch'
+  /** The preference matrix (/start/preferences). */
+  prefs?: OnboardingPrefs
 }
 
 export function readDraft(): OnboardingDraft {

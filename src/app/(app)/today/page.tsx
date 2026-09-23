@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { coverageByFunction } from '@/lib/services/index-match'
 import { redirect } from 'next/navigation'
-import { ChevronRight, Eye, Laptop, Pencil, ShieldCheck, Wallet } from 'lucide-react'
+import { ChevronRight, Clock, Eye, Globe, Laptop, Pencil, ShieldCheck, Target, Wallet, X, Zap } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard, type EvidenceItem } from '@/components/features/role-card'
@@ -10,8 +10,12 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countMatchingRoles, countWorkModeMatches, readCards, readPostedDates, readShortlist } from '@/lib/services/shortlist'
-import { arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readPostedDates, readShortlist } from '@/lib/services/shortlist'
+import { FeedProvider, SelectableCard } from '@/components/features/feed-selection'
+import { JobPanel, JobSheet } from '@/components/features/job-panel'
+import { isEasyApply } from '@/lib/job-facts'
+import { readTrackedStatuses } from '@/lib/services/workspace'
+import { applyQuickPills, arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 
 /** The work-mode preference, in the words the chip row uses. */
@@ -51,9 +55,13 @@ const TRUE_FIT = 50
 export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; n?: string; tab?: string; sort?: string; fit?: string }>
+  searchParams: Promise<{
+    show?: string; n?: string; tab?: string; sort?: string; fit?: string
+    min80?: string; fresh?: string; remote?: string; easy?: string
+  }>
 }) {
-  const { show, n, tab, sort, fit } = await searchParams
+  const params = await searchParams
+  const { show, n, tab, sort, fit } = params
   const byNewest = sort === 'new'
   const clearsOnly = fit === 'clears'
   // Everything we hold for this candidate is the default view. "New" is the
@@ -82,10 +90,37 @@ export default async function TodayPage({
   // reasonably read as a verdict.
   if (!profile?.confirmed_at) redirect('/start/confirm')
 
-  const { rows, failed: error, indexed } = shortlist
+  const { failed: error, indexed } = shortlist
+  const allRows = shortlist.rows
+
+  /**
+   * THE QUICK FILTER PILLS (2026-09-23 parity pass). Each narrows the list the
+   * candidate is reading; none changes a score, and the count they hide is
+   * stated beside them — a filter is never allowed to look like the market's
+   * answer. Posted-date and apply-URL reads happen only when a pill needs them.
+   *
+   * No "Salary > X" pill: 2.2% of postings state pay and nothing extracts it
+   * (PROJECT-STATE Stage T), so it would hide ~98% of roles for a reason the
+   * candidate could not see.
+   */
+  const pills = {
+    min80: params.min80 === '1',
+    fresh: params.fresh === '1',
+    remote: params.remote === '1',
+    easy: params.easy === '1',
+  }
+  const [postedAll, applyAll] = await Promise.all([
+    byNewest || pills.fresh ? readPostedDates(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    pills.easy ? readApplyUrls(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+  ])
+  const rows = applyQuickPills(allRows, pills, {
+    postedAt: postedAll,
+    isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
+  })
+  const pillCount = Object.values(pills).filter(Boolean).length
 
   // Newest sorts by the board's posting date, which only this view needs.
-  const postedAt = byNewest ? await readPostedDates(rows.map((r) => r.role_id)) : undefined
+  const postedAt = byNewest ? postedAll : undefined
 
   /**
    * New, sections, order, the Within-reach filter and how many cards render —
@@ -108,7 +143,7 @@ export default async function TodayPage({
 
   // At the cap, ask how many roles the same search matches — built exactly as
   // src/lib/evaluate-user.ts builds it for the scorer, so both describe one set.
-  const capSearch = rows.length >= MAX_ROLES_PER_CANDIDATE
+  const capSearch = allRows.length >= MAX_ROLES_PER_CANDIDATE
     ? candidateSearch(
         { preferredRole: profile.preferred_role ?? undefined, preferredRoles: profile.preferred_roles ?? undefined },
         profile.open_to_adjacent === true,
@@ -122,13 +157,14 @@ export default async function TodayPage({
    * feed only renders below 10 strong matches. The match count only at the
    * cap. All independent, so they run together.
    */
-  const [{ cards, requirements }, coverage, modeMatches, matched] = await Promise.all([
+  const [{ cards, requirements }, coverage, modeMatches, matched, tracked] = await Promise.all([
     readCards(user.id, arranged.flatMap((s) => s.visible)),
     strong < 10 ? coverageByFunction() : Promise.resolve([]),
     wantsMode ? countWorkModeMatches(user.id) : Promise.resolve(0),
     capSearch ? countMatchingRoles(capSearch.searches, capSearch.adjacent) : Promise.resolve(null),
+    readTrackedStatuses(arranged.flatMap((s) => s.visible).map((r) => r.role_id)),
   ])
-  const holding = holdingLine(rows.length, MAX_ROLES_PER_CANDIDATE, matched)
+  const holding = holdingLine(allRows.length, MAX_ROLES_PER_CANDIDATE, matched)
   // At the cap the list is the top of a larger set, and the tab must not call
   // it "All" two lines above a sentence saying it is not (QA-05's lesson).
   const allLabel = holding.kind === 'complete' ? 'All matches' : 'Top matches'
@@ -215,11 +251,169 @@ export default async function TodayPage({
   // confusing initials ("PM" is not who you are).
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
 
-  return (
-    <AppShell title="Jobs" initials={initials}>
-      <ShortlistViewed cleared={strong} withheld={0} />
+  // The pills ride along on every other link, so sorting or expanding a
+  // filtered list does not silently drop the filter.
+  const pillParams = (Object.keys(pills) as (keyof typeof pills)[]).filter((k) => pills[k])
+  const pillQuery = pillParams.map((k) => `&${k}=1`).join('')
+  const pillHref = (toggle: keyof typeof pills) => {
+    const q = new URLSearchParams()
+    if (onlyNew) q.set('tab', 'new')
+    if (byNewest) q.set('sort', 'new')
+    if (clearsOnly) q.set('fit', 'clears')
+    for (const k of Object.keys(pills) as (keyof typeof pills)[]) {
+      const on = k === toggle ? !pills[k] : pills[k]
+      if (on) q.set(k, '1')
+    }
+    return `/today${q.size ? `?${q}` : ''}`
+  }
+  const PILLS: { key: keyof typeof pills; label: string; icon: typeof Zap; title: string }[] = [
+    { key: 'min80', label: 'Match > 80%', icon: Target, title: 'Only roles scoring above 80 for you' },
+    { key: 'fresh', label: 'Posted < 24 hours', icon: Clock, title: 'Posted in the last day, by the employer’s own date. Roles whose board gives no date are left out.' },
+    { key: 'remote', label: 'Remote only', icon: Globe, title: 'Roles the posting says are remote' },
+    { key: 'easy', label: 'Easy Apply', icon: Zap, title: 'One-page application form, no account needed. The extension can fill it; you submit.' },
+  ]
 
-      <div className="mx-auto grid max-w-[1500px] gap-6 p-5 sm:p-8 xl:grid-cols-[minmax(0,1fr)_300px]">
+  const firstVisible = arranged.flatMap((sec) => sec.visible)[0]?.role_id ?? null
+  /* The panel's idle state carries only figures that are real. The saaf-ai
+     export also has a profile-strength meter, a weekly application limit and a
+     B2B discoverability toggle: the first two are invented numbers, and
+     employer access is parked, so none of the three ship. */
+  const rail = (
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Your market today</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">Select any job to see its match analysis, skill gaps and the AI tools for it.</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <dl className="space-y-3">
+              {[
+                [(indexed ?? 0).toLocaleString('en-IN'), 'indexed'],
+                // At the cap "matched" is the index's count and "scored" is the
+                // list — two numbers, each named for what it is.
+                [
+                  holding.kind === 'capped'
+                    ? holding.matched.toLocaleString('en-IN')
+                    : holding.kind === 'capped-unknown'
+                      ? `${allRows.length.toLocaleString('en-IN')}+`
+                      : allRows.length.toLocaleString('en-IN'),
+                  'matched',
+                ],
+                ...(holding.kind === 'complete' ? [] : [[allRows.length.toLocaleString('en-IN'), 'scored']]),
+                // The card band's name for the same line — "strong" is 60–74 on a card (QA-10).
+                [strong.toLocaleString('en-IN'), 'high-precision'],
+              ].map(([value, label]) => (
+                <div key={label} className="flex items-baseline justify-between gap-3">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="font-mono text-lg font-semibold tabular-nums tracking-[-0.03em] text-primary">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {/* The honest empty state, and only when it applies. It used to sit
+                here on every visit, including days with 165 matches, where it
+                answered a worry nobody had. */}
+            {/*
+              ⚠️ "OUR COVERAGE, NOT A VERDICT ON YOU" WAS RIGHT AND UNUSABLE.
+              The sentiment is the locked decision — thinness is attributed to
+              us, never to the candidate — but a person reading it can do
+              nothing with it. Measured on 2026-09-14 this index is 39%
+              engineering and 1.6% HR, so an HR candidate seeing three roles is
+              not having a thin DAY; they are in a function we do not cover yet.
+              Naming which functions we DO cover, with the counts, turns an
+              apology into information — and the checker below is genuinely
+              useful to them today, with no account and no shortlist.
+            */}
+            {strong < 10 ? (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-[11px] leading-5 text-muted-foreground">
+                  A thin list is our coverage, not a verdict on you. We index company hiring boards,
+                  which means we are strongest here:
+                </p>
+                <ul className="mt-2.5 space-y-1">
+                  {coverage.map((c) => (
+                    <li key={c.fn} className="flex items-baseline justify-between gap-3 text-[11px]">
+                      <span className="text-muted-foreground">{c.label}</span>
+                      <span className="font-mono tabular-nums text-primary">
+                        {c.roles.toLocaleString('en-IN')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/tools/ats-checker"
+                  className="mt-3 inline-block text-[11px] font-semibold text-primary underline underline-offset-4"
+                >
+                  Meanwhile, check what a parser reads out of your résumé →
+                </Link>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Three standing promises, one line each. They were three paragraphs.
+              Nothing is withdrawn — the clauses that went were restatements:
+              "every score opens to show its working" is what the working button
+              on every card already does, and what a salary-less index means for
+              ranking follows from the sentence that remains. */}
+          <div className="space-y-3 rounded-2xl border border-border bg-secondary/60 p-4 text-[11px] leading-5 text-muted-foreground">
+            <p className="flex items-center gap-2.5">
+              <ShieldCheck className="size-4 shrink-0" />
+              <span className="font-semibold text-primary">We never apply for you.</span>
+            </p>
+            {/* WAS: "No employer here publishes a salary." Measured against the
+                live index on 2026-09-07 and it was false — 12 of 799 postings
+                state a figure ("15 LPA" at Apna, "₹50,000" at CRED), and the
+                registry was about to grow forty-fold. It also asserted
+                something we never check: nothing extracts salary, so we have no
+                standing to say what employers publish.
+
+                The replacement is about our own behaviour, which is the part we
+                can actually keep. See docs/CONFLICTS.md B3. */}
+            <p className="flex items-center gap-2.5">
+              <Wallet className="size-4 shrink-0" />
+              We don&apos;t read salaries, so pay never moves a score.
+            </p>
+            {/* The score presents as complete, so a requirement we don't read has
+                to be named or it reads as one we checked and found nothing on.
+                Attributed to our coverage, never to the candidate. */}
+            {/* Only when it is actually biting. A preference that most roles
+                meet needs no announcement. */}
+            {wantsMode && allRows.length > 0 && modeMatches <= allRows.length / 4 ? (
+              <p className="flex items-start gap-2.5">
+                <Laptop className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  You asked for <strong className="font-semibold text-primary">{profile.work_mode_preference}</strong>.{' '}
+                  <strong className="font-mono tabular-nums text-primary">{modeMatches}</strong> of{' '}
+                  <strong className="font-mono tabular-nums text-primary">{allRows.length}</strong>{' '}
+                  match that — the rest lose those points on every card.
+                </span>
+              </p>
+            ) : null}
+            {gap ? (
+              <p className="flex items-center gap-2.5">
+                <Eye className="size-4 shrink-0" />
+                <span>
+                  We don&apos;t read {gap.decidedBy} yet.
+                </span>
+              </p>
+            ) : null}
+          </div>
+        </div>
+  )
+
+  return (
+    <FeedProvider initial={firstVisible}>
+    <AppShell
+      title="Job Search Feed"
+      eyebrow="AI job matches"
+      initials={initials}
+      context={<JobPanel idle={rail} />}
+      contextOnMobile="hide"
+    >
+      <ShortlistViewed cleared={strong} withheld={0} />
+      <JobSheet />
+
+      <div className="mx-auto max-w-[1100px] p-5 sm:p-8">
         <section className="min-w-0">
           {/* The headline used to read "Sorted by what fits, and what doesn't."
               The bucket headings below say that by existing, so it went. */}
@@ -305,6 +499,45 @@ export default async function TodayPage({
             </div>
           ) : null}
 
+          {/* Quick filters. Plain links, like every other control here: no client
+              JavaScript, and each filtered view is its own shareable URL. */}
+          <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Quick filters">
+            {PILLS.map(({ key, label, icon: Icon, title }) => (
+              <Link
+                key={key}
+                href={pillHref(key)}
+                title={title}
+                aria-pressed={pills[key]}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  pills[key]
+                    ? 'bg-brand-gradient border-transparent'
+                    : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
+                }`}
+              >
+                <Icon className="size-3.5" aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
+            {pillCount > 0 ? (
+              <Link
+                href={`/today${onlyNew ? '?tab=new' : ''}`}
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
+              >
+                <X className="size-3.5" />
+                Clear · {allRows.length - rows.length} hidden
+              </Link>
+            ) : null}
+          </div>
+
+          {pillCount > 0 && rows.length === 0 ? (
+            <p className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
+              No role in your {allRows.length} matches passes {pillCount === 1 ? 'that filter' : 'all of those filters'}.
+              That is the filter, not the market —{' '}
+              <Link href="/today" className="font-semibold text-primary underline underline-offset-4">clear it</Link>{' '}
+              to see everything.
+            </p>
+          ) : null}
+
           {/* ⚠️ AT THE CAP THIS SENTENCE SAYS SO. The scorer takes the roles whose
               titles rank closest to the candidate's search, 500 at most, and
               "Showing 500 roles matched" read as the whole market — 6 of 9
@@ -368,6 +601,7 @@ export default async function TodayPage({
                   if (onlyNew) params.set('tab', 'new')
                   if (k === 'new') params.set('sort', 'new')
                   if (clearsOnly) params.set('fit', 'clears')
+                  for (const p of pillParams) params.set(p, '1')
                   return (
                     <Link
                       key={k}
@@ -394,6 +628,7 @@ export default async function TodayPage({
                   if (onlyNew) params.set('tab', 'new')
                   if (byNewest) params.set('sort', 'new')
                   if (k === 'clears') params.set('fit', 'clears')
+                  for (const p of pillParams) params.set(p, '1')
                   return (
                     <Link
                       key={k}
@@ -521,6 +756,7 @@ export default async function TodayPage({
                             <span className="h-px flex-1 bg-border" aria-hidden="true" />
                           </div>
                         ) : null}
+                        <SelectableCard roleId={card.role_id}>
                         <RoleCard
                           gateResultId={card.id}
                           roleId={card.role_id}
@@ -535,7 +771,9 @@ export default async function TodayPage({
                           requirements={evidence(card.role_id)}
                           profileCity={profile.city ?? undefined}
                           postedAt={card.roles?.posted_at ?? undefined}
+                          trackedStatus={tracked.get(card.role_id)}
                         />
+                        </SelectableCard>
                       </div>
                       )
                     })}
@@ -548,7 +786,7 @@ export default async function TodayPage({
                   {visible.length < inSection.length ? (
                     <p className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
                       <Link
-                        href={`/today?show=${key}&n=${visible.length + SHOW_MORE_STEP}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}#bucket-${key}`}
+                        href={`/today?show=${key}&n=${visible.length + SHOW_MORE_STEP}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}${pillQuery}#bucket-${key}`}
                         className="inline-flex items-center gap-1 font-semibold text-primary hover:text-accent"
                       >
                         Show {Math.min(SHOW_MORE_STEP, inSection.length - visible.length)} more
@@ -565,128 +803,8 @@ export default async function TodayPage({
             })}
           </BreakdownEngaged>
         </section>
-
-        {/* The rail carries only figures that are real. The saaf-ai export also
-            has a profile-strength meter, a weekly application limit and a B2B
-            discoverability toggle: the first two are invented numbers, and
-            employer access is parked, so none of the three ship. */}
-        <aside className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <dl className="space-y-3">
-              {[
-                [(indexed ?? 0).toLocaleString('en-IN'), 'indexed'],
-                // At the cap "matched" is the index's count and "scored" is the
-                // list — two numbers, each named for what it is.
-                [
-                  holding.kind === 'capped'
-                    ? holding.matched.toLocaleString('en-IN')
-                    : holding.kind === 'capped-unknown'
-                      ? `${rows.length.toLocaleString('en-IN')}+`
-                      : rows.length.toLocaleString('en-IN'),
-                  'matched',
-                ],
-                ...(holding.kind === 'complete' ? [] : [[rows.length.toLocaleString('en-IN'), 'scored']]),
-                // The card band's name for the same line — "strong" is 60–74 on a card (QA-10).
-                [strong.toLocaleString('en-IN'), 'high-precision'],
-              ].map(([value, label]) => (
-                <div key={label} className="flex items-baseline justify-between gap-3">
-                  <dt className="text-xs text-muted-foreground">{label}</dt>
-                  <dd className="font-mono text-lg font-semibold tabular-nums tracking-[-0.03em] text-primary">
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            {/* The honest empty state, and only when it applies. It used to sit
-                here on every visit, including days with 165 matches, where it
-                answered a worry nobody had. */}
-            {/*
-              ⚠️ "OUR COVERAGE, NOT A VERDICT ON YOU" WAS RIGHT AND UNUSABLE.
-              The sentiment is the locked decision — thinness is attributed to
-              us, never to the candidate — but a person reading it can do
-              nothing with it. Measured on 2026-09-14 this index is 39%
-              engineering and 1.6% HR, so an HR candidate seeing three roles is
-              not having a thin DAY; they are in a function we do not cover yet.
-              Naming which functions we DO cover, with the counts, turns an
-              apology into information — and the checker below is genuinely
-              useful to them today, with no account and no shortlist.
-            */}
-            {strong < 10 ? (
-              <div className="mt-4 border-t border-border pt-4">
-                <p className="text-[11px] leading-5 text-muted-foreground">
-                  A thin list is our coverage, not a verdict on you. We index company hiring boards,
-                  which means we are strongest here:
-                </p>
-                <ul className="mt-2.5 space-y-1">
-                  {coverage.map((c) => (
-                    <li key={c.fn} className="flex items-baseline justify-between gap-3 text-[11px]">
-                      <span className="text-muted-foreground">{c.label}</span>
-                      <span className="font-mono tabular-nums text-primary">
-                        {c.roles.toLocaleString('en-IN')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/tools/ats-checker"
-                  className="mt-3 inline-block text-[11px] font-semibold text-primary underline underline-offset-4"
-                >
-                  Meanwhile, check what a parser reads out of your résumé →
-                </Link>
-              </div>
-            ) : null}
-          </div>
-
-          {/* Three standing promises, one line each. They were three paragraphs.
-              Nothing is withdrawn — the clauses that went were restatements:
-              "every score opens to show its working" is what the working button
-              on every card already does, and what a salary-less index means for
-              ranking follows from the sentence that remains. */}
-          <div className="space-y-3 rounded-2xl border border-border bg-secondary/60 p-4 text-[11px] leading-5 text-muted-foreground">
-            <p className="flex items-center gap-2.5">
-              <ShieldCheck className="size-4 shrink-0" />
-              <span className="font-semibold text-primary">We never apply for you.</span>
-            </p>
-            {/* WAS: "No employer here publishes a salary." Measured against the
-                live index on 2026-09-07 and it was false — 12 of 799 postings
-                state a figure ("15 LPA" at Apna, "₹50,000" at CRED), and the
-                registry was about to grow forty-fold. It also asserted
-                something we never check: nothing extracts salary, so we have no
-                standing to say what employers publish.
-
-                The replacement is about our own behaviour, which is the part we
-                can actually keep. See docs/CONFLICTS.md B3. */}
-            <p className="flex items-center gap-2.5">
-              <Wallet className="size-4 shrink-0" />
-              We don&apos;t read salaries, so pay never moves a score.
-            </p>
-            {/* The score presents as complete, so a requirement we don't read has
-                to be named or it reads as one we checked and found nothing on.
-                Attributed to our coverage, never to the candidate. */}
-            {/* Only when it is actually biting. A preference that most roles
-                meet needs no announcement. */}
-            {wantsMode && rows.length > 0 && modeMatches <= rows.length / 4 ? (
-              <p className="flex items-start gap-2.5">
-                <Laptop className="mt-0.5 size-4 shrink-0" />
-                <span>
-                  You asked for <strong className="font-semibold text-primary">{profile.work_mode_preference}</strong>.{' '}
-                  <strong className="font-mono tabular-nums text-primary">{modeMatches}</strong> of{' '}
-                  <strong className="font-mono tabular-nums text-primary">{rows.length}</strong>{' '}
-                  match that — the rest lose those points on every card.
-                </span>
-              </p>
-            ) : null}
-            {gap ? (
-              <p className="flex items-center gap-2.5">
-                <Eye className="size-4 shrink-0" />
-                <span>
-                  We don&apos;t read {gap.decidedBy} yet.
-                </span>
-              </p>
-            ) : null}
-          </div>
-        </aside>
       </div>
     </AppShell>
+    </FeedProvider>
   )
 }

@@ -29,7 +29,9 @@ import { ShieldCheck, Sparkles } from 'lucide-react'
  * for the finance roles that do state one. A step that serves one candidate in
  * thirty does not belong in the path to a first shortlist.
  */
-const STEPS = [12, 30, 55, 80] as const
+// Five since 2026-09-23: the preference matrix sits between confirming what
+// was read and the first shortlist.
+const STEPS = [10, 28, 48, 70, 88] as const
 
 export function OnboardingShell({
   step,
@@ -46,7 +48,7 @@ export function OnboardingShell({
       {/* Sticky, not just min-h-screen as the export had it: the confirm screen's
           form is taller than the viewport, and a panel that scrolls away leaves
           bare page ground beside the form for the rest of the way down. */}
-      <section className="relative flex flex-col overflow-hidden bg-[linear-gradient(145deg,oklch(0.95_0.02_170),oklch(0.92_0.018_230))] px-6 py-7 sm:px-10 lg:sticky lg:top-0 lg:h-screen lg:px-14 lg:py-10">
+      <section className="relative flex flex-col overflow-hidden bg-[linear-gradient(145deg,color-mix(in_oklch,var(--brand)_22%,var(--card)),var(--background)_70%)] px-6 py-7 sm:px-10 lg:sticky lg:top-0 lg:h-screen lg:px-14 lg:py-10">
         <div
           className="absolute -right-24 top-36 size-72 rounded-full border border-accent/15"
           aria-hidden="true"
@@ -61,7 +63,7 @@ export function OnboardingShell({
           className="relative flex w-fit items-center gap-2 text-sm font-semibold tracking-[-0.03em] text-primary"
           aria-label="Saaf home"
         >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+          <span className="bg-brand-gradient glow-selected flex size-8 items-center justify-center rounded-lg">
             <Sparkles className="size-4" />
           </span>
           Saaf
@@ -71,7 +73,7 @@ export function OnboardingShell({
             headline says, and the two promises said the same thing twice. */}
         <div className="relative mt-auto max-w-md pb-2 pt-16 lg:pb-14">
           <h2 className="text-balance text-3xl font-semibold leading-[1.08] tracking-[-0.05em] text-primary sm:text-4xl">
-            Four steps to your first shortlist.
+            Five steps to your first shortlist.
           </h2>
           <p className="mt-6 flex items-center gap-2 text-xs font-medium text-primary/60">
             <ShieldCheck className="size-4 shrink-0 text-accent" />
@@ -96,7 +98,7 @@ export function OnboardingShell({
               aria-label="Onboarding progress"
               className="h-1 w-full overflow-hidden rounded-full bg-secondary"
             >
-              <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
+              <div className="bg-brand-gradient h-full rounded-full" style={{ width: `${pct}%` }} />
             </div>
           </div>
 

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { trackRole } from '@/app/actions/applications'
+import { STAGE_LABEL } from '@/lib/job-facts'
+import { useTrackedStage } from '@/components/features/feed-selection'
 
 /**
  * "Track this" on a ranked role.
@@ -14,13 +16,19 @@ import { trackRole } from '@/app/actions/applications'
  * Optimistic and idempotent, like the report control: the unique index on
  * (user_id, role_id) means a second tap is not a second row.
  */
-export function TrackRole({ roleId, company, title, applyUrl }: {
+export function TrackRole({ roleId, company, title, applyUrl, labelled = false, trackedStatus }: {
   roleId: string
   company: string
   title: string
   applyUrl?: string
+  /** A labelled "Save job" button (the feed card) rather than the bare icon. */
+  labelled?: boolean
+  /** The tracker stage when this role is already tracked — read by the page. */
+  trackedStatus?: string
 }) {
-  const [tracked, setTracked] = useState(false)
+  const [stage, setStage] = useTrackedStage(roleId, trackedStatus)
+  const tracked = Boolean(stage)
+  const setTracked = (on: boolean) => setStage(on ? 'saved' : '')
   const [error, setError] = useState<string>()
 
   // An icon, not a label. It repeated on all 54 cards; the tooltip and the
@@ -31,9 +39,12 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
         href="/applications"
         title="Tracked — open your applications"
         aria-label="Tracked. Open your applications"
-        className="flex size-8 items-center justify-center rounded-lg text-accent hover:bg-secondary"
+        className={labelled
+          ? 'inline-flex items-center gap-1.5 rounded-xl border border-accent/50 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent'
+          : 'flex size-8 items-center justify-center rounded-lg text-accent hover:bg-secondary'}
       >
-        <BookmarkCheck className="size-4" />
+        <BookmarkCheck className={labelled ? 'size-3.5' : 'size-4'} />
+        {labelled ? `On tracker · ${STAGE_LABEL[stage ?? 'saved'] ?? stage}` : null}
       </a>
     )
   }
@@ -50,8 +61,10 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
     <button
       type="button"
       title="Track this role"
-      aria-label="Track this role"
-      className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
+      aria-label={labelled ? undefined : 'Track this role'}
+      className={labelled
+        ? 'inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-primary hover:border-accent/60'
+        : 'flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary'}
       onClick={async () => {
         // Optimistic, then RECONCILED. This used to set tracked=true and drop
         // the result on the floor, so a failing write looked exactly like a
@@ -66,7 +79,8 @@ export function TrackRole({ roleId, company, title, applyUrl }: {
         }
       }}
     >
-      <Bookmark className="size-4" />
+      <Bookmark className={labelled ? 'size-3.5' : 'size-4'} />
+      {labelled ? 'Save job' : null}
     </button>
   )
 }

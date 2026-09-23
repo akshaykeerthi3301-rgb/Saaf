@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { ScoreBreakdown } from '@/match/score'
 import {
-  arrangeShortlist, cardsToShow, holdingLine, withinReach,
+  applyQuickPills, arrangeShortlist, cardsToShow, holdingLine, withinReach,
   CARDS_PER_BUCKET, SHOW_MORE_STEP, type ArrangeableRow,
 } from '../shortlist'
 
@@ -178,5 +178,29 @@ describe('holdingLine — the 500 cap is never printed as a total', () => {
   it('does not announce a cap the index has since shrunk below', () => {
     expect(holdingLine(500, 500, 500)).toEqual({ kind: 'complete', scored: 500 })
     expect(holdingLine(500, 500, 480)).toEqual({ kind: 'complete', scored: 500 })
+  })
+})
+
+describe('applyQuickPills', () => {
+  const now = Date.parse('2026-09-23T12:00:00Z')
+  const rows = [
+    { id: 'a', role_id: 'ra', score: 90, score_breakdown: { location: 'remote' as const } },
+    { id: 'b', role_id: 'rb', score: 70, score_breakdown: { location: 'exact' as const } },
+    { id: 'c', role_id: 'rc', score: 85, score_breakdown: { location: 'exact' as const } },
+  ]
+  const off = { min80: false, fresh: false, remote: false, easy: false }
+
+  it('passes everything with no pill on', () => {
+    expect(applyQuickPills(rows, off, {}, now)).toHaveLength(3)
+  })
+  it('match > 80 and remote combine', () => {
+    expect(applyQuickPills(rows, { ...off, min80: true, remote: true }, {}, now).map((r) => r.id)).toEqual(['a'])
+  })
+  it('fresh keeps only dated roles inside a day, never undated ones', () => {
+    const postedAt = new Map([['ra', '2026-09-23T01:00:00Z'], ['rb', '2026-09-20T00:00:00Z']])
+    expect(applyQuickPills(rows, { ...off, fresh: true }, { postedAt }, now).map((r) => r.id)).toEqual(['a'])
+  })
+  it('easy apply defers to the lookup', () => {
+    expect(applyQuickPills(rows, { ...off, easy: true }, { isEasy: (id) => id === 'rc' }, now).map((r) => r.id)).toEqual(['c'])
   })
 })

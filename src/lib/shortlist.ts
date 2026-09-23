@@ -187,3 +187,30 @@ export function arrangeShortlist<T extends ArrangeableRow>(
     sections: [section('near', near), section('far', far)],
   }
 }
+
+/** The feed's quick-filter pills (2026-09-23). See /today for why there is no salary pill. */
+export type QuickPills = { min80: boolean; fresh: boolean; remote: boolean; easy: boolean }
+
+/**
+ * Narrow the list by the pills that are on. Pure, so it is tested; `now` is a
+ * parameter so "posted in the last 24 hours" is testable too. A role with no
+ * posting date never passes the freshness pill — we cannot claim it is new.
+ */
+export function applyQuickPills<R extends Pick<ArrangeableRow, 'role_id' | 'score' | 'score_breakdown'>>(
+  rows: R[],
+  pills: QuickPills,
+  lookups: { postedAt?: Map<string, string>; isEasy?: (roleId: string) => boolean },
+  now: number = Date.now(),
+): R[] {
+  const dayAgo = now - 86_400_000
+  return rows.filter((r) => {
+    if (pills.min80 && (r.score ?? 0) < 80) return false
+    if (pills.remote && r.score_breakdown?.location !== 'remote') return false
+    if (pills.fresh) {
+      const at = lookups.postedAt?.get(r.role_id)
+      if (!at || Date.parse(at) < dayAgo) return false
+    }
+    if (pills.easy && !lookups.isEasy?.(r.role_id)) return false
+    return true
+  })
+}
