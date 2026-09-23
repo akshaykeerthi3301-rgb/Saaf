@@ -7,7 +7,7 @@ import { checkRateLimit, __resetRateLimits } from '../rate-limit'
  * injected rather than mocked — every assertion below is deterministic.
  */
 
-const OPTS = { limit: 3, windowMs: 60_000 }
+const OPTS = { scope: 'test', limit: 3, windowMs: 60_000 }
 
 beforeEach(() => __resetRateLimits())
 
@@ -25,6 +25,16 @@ describe('checkRateLimit', () => {
     if (res.ok) return
     // Oldest hit at 1_000 expires at 61_000, i.e. 60s from now.
     expect(res.retryAfterSeconds).toBe(60)
+  })
+
+  it('scopes are independent — one feature cannot spend another feature\'s allowance', () => {
+    // Until 2026-09-23 every limited action keyed on the same hashed IP in one
+    // Map, so their hits pooled: upload + check + "Count them" is three calls,
+    // and the rewrite (limit 3) then refused its first attempt.
+    const upload = { scope: 'upload', limit: 20, windowMs: 60_000 }
+    const rewrite = { scope: 'rewrite', limit: 3, windowMs: 60_000 }
+    for (let i = 0; i < 3; i++) checkRateLimit('same-ip', upload, 1_000)
+    expect(checkRateLimit('same-ip', rewrite, 1_000)).toEqual({ ok: true, remaining: 2 })
   })
 
   it('keys are independent — one caller cannot exhaust another', () => {

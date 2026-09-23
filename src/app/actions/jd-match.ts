@@ -87,7 +87,7 @@ export type JdMatchResponse =
  * posting without ever meeting the wall, and still caps one caller at sixty
  * model reads an hour.
  */
-const JD_MATCH_LIMIT = { limit: 10, windowMs: 10 * 60_000 }
+const JD_MATCH_LIMIT = { scope: 'jd-match', limit: 10, windowMs: 10 * 60_000 }
 
 /**
  * Who is calling, as a hash.

@@ -78,7 +78,7 @@ export type TailorJdResponse =
  * draft. Sized from the honest session this surface is for: paste, read what
  * was dropped and why, correct the posting title, run it once more.
  */
-const TAILOR_LIMIT = { limit: 5, windowMs: 10 * 60_000 }
+const TAILOR_LIMIT = { scope: 'tailor-jd', limit: 5, windowMs: 10 * 60_000 }
 
 /** Hashed immediately; nothing that outlives this function holds an address. */
 async function callerKey(): Promise<string> {

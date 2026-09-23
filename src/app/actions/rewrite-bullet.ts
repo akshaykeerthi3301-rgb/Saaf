@@ -37,7 +37,7 @@ export type RewriteBulletResponse =
   | { ok: false; error: string; refused?: boolean }
 
 /** Twenty a ten-minute window — this is meant to be used line by line. */
-const LIMIT = { limit: 20, windowMs: 10 * 60_000 }
+const LIMIT = { scope: 'rewrite-bullet', limit: 20, windowMs: 10 * 60_000 }
 
 async function callerKey(): Promise<string> {
   const h = await headers()

@@ -85,7 +85,7 @@ export type OptimiseResumeResponse =
  * one rewrite per role, not one per edit — the CHECK is the thing you re-run,
  * and it is limited at thirty.
  */
-const OPTIMISE_LIMIT = { limit: 3, windowMs: 10 * 60_000 }
+const OPTIMISE_LIMIT = { scope: 'optimise-resume', limit: 3, windowMs: 10 * 60_000 }
 
 /** Hashed immediately; nothing outliving this function holds an address. */
 async function callerKey(): Promise<string> {

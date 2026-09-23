@@ -23,7 +23,7 @@ Why, and the six parts of the "Jobright parity" prompt that were declined:
 ~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23.** ~~Still
 not deployed, not pushed.~~ **Deployed (with `71a5922`); still not pushed.**
 
-## ⏳ 2026-09-23 (later) — the three code P0s are BUILT, NOT DEPLOYED (~~NOT COMMITTED~~ — committed `8b5e794`); TASK-094 built, not committed
+## ⏳ 2026-09-23 (later) — TASK-091–095 BUILT, NOT DEPLOYED (091–094 committed `8b5e794`, `61ca20e`; 095 not committed)
 
 TASK-091 (large upload no longer crashes), TASK-092 (branded error, not-found
 and loading screens) and TASK-093 (Jobs page 19.2 s → 2.9 s first load) are in

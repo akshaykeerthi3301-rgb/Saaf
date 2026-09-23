@@ -70,7 +70,7 @@ export type AtsCheckResponse = ({ ok: true } & AtsReport) | { ok: false; error: 
  * each edit is exactly the intended use. Ten would have punished the candidate
  * who actually followed the advice.
  */
-const ATS_LIMIT = { limit: 30, windowMs: 10 * 60_000 }
+const ATS_LIMIT = { scope: 'ats-check', limit: 30, windowMs: 10 * 60_000 }
 
 /**
  * Who is calling, as a hash. Identical treatment to src/app/actions/jd-match.ts:

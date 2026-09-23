@@ -58,7 +58,7 @@ const schema = z.object({
  * shares across NAT far more than web traffic does. It is a cost brake, not a
  * security control, and it is a blunter one here than anywhere else.
  */
-const LIMIT = { limit: 20, windowMs: 10 * 60_000 }
+const LIMIT = { scope: 'extension-score', limit: 20, windowMs: 10 * 60_000 }
 
 /**
  * `*` is correct here and nowhere else in this app. The caller is an extension

@@ -4,8 +4,26 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { draftApplication, type Draft } from '@/lib/tailor'
 import { PROVIDER_LABEL } from '@/lib/parse/llm'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const schema = z.object({ roleId: z.string().uuid() })
+
+/**
+ * Ten drafts per ten minutes, per candidate.
+ *
+ * ⚠️ THIS WAS THE ONE UNMETERED MODEL CALL BEHIND A BUTTON (docs/QA-AUDIT.md
+ * QA-07). Every "Review & Approve" drafts afresh — the drawer caches only in
+ * component state, so a reload re-drafts — and Groq's free tier is 8,000
+ * tokens a minute shared across the whole site (src/lib/parse/llm.ts). One
+ * candidate opening drawers in a loop would starve everyone else's rewrite.
+ *
+ * Keyed on the user, not the IP: the caller is always signed in, and many
+ * Indian candidates share an address behind carrier-grade NAT or an office
+ * network, where an IP key would make strangers exhaust each other. Ten is
+ * generous for a person working down a shortlist and bounds a loop at one a
+ * minute.
+ */
+const TAILOR_ROLE_LIMIT = { scope: 'tailor-role', limit: 10, windowMs: 10 * 60_000 }
 
 export type TailorResult =
   | { ok: true; draft: Draft; providerLabel: string }
@@ -44,6 +62,18 @@ export async function tailorForRole(input: z.input<typeof schema>): Promise<Tail
 
   if (!profile) return { ok: false, error: 'Confirm your profile first.' }
   if (!role) return { ok: false, error: 'That role is no longer in the index.' }
+
+  // Charged here, once a model will run — a missing profile or role costs nothing.
+  const limit = checkRateLimit(user.id, TAILOR_ROLE_LIMIT)
+  if (!limit.ok) {
+    const mins = Math.ceil(limit.retryAfterSeconds / 60)
+    return {
+      ok: false,
+      error:
+        `You have drafted a lot of applications in a short while. Try again in ` +
+        `${mins === 1 ? 'a minute' : `${mins} minutes`} — you can still apply directly.`,
+    }
+  }
 
   const draft = await draftApplication(
     {

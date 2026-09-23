@@ -7,6 +7,8 @@ import { type ParseResult } from '@/lib/parse/extract'
 import { resumeFacts } from '@/lib/parse/facts'
 import { readResumeWithModel } from '@/lib/parse/llm'
 import { MAX_RESUME_BYTES, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
+import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const ACCEPTED = {
   'application/pdf': 'pdf',
@@ -20,6 +22,19 @@ const schema = z.object({
     .refine((f) => f.size <= MAX_RESUME_BYTES, TOO_LARGE_MESSAGE)
     .refine((f) => f.type in ACCEPTED, 'We can read PDF and .docx files.'),
 })
+
+/**
+ * Five model reads per ten minutes, per candidate — enough for onboarding and
+ * two or three re-uploads of a corrected file.
+ *
+ * ⚠️ PAST IT THE MODEL IS SKIPPED, NOT THE UPLOAD. The model is strictly
+ * additive here (see below): without it the deterministic reader still returns
+ * title, employer, years and city, and the candidate confirms and edits every
+ * field on the next screen. Refusing the upload would strand someone mid
+ * onboarding to protect a budget that skipping one call protects just as well.
+ * Keyed on the user — see TAILOR_ROLE_LIMIT in tailor.ts for why not the IP.
+ */
+const PARSE_MODEL_LIMIT = { scope: 'parse-resume-model', limit: 5, windowMs: 10 * 60_000 }
 
 export type ParseResumeResponse =
   | ({ ok: true } & ParseResult)
@@ -38,6 +53,20 @@ export type ParseResumeResponse =
  * fault — a scanned PDF with no text layer is our limitation, not theirs.
  */
 export async function parseResume(formData: FormData): Promise<ParseResumeResponse> {
+  /**
+   * ⚠️ SIGNED IN, CHECKED HERE — NOT ONLY BY THE PAGE. This was the one
+   * unauthenticated action that does model work (docs/QA-AUDIT.md QA-08;
+   * CLAUDE.md named it "the gap to close first"). src/proxy.ts gating
+   * /start/:path* is UX, not security: an exported action is its own public
+   * entry point, reachable without the page that renders it ever running.
+   * Both callers — onboarding upload and the dev bench — are signed in.
+   */
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { ok: false, error: 'Your session has ended. Sign in again to upload your résumé.' }
+  }
+
   const parsed = schema.safeParse({ file: formData.get('file') })
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'We could not read that file.' }
@@ -67,6 +96,17 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
      * Bangalore" in the checker. Same file, same session, two answers.
      */
     const deterministic = resumeFacts(text)
+
+    if (!checkRateLimit(user.id, PARSE_MODEL_LIMIT).ok) {
+      return {
+        ok: true,
+        ...deterministic,
+        warnings: [
+          ...deterministic.warnings,
+          'We read this file without our model this time, so no skills were picked up — add yours on this screen.',
+        ],
+      }
+    }
 
     // Strictly additive. The model reaches skills and domain that fixed
     // patterns cannot; where both produce a field the model wins, because it

@@ -13,6 +13,9 @@ is the evidence those tasks point back to.
 | QA-02 `/today` speed | **Fixed, verified on a local production build, not deployed** — TASK-093. Cold-cache case unverified |
 | QA-12 error / not-found / loading screens | **Fixed, verified on localhost, not deployed** — TASK-092 |
 | QA-06 500 cap shown as a total | **Fixed, verified on localhost, not deployed** — TASK-094 |
+| QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
+| QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
+| QA-26 intermittent rewrite failure, unlogged | Open — TASK-105 |
 | QA-03 email sign-in | Open — founder-only (TASK-075) |
 | Everything else | Open — ROADMAP Phase 11 |
 
@@ -220,6 +223,19 @@ all good — but no CSP.
 
 **QA-25 · Profile input types.** Phone is `type="text"` (no numeric keypad on a
 phone); LinkedIn URL is `type="text"` (no URL keyboard, no scheme check).
+
+### Found after the pass
+
+**QA-25b · Every rate limit shared one allowance per visitor.** All seven limited
+actions (and `api/extension/score`) keyed on the same hashed IP in one in-memory
+store, so their hits pooled. Upload + check + "Count them" is three calls; the
+résumé rewrite's limit is three, so it refused its first attempt. Reproduced by
+a failing test before the fix (TASK-095).
+
+**QA-26 · A model failure leaves no trace.** "Rewrite everything" failed once on
+the UW sample and worked on retry; the provider answered a probe normally. No
+failure path in `llm.ts` or `resume-rewrite.ts` logs anything, so the cause is
+unknowable after the fact (TASK-105).
 
 ## What worked, measured
 

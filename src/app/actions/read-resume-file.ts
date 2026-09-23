@@ -87,7 +87,7 @@ export type ReadResumeFileResponse =
  * real CPU on a serverless instance but costs no money, and the honest loop on
  * this page is upload → fix → upload again, which a tight limit would punish.
  */
-const UPLOAD_LIMIT = { limit: 20, windowMs: 10 * 60_000 }
+const UPLOAD_LIMIT = { scope: 'read-resume-file', limit: 20, windowMs: 10 * 60_000 }
 
 /** Hashed immediately; nothing outliving this function holds an address. */
 async function callerKey(): Promise<string> {

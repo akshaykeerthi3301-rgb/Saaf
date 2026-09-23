@@ -1984,6 +1984,18 @@ first version — an RPC resolved by argument NAMES, a wider object spread into
 it, and a HEAD request that turned "no such function" into a silent null. A
 type checker cannot see it; opening the page did.
 
+**TASK-095 — the limiter had been pooling every feature's allowance.** All
+eight rate-limited entry points keyed on one hashed IP in one Map; the sizes
+(30 checks, 3 rewrites, 6 counts…) were each reasoned per feature, but the
+store never separated them, so a normal checker session spent the rewrite's
+allowance before the rewrite. Nobody had hit it because nobody but the founder
+has used the product. The fix is structural — `scope` is required by the type,
+which is also how the eighth caller was found. New signed-in limits key on the
+user id: carrier-grade NAT and office networks put many Indian candidates on
+one address, where an IP key makes strangers exhaust each other. Résumé
+parsing now requires a session (CLAUDE.md's "gap to close first") and degrades
+to the deterministic reader past its limit rather than refusing the upload.
+
 **Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
 2026-09-07); Next refuses to run on it. Every check above ran on the pinned
 v22.23.2 via a PATH prefix.

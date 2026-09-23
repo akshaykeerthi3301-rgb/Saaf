@@ -24,6 +24,17 @@ type Window = {
 }
 
 export type RateLimitOptions = {
+  /**
+   * Which allowance this is — required, and folded into the key.
+   *
+   * ⚠️ WITHOUT IT, FEATURES SPENT EACH OTHER'S ALLOWANCE. Until 2026-09-23
+   * every limited action keyed on the same hashed IP in this one Map, so all
+   * their hits pooled: upload + check + "Count them" is three calls, and the
+   * résumé rewrite — limit 3 — refused its first attempt. Each limit was
+   * sized for its own feature; the store never kept them apart. Required
+   * rather than optional so a new caller cannot reintroduce the pooling.
+   */
+  scope: string
   /** Calls permitted inside one window. */
   limit: number
   /** Window length in milliseconds. */
@@ -60,11 +71,12 @@ export function __resetRateLimits(): void {
  * rejected loop costs CPU rather than money.
  */
 export function checkRateLimit(
-  key: string,
-  { limit, windowMs }: RateLimitOptions,
+  caller: string,
+  { scope, limit, windowMs }: RateLimitOptions,
   now: number = Date.now(),
 ): RateLimitResult {
   const cutoff = now - windowMs
+  const key = `${scope}:${caller}`
 
   const existing = windows.get(key)
   const hits = (existing?.hits ?? []).filter((t) => t > cutoff)

@@ -44,7 +44,7 @@ export type IndexMatchResponse =
  * — heavier per call than the model work, and unlike the model work it cannot
  * fail over to a second provider.
  */
-const LIMIT = { limit: 6, windowMs: 10 * 60_000 }
+const LIMIT = { scope: 'index-match', limit: 6, windowMs: 10 * 60_000 }
 
 async function callerKey(): Promise<string> {
   const h = await headers()

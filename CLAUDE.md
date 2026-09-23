@@ -121,13 +121,24 @@ The three without a `getUser()` call, and why:
 |---|---|
 | `sign-out.ts` | Calls `signOut()`; there is nothing to authorise. |
 | `role-catalogue.ts` | Reads `roles` only, whose RLS policy is `authenticated read roles` — an unauthenticated caller gets zero rows from the database, not from a check here. |
-| `parse-resume.ts` | Touches no table. Parses bytes in memory and returns fields. |
+| ~~`parse-resume.ts`~~ | ~~Touches no table.~~ **No longer exempt (2026-09-23, TASK-095)** — it calls `getUser()` and meters its model call per user. |
 
-⚠️ `parse-resume.ts` is the one worth watching. It reads no data, but it is an
-unauthenticated entry point that does **LLM work**, so it is a cost surface
-rather than a data surface. Today only `src/proxy.ts` gates it, via the
-`/start/:path*` matcher — and proxy is UX, not security. If résumé parsing ever
-gets expensive or rate-limited, that is the gap to close first.
+~~⚠️ `parse-resume.ts` is the one worth watching … that is the gap to close
+first.~~ **Closed 2026-09-23.** It was an unauthenticated entry point doing LLM
+work, gated only by `src/proxy.ts` (UX, not security). It now requires a session
+and, past five model reads in ten minutes, parses without the model rather than
+refusing the upload.
+
+⚠️ This table predates the public tools (`ats-check`, `jd-match`, `index-match`,
+`read-resume-file`, `optimise-resume`, `rewrite-bullet`, `tailor-jd`), which are
+unauthenticated by design and IP-rate-limited. The counts above are due a
+re-measure.
+
+**Every rate limit names its own `scope`** (`src/lib/rate-limit.ts`, required by
+the type). Until 2026-09-23 all limited actions keyed on the same hashed IP in
+one store, so their allowances pooled and the résumé rewrite (limit 3) refused
+its first attempt after an upload, a check and "Count them". A signed-in action
+keys on the user id, not the IP — Indian candidates routinely share an address.
 
 ### 3. No `supabase.from()` in `src/components/` or `src/app/`
 
