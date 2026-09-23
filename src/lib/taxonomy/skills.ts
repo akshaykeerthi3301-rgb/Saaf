@@ -52,6 +52,35 @@ const NOT_SKILLS = new Set([
 
 const SKILLS = new Set(Object.keys(TERMS).filter((t) => !NOT_SKILLS.has(t)))
 
+/**
+ * Real skills that are also the generic tail of a product name.
+ *
+ * ⚠️ "HOW MUCH HAVE YOU WORKED WITH SERVER?" (docs/QA-AUDIT.md QA-20). An
+ * Alteryx posting naming "Alteryx Server" produced that interview question,
+ * because `server` is in the vocabulary — correctly: its own build notes above
+ * keep it as a real skill. Dropping it would lose "server administration";
+ * keeping it bare turns every "SQL Server", "Windows Server" and "Alteryx
+ * Server" into a question about a noun. So these are skipped only where a
+ * capitalised word sits directly before them, which is the product-name
+ * shape; the brand before them ("SQL") is still read on its own merits.
+ *
+ * Chosen from the vocabulary's own measurement, not by taste: every term here
+ * has capRatio < 0.75 in skills.json (it is mostly written lowercase) and is
+ * the recurring tail of a named product — Google Ads, Google Workspace,
+ * Microsoft Fabric, Delta Lake, Azure Service Bus, Sales Navigator, Task
+ * Scheduler, Cisco Router.
+ *
+ * The product shape is a CAPITALISED tail after a capitalised word — "SQL
+ * Server" — or after one in a shared-brand list: the live Alteryx posting
+ * reads "Alteryx Designer and Server products". The capital on the tail
+ * itself is what keeps "Python and server administration" a skill.
+ */
+const PRODUCT_TAILS = new Set(['server', 'ads', 'workspace', 'fabric', 'lake', 'bus', 'navigator', 'scheduler', 'router'])
+
+/** A capitalised word right before the match on the same line, optionally
+ *  followed by "and" / "or" / "&" / a comma — the shared-brand list. */
+const TITLE_CASE_BEFORE = /(?:^|[^\S\n])[A-Z][A-Za-z0-9+#.]*(?:,|[ \t]+(?:and|or|&))?[ \t]$/
+
 /** Distinct employers whose postings this vocabulary was measured across. */
 export const DESCRIPTIONS_SCANNED = SKILL_DATA.descriptionsScanned
 
@@ -82,6 +111,7 @@ export function extractSkillPhrases(text: string): string[] {
     const raw = m[1]
     const k = raw.toLowerCase()
     if (!SKILLS.has(k)) continue
+    if (PRODUCT_TAILS.has(k) && /^[A-Z]/.test(raw) && TITLE_CASE_BEFORE.test(text.slice(Math.max(0, m.index - 40), m.index))) continue
     // First spelling wins, and a capitalised one beats a lowercase one — the
     // posting's own heading is usually where the proper casing is.
     const prev = seen.get(k)

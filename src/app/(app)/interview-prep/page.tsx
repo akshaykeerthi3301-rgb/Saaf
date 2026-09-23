@@ -104,6 +104,9 @@ export default async function InterviewPrepPage({
                   }`}
                 >
                   {o.title}
+                  {/* The company tells three "Customer Success Manager 81" chips
+                      apart — without it the picker offered identical choices (QA-20). */}
+                  {o.company ? <span className="text-muted-foreground"> · {displayEmployer(o.company)}</span> : null}
                   {o.score != null ? <span className="ml-1.5 font-mono tabular-nums">{o.score}</span> : null}
                 </Link>
               ))}
