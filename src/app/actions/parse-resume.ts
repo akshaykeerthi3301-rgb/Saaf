@@ -6,7 +6,7 @@ import { docxToText } from '@/lib/parse/docx'
 import { type ParseResult } from '@/lib/parse/extract'
 import { resumeFacts } from '@/lib/parse/facts'
 import { readResumeWithModel } from '@/lib/parse/llm'
-import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
+import { MAX_RESUME_BYTES, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 
 const ACCEPTED = {
   'application/pdf': 'pdf',
@@ -17,7 +17,7 @@ const schema = z.object({
   file: z
     .instanceof(File)
     .refine((f) => f.size > 0, 'That file is empty.')
-    .refine((f) => f.size <= MAX_RESUME_BYTES, 'That file is over 5 MB.')
+    .refine((f) => f.size <= MAX_RESUME_BYTES, TOO_LARGE_MESSAGE)
     .refine((f) => f.type in ACCEPTED, 'We can read PDF and .docx files.'),
 })
 

@@ -6,7 +6,7 @@ import { FileUp, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OnboardingShell } from '@/components/features/onboarding-shell'
 import { parseResume } from '@/app/actions/parse-resume'
-import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
+import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { writeDraft } from '@/lib/onboarding-store'
 import { track } from '@/lib/analytics'
 
@@ -30,7 +30,7 @@ export default function UploadPage() {
   async function onFile(file: File) {
     setError(undefined)
     if (file.size > MAX_RESUME_BYTES) {
-      setError('That file is over 5 MB. You can type your details in instead.')
+      setError(`${TOO_LARGE_MESSAGE} You can type your details in instead.`)
       return
     }
     setBusy(true)
@@ -114,7 +114,7 @@ export default function UploadPage() {
             {busy ? 'Reading…' : 'Choose a file, or drop it here'}
           </span>
           <span className="mt-1 text-xs text-muted-foreground">
-            {busy ? '' : 'PDF or DOCX · 5 MB'}
+            {busy ? '' : `PDF or DOCX · ${MAX_RESUME_MB} MB`}
           </span>
         </button>
         {!yearsValid && !busy ? (

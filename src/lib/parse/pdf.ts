@@ -20,7 +20,7 @@ import { buildPage, layoutToText, type LayoutDoc, type LayoutItem } from './layo
 
 // No résumé is legitimately longer than this. Bounds worst-case parse time
 // under disableWorker's single-threaded, synchronous-per-page loop — a
-// pathological PDF (many pages, heavy fonts/images) near the 5MB cap could
+// pathological PDF (many pages, heavy fonts/images) near the upload cap could
 // otherwise run long enough to hit the platform's function timeout with no
 // clean error surfaced to the client at all.
 const MAX_PAGES = 15

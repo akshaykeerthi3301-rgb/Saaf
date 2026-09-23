@@ -755,7 +755,7 @@ export function bucketFor(breakdown: ScoreBreakdown | null | undefined): Bucket 
  * every exact-city and remote role above every commute-cluster one, which is
  * what "top choices must be from Delhi" means.
  */
-export function locationRank(breakdown: ScoreBreakdown | null | undefined): number {
+export function locationRank(breakdown: Pick<ScoreBreakdown, 'location'> | null | undefined): number {
   switch (breakdown?.location) {
     case 'exact':
     case 'remote':

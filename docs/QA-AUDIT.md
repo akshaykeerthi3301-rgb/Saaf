@@ -5,6 +5,16 @@ it. Every finding carries the measurement or reproduction behind it and the file
 it comes from. Fixes are scheduled in `docs/ROADMAP.md` Phase 11; this document
 is the evidence those tasks point back to.
 
+## Status
+
+| Finding | State (2026-09-23) |
+|---|---|
+| QA-01 upload crash | **Fixed, verified on localhost, not deployed** — TASK-091 |
+| QA-02 `/today` speed | **Fixed, verified on a local production build, not deployed** — TASK-093. Cold-cache case unverified |
+| QA-12 error / not-found / loading screens | **Fixed, verified on localhost, not deployed** — TASK-092 |
+| QA-03 email sign-in | Open — founder-only (TASK-075) |
+| Everything else | Open — ROADMAP Phase 11 |
+
 ## How it was tested
 
 | Surface | Where | How |

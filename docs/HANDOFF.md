@@ -2,10 +2,10 @@
 
 ---
 
-## ⏳ 2026-09-23 — "Posted N days ago" is BUILT and NOT LIVE (~~and NOT COMMITTED~~ — committed `1ff17d1`)
+## ✅ 2026-09-23 — "Posted N days ago" is LIVE (~~BUILT and NOT LIVE~~ — deployed `dpl_BifT74tcXs6WVeYfSMSjKnApokUg`, backfill run)
 
 TASK-086 works on localhost against the live database (32 of 40 of the founder's
-shortlist cards show a date). Nothing is deployed. ~~Nothing is committed — the working tree holds it.~~ To put it live, **in this order, in one sitting**:
+shortlist cards show a date). ~~Nothing is deployed.~~ ~~Nothing is committed — the working tree holds it.~~ **Done 2026-09-23, in this order:** deploy `dpl_BifT74tcXs6WVeYfSMSjKnApokUg`, then the backfill (3,792 written, 0 failed, re-run finds 0). The runbook as it was followed:
 
 1. **Deploy** (the founder's go-ahead; the session can run it — `saaf` project,
    rsync without `.git`, never `--prebuilt`).
@@ -20,8 +20,18 @@ shortlist cards show a date). Nothing is deployed. ~~Nothing is committed — th
 Why, and the six parts of the "Jobright parity" prompt that were declined:
 `docs/PROJECT-STATE.md` Stage AA. Next tasks: `docs/ROADMAP.md` Phase 10.
 
-~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23. Still
-not deployed, not pushed.**
+~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23.** ~~Still
+not deployed, not pushed.~~ **Deployed (with `71a5922`); still not pushed.**
+
+## ⏳ 2026-09-23 (later) — the three code P0s are BUILT, NOT DEPLOYED, NOT COMMITTED
+
+TASK-091 (large upload no longer crashes), TASK-092 (branded error, not-found
+and loading screens) and TASK-093 (Jobs page 19.2 s → 2.9 s first load) are in
+the working tree, walked in a browser on localhost / a local production build,
+with every gate green (test 657, lint 0 errors, typecheck, bench, bench:match).
+**Nothing of this is on the live site yet.** Until it is, a 4.5–5 MB résumé
+still crashes the live checker. To ship: commit, then the RUNBOOK deploy — no
+migration, no backfill, no env change needed.
 
 ## ⚡ 2026-09-23 — QA pass done; two decisions need the founder
 

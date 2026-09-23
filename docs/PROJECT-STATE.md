@@ -1941,6 +1941,42 @@ onboarding draft was cleared from sessionStorage; the confirm step was never
 submitted. A fixture account (`db:seed-test-user`) is the right tool for the
 untested new-user path next time.
 
+### Stage AC — posted dates live; the three code P0s fixed (2026-09-23)
+
+**Deployed** `dpl_BifT74tcXs6WVeYfSMSjKnApokUg` (commit `71a5922`), then
+`backfill:posted-dates --write`: 3,792 Greenhouse dates corrected, 0 failed, a
+re-run finds 0. Posted dates are live. Verified by the backfill's own re-run
+and route smoke tests; the signed-in card itself cannot be opened on
+production (Google-only sign-in, dev door 404s) and was verified on localhost
+against the same database.
+
+**TASK-091, 092, 093 built and walked in a browser — NOT deployed, NOT
+committed.** Evidence per task is in ROADMAP Phase 11. What is worth carrying:
+
+- **The upload limit is the host's, not ours.** 4 MB, with a test that fails if
+  `MAX_RESUME_BYTES` + envelope ever exceeds Vercel's 4.5 MB body cap or if
+  `bodySizeLimit` drifts above it. `next.config.ts` said 8mb to fix an earlier
+  stuck upload, which only made local dev accept what production refuses.
+- **`/today`'s weight was never the data.** Per 40 cards: 68 KB of class names,
+  71 KB of inline SVG, 74 KB of *Insights* of which 8 KB is text — then all of
+  it again in the RSC payload. Compressed, the default page is 43 KB. The slow
+  part was the read: 500 rows × (full breakdown + role + every requirement).
+  Now the list is read thin (74 KB, no join) and only rendered cards whole.
+  ~~Load Insights on open~~ was in the plan and is dropped: DESIGN.md makes the
+  breakdown "never behind a request", and that rule held.
+- **Measured on a local production build, live DB:** first render 19.2 → 2.9 s,
+  repeat 2.1 → 1.0 s, New tab 4.9 → 1.0 s, Newest 4.5 → 0.9 s. **The cold-cache
+  case could not be forced and is unverified** — the claim is only that it now
+  reads 14× less and joins 460 fewer roles.
+- **Parity, not assumed:** old vs new reads compared on all 500 rows and 1,359
+  requirement lines, 0 differences. `bench:match` unchanged.
+- `/today` had no tests; `src/lib/__tests__/shortlist.test.ts` (12) now pins its
+  arithmetic, written before the reads moved. Page query sites 25 → **22**.
+
+**Environment:** the shell's default `node` was **v18.20.8** today (it was 24 on
+2026-09-07); Next refuses to run on it. Every check above ran on the pinned
+v22.23.2 via a PATH prefix.
+
 ### Deployed 2026-09-16 — the whole Résumé Studio, and a runbook that nearly shipped a 404
 
 **https://saaf-ten.vercel.app**, `dpl_ARvB3JR54u71LNmvLYkNpvUCnbDN`, region

@@ -9,8 +9,9 @@ import { RoleCard, type EvidenceItem } from '@/components/features/role-card'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
-import { locationRank, type ScoreBreakdown } from '@/match/score'
 import { resolveCity } from '@/lib/taxonomy/locations'
+import { countWorkModeMatches, readCards, readShortlist } from '@/lib/services/shortlist'
+import { arrangeShortlist, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -18,24 +19,6 @@ const WORK_MODE_LABEL: Record<string, string> = {
   hybrid: 'Hybrid',
   onsite: 'On-site',
 }
-
-/** Badges "seen in the last 7 days" rather than tracking each user's actual
- *  last-visit timestamp — simpler, no write-on-every-page-load. */
-const NEW_WITHIN_DAYS = 7
-
-/** How many cards of a bucket are rendered before the "show all" link.
- *
- *  NOT a limit on what the candidate can see — every role stays one click away
- *  and every bucket states its full count above the cards, so nothing is
- *  hidden. It is a limit on what we make them download to find out.
- *
- *  Measured on a real 229-role list: rendering all of it produced 4.27MB of
- *  HTML (1.8MB markup and 2.4MB of hydration data for the same tree a second
- *  time) and took 6.8s to render, against 0.3s for the query that fed it. The
- *  page was slow because of how much of it existed, not because of the
- *  database. 20 a bucket is roughly what a person scans before deciding to
- *  narrow their search instead of scrolling further. */
-const CARDS_PER_BUCKET = 20
 
 /**
  * The True-Fit line: where high-probability applications stop and long shots
@@ -56,32 +39,6 @@ const CARDS_PER_BUCKET = 20
  */
 const TRUE_FIT = 50
 
-type RoleRequirement = {
-  kind: string
-  min_years: number | null
-  max_years?: number | null
-  credential: string | null
-  value_text: string | null
-  source_quote: string
-  confidence: number
-}
-
-type MatchRow = {
-  id: string
-  role_id: string
-  reason: string
-  score: number | null
-  score_breakdown: ScoreBreakdown | null
-  roles: {
-    title: string
-    city: string | null
-    apply_url: string
-    company_name: string | null
-    posted_at: string | null
-    role_requirements: RoleRequirement[] | null
-  } | null
-}
-
 /**
  * The ranked shortlist.
  *
@@ -93,9 +50,9 @@ type MatchRow = {
 export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; tab?: string; sort?: string; fit?: string }>
+  searchParams: Promise<{ show?: string; n?: string; tab?: string; sort?: string; fit?: string }>
 }) {
-  const { show, tab, sort, fit } = await searchParams
+  const { show, n, tab, sort, fit } = await searchParams
   const byNewest = sort === 'new'
   const clearsOnly = fit === 'clears'
   // Everything we hold for this candidate is the default view. "New" is the
@@ -108,64 +65,34 @@ export default async function TodayPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('preferred_role, confirmed_at, city, work_mode_preference, years_experience')
-    .eq('id', user.id)
-    .single()
+  // The profile and the shortlist are independent reads, so they run together:
+  // four round trips in sequence used to precede every render (QA-02).
+  const [{ data: profile }, shortlist] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('preferred_role, confirmed_at, city, work_mode_preference, years_experience')
+      .eq('id', user.id)
+      .single(),
+    readShortlist(user.id),
+  ])
 
   // Scores never run against an unconfirmed profile, so there would be nothing
   // to show — send them back rather than rendering an empty list they would
   // reasonably read as a verdict.
   if (!profile?.confirmed_at) redirect('/start/confirm')
 
-  const { data, error } = await supabase
-    .from('gate_results')
-    .select(`
-      id, role_id, reason, score, score_breakdown,
-      roles(title, city, apply_url, company_name, posted_at, role_requirements(*))
-    `)
-    .eq('user_id', user.id)
-    .order('score', { ascending: false, nullsFirst: false })
+  const { rows, failed: error, indexed } = shortlist
 
-  const rows = (data ?? []) as unknown as MatchRow[]
-
-  const { count: indexed } = await supabase
-    .from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)
-
-  // Insert-once, survives gate_results being deleted and recreated by the
-  // sweep in evaluate-user.ts. See supabase/migrations/0007_role_first_shown.sql.
-  const { data: firstShownRows } = await supabase
-    .from('role_first_shown')
-    .select('role_id, first_shown_at')
-    .eq('user_id', user.id)
-  const firstShownAt = new Map((firstShownRows ?? []).map((r) => [r.role_id, r.first_shown_at]))
-
-  const newCutoff = new Date().getTime() - NEW_WITHIN_DAYS * 86400_000
-  const isNew = (r: MatchRow) => {
-    const shown = firstShownAt.get(r.role_id)
-    return shown ? new Date(shown).getTime() >= newCutoff : false
-  }
-
-  // Every requirement extracted for the role — a wrong score is debugged by
-  // seeing what was read, not just the number it produced.
-  const evidence = (r: MatchRow): EvidenceItem[] =>
-    (r.roles?.role_requirements ?? []).map((q) => ({
-      kind: q.kind,
-      minYears: q.min_years ?? undefined,
-      credential: q.credential ?? undefined,
-      valueText: q.value_text ?? undefined,
-      sourceQuote: q.source_quote,
-      confidence: Number(q.confidence),
-    }))
-
-  const strong = rows.filter((r) => (r.score ?? 0) >= 75).length
   /**
-   * Only on the thin path — a well-served shortlist never pays for these
-   * counts, and the message they feed only renders below 10 strong matches.
+   * New, sections, order, the Within-reach filter and how many cards render —
+   * all in src/lib/shortlist.ts, where they are tested. The reasoning for each
+   * stays below, beside the copy it produces.
    */
-  const coverage = strong < 10 ? await coverageByFunction() : []
-  const gap = functionGap(profile.preferred_role)
+  const { isNew, newCount, visibleCount, strong, farCount, sections: arranged } = arrangeShortlist(
+    rows,
+    shortlist.firstShownAt,
+    { onlyNew, byNewest, clearsOnly, show, shown: n ? Number(n) : undefined },
+  )
 
   // A work-mode preference is a filter wearing a score component's clothes. Set
   // to "remote" against this index it fails almost everywhere, which put the
@@ -174,17 +101,37 @@ export default async function TodayPage({
   // that makes it actionable, which belongs here once rather than there 246
   // times. Counted from the stored breakdowns, so it is the real number.
   const wantsMode = profile.work_mode_preference && profile.work_mode_preference !== 'no_preference'
-  const modeMatches = wantsMode
-    ? rows.filter((r) => {
-        const c = r.score_breakdown?.components?.find((x) => x.key === 'work_mode')
-        return c ? c.points === c.max : false
-      }).length
-    : 0
+
+  /**
+   * The cards on screen are read whole here, and only they are — see
+   * src/lib/services/shortlist.ts. Coverage only on the thin path: a
+   * well-served shortlist never pays for those counts, and the message they
+   * feed only renders below 10 strong matches. The three are independent, so
+   * they run together.
+   */
+  const [{ cards, requirements }, coverage, modeMatches] = await Promise.all([
+    readCards(user.id, arranged.flatMap((s) => s.visible)),
+    strong < 10 ? coverageByFunction() : Promise.resolve([]),
+    wantsMode ? countWorkModeMatches(user.id) : Promise.resolve(0),
+  ])
+
+  // Every requirement extracted for the role — a wrong score is debugged by
+  // seeing what was read, not just the number it produced. Read only for the
+  // cards that render; see src/lib/services/shortlist.ts for why.
+  const evidence = (roleId: string): EvidenceItem[] =>
+    (requirements.get(roleId) ?? []).map((q) => ({
+      kind: q.kind,
+      minYears: q.min_years ?? undefined,
+      credential: q.credential ?? undefined,
+      valueText: q.value_text ?? undefined,
+      sourceQuote: q.source_quote,
+      confidence: Number(q.confidence),
+    }))
+
+  const gap = functionGap(profile.preferred_role)
 
   // Buckets are derived from the stored breakdown, not from a column, so they
   // can never fall out of step with the scorer. See src/match/score.ts.
-  const newCount = rows.filter(isNew).length
-  const visibleRows = onlyNew ? rows.filter(isNew) : rows
 
   /**
    * Two sections, split on location and nothing else.
@@ -211,19 +158,9 @@ export default async function TodayPage({
    * both are reachable from where the candidate said they are.
    */
   const cityLabel = resolveCity(profile.city)?.name ?? profile.city?.trim()
-  const near = visibleRows.filter((r) => locationRank(r.score_breakdown) <= 1)
-  const far = visibleRows.filter((r) => locationRank(r.score_breakdown) > 1)
 
-  /** Best match first, or newest first — the candidate's choice, both sections.
-   *  Within equal scores the exact city still beats the commute cluster. */
-  const order = (list: MatchRow[]) =>
-    [...list].sort((a, b) =>
-      byNewest
-        ? (firstShownAt.get(b.role_id) ?? '').localeCompare(firstShownAt.get(a.role_id) ?? '') ||
-          (b.score ?? 0) - (a.score ?? 0)
-        : (b.score ?? 0) - (a.score ?? 0) ||
-          locationRank(a.score_breakdown) - locationRank(b.score_breakdown),
-    )
+  /* Best match first, or newest first — the candidate's choice, both sections.
+     Within equal scores the exact city still beats the commute cluster. */
 
   /**
    * "Within reach" — the experience standing the scorer already computed.
@@ -241,31 +178,20 @@ export default async function TodayPage({
    *
    * A filter, never a gate. The count it hides is stated next to the control.
    */
-  const clears = (r: MatchRow) => {
-    const e = r.score_breakdown?.experience
-    return e === 'meets' || e === 'unstated' || e === 'short' || e === 'over'
-  }
-  const apply = (list: MatchRow[]) => order(clearsOnly ? list.filter(clears) : list)
-
-  const sections: { key: string; title: string; blurb: string; rows: MatchRow[]; all: number }[] = [
-    {
-      key: 'near',
+  const COPY = {
+    near: {
       // The canonical name, not the raw profile string — a heading reading
       // "In Bangalore, India" is the stored value leaking onto the page.
       title: cityLabel ? `In ${cityLabel}` : 'Where you work',
       blurb: 'In the city you gave us, its commute belt, or fully remote.',
-      rows: apply(near),
-      all: near.length,
     },
-    {
-      key: 'far',
+    far: {
       title: 'Worth a move',
       blurb:
         'Strong matches on the work itself, in other Indian cities. Ranked the same way — the only thing separating these from the list above is where they are.',
-      rows: apply(far),
-      all: far.length,
     },
-  ]
+  } as const
+  const sections = arranged.map((s) => ({ ...s, ...COPY[s.key] }))
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
   // From the signed-in address, matching /applications — a job title makes for
   // confusing initials ("PM" is not who you are).
@@ -312,7 +238,7 @@ export default async function TodayPage({
             </p>
           ) : null}
 
-          {onlyNew && visibleRows.length === 0 ? (
+          {onlyNew && visibleCount === 0 ? (
             <p className="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
               Nothing new in the last {NEW_WITHIN_DAYS} days. Your {rows.length} matches are all
               still there under <Link href="/today" className="font-semibold text-primary underline underline-offset-4">All matches</Link> —
@@ -327,7 +253,7 @@ export default async function TodayPage({
               from the profile rather than hardcoded, and Edit goes to the place
               that changes them. A chip that did not correspond to a stored
               value would be decoration claiming to be a filter. */}
-          {visibleRows.length > 0 ? (
+          {visibleCount > 0 ? (
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground">
                 Your baseline
@@ -361,8 +287,8 @@ export default async function TodayPage({
           ) : null}
 
           <p className="mb-4 text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-primary">{visibleRows.length}</span>{' '}
-            {visibleRows.length === 1 ? 'role' : 'roles'} matched to your baseline.
+            Showing <span className="font-semibold text-primary">{visibleCount}</span>{' '}
+            {visibleCount === 1 ? 'role' : 'roles'} matched to your baseline.
           </p>
 
           {/* Sort and filter. Plain links, so the whole control set costs no
@@ -371,7 +297,7 @@ export default async function TodayPage({
               sections: they are one list split by location, and a candidate
               sorting one half by newest while the other stays on best-match
               would be comparing two different things. */}
-          {visibleRows.length > 0 ? (
+          {visibleCount > 0 ? (
             <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Sort</span>
@@ -428,7 +354,7 @@ export default async function TodayPage({
           ) : null}
 
           <BreakdownEngaged>
-            {sections.map(({ key, title, blurb, rows: inSection, all }) => {
+            {sections.map(({ key, title, blurb, rows: inSection, all, visible }) => {
               /**
                * A section with nothing in it still gets its heading — for the
                * near one, at least.
@@ -444,7 +370,7 @@ export default async function TodayPage({
                * is the outcome the candidate wanted.
                */
               if (all === 0) {
-                if (key !== 'near' || far.length === 0) return null
+                if (key !== 'near' || farCount === 0) return null
                 return (
                   <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
                     <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
@@ -455,17 +381,16 @@ export default async function TodayPage({
                     </div>
                     <p className="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
                       No matches{cityLabel ? ` in ${cityLabel}` : ' where you work'} today — that is our
-                      coverage of employers there, not a verdict on you. The {far.length}{' '}
-                      {far.length === 1 ? 'role' : 'roles'} below {far.length === 1 ? 'is' : 'are'} the
+                      coverage of employers there, not a verdict on you. The {farCount}{' '}
+                      {farCount === 1 ? 'role' : 'roles'} below {farCount === 1 ? 'is' : 'are'} the
                       same work, elsewhere in India.
                     </p>
                   </section>
                 )
               }
-              // ?show=<section> renders it whole. A plain link, so this costs no
-              // client JavaScript and the expanded view is its own shareable URL.
-              const expanded = show === key || show === 'all'
-              const visible = expanded ? inSection : inSection.slice(0, CARDS_PER_BUCKET)
+              // How many render is decided in src/lib/shortlist.ts — the default,
+              // or more after "Show more". Plain links, so this costs no client
+              // JavaScript and every expanded view is its own shareable URL.
               const hiddenByFilter = all - inSection.length
               return (
                 <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
@@ -512,7 +437,13 @@ export default async function TodayPage({
                   ) : null}
 
                   <div className="space-y-4">
-                    {visible.map((r, i) => (
+                    {visible.map((r, i) => {
+                      const card = cards.get(r.id)
+                      // Recomputed between the two reads — the nightly sweep
+                      // replaces gate_results rows. Skipped rather than drawn
+                      // half-empty; the next load has it.
+                      if (!card) return null
+                      return (
                       <div key={r.id}>
                         {/* The line is drawn between two cards, at the first
                             role that falls below the benchmark — so it marks a
@@ -533,34 +464,43 @@ export default async function TodayPage({
                           </div>
                         ) : null}
                         <RoleCard
-                          gateResultId={r.id}
-                          roleId={r.role_id}
-                          title={r.roles?.title ?? ''}
-                          company={displayEmployer(r.roles?.company_name)}
-                          city={displayCity(r.roles?.city) || undefined}
-                          score={r.score ?? 0}
-                          breakdown={r.score_breakdown}
-                          reason={r.reason}
-                          applyUrl={r.roles?.apply_url}
+                          gateResultId={card.id}
+                          roleId={card.role_id}
+                          title={card.roles?.title ?? ''}
+                          company={displayEmployer(card.roles?.company_name)}
+                          city={displayCity(card.roles?.city) || undefined}
+                          score={card.score ?? 0}
+                          breakdown={card.score_breakdown}
+                          reason={card.reason}
+                          applyUrl={card.roles?.apply_url}
                           isNew={isNew(r)}
-                          requirements={evidence(r)}
+                          requirements={evidence(card.role_id)}
                           profileCity={profile.city ?? undefined}
-                          postedAt={r.roles?.posted_at ?? undefined}
+                          postedAt={card.roles?.posted_at ?? undefined}
                         />
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
 
                   {/* The count above is the whole section, so this reads as
-                      "there is more", never as "there was a cut". */}
+                      "there is more", never as "there was a cut". It adds a
+                      step rather than rendering everything: all 338 of one
+                      section was 6.3 MB for a phone to parse (QA-02). */}
                   {visible.length < inSection.length ? (
-                    <Link
-                      href={`/today?show=${key}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}#bucket-${key}`}
-                      className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent"
-                    >
-                      Show all {inSection.length}
-                      <ChevronRight className="size-3.5" />
-                    </Link>
+                    <p className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
+                      <Link
+                        href={`/today?show=${key}&n=${visible.length + SHOW_MORE_STEP}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}#bucket-${key}`}
+                        className="inline-flex items-center gap-1 font-semibold text-primary hover:text-accent"
+                      >
+                        Show {Math.min(SHOW_MORE_STEP, inSection.length - visible.length)} more
+                        <ChevronRight className="size-3.5" />
+                      </Link>
+                      <span className="text-muted-foreground">
+                        <span className="font-mono tabular-nums">{visible.length}</span> of{' '}
+                        <span className="font-mono tabular-nums">{inSection.length}</span> shown
+                      </span>
+                    </p>
                   ) : null}
                 </section>
               )

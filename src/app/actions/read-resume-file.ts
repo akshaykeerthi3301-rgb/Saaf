@@ -10,7 +10,7 @@ import { docxToText } from '@/lib/parse/docx'
 import { extractFields, type ParsedFields } from '@/lib/parse/extract'
 import { parseSections, type ResumeSections } from '@/lib/parse/sections'
 import type { LayoutFacts } from '@/lib/ats-check'
-import { MAX_RESUME_BYTES } from '@/lib/parse/constants'
+import { MAX_RESUME_BYTES, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 
 /**
  * Read an uploaded PDF or .docx for the PUBLIC ATS checker. Persists nothing.
@@ -54,7 +54,7 @@ const schema = z.object({
   file: z
     .instanceof(File)
     .refine((f) => f.size > 0, 'That file is empty.')
-    .refine((f) => f.size <= MAX_RESUME_BYTES, 'That file is over 5 MB.')
+    .refine((f) => f.size <= MAX_RESUME_BYTES, TOO_LARGE_MESSAGE)
     .refine((f) => f.type in ACCEPTED, 'We can read PDF and Word (.docx) files.'),
 })
 

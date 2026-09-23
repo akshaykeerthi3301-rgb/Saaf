@@ -11,6 +11,7 @@ import { Card, Eyebrow } from '@/components/ui/card'
 import { Combobox } from '@/components/ui/combobox'
 import { ResumePreview } from '@/components/features/resume-preview'
 import { readResumeFile } from '@/app/actions/read-resume-file'
+import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { checkResumeForAts } from '@/app/actions/ats-check'
 import { optimiseResume } from '@/app/actions/optimise-resume'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
@@ -215,8 +216,17 @@ export function AtsFlow() {
 
   function pick(f: File | undefined) {
     if (!f) return
-    setFile(f)
     setError(undefined)
+    // Checked before anything is sent. Over the host's body cap the request
+    // never reaches our action, so its own size message cannot be shown —
+    // the platform's 413 used to take the whole page down (QA-01).
+    if (f.size > MAX_RESUME_BYTES) {
+      setFile(undefined)
+      setError(`${TOO_LARGE_MESSAGE} Export a smaller PDF, or paste the text below instead.`)
+      setPastedFallback(true)
+      return
+    }
+    setFile(f)
   }
 
   function check(e: React.FormEvent) {
@@ -231,7 +241,18 @@ export function AtsFlow() {
       if (file) {
         const fd = new FormData()
         fd.append('file', file)
-        const read = await readResumeFile(fd)
+        let read: Awaited<ReturnType<typeof readResumeFile>>
+        try {
+          read = await readResumeFile(fd)
+        } catch {
+          // A transport failure — the host refusing the body, a timeout, a
+          // dropped connection — rejects instead of returning `ok: false`,
+          // and uncaught inside a transition it replaces the page with an
+          // error screen. The fallback is the same one a bad file gets.
+          setError('We could not upload that file. Try a smaller export, or paste the text below instead.')
+          setPastedFallback(true)
+          return
+        }
         if (!read.ok) {
           // Never a dead end: the fallback opens with the message.
           setError(read.error)
@@ -609,7 +630,7 @@ export function AtsFlow() {
                   Upload your résumé
                 </button>
                 <p className="text-xs text-muted-foreground">
-                  PDF or Word (.docx), up to 5 MB — or drop it here.
+                  PDF or Word (.docx), up to {MAX_RESUME_MB} MB — or drop it here.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   We read it in the request and drop it. It is never stored.
