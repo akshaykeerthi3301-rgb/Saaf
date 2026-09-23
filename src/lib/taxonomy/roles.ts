@@ -212,3 +212,25 @@ export function domainOf(text: string | null | undefined): string | null {
 export const DOMAIN_LABEL: Record<string, string> = Object.fromEntries(
   DOMAINS.map((d) => [d.key, d.label]),
 )
+
+/**
+ * Whether a résumé's current title may be pre-filled as the role a candidate
+ * wants, given how many postings the matcher's own search returns for it.
+ *
+ * ⚠️ THE CURRENT TITLE IS NOT ALWAYS A JOB. A student's first "experience" on
+ * the public UW sample is a hackathon, and the parse read "Hackfest" as the
+ * title; the confirm screen copied it into the role, and one click on "Looks
+ * right" built a shortlist on a word no posting carries (docs/QA-AUDIT.md
+ * QA-09). The test that matters is the one the shortlist will run: does the
+ * index hold any posting for it? `postings` is that count — null when it could
+ * not be had in time, when the taxonomy decides instead (so "Systems Engineer",
+ * which it does not know, still prefills whenever the count answers).
+ *
+ * Undefined means "leave the role empty and ask" — never a guess.
+ */
+export function suggestedRoleFor(title: string | null | undefined, postings: number | null): string | undefined {
+  const t = title?.trim()
+  if (!t) return undefined
+  if (postings !== null) return postings > 0 ? t : undefined
+  return DOMAIN_OF.has(t.toLowerCase()) || domainOf(t) !== null ? t : undefined
+}

@@ -3,8 +3,10 @@
 import { z } from 'zod'
 import { pdfToText } from '@/lib/parse/pdf'
 import { docxToText } from '@/lib/parse/docx'
-import { type ParseResult } from '@/lib/parse/extract'
-import { resumeFacts } from '@/lib/parse/facts'
+import { type ParseResult, type ParsedFields } from '@/lib/parse/extract'
+import { mergeModelRead, resumeFacts } from '@/lib/parse/facts'
+import { suggestedRoleFor } from '@/lib/taxonomy/roles'
+import { countMatchingRoles } from '@/lib/services/shortlist'
 import { readResumeWithModel } from '@/lib/parse/llm'
 import { MAX_RESUME_BYTES, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { createClient } from '@/lib/supabase/server'
@@ -37,7 +39,7 @@ const schema = z.object({
 const PARSE_MODEL_LIMIT = { scope: 'parse-resume-model', limit: 5, windowMs: 10 * 60_000 }
 
 export type ParseResumeResponse =
-  | ({ ok: true } & ParseResult)
+  | ({ ok: true; suggestedRole?: string } & ParseResult)
   | { ok: false; error: string }
 
 /**
@@ -97,61 +99,32 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
      */
     const deterministic = resumeFacts(text)
 
+    // Strictly additive. The model reaches skills and domain that fixed
+    // patterns cannot; where both produce a field the deterministic reader
+    // wins (mergeModelRead in src/lib/parse/facts.ts says why), and either way
+    // the candidate confirms every field on the next screen before anything
+    // is stored. A null here (no API key, timeout, bad JSON) leaves the
+    // deterministic result exactly as it was.
+    let read: { fields: ParsedFields; warnings: string[] }
     if (!checkRateLimit(user.id, PARSE_MODEL_LIMIT).ok) {
-      return {
-        ok: true,
-        ...deterministic,
+      read = {
+        fields: deterministic.fields,
         warnings: [
           ...deterministic.warnings,
           'We read this file without our model this time, so no skills were picked up — add yours on this screen.',
         ],
       }
+    } else {
+      const model = await readResumeWithModel(text)
+      read = model ? mergeModelRead(deterministic, model) : deterministic
     }
 
-    // Strictly additive. The model reaches skills and domain that fixed
-    // patterns cannot; where both produce a field the model wins, because it
-    // reads the whole document rather than the first 25 lines — and either way
-    // the candidate confirms every field on the next screen before anything
-    // is stored. A null here (no API key, timeout, bad JSON) leaves the
-    // deterministic result exactly as it was.
-    const model = await readResumeWithModel(text)
-    if (!model) return { ok: true, ...deterministic }
+    // Offered as the target role only if the index holds postings for it —
+    // the same strict search the shortlist runs. See suggestedRoleFor().
+    const title = read.fields.currentTitle?.trim()
+    const suggestedRole = suggestedRoleFor(title, title ? await countMatchingRoles([title], false) : null)
 
-    /**
-     * ⚠️ THE MODEL NO LONGER OVERRIDES A FACT THE DETERMINISTIC READER FOUND.
-     * It used to win on every field, which is how /resume came to show 2 years
-     * where the checker showed 4 — the model's number replacing arithmetic done
-     * from the candidate's own dates. It still FILLS fields nothing else
-     * reached, and it is still the only reader that gets skills and domain at
-     * all, which is why it runs.
-     *
-     * The narrowing matters beyond consistency: `llm.ts` records a live
-     * incident where the model returned "Systems Engineer at Infosys Jun 2024 -
-     * Present" as a job title, and it reached `preferred_role` and emptied a
-     * candidate's shortlist. A deterministic answer that exists is the better
-     * answer; the model's value is what it finds when there is nothing there.
-     */
-    const fields = {
-      ...deterministic.fields,
-      currentTitle: deterministic.fields.currentTitle ?? model.currentTitle,
-      employer: deterministic.fields.employer ?? model.employer,
-      yearsExperience: deterministic.fields.yearsExperience ?? model.yearsExperience,
-      city: deterministic.fields.city ?? model.city,
-      skills: model.skills,
-      domain: model.domain,
-    }
-
-    // Warnings describe what still needs checking, so drop the ones the model
-    // has now answered — telling someone we could not find a city while
-    // showing them their city reads as a broken product.
-    const warnings = deterministic.warnings.filter((w: string) =>
-      !(fields.city && /city/i.test(w)) &&
-      !(fields.currentTitle && /current title/i.test(w)) &&
-      !(fields.employer && /employer/i.test(w)) &&
-      !(fields.yearsExperience !== undefined && /years of experience/i.test(w))
-    )
-
-    return { ok: true, fields, warnings }
+    return { ok: true, ...read, suggestedRole }
   } catch {
     return {
       ok: false,

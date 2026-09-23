@@ -16,6 +16,9 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+const countMatchingRoles = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/services/shortlist', () => ({ countMatchingRoles }))
+
 const readResumeWithModel = vi.hoisted(() => vi.fn())
 vi.mock('@/lib/parse/llm', async (original) => ({
   ...(await original<typeof import('@/lib/parse/llm')>()),
@@ -37,6 +40,8 @@ beforeEach(() => {
   state.user = { id: 'user-1' }
   readResumeWithModel.mockReset()
   readResumeWithModel.mockResolvedValue({ skills: ['Java', 'Spring Boot'], domain: 'Banking' })
+  countMatchingRoles.mockReset()
+  countMatchingRoles.mockResolvedValue(213)
 })
 
 describe('parseResume — signed in and metered', () => {
@@ -64,5 +69,22 @@ describe('parseResume — signed in and metered', () => {
     expect(readResumeWithModel).toHaveBeenCalledTimes(5)
     expect(sixth.fields.currentTitle).toBeTruthy()
     expect(sixth.warnings.join(' ')).toMatch(/without our model/)
+  })
+})
+
+describe('parseResume — the suggested target role (QA-09)', () => {
+  it('suggests the current title when the index holds postings for it', async () => {
+    const res = await parseResume(form())
+    expect(res.ok).toBe(true)
+    if (!res.ok) return
+    expect(res.fields.currentTitle).toBe('Systems Engineer')
+    expect(countMatchingRoles).toHaveBeenCalledWith(['Systems Engineer'], false)
+    expect(res.suggestedRole).toBe('Systems Engineer')
+  })
+
+  it('suggests nothing when no posting carries the title', async () => {
+    countMatchingRoles.mockResolvedValue(0)
+    const res = await parseResume(form())
+    expect(res.ok && res.suggestedRole).toBeUndefined()
   })
 })

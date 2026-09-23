@@ -46,7 +46,11 @@ export default function ConfirmPage() {
     // from their résumé text (that guess is exactly what used to misroute
     // candidates). Suggested from their current title instead, and always
     // editable, since "what you do now" and "what you want next" often differ.
-    preferredRole: edits.preferredRole ?? fields.currentTitle ?? '',
+    //
+    // ⚠️ ONLY WHEN THE INDEX HOLDS POSTINGS FOR IT (draft.suggestedRole, set by
+    // parseResume). Copying the title unconditionally pre-filled "Hackfest" for
+    // a student whose first "experience" was a hackathon (QA-09).
+    preferredRole: edits.preferredRole ?? draft.suggestedRole ?? '',
     // Normalised at prefill, not just at save: a box reading "Bengaluru"
     // matches the chip the candidate sees highlighted, and shows the taxonomy
     // doing its job. The raw parse is what produced "Bangalore, India".
@@ -119,8 +123,12 @@ export default function ConfirmPage() {
         />
         <RoleInput
           label="What job role are you looking for?"
-          provenance={fields.currentTitle ? 'from your current title' : undefined}
-          helper="Be specific — 'Product Manager', not 'Manager'."
+          provenance={draft.suggestedRole ? 'from your current title' : undefined}
+          helper={
+            fields.currentTitle && !draft.suggestedRole
+              ? `We hold no postings titled “${fields.currentTitle}”, so we have not filled this in — choose the role you want.`
+              : "Be specific — 'Product Manager', not 'Manager'."
+          }
           value={f.preferredRole}
           onChange={(v) => setF({ ...f, preferredRole: v })}
         />

@@ -16,6 +16,8 @@ export type OnboardingDraft = {
   portals?: string[]
   fields?: ParsedFields
   warnings?: string[]
+  /** The current title, only when the index holds postings for it. See suggestedRoleFor(). */
+  suggestedRole?: string
 }
 
 export function readDraft(): OnboardingDraft {

@@ -1,5 +1,5 @@
 {
-  "$comment": "Ground truth per document. Synthetic entries share one r\u00e9sum\u00e9 across layouts; `group` ties them together for the invariance gate. The rohan.* pair is the original repo fixture, kept here because it is the document that proved the PDF/DOCX split (34 vs 65) and must never regress. Real entries are hand-written once per CV.",
+  "$comment": "Ground truth per document. Synthetic entries share one résumé across layouts; `group` ties them together for the invariance gate. The rohan.* pair is the original repo fixture, kept here because it is the document that proved the PDF/DOCX split (34 vs 65) and must never regress. Real entries are hand-written once per CV. `titleIsJob` (read by npm run bench:parse only) records whether the first role's title is a job a candidate could want — the onboarding suggestion must never pre-fill one that is not.",
   "documents": {
     "synthetic/single-column.pdf": {
       "group": "priya",
@@ -13,7 +13,8 @@
         "multi-column",
         "single-blob",
         "missing-sections"
-      ]
+      ],
+      "titleIsJob": true
     },
     "synthetic/headings-odd.pdf": {
       "group": "priya",
@@ -27,7 +28,8 @@
         "multi-column",
         "single-blob",
         "missing-sections"
-      ]
+      ],
+      "titleIsJob": true
     },
     "synthetic/two-column.pdf": {
       "group": "priya-2col",
@@ -39,7 +41,8 @@
       "email": "priya.iyer@example.com",
       "expectFindings": [
         "multi-column"
-      ]
+      ],
+      "titleIsJob": true
     },
     "synthetic/table-layout.pdf": {
       "group": "priya",
@@ -53,7 +56,8 @@
         "multi-column",
         "single-blob",
         "missing-sections"
-      ]
+      ],
+      "titleIsJob": true
     },
     "synthetic/rohan.pdf": {
       "group": "rohan",
@@ -61,7 +65,8 @@
       "educationEntries": 1,
       "skillsAtLeast": 7,
       "name": "Rohan Sharma",
-      "email": "rohan.sharma@example.com"
+      "email": "rohan.sharma@example.com",
+      "titleIsJob": true
     },
     "synthetic/rohan.docx": {
       "group": "rohan",
@@ -69,7 +74,28 @@
       "educationEntries": 1,
       "skillsAtLeast": 7,
       "name": "Rohan Sharma",
-      "email": "rohan.sharma@example.com"
+      "email": "rohan.sharma@example.com",
+      "titleIsJob": true
+    },
+    "samples/uw-tech.pdf": {
+      "titleIsJob": false,
+      "titleNote": "First \"experience\" is Participant at Hackfest, a hackathon."
+    },
+    "samples/uw-consulting.pdf": {
+      "titleIsJob": false,
+      "titleNote": "First \"experience\" is Participant in a case competition."
+    },
+    "samples/uw-health.pdf": {
+      "titleIsJob": true,
+      "titleNote": "Scribe at PhysAssist."
+    },
+    "samples/uw-nonprofit.pdf": {
+      "titleIsJob": true,
+      "titleNote": "Yoga Instructor at University of Washington Recreation."
+    },
+    "samples/uw-undergrad.pdf": {
+      "titleIsJob": true,
+      "titleNote": "Child and Family Services Intern at Community Support Center."
     }
   }
 }

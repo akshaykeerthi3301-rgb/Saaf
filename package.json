@@ -28,6 +28,7 @@
     "reclassify:roles": "tsx --env-file=.env.local scripts/reclassify-roles.ts",
     "probe:salary": "tsx scripts/probe-salary-coverage.ts",
     "bench:match": "tsx --env-file=.env.local scripts/bench-match.ts",
+    "bench:parse": "tsx --env-file=.env.local scripts/bench-parse.ts",
     "backfill:posted-dates": "tsx --env-file=.env.local scripts/backfill-posted-dates.ts"
   },
   "dependencies": {

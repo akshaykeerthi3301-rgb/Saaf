@@ -49,6 +49,7 @@ export default function UploadPage() {
       writeDraft({
         fields: { ...res.fields, yearsExperience: yearsNum },
         warnings: res.warnings,
+        suggestedRole: res.suggestedRole,
       })
       router.push('/start/reading')
     } catch {
