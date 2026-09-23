@@ -10,7 +10,7 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countMatchingRoles, countWorkModeMatches, readCards, readShortlist } from '@/lib/services/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readCards, readPostedDates, readShortlist } from '@/lib/services/shortlist'
 import { arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 
@@ -84,6 +84,9 @@ export default async function TodayPage({
 
   const { rows, failed: error, indexed } = shortlist
 
+  // Newest sorts by the board's posting date, which only this view needs.
+  const postedAt = byNewest ? await readPostedDates(rows.map((r) => r.role_id)) : undefined
+
   /**
    * New, sections, order, the Within-reach filter and how many cards render —
    * all in src/lib/shortlist.ts, where they are tested. The reasoning for each
@@ -92,7 +95,7 @@ export default async function TodayPage({
   const { isNew, newCount, visibleCount, strong, farCount, sections: arranged } = arrangeShortlist(
     rows,
     shortlist.firstShownAt,
-    { onlyNew, byNewest, clearsOnly, show, shown: n ? Number(n) : undefined },
+    { onlyNew, byNewest, clearsOnly, show, shown: n ? Number(n) : undefined, postedAt },
   )
 
   // A work-mode preference is a filter wearing a score component's clothes. Set

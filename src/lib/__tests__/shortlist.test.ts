@@ -81,6 +81,37 @@ describe('arrangeShortlist — new and newest', () => {
   })
 })
 
+describe('Newest — newest posted, where the board said when (QA-11)', () => {
+  it('puts the most recently posted first, whatever order they were shown in', () => {
+    const old = row(90, 'exact')
+    const fresh = row(40, 'exact')
+    // Shown the other way round: the old posting reached this candidate last.
+    const shown = new Map([[old.role_id, daysAgo(1)], [fresh.role_id, daysAgo(5)]])
+    const postedAt = new Map([[old.role_id, '2024-07-09T00:00:00Z'], [fresh.role_id, '2026-09-20T00:00:00Z']])
+    const { sections } = arrangeShortlist([old, fresh], shown, { ...base, byNewest: true, postedAt })
+    expect(sections[0].rows.map((r) => r.id)).toEqual([fresh.id, old.id])
+  })
+
+  it('compares instants, not strings, across offsets', () => {
+    const a = row(50, 'exact')
+    const b = row(50, 'exact')
+    // 00:30 +05:30 is 19:00Z the previous day — earlier than b, though it sorts later as text.
+    const postedAt = new Map([[a.role_id, '2026-09-20T00:30:00+05:30'], [b.role_id, '2026-09-19T20:00:00Z']])
+    const { sections } = arrangeShortlist([a, b], new Map(), { ...base, byNewest: true, postedAt })
+    expect(sections[0].rows.map((r) => r.id)).toEqual([b.id, a.id])
+  })
+
+  it('lists undated roles after dated ones, in first-shown order', () => {
+    const dated = row(10, 'exact')
+    const undatedRecent = row(20, 'exact')
+    const undatedOld = row(99, 'exact')
+    const shown = new Map([[undatedRecent.role_id, daysAgo(1)], [undatedOld.role_id, daysAgo(9)], [dated.role_id, daysAgo(30)]])
+    const postedAt = new Map([[dated.role_id, '2025-01-01T00:00:00Z']])
+    const { sections } = arrangeShortlist([undatedOld, dated, undatedRecent], shown, { ...base, byNewest: true, postedAt })
+    expect(sections[0].rows.map((r) => r.id)).toEqual([dated.id, undatedRecent.id, undatedOld.id])
+  })
+})
+
 describe('Within reach', () => {
   it('keeps meets, unstated, short and over; drops under', () => {
     expect(['meets', 'unstated', 'short', 'over'].map((e) => withinReach(row(50, 'exact', e as Exp)))).toEqual([true, true, true, true])

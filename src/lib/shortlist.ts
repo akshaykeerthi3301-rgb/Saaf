@@ -70,6 +70,8 @@ export type ArrangeOptions = {
   show?: string
   /** How many of that section to render; parsed from the URL, so untrusted. */
   shown?: number
+  /** role_id → the board's posting date. Read only for the Newest view. */
+  postedAt?: Map<string, string>
   now?: number
 }
 
@@ -136,11 +138,37 @@ export function arrangeShortlist<T extends ArrangeableRow>(
   const near = visibleRows.filter((r) => locationRank(r.score_breakdown) <= 1)
   const far = visibleRows.filter((r) => locationRank(r.score_breakdown) > 1)
 
+  /**
+   * ⚠️ "NEWEST" IS NEWEST POSTED, WHERE THE BOARD SAID WHEN. It sorted by when
+   * the role was first shown to this candidate, which was the only date we had
+   * — until the card started printing "Posted 2 years ago" (TASK-086), and a
+   * two-year-old posting could head the Newest list (docs/QA-AUDIT.md QA-11).
+   * Dated roles lead, newest first; roles whose board gave no date follow in
+   * first-shown order, rather than being slotted among dated ones by a date
+   * that means something else. Compared as instants, not strings: boards write
+   * offsets differently.
+   */
+  const posted = (r: T) => {
+    const iso = opts.postedAt?.get(r.role_id)
+    const t = iso ? Date.parse(iso) : NaN
+    return Number.isNaN(t) ? null : t
+  }
+  const newest = (a: T, b: T) => {
+    const pa = posted(a)
+    const pb = posted(b)
+    if (pa !== null && pb !== null && pa !== pb) return pb - pa
+    if (pa !== null && pb === null) return -1
+    if (pa === null && pb !== null) return 1
+    if (pa === null && pb === null) {
+      const byShown = (firstShownAt.get(b.role_id) ?? '').localeCompare(firstShownAt.get(a.role_id) ?? '')
+      if (byShown) return byShown
+    }
+    return (b.score ?? 0) - (a.score ?? 0)
+  }
   const order = (list: T[]) =>
     [...list].sort((a, b) =>
       opts.byNewest
-        ? (firstShownAt.get(b.role_id) ?? '').localeCompare(firstShownAt.get(a.role_id) ?? '') ||
-          (b.score ?? 0) - (a.score ?? 0)
+        ? newest(a, b)
         : (b.score ?? 0) - (a.score ?? 0) ||
           locationRank(a.score_breakdown) - locationRank(b.score_breakdown),
     )

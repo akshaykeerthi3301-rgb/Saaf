@@ -146,6 +146,25 @@ export async function readCards(
 }
 
 /**
+ * role_id → the board's posting date, for the given roles. Read only when the
+ * candidate sorts by Newest: the thin shortlist read carries no `roles` join,
+ * and adding one for every view would put back the cold-cache cost TASK-093
+ * removed.
+ */
+export async function readPostedDates(roleIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) => supabase.from('roles').select('id, posted_at').in('id', ids).not('posted_at', 'is', null)),
+  )
+  for (const { data } of results) {
+    for (const r of (data ?? []) as { id: string; posted_at: string }[]) out.set(r.id, r.posted_at)
+  }
+  return out
+}
+
+/**
  * How many roles in the index match the candidate's search — the number the
  * scorer's 500-row cap is taken from. Asked of roles_for_candidates() itself,
  * with the same arguments the scorer passed (candidateSearch() in
