@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { NEXT_COOKIE, NEXT_COOKIE_MAX_AGE, safeNextPath } from '@/lib/next-path'
 
 /**
  * Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts`, and the
@@ -45,7 +46,21 @@ export async function proxy(request: NextRequest) {
   if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/signin'
-    return NextResponse.redirect(url)
+    url.search = ''
+    const redirect = NextResponse.redirect(url)
+    // Remembered for /auth/callback, so sign-in returns them here rather than
+    // to /today (QA-22). A cookie, not a query param — see src/lib/next-path.ts.
+    const next = safeNextPath(request.nextUrl.pathname + request.nextUrl.search)
+    if (next) {
+      redirect.cookies.set(NEXT_COOKIE, next, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: NEXT_COOKIE_MAX_AGE,
+      })
+    }
+    return redirect
   }
 
   return response

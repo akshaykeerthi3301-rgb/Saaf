@@ -20,6 +20,7 @@ is the evidence those tasks point back to.
 | QA-14, QA-15, QA-16 one-click finality, stale count, any-scheme links | **Fixed, verified on localhost, not deployed** — TASK-100 |
 | QA-18, QA-19, QA-25 phone overlap, tap size, contrast, input types | **Fixed except the accent green (TASK-101b, founder decision), verified on localhost, not deployed** — TASK-101 |
 | QA-20 interview-prep picker and product-name skills | **Fixed, verified on localhost, not deployed** — TASK-102 |
+| QA-22 sign-in forgot the destination | **Fixed, partly verified (redirect + cookie; Google round trip unwalked), not deployed** — TASK-103 |
 | QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-26 intermittent rewrite failure, unlogged | Open — TASK-105 |
