@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { deleteOwnReport } from '@/lib/services/reports'
 
 const schema = z.object({ gateResultId: z.string().uuid(), note: z.string().max(500).optional() })
 
@@ -31,4 +32,18 @@ export async function reportRefusal(input: { gateResultId: string; note?: string
     )
   if (error) return { ok: false as const, error: 'Could not record that.' }
   return { ok: true as const }
+}
+
+/** Take a report back. Its own entry point, so it authenticates itself. */
+export async function withdrawReport(input: { gateResultId: string }) {
+  const parsed = z.object({ gateResultId: z.string().uuid() }).safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: 'Invalid report.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false as const, error: 'Not signed in.' }
+
+  return (await deleteOwnReport(user.id, parsed.data.gateResultId))
+    ? { ok: true as const }
+    : { ok: false as const, error: 'Could not withdraw that.' }
 }

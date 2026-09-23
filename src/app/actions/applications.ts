@@ -34,7 +34,10 @@ const trackSchema = z.object({
   roleId: z.string().uuid().optional(),
   company: z.string().min(1).max(200),
   title: z.string().min(1).max(300),
-  applyUrl: z.string().url().max(2000).optional(),
+  // http(s) only. z.string().url() accepts any scheme, so a "javascript:" link
+  // was stored (QA-16). React refuses to render it today; the rule belongs at
+  // the boundary so no later, non-React consumer inherits the row.
+  applyUrl: z.string().url().max(2000).refine((u) => /^https?:\/\//i.test(u), 'The link needs to start with http:// or https://.').optional(),
   /**
    * Which column it lands in. Defaults to 'saved' at the database level.
    *

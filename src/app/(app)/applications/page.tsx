@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation'
-import { CalendarClock } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationBoard, type Application } from '@/components/features/application-board'
-import { istDay } from '@/lib/day'
 
 /**
  * The tracker.
@@ -59,38 +57,13 @@ export default async function ApplicationsPage() {
   // From the signed-in address rather than a second query just for two letters.
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
 
-  const due = rows.filter(
-    (r) => r.followUpOn && r.followUpOn <= istDay()
-      && r.status !== 'closed',
-  ).length
 
   return (
     <AppShell title="Job Tracker" initials={initials}>
       <div className="mx-auto max-w-[1500px] p-5 sm:p-8">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            {/* The header above already says "Applications". A headline, an
-                eyebrow and a subtitle repeating it were three labels for one
-                page. The empty state stays — it tells you what to do next. */}
-            {rows.length === 0 ? (
-              <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.
-              </p>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {due > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent">
-                <CalendarClock className="size-3.5" />
-                {due} to follow up on
-              </span>
-            )}
-            <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground">
-              {rows.length} tracked
-            </span>
-          </div>
-        </div>
-
+        {/* The empty state, the follow-up badge and the tracked count live in
+            ApplicationBoard now, counted from its own state — computed here
+            they stayed stale after every add or remove (QA-15). */}
         {/* A backend failure must never render as a verdict — an empty board would
             read as "you have applied to nothing", which is a statement about the
             candidate rather than about our read. */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CalendarClock, Lock, Plus, X } from 'lucide-react'
 import {
   setApplicationStatus, setApplicationDetail, removeApplication, trackRole,
@@ -51,6 +51,9 @@ const COLUMNS: { status: ApplicationStatus; label: string; empty: string }[] = [
  * well before it felt slow, but an optimistic update that cannot be undone is
  * worse than a slow one.
  */
+/** How long a removed card can be brought back before the delete is sent. */
+const UNDO_MS = 6000
+
 export function ApplicationBoard({ initial }: { initial: Application[] }) {
   const [rows, setRows] = useState(initial)
   const [editing, setEditing] = useState<string | null>(null)
@@ -127,23 +130,73 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
     )
   }
 
-  const remove = async (id: string) => {
-    const index = rows.findIndex((r) => r.id === id)
-    if (index < 0) return
-    const removed = rows[index]
-    setRows((rs) => rs.filter((r) => r.id !== id))
-    await commit(
-      () => removeApplication({ id }),
+  /**
+   * Remove, with a few seconds to take it back.
+   *
+   * ⚠️ ONE CLICK USED TO DELETE A CARD AND ITS NOTES FOR GOOD (docs/QA-AUDIT.md
+   * QA-15). The card now leaves the board at once, but the delete is held for
+   * UNDO_MS behind an "Undo" bar and only then sent. Held, not sent-and-
+   * restored: re-creating a deleted row would give it a new id and lose
+   * nothing only by luck. If the candidate navigates away inside the window
+   * the delete is flushed on unmount; if the tab itself closes, it is never
+   * sent and the card is back next visit — the safe direction to fail.
+   */
+  const pending = useRef<{ row: Application; index: number; timer: ReturnType<typeof setTimeout> } | null>(null)
+  const [undoable, setUndoable] = useState<Application | null>(null)
+
+  const send = (p: { row: Application; index: number }) =>
+    commit(
+      () => removeApplication({ id: p.row.id }),
       // Restored at its original index rather than appended — a card that
       // reappears somewhere else reads as a second bug.
       () =>
         setRows((rs) => {
           const copy = [...rs]
-          copy.splice(Math.min(index, copy.length), 0, removed)
+          copy.splice(Math.min(p.index, copy.length), 0, p.row)
           return copy
         }),
     )
+
+  const flush = () => {
+    const p = pending.current
+    if (!p) return
+    clearTimeout(p.timer)
+    pending.current = null
+    setUndoable(null)
+    void send(p)
   }
+
+  const remove = (id: string) => {
+    flush() // one pending removal at a time; the earlier one is committed now
+    const index = rows.findIndex((r) => r.id === id)
+    if (index < 0) return
+    const row = rows[index]
+    setRows((rs) => rs.filter((r) => r.id !== id))
+    pending.current = { row, index, timer: setTimeout(flush, UNDO_MS) }
+    setUndoable(row)
+  }
+
+  const undo = () => {
+    const p = pending.current
+    if (!p) return
+    clearTimeout(p.timer)
+    pending.current = null
+    setUndoable(null)
+    setRows((rs) => {
+      const copy = [...rs]
+      copy.splice(Math.min(p.index, copy.length), 0, p.row)
+      return copy
+    })
+  }
+
+  // Navigating away inside the window still deletes what the candidate removed.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => flush(), [])
+
+  // Counted from the board's own state, so they move with every add, remove
+  // and status change. They were computed on the server and stayed at "1
+  // tracked" beside an empty board until a reload (QA-15).
+  const due = rows.filter((r) => r.followUpOn && r.followUpOn <= istDay() && r.status !== 'closed').length
 
   // IST, not UTC: a follow-up due today is due on the candidate's calendar.
   const today = istDay()
@@ -152,6 +205,45 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
 
   return (
     <>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          {rows.length === 0 ? (
+            <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+              Nothing tracked yet. Track a role from today’s list, or add one you found anywhere.
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {due > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent">
+              <CalendarClock className="size-3.5" />
+              {due} to follow up on
+            </span>
+          )}
+          <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+            {rows.length} tracked
+          </span>
+        </div>
+      </div>
+
+      {undoable && (
+        <p
+          role="status"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm leading-6 text-primary"
+        >
+          <span>
+            Removed <span className="font-semibold">{undoable.title}</span> at {undoable.company}.
+          </span>
+          <button
+            type="button"
+            onClick={undo}
+            className="rounded-lg px-2 py-1 text-sm font-semibold text-primary underline underline-offset-4 hover:text-accent"
+          >
+            Undo
+          </button>
+        </p>
+      )}
+
       {/* A rejected write, said out loud. It sits above the board rather than on
           the card, because the card has already rolled back to its previous
           value — the message explains why it moved back, and a card that both
@@ -344,9 +436,17 @@ function AddByHand({
   const [error, setError] = useState<string>()
 
   async function add() {
-    if (!company.trim() || !title.trim()) return
-    setBusy(true); setError(undefined)
+    // Said, not silent: an Add that did nothing looked broken (QA-15).
+    if (!company.trim() || !title.trim()) {
+      setError('Add a company and a role title — the link is optional.')
+      return
+    }
     const url = applyUrl.trim()
+    if (url && !/^https?:\/\//i.test(url)) {
+      setError('The link needs to start with http:// or https://.')
+      return
+    }
+    setBusy(true); setError(undefined)
     // ⚠️ ONE WRITE, WITH THE COLUMN ON THE INSERT. This briefly inserted and
     // then called setApplicationStatus with a client-generated UUID — which did
     // nothing at all, silently, because that id does not exist server-side and
