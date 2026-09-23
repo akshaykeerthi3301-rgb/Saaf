@@ -1902,6 +1902,45 @@ Walked in a browser on localhost against the live database: 32 of 40 shortlist
 cards show a date chip; an undated (Workday) card shows none; 375px width, no
 horizontal scroll; no console errors. **Not deployed. No migration.**
 
+### Stage AB — the QA pass: what a customer hits (2026-09-23)
+
+Founder asked for intensive end-to-end testing and a revision plan. Full
+evidence in **`docs/QA-AUDIT.md`**; fixes are ROADMAP Phase 11 (TASK-091 →
+TASK-104). The numbers worth carrying, all measured 2026-09-23:
+
+| Measured | Value |
+|---|---|
+| Upload of 4.7 MB to production ATS checker | **413 from Vercel → whole page crashes.** UI and zod allow 5 MB; Vercel's body cap is 4.5 MB |
+| `/today` main query (500 rows + `role_requirements(*)`) | **9,954 ms cold / 492 ms warm, 1,045 KB JSON** |
+| `/today` server time, local prod build, live DB | 19.2 s first, 2.1 s repeat; 691 KB HTML; "Show all 338" **6.3 MB** |
+| Other signed-in pages | 0.33–0.75 s, 26–47 KB |
+| Lighthouse mobile, production | `/` 84 (LCP 4.1 s) · `/tools/ats-checker` 86 · `/signin` 87 · `/audit` 97 · `/tools/paste-jd` 98 |
+| Public TTFB, production | 0.17–0.50 s on every route |
+| axe-core WCAG 2.1 AA, signed-in | `/today` 49 contrast failures; accent button **4.49:1**; tracker scroller not keyboard-reachable; 4 pages clean |
+| Users in `profiles` | 9 |
+
+**The finding that matters most for launch is not a bug in any one screen:**
+nothing under `src/app` defines `error.tsx`, `global-error.tsx`,
+`not-found.tsx` or `loading.tsx`. Every slow path and every failure falls
+through to Next's unbranded defaults — which is how a 413 became a blank page
+and a 10-second query became a frozen one.
+
+**Two recurrences of defects already fixed elsewhere** — worth noticing as a
+pattern, not only as two bugs: the ATS checker contradicts itself between step
+1 and step 4 (the `keepStillTrue` family, fixed for `/tools/paste-jd` only), and
+a displayed count is a cap (500 on `/today`; 150-of-199 on the checker), the
+same class as Stage T's "field present ≠ field meaning".
+
+**Doc drift found, not fixed here:** CLAUDE.md states 11 server actions and 24
+legacy query sites; measured 21 and **25** — the "do not add a 25th" line has
+been crossed. The codebase is right; CLAUDE.md needs re-measuring.
+
+**Testing hygiene:** the founder's account was used for signed-in flows. Two
+tracker rows and one `refusal_reports` row created by tests were removed; the
+onboarding draft was cleared from sessionStorage; the confirm step was never
+submitted. A fixture account (`db:seed-test-user`) is the right tool for the
+untested new-user path next time.
+
 ### Deployed 2026-09-16 — the whole Résumé Studio, and a runbook that nearly shipped a 404
 
 **https://saaf-ten.vercel.app**, `dpl_ARvB3JR54u71LNmvLYkNpvUCnbDN`, region

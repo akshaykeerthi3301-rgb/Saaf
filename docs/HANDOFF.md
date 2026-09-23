@@ -2,11 +2,10 @@
 
 ---
 
-## ⏳ 2026-09-23 — "Posted N days ago" is BUILT, NOT LIVE, and NOT COMMITTED
+## ⏳ 2026-09-23 — "Posted N days ago" is BUILT and NOT LIVE (~~and NOT COMMITTED~~ — committed `1ff17d1`)
 
 TASK-086 works on localhost against the live database (32 of 40 of the founder's
-shortlist cards show a date). Nothing is deployed and nothing is committed —
-the working tree holds it. To put it live, **in this order, in one sitting**:
+shortlist cards show a date). Nothing is deployed. ~~Nothing is committed — the working tree holds it.~~ To put it live, **in this order, in one sitting**:
 
 1. **Deploy** (the founder's go-ahead; the session can run it — `saaf` project,
    rsync without `.git`, never `--prebuilt`).
@@ -20,6 +19,25 @@ the working tree holds it. To put it live, **in this order, in one sitting**:
 
 Why, and the six parts of the "Jobright parity" prompt that were declined:
 `docs/PROJECT-STATE.md` Stage AA. Next tasks: `docs/ROADMAP.md` Phase 10.
+
+~~Nothing is committed.~~ **Committed as `1ff17d1` on `main`, 2026-09-23. Still
+not deployed, not pushed.**
+
+## ⚡ 2026-09-23 — QA pass done; two decisions need the founder
+
+`docs/QA-AUDIT.md` has 25 findings; ROADMAP Phase 11 turns them into TASK-091 →
+TASK-104. A session can build all of them **except where these two decisions
+gate it**:
+
+| Decision | Why it is yours | Gates |
+|---|---|---|
+| **Darken the accent green slightly?** White text on it measures 4.49:1; the accessibility floor is 4.5:1 | It is the brand's one colour, and `docs/DESIGN.md` is law — a session may not move a token unasked | TASK-101 |
+| **Raise the 500-role shortlist cap?** Disclosing it ("Top 500 of N") needs no decision and will be built | A bigger cap is a product choice about list length vs precision, and costs page weight until TASK-093 lands | the second half of TASK-094 |
+
+**Live-site facts from the pass that you should know without reading the audit:**
+a résumé between 4.5 and 5 MB crashes the live checker to a blank error page
+today (TASK-091 fixes it), and the Jobs page can take 10–19 seconds on the first
+visit of the day (TASK-093).
 
 ---
 
