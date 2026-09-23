@@ -228,7 +228,9 @@ async function fillDescriptions(
         signal: AbortSignal.timeout(12000),
       })
       if (!res.ok) return
-      r.description = a.parseDetail!(await res.json())
+      const detail: unknown = await res.json()
+      r.description = a.parseDetail!(detail)
+      if (a.parseDetailPostedAt) r.postedAt = a.parseDetailPostedAt(detail) ?? r.postedAt
     } catch {
       // Leave the description empty; the role still ranks on its title.
     }

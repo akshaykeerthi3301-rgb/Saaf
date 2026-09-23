@@ -77,6 +77,7 @@ type MatchRow = {
     city: string | null
     apply_url: string
     company_name: string | null
+    posted_at: string | null
     role_requirements: RoleRequirement[] | null
   } | null
 }
@@ -122,7 +123,7 @@ export default async function TodayPage({
     .from('gate_results')
     .select(`
       id, role_id, reason, score, score_breakdown,
-      roles(title, city, apply_url, company_name, role_requirements(*))
+      roles(title, city, apply_url, company_name, posted_at, role_requirements(*))
     `)
     .eq('user_id', user.id)
     .order('score', { ascending: false, nullsFirst: false })
@@ -544,6 +545,7 @@ export default async function TodayPage({
                           isNew={isNew(r)}
                           requirements={evidence(r)}
                           profileCity={profile.city ?? undefined}
+                          postedAt={r.roles?.posted_at ?? undefined}
                         />
                       </div>
                     ))}

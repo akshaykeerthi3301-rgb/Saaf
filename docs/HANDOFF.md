@@ -2,6 +2,27 @@
 
 ---
 
+## ⏳ 2026-09-23 — "Posted N days ago" is BUILT, NOT LIVE, and NOT COMMITTED
+
+TASK-086 works on localhost against the live database (32 of 40 of the founder's
+shortlist cards show a date). Nothing is deployed and nothing is committed —
+the working tree holds it. To put it live, **in this order, in one sitting**:
+
+1. **Deploy** (the founder's go-ahead; the session can run it — `saaf` project,
+   rsync without `.git`, never `--prebuilt`).
+2. **Immediately after:** `npm run backfill:posted-dates -- --write`. The dry run
+   found 3,802 Greenhouse roles whose stored date is the last edit, a median
+   46.9 days too fresh. Run it *before* the deploy and the old live ingest puts
+   the wrong dates straight back; skip it and every Greenhouse card on the live
+   site overstates freshness for up to a rotation.
+3. **Expect Workday cards to show no date at first.** 10,378 roles (41% of the
+   index) have none stored; each fills in as ingest next visits its board.
+
+Why, and the six parts of the "Jobright parity" prompt that were declined:
+`docs/PROJECT-STATE.md` Stage AA. Next tasks: `docs/ROADMAP.md` Phase 10.
+
+---
+
 ## ⚡ Resuming after 2026-09-14? Start here.
 
 ~~**All work since 2026-09-12 is on the branch `ats-parity`, not on `main`.**~~

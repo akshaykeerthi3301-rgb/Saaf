@@ -1844,6 +1844,64 @@ grounded equivalent here. Revisit when there is a paid tier.
 (no model, no rate-limit charge), summary-only (model ran, every bullet
 untouched). **No migration.**
 
+### Stage AA — a parity prompt, measured against the repo; and "posted" was the last edit (2026-09-23)
+
+**The prompt.** The founder brought a generic "Jobright.ai parity" master prompt
+(Next.js init, zinc monochrome, pgvector matching, auto-apply extension, n8n
+email sync, company insights, applicant counts). Checked against the repo rather
+than acknowledged: stack, résumé parsing, split score, tailoring with the
+fabrication guard, a form-filling extension and the tracker board all exist.
+**Founder chose 2026-09-23: close the real gaps in Saaf, no rebuild.** Declined,
+and why — so a later session handed the same prompt does not re-derive this:
+
+| Declined | Why |
+|---|---|
+| Auto-apply / simulated submit | Locked decision: Saaf never applies on anyone's behalf. The extension fills; the candidate submits |
+| Live applicant counts | Only LinkedIn/Naukri expose them, both banned (ToS). ATS APIs do not. `role-card.tsx` already dropped "Early applicant" for this reason |
+| Zinc monochrome, flat, Geist | That is the system retired 2026-09-05 (`DESIGN.md` § What was retired). Dark rebrand is separately parked |
+| n8n parsing users' Gmail to move tracker cards | Gmail read access is a Google *restricted* scope — needs a paid third-party security assessment (cost unverified) — plus a server for n8n. Breaks ₹0, and holds every user's inbox |
+| pgvector similarity as the match score | Scoring is deterministic so every number states its reason; a cosine similarity cannot. Admissible later only as one component, and only if `bench:match` improves |
+| Claude API for all model work | Per-call cost; Groq (primary) and Gemini (fallback) run it at ₹0 today — `src/lib/parse/llm.ts` |
+
+Accepted: posted date on cards (TASK-086), a conversational copilot (TASK-088),
+a company panel pending a free data source (TASK-089).
+
+**The finding — Greenhouse's "posted" date was its last edit.** The adapter read
+`updated_at`. Live probe of Okta's board: all 328 postings shared one `updated_at`
+two days old, while `first_published` ranged back to February. The list API
+returns `first_published` on every posting, with and without `?content=true`.
+Dry run of `npm run backfill:posted-dates`, 2026-09-23: **548 Greenhouse boards,
+4,472 roles still listed, 3,802 (85%) stored a date that is not the posting date,
+median 46.9 days fresher than the truth.** Nothing displayed `posted_at` before
+today, so this was latent — it became a false claim the moment a card showed it.
+
+**Date coverage by provider, measured live 2026-09-23** (all 1,398 boards,
+25,249 roles):
+
+| Provider | Roles | With a date |
+|---|---|---|
+| Workday | 10,378 (41% of the index) | **0%** — listing says "Posted 30+ Days Ago"; detail call has `startDate` (live-probed on Novartis) and now keeps it |
+| SmartRecruiters | 5,796 | 100% |
+| Greenhouse | 5,718 | 100% — but the wrong field until this stage. 4,472 of them are still on their boards; the rest await ingest's prune |
+| Workable / Ashby / Recruitee / Lever | 1,272 / 1,156 / 518 / 411 | 100% |
+
+~~A first pass of this probe reported Workday at 8,960 roles~~ — its boards
+query was unpaged and silently stopped at 1,000 of 1,398 boards, leaving 5,645
+roles unattributed. Same failure class as `score-candidate.ts`'s 500-row cap:
+a Supabase read with no `.range()` loop returns the first 1,000 and no error.
+
+**Rule carried forward:** before displaying any stored field as a fact, check
+what the provider meant by it. A field existing is not the field meaning what
+its column name says — the same lesson as Stage T's salary probe (a key present
+on every posting, empty).
+
+**Gates:** `npm test` 642 · `npm run lint` 0 errors, 26 warnings (unchanged from
+before the change) · `npm run typecheck` clean · `npm run verify:rls` verified ·
+`npm run bench` DELTA none · `npm run bench:match` 0 components at 90%+.
+Walked in a browser on localhost against the live database: 32 of 40 shortlist
+cards show a date chip; an undated (Workday) card shows none; 375px width, no
+horizontal scroll; no console errors. **Not deployed. No migration.**
+
 ### Deployed 2026-09-16 — the whole Résumé Studio, and a runbook that nearly shipped a 404
 
 **https://saaf-ten.vercel.app**, `dpl_ARvB3JR54u71LNmvLYkNpvUCnbDN`, region

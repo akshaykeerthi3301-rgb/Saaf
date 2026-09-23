@@ -1,9 +1,10 @@
-import { AlertCircle, ChevronRight, MapPin, Quote } from 'lucide-react'
+import { AlertCircle, ChevronRight, Clock, MapPin, Quote } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
 import { ReviewDrawer } from '@/components/features/review-drawer'
 import { TrackRole } from '@/components/features/track-role'
 import { FitRing, bandFor } from '@/components/ui/fit-ring'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
+import { postedAgo, postedOn } from '@/lib/day'
 import type { ScoreBreakdown } from '@/match/score'
 
 /** One requirement the extractor read out of a posting, with the sentence it
@@ -35,6 +36,8 @@ type Props = {
   isNew?: boolean
   requirements?: EvidenceItem[]
   profileCity?: string
+  /** roles.posted_at — the date the employer's board gave, never our own. */
+  postedAt?: string
 }
 
 /**
@@ -58,9 +61,10 @@ type Props = {
  */
 export function RoleCard({
   gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity,
+  isNew, requirements, profileCity, postedAt,
 }: Props) {
   const band = bandFor(score)
+  const posted = postedAgo(postedAt)
 
   /**
    * One quote, shown once.
@@ -147,12 +151,26 @@ export function RoleCard({
               we extract neither — employment type is not parsed at all, and 12
               of 799 postings state pay. A chip is only here when the value
               behind it was actually read from the posting. */}
-          {city ? (
+          {city || posted ? (
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1.5 text-xs text-primary">
-                <MapPin className="size-3" aria-hidden="true" />
-                {city}
-              </span>
+              {city ? (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1.5 text-xs text-primary">
+                  <MapPin className="size-3" aria-hidden="true" />
+                  {city}
+                </span>
+              ) : null}
+              {/* The board's own date. No chip when it gave none — Workday
+                  roles fill in as ingest revisits them. Not "Early applicant":
+                  we hold when a role was posted, not who has applied. */}
+              {posted && postedAt ? (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1.5 text-xs text-primary"
+                  title={`Posted ${postedOn(postedAt)}, as dated by the employer's job board`}
+                >
+                  <Clock className="size-3" aria-hidden="true" />
+                  {posted}
+                </span>
+              ) : null}
             </div>
           ) : null}
 

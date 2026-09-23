@@ -52,6 +52,40 @@ describe('smartrecruiters detail fetching', () => {
 })
 
 /**
+ * Posting dates. The job card says "Posted N days ago" from `postedAt`, so a
+ * field that is not the publish date becomes a false claim on every card.
+ */
+describe('posting dates', () => {
+  it('greenhouse reads first_published, not the last edit', () => {
+    // Live shape, Okta 2026-09-23: one bulk edit stamped every posting.
+    const [role] = adapterFor('greenhouse')!.parse({
+      jobs: [{
+        id: 1, title: 'Account Executive', location: { name: 'Bengaluru' },
+        content: '', absolute_url: 'https://x',
+        first_published: '2026-02-09T00:15:16-05:00',
+        updated_at: '2026-09-21T12:43:00-04:00',
+      }],
+    }, 'okta')
+    expect(role.postedAt).toBe('2026-02-09T00:15:16-05:00')
+  })
+
+  it('greenhouse stores no date rather than an edit time when first_published is absent', () => {
+    const [role] = adapterFor('greenhouse')!.parse({
+      jobs: [{ id: 1, title: 'x', updated_at: '2026-09-21T12:43:00-04:00' }],
+    }, 'okta')
+    expect(role.postedAt).toBeNull()
+  })
+
+  it('workday reads startDate off the detail call', () => {
+    const a = adapterFor('workday')!
+    expect(a.parseDetailPostedAt!({ jobPostingInfo: { startDate: '2026-08-12', postedOn: 'Posted 30+ Days Ago' } }))
+      .toBe('2026-08-12')
+    expect(a.parseDetailPostedAt!({})).toBeNull()
+    expect(a.parseDetailPostedAt!(null)).toBeNull()
+  })
+})
+
+/**
  * The completeness contract.
  *
  * `complete` decides whether ingest/run.ts prunes a board and whether it is

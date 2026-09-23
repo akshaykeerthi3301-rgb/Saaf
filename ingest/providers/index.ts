@@ -26,7 +26,12 @@ export const ADAPTERS: Adapter[] = [
         locationRaw: str(rec(j.location).name),
         description: toText(str(j.content)),
         applyUrl: str(j.absolute_url),
-        postedAt: (j.updated_at as string) ?? null,
+        // NOT `updated_at`, which this read until 2026-09-23. That is the last
+        // edit, and boards bulk-edit: on Okta's board all 328 postings carried
+        // one identical `updated_at` two days old, including a role first
+        // published seven months earlier. Labelled "Posted", it made every
+        // Greenhouse role look fresh. `first_published` is the posting date.
+        postedAt: (j.first_published as string) || null,
       })),
   },
   {
@@ -342,7 +347,8 @@ ADAPTERS.push({
           description: '',
           applyUrl: `https://${host}/${site}${path}`,
           // "Posted 3 Days Ago" is not a date, and is not going to be parsed
-          // out of English prose. The detail call carries a real startDate.
+          // out of English prose — "30+ Days Ago" cannot be. The detail call
+          // carries a real startDate; parseDetailPostedAt reads it.
           postedAt: null,
         })
       }
@@ -355,6 +361,7 @@ ADAPTERS.push({
 
   detailUrl: (token, externalId) => `${wdBase(token)}${externalId}`,
   parseDetail: (raw) => toText(str(rec(rec(raw).jobPostingInfo).jobDescription)),
+  parseDetailPostedAt: (raw) => str(rec(rec(raw).jobPostingInfo).startDate) || null,
 })
 
 export const adapterFor = (p: string) => ADAPTERS.find((a) => a.provider === p)

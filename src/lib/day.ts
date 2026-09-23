@@ -22,3 +22,37 @@ const IST = new Intl.DateTimeFormat('en-CA', {
 export function istDay(at: Date = new Date()): string {
   return IST.format(at)
 }
+
+const DAY_MS = 86_400_000
+
+const IST_DATE = new Intl.DateTimeFormat('en-IN', {
+  timeZone: 'Asia/Kolkata',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+/**
+ * "Posted 3 days ago", from the date the employer's board gave the posting.
+ * Null when there is no usable date — the card then shows nothing, because an
+ * invented freshness is worse than none (Greenhouse's `updated_at` was stored
+ * as this field until 2026-09-23 and made months-old roles read as days old).
+ *
+ * Whole days elapsed, not calendar days: Workday gives a bare date, so a finer
+ * reading would be precision the source does not have.
+ */
+export function postedAgo(iso: string | null | undefined, now: Date = new Date()): string | null {
+  const t = iso ? Date.parse(iso) : NaN
+  if (Number.isNaN(t)) return null
+  const days = Math.max(0, Math.floor((now.getTime() - t) / DAY_MS))
+  if (days === 0) return 'Posted today'
+  if (days === 1) return 'Posted yesterday'
+  if (days < 60) return `Posted ${days} days ago`
+  if (days < 365) return `Posted ${Math.floor(days / 30)} months ago`
+  return 'Posted over a year ago'
+}
+
+/** The exact posting date in IST, for the tooltip behind `postedAgo`. */
+export function postedOn(iso: string): string {
+  return IST_DATE.format(new Date(iso))
+}

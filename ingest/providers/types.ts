@@ -42,6 +42,12 @@ export type Adapter = {
   detailUrl?: (token: string, externalId: string) => string
   /** Detail payload → the description text. */
   parseDetail?: (raw: unknown) => string
+  /**
+   * Detail payload → the posting date, for a provider whose listing has none.
+   * Workday's listing says only "Posted 30+ Days Ago"; its detail call carries
+   * `startDate`. Measured 2026-09-23: 10,378 Workday roles, 0 with a date.
+   */
+  parseDetailPostedAt?: (raw: unknown) => string | null
 
   /**
    * For a provider whose listing is not one GET.
