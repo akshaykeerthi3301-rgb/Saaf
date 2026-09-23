@@ -602,6 +602,7 @@ export function AtsFlow() {
             <input
               ref={inputRef}
               id="ats-file"
+              aria-label="Upload your résumé"
               type="file"
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="sr-only"

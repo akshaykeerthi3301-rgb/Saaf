@@ -266,7 +266,14 @@ export function ApplicationBoard({ initial }: { initial: Application[] }) {
 
       {/* Horizontal snap-scroll on a phone, a five-column grid from xl. No
           breakpoint to maintain beyond that one switch. */}
-      <div className="flex snap-x gap-4 overflow-x-auto pb-4 xl:grid xl:grid-cols-5 xl:overflow-visible">
+      {/* Focusable, so the columns that scroll sideways on a phone can be
+          reached by keyboard (WCAG scrollable-region-focusable, QA-19). */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Your application pipeline"
+        className="flex snap-x gap-4 overflow-x-auto pb-4 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 xl:grid xl:grid-cols-5 xl:overflow-visible"
+      >
         {COLUMNS.map((col) => {
           const inCol = rows.filter((r) => r.status === col.status)
           return (

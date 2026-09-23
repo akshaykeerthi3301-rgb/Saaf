@@ -149,11 +149,11 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         </p>
         <Input label="Full name" value={f.fullName}
           onChange={(e) => setF({ ...f, fullName: e.target.value })} />
-        <Input label="Phone" value={f.phone}
+        <Input label="Phone" type="tel" inputMode="tel" autoComplete="tel" value={f.phone}
           onChange={(e) => setF({ ...f, phone: e.target.value })} />
-        <Input label="LinkedIn URL" value={f.linkedinUrl}
+        <Input label="LinkedIn URL" type="url" inputMode="url" value={f.linkedinUrl}
           onChange={(e) => setF({ ...f, linkedinUrl: e.target.value })} />
-        <Input label="Portfolio or GitHub" value={f.portfolioUrl}
+        <Input label="Portfolio or GitHub" type="url" inputMode="url" value={f.portfolioUrl}
           onChange={(e) => setF({ ...f, portfolioUrl: e.target.value })} />
         <Input label="Notice period" value={f.noticePeriod}
           onChange={(e) => setF({ ...f, noticePeriod: e.target.value })} />

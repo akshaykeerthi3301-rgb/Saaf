@@ -180,14 +180,17 @@ export function RoleCard({
               its reason is the exact failure this product exists to correct. */}
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{reason}</p>
 
-          <div className="mt-auto flex items-center gap-1 pt-4">
+          {/* flex-wrap, and the closed disclosure never narrower than its own
+              label: at 375 px "Insights (3)" used to be squeezed under the Track
+              button beside it, so a tap on one could land on the other (QA-18). */}
+          <div className="mt-auto flex flex-wrap items-center gap-1 pt-4">
             {breakdown && (
               /* ONE disclosure, not two. The score components and the sentences
                  they were read from are the same question — "where did this
                  number come from" — and asking it twice put two more lines of
                  text on every card. Still inline, still no round trip. */
-              <details className="group min-w-0 flex-1" data-breakdown="score">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
+              <details className="group flex-none open:min-w-0 open:flex-1" data-breakdown="score">
+                <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 whitespace-nowrap py-1 text-xs font-semibold text-muted-foreground hover:text-primary">
                   <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
                   Insights
                   {shownRequirements.length ? (

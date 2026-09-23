@@ -240,7 +240,8 @@ export default async function TodayPage({
                     }`}
                   >
                     {t.label}
-                    <span className="font-mono tabular-nums opacity-70">{t.count}</span>
+                    {/* Full strength: at opacity-70 these measured 3.11:1 (QA-19). */}
+                    <span className="font-mono tabular-nums">{t.count}</span>
                   </Link>
                 )
               })}
@@ -372,7 +373,7 @@ export default async function TodayPage({
                       key={k}
                       href={`/today${params.size ? `?${params}` : ''}`}
                       aria-current={active ? 'true' : undefined}
-                      className={`font-medium transition-colors ${
+                      className={`inline-flex min-h-6 items-center font-medium transition-colors ${
                         active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
                       }`}
                     >
@@ -398,7 +399,7 @@ export default async function TodayPage({
                       key={k}
                       href={`/today${params.size ? `?${params}` : ''}`}
                       aria-current={active ? 'true' : undefined}
-                      className={`font-medium transition-colors ${
+                      className={`inline-flex min-h-6 items-center font-medium transition-colors ${
                         active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
                       }`}
                     >
