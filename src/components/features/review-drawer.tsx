@@ -5,6 +5,7 @@ import { CircleCheck, Info, Loader2, ShieldCheck, X } from 'lucide-react'
 import { tailorForRole } from '@/app/actions/tailor'
 import { trackRole } from '@/app/actions/applications'
 import type { Draft } from '@/lib/tailor'
+import { Sheet, SheetClose, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 type Props = {
   roleId: string
@@ -76,38 +77,28 @@ export function ReviewDrawer({ roleId, title, company, applyUrl }: Props) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={launch}
-        className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground hover:opacity-90"
+      <Sheet
+        open={open}
+        onOpenChange={(next) => (next ? launch() : setOpen(false))}
+        trigger={
+          <SheetTrigger className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground hover:opacity-90">
+            <ShieldCheck className="size-3.5" />
+            Review &amp; Approve
+          </SheetTrigger>
+        }
       >
-        <ShieldCheck className="size-3.5" />
-        Review &amp; Approve
-      </button>
-
-      {open ? (
-        <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={`Review application: ${title}`}>
-          <button
-            className="absolute inset-0 bg-primary/25 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-            aria-label="Close review"
-          />
-
-          <div className="relative flex h-full w-full max-w-lg flex-col border-l border-border bg-card shadow-sm">
             <header className="flex items-start justify-between gap-4 border-b border-border p-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">Review application</p>
-                <h2 className="mt-1 text-lg font-semibold leading-snug tracking-[-0.03em] text-primary">{title}</h2>
+                <SheetTitle className="mt-1 text-lg font-semibold leading-snug tracking-[-0.03em] text-primary">{title}</SheetTitle>
                 <p className="text-sm text-muted-foreground">{company}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
+              <SheetClose
                 className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary"
                 aria-label="Close"
               >
                 <X className="size-4" />
-              </button>
+              </SheetClose>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-5">
@@ -200,13 +191,9 @@ export function ReviewDrawer({ roleId, title, company, applyUrl }: Props) {
             </div>
 
             <footer className="flex items-center gap-3 border-t border-border p-5">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-primary"
-              >
+              <SheetClose className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-primary">
                 Cancel
-              </button>
+              </SheetClose>
               {/* Staging files it on the board. Saaf never submits an
                   application — the apply link goes to the employer's own site,
                   which is a locked decision, not a gap. */}
@@ -229,9 +216,7 @@ export function ReviewDrawer({ roleId, title, company, applyUrl }: Props) {
                 </a>
               ) : null}
             </footer>
-          </div>
-        </div>
-      ) : null}
+      </Sheet>
     </>
   )
 }

@@ -16,6 +16,7 @@ is the evidence those tasks point back to.
 | QA-04, QA-05, QA-10, QA-17, QA-21 one fact, two names | **Fixed, verified on localhost, not deployed** — TASK-096 |
 | QA-09 non-job pre-filled as target role | **Fixed, verified on localhost, not deployed** — TASK-097 |
 | QA-11 Newest sorted by first-shown | **Fixed, verified on localhost, not deployed** — TASK-098 |
+| QA-13 review drawer not a real dialog | **Fixed, verified on localhost, not deployed** — TASK-099 |
 | QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-26 intermittent rewrite failure, unlogged | Open — TASK-105 |
