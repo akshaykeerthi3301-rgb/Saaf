@@ -23,6 +23,7 @@ is the evidence those tasks point back to.
 | QA-07, QA-08 unmetered model calls | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-25b pooled rate limits (found during TASK-095) | **Fixed, verified on localhost, not deployed** — TASK-095 |
 | QA-26 intermittent rewrite failure, unlogged | Open — TASK-105 |
+| **QA-27 email sign-in opened any existing account** | **Fixed, verified on localhost, committed, NOT deployed — live on production until deployed** — TASK-106 |
 | QA-03 email sign-in | Open — founder-only (TASK-075) |
 | Everything else | Open — ROADMAP Phase 11 |
 
@@ -243,6 +244,12 @@ a failing test before the fix (TASK-095).
 the UW sample and worked on retry; the provider answered a probe normally. No
 failure path in `llm.ts` or `resume-rewrite.ts` logs anything, so the cause is
 unknowable after the fact (TASK-105).
+
+**QA-27 · P0 · Typing someone's email signed you in as them.** Found while
+building TASK-103, live since 2026-09-03. `instantSignIn(email)` minted and
+verified a sign-in token server-side with no inbox round-trip; for an existing
+address that is a session for the existing account. Reproduced with a throwaway
+user (new → `signup`; again → `magiclink`, same user id). Fixed by TASK-106.
 
 ## What worked, measured
 

@@ -32,6 +32,20 @@ export async function instantSignIn(email: string): Promise<InstantSignInRespons
   const token = await generateSignInToken(parsed.data)
   if ('error' in token) return { ok: false, error: 'Could not sign you in. Try again in a moment.' }
 
+  // ⚠️ AN EMAIL ALONE MAY START AN ACCOUNT, NEVER OPEN ONE. With no inbox
+  // round-trip there is no proof the typist owns the address, so an existing
+  // account is refused before its token is used — Google, which does prove
+  // ownership, is the way back in (it links to the same account by email).
+  // See generateSignInToken for the measurement (QA-27, TASK-106).
+  if (!token.isNewAccount) {
+    return {
+      ok: false,
+      error:
+        'That email already has a Saaf account. To keep it yours, sign in with Google — ' +
+        'anyone can type an email address, so we do not open an existing account on one alone.',
+    }
+  }
+
   // token_hash verification takes no email — it's a different overload from
   // the {email, token, type} form, and mixing them is rejected outright. The
   // type must match what GoTrue actually assigned the token (see

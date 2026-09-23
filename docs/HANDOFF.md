@@ -2,6 +2,23 @@
 
 ---
 
+## 🔴 2026-09-23 — DEPLOY TASK-106 FIRST: email sign-in opened any existing account
+
+On the live site today, typing someone's email on /signin signs you in AS
+THEM — their profile, phone, salary expectation, saved résumés, tracker, and
+the delete-account button. Instant sign-in (no inbox round-trip, chosen on
+2026-09-03 to stay at ₹0) never checked that the typist owns the address, and
+for an existing address the token it mints is that account's session.
+Reproduced with a throwaway account; nothing real was touched.
+
+**The fix is committed and not deployed** (TASK-106): email sign-in now only
+creates NEW accounts and sends anyone with an existing account to Google. All
+8 real accounts are Gmail or Google-capable, so nobody real is locked out.
+**Say "deploy" and it goes out with TASK-091 to TASK-104.** Until then, the
+exposure stands.
+
+---
+
 ## ✅ 2026-09-23 — "Posted N days ago" is LIVE (~~BUILT and NOT LIVE~~ — deployed `dpl_BifT74tcXs6WVeYfSMSjKnApokUg`, backfill run)
 
 TASK-086 works on localhost against the live database (32 of 40 of the founder's
