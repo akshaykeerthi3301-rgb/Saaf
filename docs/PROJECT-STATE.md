@@ -2167,7 +2167,10 @@ What works is rsyncing the sources without `.git` and letting Vercel build.
 replication" brief the same evening Stage AA had declined a rebuild, and — asked
 to choose between closing gaps, a dark rebrand, or reversing locked decisions —
 answered "continue to execute my direction". Built on branch `jobright-parity`
-(TASK-107 → TASK-116, ROADMAP Phase 12). **Not merged, not deployed.**
+(TASK-107 → TASK-116, ROADMAP Phase 12). ~~**Not merged, not deployed.**~~
+**Merged and deployed 2026-09-24, `dpl_RdV14SSjhUtJTeAvZyewSTjDxeHK`** (TASK-117;
+migration 0028 was already applied when checked, RLS re-verified). Signed-out
+behaviour verified on production; signed-in screens verified on localhost only.
 
 **Reversed by founder direction, 2026-09-23** (struck, not deleted, where they stood):
 

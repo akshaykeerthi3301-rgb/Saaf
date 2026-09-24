@@ -2,7 +2,16 @@
 
 ---
 
-## ⏳ 2026-09-23 (late) — the Jobright-style workspace is BUILT, NOT MERGED, NOT LIVE
+## ✅ 2026-09-24 — the Jobright-style workspace is LIVE, `dpl_RdV14SSjhUtJTeAvZyewSTjDxeHK` (~~BUILT, NOT MERGED, NOT LIVE~~)
+
+**Done on your go-ahead:** migration 0028 was already applied (checked), access
+rules re-verified, `main` merged, deployed to https://saaf-ten.vercel.app and
+checked there signed-out. **Still yours:** sign in with Google on the live site
+and walk the new screens once — a session cannot sign in as you on production —
+and sign up once with a throwaway email to see the new onboarding end to end.
+`main` is not pushed to GitHub.
+
+### Superseded — the entry as written on 2026-09-23
 
 **What exists:** the whole parity pass (dark zinc/indigo look, three-column
 workspace, job feed with filter pills and a match-analysis panel, résumé
