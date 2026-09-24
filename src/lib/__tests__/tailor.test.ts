@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groundingFailure, matchedSkills, type CandidateFacts } from '../tailor'
+import { groundingFailure, groundText, matchedSkills, type CandidateFacts } from '../tailor'
 
 /**
  * The grounding filter is the "Zero Fabricated Claims" badge.
@@ -132,5 +132,45 @@ describe('possessive forms of an allowed company', () => {
   it('still rejects a stranger’s company, possessive or not', () => {
     expect(groundingFailure('Led delivery at Infosys.', me, role)).not.toBeNull()
     expect(groundingFailure('Led Infosys’s delivery team.', me, role)).not.toBeNull()
+  })
+})
+
+/**
+ * ⚠️ THE COVER NOTE IS PROSE, AND groundingFailure() READS ONE LINE.
+ *
+ * It exempts only the first word of what it is given, so in a three-sentence
+ * note every sentence-initial "That", "Most" or "From" reads as an employer the
+ * profile does not list, and draftApplication() dropped the whole note — the
+ * review drawer then showed an empty cover note. Found 2026-09-23 building the
+ * cover-letter studio (PROJECT-STATE Stage AD, item 2); groundText() checks one
+ * sentence at a time with [Tags] removed.
+ */
+describe('groundText — the cover note, checked per sentence', () => {
+  const role = { title: 'Product Analyst', company: 'Zeta', description: null }
+  const note =
+    'I am applying for the Product Analyst role at Zeta. ' +
+    'That work is close to what I do at ICICI Bank, where I use SQL daily. ' +
+    'Most of my time goes on customer segmentation for retail products.'
+
+  it('the single-line filter wrongly rejects a plausible note (the bug)', () => {
+    expect(groundingFailure(note, me, role)).toMatch(/"That"/)
+  })
+
+  it('accepts the same note sentence by sentence', () => {
+    expect(groundText(note, me, role)).toBeNull()
+  })
+
+  it('ignores [Tags], which are blanks for the candidate, not claims', () => {
+    expect(groundText('Dear [Hiring Manager], I am applying for the Product Analyst role at Zeta.', me, role)).toBeNull()
+  })
+
+  it('still rejects an invented employer in any sentence', () => {
+    expect(groundText(`${note} Before that I led growth at Flipkart.`, me, role)).toMatch(/Flipkart/)
+  })
+
+  it('still rejects an invented figure, inflated tenure or unheld credential', () => {
+    expect(groundText(`${note} I grew revenue by 40% there.`, me, role)).toMatch(/figure/)
+    expect(groundText(`${note} I bring 6 years of analytics experience.`, me, role)).toMatch(/6 years/)
+    expect(groundText(`${note} As a CFA charterholder I model risk.`, me, role)).toMatch(/CFA/)
   })
 })

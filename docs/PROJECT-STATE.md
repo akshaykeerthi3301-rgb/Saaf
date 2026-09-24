@@ -2201,9 +2201,13 @@ does not re-derive this:
 2. **`groundingFailure()` cannot judge prose.** It exempts only the first word
    of what it is given, so a paragraph fails on every sentence-initial "That" or
    "Most", and on `[Hiring Manager]` tags. `groundText()` strips tags and checks
-   per sentence; invented employers and figures still fail (tested). ⚠️ **The
+   per sentence; invented employers and figures still fail (tested). ~~⚠️ **The
    existing review drawer passes a three-sentence cover note to it whole** —
-   `src/lib/tailor.ts` — and so probably drops good notes; not changed here.
+   `src/lib/tailor.ts` — and so probably drops good notes; not changed here.~~
+   **Fixed 2026-09-24 (TASK-118):** the drawer's note now goes through
+   `groundText()`, which moved into `tailor.ts` to avoid a circular import. The
+   bug is proven by test (a note rejected on "That"), not by a live count — how
+   many real notes it had dropped since the drawer shipped was never measured.
 3. **The grounding filter does not catch invented ACTIVITIES.** Checked live: a
    Groq cover letter said "I have led full-cycle recruiting" — no figure, no
    employer, no tenure, no credential, so it passed. Same limit in the review

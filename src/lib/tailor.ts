@@ -1,4 +1,6 @@
 import { activeProvider, failureOf, httpFailure, logModelFailure, type Provider } from './parse/llm'
+// copilot-templates imports only TYPES from this file, so this is not a cycle at runtime.
+import { forGrounding } from './copilot-templates'
 
 /**
  * Draft an application, and then refuse to show the parts that cannot be
@@ -171,6 +173,31 @@ export function groundingFailure(
   return null
 }
 
+/**
+ * groundingFailure() for prose: tags removed, then checked ONE SENTENCE AT A
+ * TIME.
+ *
+ * ⚠️ THE FILTER WAS BUILT FOR A SINGLE RÉSUMÉ LINE and exempts only the first
+ * word of what it is given. Handed a paragraph, every sentence-initial "That",
+ * "Most" or "From" (four letters or more) reads as an unknown employer and the
+ * whole text is dropped — found by copilot-templates.test.ts on 2026-09-23.
+ * draftApplication()'s cover note had the same bug since it shipped: the review
+ * drawer showed an empty note whenever the model wrote a second sentence that
+ * began with such a word (tailor.test.ts, "groundText"). Splitting keeps the rule exactly as strict for the words
+ * that matter and stops it firing on grammar.
+ */
+export function groundText(text: string, me: CandidateFacts, role: RoleFacts): string | null {
+  const sentences = forGrounding(text)
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((x) => x.replace(/^[\s"'“‘(-]+/, '').trim())
+    .filter(Boolean)
+  for (const sentence of sentences) {
+    const fail = groundingFailure(sentence, me, role)
+    if (fail) return fail
+  }
+  return null
+}
+
 /** Skills the candidate holds that the posting also names. The highlight. */
 export function matchedSkills(me: CandidateFacts, role: RoleFacts): string[] {
   const hay = `${role.title} ${role.description ?? ''}`.toLowerCase()
@@ -290,9 +317,10 @@ export async function draftApplication(me: CandidateFacts, role: RoleFacts): Pro
     }
 
     const note = typeof parsed.coverNote === 'string' ? parsed.coverNote.trim() : ''
-    // The note goes through the same filter. It is the part a candidate is most
-    // likely to send verbatim.
-    const noteFail = note ? groundingFailure(note, me, role) : 'was not written'
+    // The note goes through the same filter, one sentence at a time — it is the
+    // part a candidate is most likely to send verbatim. Whole, it was rejected
+    // for any sentence starting "That" or "Most" (see groundText).
+    const noteFail = note ? groundText(note, me, role) : 'was not written'
 
     return {
       bullets: bullets.slice(0, 3),

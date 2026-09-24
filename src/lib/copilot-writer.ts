@@ -1,11 +1,14 @@
 import { callJsonModel, type Provider } from '@/lib/parse/llm'
-import { groundingFailure, type CandidateFacts, type RoleFacts } from '@/lib/tailor'
+import { groundText, type CandidateFacts, type RoleFacts } from '@/lib/tailor'
 import {
-  coverLetterTemplate, forGrounding, LINKEDIN_NOTE_MAX, outreachTemplates, scoreAnswerHeuristic,
+  coverLetterTemplate, LINKEDIN_NOTE_MAX, outreachTemplates, scoreAnswerHeuristic,
   type AnswerFeedback, type ContactKey, type OutreachMessage, type Tone,
 } from '@/lib/copilot-templates'
 
 export type { AnswerFeedback, OutreachMessage, Tone } from '@/lib/copilot-templates'
+// groundText moved to src/lib/tailor.ts (2026-09-24) so the review drawer's
+// cover note can use it without a circular import; re-exported for callers.
+export { groundText } from '@/lib/tailor'
 
 /**
  * The Co-Pilot's model-backed writing: cover letters, outreach messages and
@@ -22,29 +25,6 @@ export type { AnswerFeedback, OutreachMessage, Tone } from '@/lib/copilot-templa
  * same filter as the review drawer: no figure, employer, tenure or credential
  * the profile does not hold. A failing paragraph is dropped and listed.
  */
-
-/**
- * groundingFailure() for prose: tags removed, then checked ONE SENTENCE AT A
- * TIME.
- *
- * ⚠️ THE FILTER WAS BUILT FOR A SINGLE RÉSUMÉ LINE and exempts only the first
- * word of what it is given. Handed a paragraph, every sentence-initial "That",
- * "Most" or "From" reads as an unknown employer and the whole letter is
- * dropped — found by copilot-templates.test.ts on 2026-09-23, before any
- * candidate saw it. Splitting keeps the rule exactly as strict for the words
- * that matter and stops it firing on grammar.
- */
-export function groundText(text: string, me: CandidateFacts, role: RoleFacts): string | null {
-  const sentences = forGrounding(text)
-    .split(/\n+|(?<=[.!?])\s+/)
-    .map((x) => x.replace(/^[\s"'“‘(-]+/, '').trim())
-    .filter(Boolean)
-  for (const sentence of sentences) {
-    const fail = groundingFailure(sentence, me, role)
-    if (fail) return fail
-  }
-  return null
-}
 
 // ------------------------------------------------------------- cover letter
 
