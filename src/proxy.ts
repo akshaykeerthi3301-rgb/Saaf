@@ -77,6 +77,6 @@ export const config = {
   matcher: [
     '/today/:path*', '/applications/:path*', '/profile/:path*', '/start/:path*',
     '/dev/:path*', '/copilot/:path*', '/resume/:path*', '/interview-prep/:path*',
-    '/cover-letter/:path*', '/outreach/:path*',
+    '/cover-letter/:path*', '/outreach/:path*', '/coaching/:path*',
   ],
 }

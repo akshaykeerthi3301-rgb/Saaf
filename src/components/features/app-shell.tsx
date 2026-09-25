@@ -9,8 +9,7 @@ import { useAccount } from '@/components/features/account-context'
 import type { SearchStatus } from '@/lib/services/workspace'
 import {
   BriefcaseBusiness, ChevronsUpDown, FileText, Gauge, KanbanSquare, LogOut, Menu, MessageCircle,
-  Send, Settings, ShieldCheck, Sparkles, UserRound, X,
-} from 'lucide-react'
+  Send, Settings, ShieldCheck, Sparkles, UserRound, X, GraduationCap } from 'lucide-react'
 
 /**
  * The signed-in workspace — the three-column split.
@@ -35,6 +34,7 @@ const NAV: { label: string; href: string; icon: typeof BriefcaseBusiness }[] = [
   // Unlocked 2026-09-15 on a measured 4.1% noise rate (TASK-080). If that number
   // is ever unknown again, re-lock it.
   { label: 'Interview Prep', href: '/interview-prep', icon: MessageCircle },
+  { label: 'Coaching', href: '/coaching', icon: GraduationCap },
 ]
 
 const SECONDARY: { label: string; href: string; icon: typeof BriefcaseBusiness }[] = [
