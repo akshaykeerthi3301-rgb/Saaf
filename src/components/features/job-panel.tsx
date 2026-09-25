@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useState, useSyncExternalStore, useTransition, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import Link from 'next/link'
 import {
@@ -11,6 +12,8 @@ import { useFeed } from '@/components/features/feed-selection'
 import { QuickApply } from '@/components/features/quick-apply'
 import { TrackRole } from '@/components/features/track-role'
 import { ReviewDrawer } from '@/components/features/review-drawer'
+import { HideRole } from '@/components/features/feed-controls'
+import { correctSkillFromJob } from '@/app/actions/feed-prefs'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
@@ -153,6 +156,7 @@ function PanelHeader({ j }: { j: JobInsight }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <QuickApply roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} easy={j.easyApply} size="lg" />
         <TrackRole roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} labelled trackedStatus={j.trackedStatus ?? undefined} />
+        <HideRole roleId={j.roleId} />
       </div>
     </div>
   )
@@ -179,19 +183,58 @@ function Section({ title, icon: Icon, children }: { title: string; icon: typeof 
   )
 }
 
+/**
+ * Correct your skills from the job (Phase 15; Jobright lets you click a skill
+ * tag to say you do or do not have it). Writes the profile, rescores every
+ * role, then refetches this panel and the feed — and says what moved.
+ */
+function useSkillCorrection(roleId: string) {
+  const router = useRouter()
+  const { reload } = useFeed()
+  const [pending, start] = useTransition()
+  const [busy, setBusy] = useState<string>()
+  const [note, setNote] = useState<string>()
+  const run = (skill: string, have: boolean) => {
+    setBusy(skill); setNote(undefined)
+    start(async () => {
+      const r = await correctSkillFromJob({ roleId, skill, have }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
+      setBusy(undefined)
+      if (!r.ok) { setNote(r.error); return }
+      const moved = r.before !== null && r.after !== null && r.before !== r.after ? ` This job went from ${r.before} to ${r.after}.` : ' This job’s score did not change.'
+      setNote(`${have ? 'Added' : 'Removed'} “${skill}” ${have ? 'to' : 'from'} your profile and rescored ${r.rescored} roles.${moved}`)
+      reload(roleId)
+      router.refresh()
+    })
+  }
+  return { run, pending, busy, note }
+}
+
 function AnalysisTab({ j }: { j: JobInsight }) {
   const a = j.analysis
+  const skill = useSkillCorrection(j.roleId)
   return (
     <>
       <Section title="Skill gap breakdown" icon={Sparkles}>
+        <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
+          Wrong? Click a skill to add it to your profile or take it off — only claim what you would defend in an interview.
+        </p>
+        {skill.note ? <p role="status" className="mb-3 rounded-lg border border-border bg-secondary/60 px-3 py-2 text-xs text-primary">{skill.note}</p> : null}
         <p className="mb-2 text-[11px] font-semibold text-score-high">Matched skills · {a.matched.length}</p>
         {a.matched.length ? (
           <div className="flex flex-wrap gap-1.5">
             {a.matched.map((s) => (
-              <span key={s} className="inline-flex items-center gap-1 rounded-md border border-score-high/30 bg-score-high/10 px-2 py-1 text-xs text-score-high">
-                <CheckCircle2 className="size-3" aria-hidden="true" />
+              <button
+                key={s}
+                type="button"
+                disabled={skill.pending}
+                onClick={() => skill.run(s, false)}
+                title="I don't have this — take it off my profile"
+                className="inline-flex items-center gap-1 rounded-md border border-score-high/30 bg-score-high/10 px-2 py-1 text-xs text-score-high transition hover:border-score-high disabled:opacity-60"
+              >
+                {skill.busy === s ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="size-3" aria-hidden="true" />}
                 {s}
-              </span>
+                <X className="size-3 opacity-60" aria-hidden="true" />
+              </button>
             ))}
           </div>
         ) : (
@@ -202,14 +245,18 @@ function AnalysisTab({ j }: { j: JobInsight }) {
         {a.missing.length ? (
           <div className="flex flex-wrap gap-1.5">
             {a.missing.map((m) => (
-              <span
+              <button
                 key={m.term}
-                title={m.employers ? `Named by ${m.employers} employers in our index` : undefined}
-                className="inline-flex items-center gap-1 rounded-md border border-score-mid/30 bg-score-mid/10 px-2 py-1 text-xs text-score-mid"
+                type="button"
+                disabled={skill.pending}
+                onClick={() => skill.run(m.term, true)}
+                title={`I have this — add it to my profile${m.employers ? ` (named by ${m.employers} employers in our index)` : ''}`}
+                className="inline-flex items-center gap-1 rounded-md border border-score-mid/30 bg-score-mid/10 px-2 py-1 text-xs text-score-mid transition hover:border-score-mid disabled:opacity-60"
               >
+                {skill.busy === m.term ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : <span aria-hidden="true">+</span>}
                 {m.term}
                 {m.employers ? <span className="font-mono text-[10px] opacity-80">{m.employers}</span> : null}
-              </span>
+              </button>
             ))}
           </div>
         ) : (

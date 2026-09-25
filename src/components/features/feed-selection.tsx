@@ -46,6 +46,8 @@ const FeedContext = createContext<{
   current: InsightState
   select: (roleId: string) => void
   close: () => void
+  /** Fetch a job's insight again — after a skill correction rescored it. */
+  reload: (roleId: string) => void
 } | null>(null)
 
 /**
@@ -84,6 +86,13 @@ export function FeedProvider({ initial, children }: { initial: string | null; ch
         current,
         select: (roleId) => setSelection({ roleId, opened: true }),
         close: () => setSelection((s) => ({ ...s, opened: false })),
+        // Refetch in place: the old insight stays on screen until the new one
+        // lands, so the panel (and any message in it) does not unmount.
+        reload: (roleId) => {
+          getJobInsight({ roleId })
+            .then((result) => { if (result.ok) setResults((r) => ({ ...r, [roleId]: result })) })
+            .catch(() => {})
+        },
       }}
     >
       <TrackedContext.Provider value={{ stages, set: (id, stage) => setStages((x) => ({ ...x, [id]: stage })) }}>

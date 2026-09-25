@@ -17,6 +17,9 @@ import { isEasyApply } from '@/lib/job-facts'
 import { readTrackedStatuses } from '@/lib/services/workspace'
 import { applyQuickPills, arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
+import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
+import { applyTextFilter, viewFromParams, viewToQuery } from '@/lib/feed-query'
+import { FeedSearch, HideRole, SavedFilters } from '@/components/features/feed-controls'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -60,6 +63,8 @@ export default async function TodayPage({
     min80?: string; fresh?: string; remote?: string; easy?: string
     /** A role to open on arrival — the public job page's "See my match score". */
     role?: string
+    /** Phase 15: words to find in title/company, a city, and the hidden-jobs view. */
+    q?: string; city?: string; hidden?: string
   }>
 }) {
   const params = await searchParams
@@ -79,13 +84,14 @@ export default async function TodayPage({
 
   // The profile and the shortlist are independent reads, so they run together:
   // four round trips in sequence used to precede every render (QA-02).
-  const [{ data: profile }, shortlist] = await Promise.all([
+  const [{ data: profile }, shortlist, feedPrefs] = await Promise.all([
     supabase
       .from('profiles')
       .select('preferred_role, preferred_roles, open_to_adjacent, confirmed_at, city, work_mode_preference, years_experience')
       .eq('id', user.id)
       .single(),
     readShortlist(user.id),
+    readFeedPrefs(user.id),
   ])
 
   // Scores never run against an unconfirmed profile, so there would be nothing
@@ -94,7 +100,15 @@ export default async function TodayPage({
   if (!profile?.confirmed_at) redirect('/start/confirm')
 
   const { failed: error, indexed } = shortlist
-  const allRows = shortlist.rows
+  /**
+   * HIDDEN JOBS (Phase 15). A hidden role leaves this candidate's feed and
+   * never its score; `?hidden=1` shows only the hidden ones, to bring back.
+   * Everything below counts from this list, so "N matches" means N you can see.
+   */
+  const showHidden = params.hidden === '1'
+  const hiddenCount = shortlist.rows.filter((r) => feedPrefs.hidden.has(r.role_id)).length
+  const allRows = shortlist.rows.filter((r) => feedPrefs.hidden.has(r.role_id) === showHidden)
+  const view = viewFromParams(params)
 
   /**
    * THE QUICK FILTER PILLS (2026-09-23 parity pass). Each narrows the list the
@@ -116,11 +130,23 @@ export default async function TodayPage({
     byNewest || pills.fresh ? readPostedDates(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
     pills.easy ? readApplyUrls(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
   ])
-  const rows = applyQuickPills(allRows, pills, {
-    postedAt: postedAll,
-    isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
-  })
-  const pillCount = Object.values(pills).filter(Boolean).length
+  // Title/company/city are read only when a text filter is on (Phase 15).
+  const roleText = view.q || view.city ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
+  const rows = applyTextFilter(
+    applyQuickPills(allRows, pills, {
+      postedAt: postedAll,
+      isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
+    }),
+    view,
+    roleText,
+  )
+  const pillCount = Object.values(pills).filter(Boolean).length + (view.q ? 1 : 0) + (view.city ? 1 : 0)
+  // The text filter and the hidden view ride along on every link, like the pills.
+  const textParams: [string, string][] = [
+    ...(view.q ? [['q', view.q] as [string, string]] : []),
+    ...(view.city ? [['city', view.city] as [string, string]] : []),
+    ...(showHidden ? [['hidden', '1'] as [string, string]] : []),
+  ]
 
   // Newest sorts by the board's posting date, which only this view needs.
   const postedAt = byNewest ? postedAll : undefined
@@ -257,7 +283,7 @@ export default async function TodayPage({
   // The pills ride along on every other link, so sorting or expanding a
   // filtered list does not silently drop the filter.
   const pillParams = (Object.keys(pills) as (keyof typeof pills)[]).filter((k) => pills[k])
-  const pillQuery = pillParams.map((k) => `&${k}=1`).join('')
+  const pillQuery = pillParams.map((k) => `&${k}=1`).join('') + textParams.map(([k, v]) => `&${k}=${encodeURIComponent(v)}`).join('')
   const pillHref = (toggle: keyof typeof pills) => {
     const q = new URLSearchParams()
     if (onlyNew) q.set('tab', 'new')
@@ -267,6 +293,7 @@ export default async function TodayPage({
       const on = k === toggle ? !pills[k] : pills[k]
       if (on) q.set(k, '1')
     }
+    for (const [k, v] of textParams) q.set(k, v)
     return `/today${q.size ? `?${q}` : ''}`
   }
   const PILLS: { key: keyof typeof pills; label: string; icon: typeof Zap; title: string }[] = [
@@ -504,7 +531,30 @@ export default async function TodayPage({
 
           {/* Quick filters. Plain links, like every other control here: no client
               JavaScript, and each filtered view is its own shareable URL. */}
+          <FeedSearch initial="" />
+          <SavedFilters
+            saved={feedPrefs.saved.map((f) => ({ name: f.name, query: viewToQuery(f.view) }))}
+            current={view}
+            stored={feedPrefs.stored}
+          />
           <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Quick filters">
+            {textParams.filter(([k]) => k !== 'hidden').map(([k, v]) => {
+              const rest = new URLSearchParams()
+              for (const p of pillParams) rest.set(p, '1')
+              for (const [tk, tv] of textParams) if (tk !== k) rest.set(tk, tv)
+              return (
+                <Link
+                  key={k}
+                  href={`/today${rest.size ? `?${rest}` : ''}`}
+                  title="Remove this filter"
+                  className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold"
+                >
+                  {k === 'city' ? <Globe className="size-3.5" aria-hidden="true" /> : <Target className="size-3.5" aria-hidden="true" />}
+                  {k === 'city' ? `In ${v}` : `“${v}”`}
+                  <X className="size-3" aria-hidden="true" />
+                </Link>
+              )
+            })}
             {PILLS.map(({ key, label, icon: Icon, title }) => (
               <Link
                 key={key}
@@ -527,10 +577,24 @@ export default async function TodayPage({
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
               >
                 <X className="size-3.5" />
-                Clear · {allRows.length - rows.length} hidden
+                Clear · {allRows.length - rows.length} filtered out
+              </Link>
+            ) : null}
+            {hiddenCount > 0 || showHidden ? (
+              <Link
+                href={showHidden ? '/today' : '/today?hidden=1'}
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
+              >
+                <Eye className="size-3.5" />
+                {showHidden ? 'Back to your feed' : `${hiddenCount} hidden job${hiddenCount === 1 ? '' : 's'}`}
               </Link>
             ) : null}
           </div>
+          {showHidden ? (
+            <p className="mb-4 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+              Jobs you hid. They are still scored — only hidden from your feed and daily email. Unhide any to bring it back.
+            </p>
+          ) : null}
 
           {pillCount > 0 && rows.length === 0 ? (
             <p className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
@@ -605,6 +669,7 @@ export default async function TodayPage({
                   if (k === 'new') params.set('sort', 'new')
                   if (clearsOnly) params.set('fit', 'clears')
                   for (const p of pillParams) params.set(p, '1')
+                  for (const [tk, tv] of textParams) params.set(tk, tv)
                   return (
                     <Link
                       key={k}
@@ -632,6 +697,7 @@ export default async function TodayPage({
                   if (byNewest) params.set('sort', 'new')
                   if (k === 'clears') params.set('fit', 'clears')
                   for (const p of pillParams) params.set(p, '1')
+                  for (const [tk, tv] of textParams) params.set(tk, tv)
                   return (
                     <Link
                       key={k}
@@ -775,6 +841,7 @@ export default async function TodayPage({
                           profileCity={profile.city ?? undefined}
                           postedAt={card.roles?.posted_at ?? undefined}
                           trackedStatus={tracked.get(card.role_id)}
+                          hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
                         />
                         </SelectableCard>
                       </div>

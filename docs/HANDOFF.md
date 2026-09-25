@@ -10,8 +10,9 @@ public page that Google can find; pasting a job link into the tracker fills in
 the company and title; the tracker has a Rejected column. Details: ROADMAP
 Phase 14, PROJECT-STATE Stage AF (includes the full Jobright pass/fail table).
 
-**What only you can do (TASK-131), in this order:**
+**What only you can do (TASK-131 + TASK-139), in this order:**
 
+0. **Also apply `supabase/migrations/0030_feed_preferences.sql`** (added later the same day — hidden jobs and saved filters). Paste it in the Supabase SQL editor. Until then Hide and Save this view say the update is missing; search and skill correction work without it.
 1. **Apply migration `supabase/migrations/0029_rejected_stage.sql`** in the
    Supabase SQL editor — paste the one line on its own. Until then the Rejected
    column refuses moves and says why; nothing else is affected.

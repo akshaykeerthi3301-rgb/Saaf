@@ -64,11 +64,18 @@ export async function sendDigests(): Promise<void> {
     const email = user?.user?.email
     if (!email || email.endsWith('.local')) continue // skip test fixtures
 
-    const { data: rows } = await db
+    const { data: allRows } = await db
       .from('gate_results')
-      .select('outcome, reason, score, roles(title, company_name, city)')
+      .select('role_id, outcome, reason, score, roles(title, company_name, city)')
       .eq('user_id', p.id)
       .gte('computed_at', since)
+
+    // Jobs the candidate hid (migration 0030) stay out of the email too. A
+    // separate read, and its failure is ignored: before 0030 is applied the
+    // column does not exist, and a digest must not stop sending for that.
+    const { data: prefs } = await db.from('profiles').select('hidden_role_ids').eq('id', p.id).maybeSingle()
+    const hidden = new Set(((prefs as { hidden_role_ids?: string[] | null } | null)?.hidden_role_ids) ?? [])
+    const rows = (allRows ?? []).filter((r) => !hidden.has((r as { role_id: string }).role_id))
 
     // Nothing is withheld any more — the digest leads with the best-scoring
     // new roles instead of a cleared/withheld split. A strong match is 75+,

@@ -87,3 +87,21 @@ founder-only item left out of HANDOFF → TPM max 5. A hardcoded colour in `src/
 
 **Team average (scored roles): 6.9 / 10.** Lowest: PM and TPM — the process
 steps before building, not the building.
+
+---
+
+## 2026-09-25 (evening) — the four buildable gaps (TASK-134 → 137)
+
+| Role | Score | Evidence | Fix |
+|---|---|---|---|
+| PM | **8** | Acceptance criteria were in ROADMAP before building (last fix done). Saved filters placed on the feed, not the sidebar the criteria named — reason written down | — |
+| TPM | **8** | Blueprint emitted before building (last fix done); ROADMAP ticked with results; 0030 in HANDOFF | — |
+| AI-ENG | **9** | Search deliberately has no model call; zero new cost | — |
+| CTX | **7** | Mostly ranges and greps; still several broad reads of `today/page.tsx` regions | Read ranges |
+| UX | **8** | Walked at 1440 and 375 px, tokens only. Stale "500 closest matches" line under a filter noticed, left | Fix the line under filters |
+| BE | **8** | Invariants held (DB in services, Zod on 4 actions, per-user limit); error-tolerant reads before 0030 | — |
+| QA | **7** | Skill correction and search walked and reverted; **Hide and Save not walked end to end** (0030 not applied) — stated in ROADMAP, not claimed. Last scorecard's `/security-review` of the link reader **still not done** | Run it; walk Hide/Save after 0030 |
+| REALITY | **8** | Caught the Stage AG miscount before it shipped; every claim above tagged | — |
+| EVAL | **7** | 3 of 6 fixes from the last scorecard done (criteria first, blueprint, ranges partly); security review, double DB read on `/jobs/[id]`, sitemap fallback log still open | Carry the three forward |
+
+**Team average (scored roles): 7.8 / 10** (was 6.9).

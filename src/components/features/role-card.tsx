@@ -10,6 +10,7 @@ import { isEasyApply, titleSeniority } from '@/lib/job-facts'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import { postedAgo, postedOn } from '@/lib/day'
 import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
+import type { ReactNode } from 'react'
 import type { ScoreBreakdown } from '@/match/score'
 import { requirementLabel } from '@/lib/display-names'
 
@@ -46,6 +47,8 @@ type Props = {
   postedAt?: string
   /** The candidate's tracker stage for this role, when tracked. */
   trackedStatus?: string
+  /** The Hide / Unhide control (Phase 15), passed in so this card stays a server component. */
+  hideControl?: ReactNode
 }
 
 /**
@@ -67,7 +70,7 @@ type Props = {
  */
 export function RoleCard({
   gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity, postedAt, trackedStatus,
+  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl,
 }: Props) {
   const band = bandFor(score)
   const posted = postedAgo(postedAt)
@@ -203,6 +206,7 @@ export function RoleCard({
         <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} labelled trackedStatus={trackedStatus} />
         {applyUrl ? <QuickApply roleId={roleId} company={company} title={title} applyUrl={applyUrl} easy={easy} /> : null}
         <ViewMatchButton roleId={roleId} />
+        {hideControl}
         <ReportScore gateResultId={gateResultId} />
       </div>
 

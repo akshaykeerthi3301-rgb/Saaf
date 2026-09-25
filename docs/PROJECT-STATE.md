@@ -2421,6 +2421,39 @@ real ATS form). **But Jobright does not offer India in its feed**, so for the
 Indian candidate Saaf is built for, the comparison is between a product that
 matches Indian roles and one that, as observed, does not.
 
+### Stage AH — the four buildable gaps from inside Jobright (2026-09-25)
+
+Built on `public-job-pages` (ROADMAP TASK-134 → 137), acceptance criteria
+written before building. **MEASURED** unless tagged.
+
+| Gap (OBSERVED in Jobright, Stage AG) | Built | Verified how |
+|---|---|---|
+| Saved filters | Name the current view; chips above the pills; `profiles.saved_filters` | Unit tests (whitelist rebuild, junk dropped). Browser: the "needs 0030" message. **Save → restore not walked — 0030 not applied** |
+| Hide a job | Card + panel button, `?hidden=1` view, digest excludes, score untouched; `profiles.hidden_role_ids` | Unit tests (add/remove/cap/missing column). Browser: the "needs 0030" message. **Not walked end to end** |
+| Correct skills from the job page | Matched skills → "I don't have this", missing → "I have this"; profile write + `evaluateUser` | **Walked on the founder's account, then reverted**: +CSM → 500 rescored, 81 → 86 in 8 s, panel refreshed in place, card showed 86; −CSM → 86 → 81 |
+| Plain-language search | Deterministic parser → pills + new `q` (title/company words) and `city` filters | **Walked**: "customer success jobs in Bangalore, remote ok" → 500 → 30, all customer-success titles, Remote-only left off. 375 px: no sideways scroll |
+
+**Decisions made while building:**
+- Hidden jobs and saved filters live on `profiles` (migration 0030), not new
+  tables: the owner-only policy already covers them, so no policy can be
+  written wrong. Reads are a separate, error-tolerant query, so /today renders
+  before 0030 is applied.
+- A saved filter stores a *view*, never a URL, and is rebuilt through
+  `viewFromParams` on every read — a stored value can only ever produce a view
+  the pills could produce (tested with an injected `javascript:` key).
+- "remote ok" means remote is allowed, not required, so it does not switch on
+  Remote only, which would hide every office role.
+- The feed's "N hidden" link (count of pill-filtered cards) was renamed
+  "N filtered out" — "hidden" now means the Hide feature.
+
+**Noticed, not changed:** with a text filter on, the line "Showing the 500
+closest title matches to your baseline" still describes the unfiltered list
+(the tab count correctly says 30). Same behaviour the pills already had.
+
+**Measured 2026-09-25:** 874 tests pass (56 files; +19), lint 0 errors / 23
+warnings (pre-existing), typecheck clean, build green. No server or console
+errors during the walk.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~
