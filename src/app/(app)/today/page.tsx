@@ -58,6 +58,8 @@ export default async function TodayPage({
   searchParams: Promise<{
     show?: string; n?: string; tab?: string; sort?: string; fit?: string
     min80?: string; fresh?: string; remote?: string; easy?: string
+    /** A role to open on arrival — the public job page's "See my match score". */
+    role?: string
   }>
 }) {
   const params = await searchParams
@@ -70,6 +72,7 @@ export default async function TodayPage({
   // list was never date-filtered, but a page called Today with a date across
   // the top reads as though it were.
   const onlyNew = tab === 'new'
+  const roleParam = params.role && /^[0-9a-f-]{36}$/i.test(params.role) ? params.role : null
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
@@ -402,7 +405,7 @@ export default async function TodayPage({
   )
 
   return (
-    <FeedProvider initial={firstVisible}>
+    <FeedProvider initial={roleParam ?? firstVisible}>
     <AppShell
       title="Job Search Feed"
       eyebrow="AI job matches"

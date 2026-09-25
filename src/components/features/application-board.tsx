@@ -9,6 +9,7 @@ import {
   trackRole, type ApplicationStatus,
 } from '@/app/actions/applications'
 import { istDay } from '@/lib/day'
+import { readJobLink } from '@/app/actions/job-link'
 import { followUpEmail } from '@/lib/copilot-templates'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { Modal, ModalClose, ModalTitle } from '@/components/ui/modal'
@@ -37,6 +38,9 @@ export type Application = {
  * closes an application for their own reasons at least as often as an employer
  * closes it for them, and "Rejected" would name a verdict we do not know.
  * 'applying' is the stage between deciding and submitting (migration 0028).
+ * 'rejected' (migration 0029, 2026-09-25) is a different thing from Archived:
+ * the candidate sets it because they were told, so it names a verdict they
+ * know rather than one we guessed.
  */
 export const COLUMNS: { status: ApplicationStatus; label: string; empty: string }[] = [
   { status: 'saved', label: 'Saved', empty: 'Nothing saved yet. Save a role from your feed.' },
@@ -44,6 +48,7 @@ export const COLUMNS: { status: ApplicationStatus; label: string; empty: string 
   { status: 'applied', label: 'Applied', empty: 'Nothing applied to yet.' },
   { status: 'interviewing', label: 'Interviewing', empty: 'No interviews yet.' },
   { status: 'offer', label: 'Offer', empty: 'No offers yet.' },
+  { status: 'rejected', label: 'Rejected', empty: 'Nothing here — good.' },
   { status: 'closed', label: 'Archived', empty: 'Nothing archived.' },
 ]
 const LABEL = Object.fromEntries(COLUMNS.map((c) => [c.status, c.label])) as Record<ApplicationStatus, string>
@@ -230,7 +235,7 @@ export function ApplicationBoard({
   }
 
   const today = istDay()
-  const due = rows.filter((r) => r.followUpOn && r.followUpOn <= today && r.status !== 'closed').length
+  const due = rows.filter((r) => r.followUpOn && r.followUpOn <= today && r.status !== 'closed' && r.status !== 'rejected').length
   const open = rows.find((r) => r.id === openId) ?? null
 
   return (
@@ -357,7 +362,7 @@ function BoardCard({
   onOpen: () => void
   onMove: (s: ApplicationStatus) => void
 }) {
-  const overdue = !!r.followUpOn && r.followUpOn < today && r.status !== 'closed'
+  const overdue = !!r.followUpOn && r.followUpOn < today && r.status !== 'closed' && r.status !== 'rejected'
   const days = daysIn(r)
   return (
     <article
@@ -694,7 +699,28 @@ function AddByHand({ onAdded }: { onAdded: (row: Application) => void }) {
   const [status, setStatus] = useState<ApplicationStatus>('saved')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
+  const [reading, setReading] = useState(false)
+  const [readNote, setReadNote] = useState<string>()
+  const lastRead = useRef('')
   const inputCls = 'w-full rounded-xl border border-input bg-background px-3 py-2 text-xs text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-ring/20'
+
+  /**
+   * Paste a link, get the company and title (Jobright's tracker parses an
+   * external job's details from its link). Fills only blank fields — never
+   * overwrites what the candidate typed — and says where the words came from.
+   */
+  async function readLink(raw: string) {
+    const url = raw.trim()
+    if (!/^https:\/\/\S+\.\S+/i.test(url) || url === lastRead.current) return
+    lastRead.current = url
+    setReading(true); setReadNote(undefined)
+    const res = await readJobLink(url).catch(() => ({ ok: false as const, reason: 'Check your connection, or type it in.' }))
+    setReading(false)
+    if (!res.ok) { setReadNote(res.reason); return }
+    if (res.job.company) setCompany((c) => c.trim() ? c : res.job.company)
+    if (res.job.title) setTitle((t) => t.trim() ? t : res.job.title)
+    setReadNote(res.source === 'index' ? 'Filled from the role in our index — check it.' : 'Filled from the posting page — check it before you add.')
+  }
 
   async function add() {
     if (!company.trim() || !title.trim()) { setError('Add a company and a role title — the link is optional.'); return }
@@ -717,7 +743,7 @@ function AddByHand({ onAdded }: { onAdded: (row: Application) => void }) {
       note: null, followUpOn: null, updatedAt: now, appliedOn: status === 'applied' ? now.slice(0, 10) : null,
       resumeVersion: null, salaryNote: null, interviewOn: null, statusChangedAt: now,
     })
-    setCompany(''); setTitle(''); setApplyUrl(''); setStatus('saved')
+    setCompany(''); setTitle(''); setApplyUrl(''); setStatus('saved'); setReadNote(undefined); lastRead.current = ''
   }
 
   return (
@@ -727,9 +753,15 @@ function AddByHand({ onAdded }: { onAdded: (row: Application) => void }) {
         <span className="font-normal text-muted-foreground">— a referral, a forward, a board we do not index</span>
       </summary>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <input
+          className={`${inputCls} sm:max-w-72`} aria-label="Link to the posting" type="url" inputMode="url"
+          placeholder="Paste the job link — we fill in the rest" value={applyUrl}
+          onChange={(e) => setApplyUrl(e.target.value)}
+          onBlur={(e) => readLink(e.target.value)}
+          onPaste={(e) => readLink(e.clipboardData.getData('text'))}
+        />
         <input className={`${inputCls} sm:max-w-52`} aria-label="Company" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} />
         <input className={`${inputCls} sm:max-w-60`} aria-label="Role title" placeholder="Role title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input className={`${inputCls} sm:max-w-64`} aria-label="Link to the posting" type="url" inputMode="url" placeholder="Link to the posting (optional)" value={applyUrl} onChange={(e) => setApplyUrl(e.target.value)} />
         <select className={`${inputCls} sm:max-w-40`} aria-label="Which column" value={status} onChange={(e) => setStatus(e.target.value as ApplicationStatus)}>
           {COLUMNS.map((c) => <option key={c.status} value={c.status}>{c.label}</option>)}
         </select>
@@ -737,6 +769,8 @@ function AddByHand({ onAdded }: { onAdded: (row: Application) => void }) {
           <Plus className="size-3.5" /> {busy ? 'Adding…' : 'Add'}
         </button>
       </div>
+      {reading ? <p role="status" className="mt-2 text-xs text-muted-foreground">Reading the posting…</p> : null}
+      {!reading && readNote ? <p role="status" className="mt-2 text-xs text-muted-foreground">{readNote}</p> : null}
       {error && <p className="mt-2 text-xs text-muted-foreground">{error}</p>}
     </details>
   )

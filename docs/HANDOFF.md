@@ -2,6 +2,32 @@
 
 ---
 
+## 🔶 2026-09-25 (later) — public job pages + tracker link reading + Rejected: BUILT, NOT LIVE
+
+**What exists:** on the branch **`public-job-pages`** (built on top of
+`extension-parity`, so merging it brings both). Every job Saaf reads gets its own
+public page that Google can find; pasting a job link into the tracker fills in
+the company and title; the tracker has a Rejected column. Details: ROADMAP
+Phase 14, PROJECT-STATE Stage AF (includes the full Jobright pass/fail table).
+
+**What only you can do (TASK-131), in this order:**
+
+1. **Apply migration `supabase/migrations/0029_rejected_stage.sql`** in the
+   Supabase SQL editor — paste the one line on its own. Until then the Rejected
+   column refuses moves and says why; nothing else is affected.
+2. **Merge `public-job-pages` into `main` and deploy** (a session can do this
+   on your go-ahead). This also ships the extension work from Phase 13.
+3. **Tell Google the pages exist:** Google Search Console → add the site →
+   submit `https://saaf-ten.vercel.app/sitemap.xml`. Needs your Google account.
+   Without it Google finds the pages slowly, if at all. (Worth doing on a real
+   domain rather than `vercel.app` if you plan to buy one — rankings do not move
+   with you.)
+4. **Optional:** sign in to Jobright yourself in the browser pane if you want
+   their signed-in screens compared too — a session cannot create an account or
+   type a password.
+
+---
+
 ## 🔶 2026-09-25 — the extension parity pass is BUILT, NOT MERGED, NOT LIVE
 
 **What exists:** on the branch **`extension-parity`**, committed. The extension

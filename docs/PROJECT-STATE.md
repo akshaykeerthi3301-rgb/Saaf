@@ -95,7 +95,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 | **Never turn users away** | No signup gating, even for poorly-served segments. Instead the **honest empty state** — *"650 indexed today · 47 matching your search · 3 a strong fit"* (a narrowing since the pivot; it read as a subtraction ending in "3 cleared your experience band" before). Thinness is attributed to registry coverage, never to the candidate. **This decision survived the pivot untouched** and is the one thing both products share. |
 | **Parse-then-confirm onboarding** | Résumé parsed to pre-fill; candidate confirms every field before the first match runs. Source file **deleted after parsing** (DPDP posture + confidentiality guarantee). |
 | **Fabrication guard blocks, not warns** | Generated documents may only reorder/trim/re-word confirmed profile facts. Blocked output's remedy is "add it to your profile," never "let the model assert it." |
-| **Open-source the gate, keep the registry private** | Gate code is portfolio proof; the registry is the moat. |
+| **Open-source the gate, keep the registry private** | Gate code is portfolio proof; the registry is the moat. ⚠️ **Weakened 2026-09-25 by founder decision (Stage AF):** public job pages make *which employers we read* derivable, one page at a time. `registry/boards.json` and the `boards` table stay private. |
 | **₹0, no paid tier** | Beta at ₹0. Vercel Hobby is non-commercial only — *advertising* a paid product counts as commercial, so even announcing a tier breaks it. |
 | **⛔ Founder's personal job tracker is NOT publishable** | It informed the design (origin of the precision thesis) but is personal data. Must never appear in a landing page, launch post, case study or any public artifact. Flagged in `1-Product-Offer.md` Evidence Sources. |
 | **Name is Saaf** | Decided 2026-09-02. `jobmatch` was killed: Job Match Pro (`jobmatchpro.in`) is an Indian product in the identical wedge. Also killed — Winnow (Winnow Career Concierge sells an "Interview Probability Score"), Yogya (Yogya.ai, Bengaluru), Sirf (active Indian e-commerce app). ⚠️ Registrar/handle availability for Saaf is **unverified** — search presence only. |
@@ -2301,6 +2301,72 @@ drain filed nothing (dedupe); the test row was removed from the founder's
 tracker (2 → 1, as found). **Not verified:** the real extension loaded in Chrome
 (the preview browser cannot load unpacked extensions), real speech capture (no
 microphone), any real ATS form, and anything on production.
+
+### Stage AF — the Jobright parity audit: public job pages, link reading, Rejected (2026-09-25)
+
+**The brief.** "Activate all agents and start correcting the product. Goal: parity
+with Jobright AI. Use the browser to understand their end-to-end mechanisms."
+Jobright's signed-in app (`/jobs/recommend`) redirects a visitor to the homepage,
+and creating an account or typing a password is not something a session may do,
+so the audit covers every **public** surface, read in a browser on 2026-09-25:
+home, AI Job Match, Job Autofill, Resume AI, Orion, Job Tracker, the Agent launch
+post (2025-06-24), and a live public job page (Glean, Principal PMM). **The
+signed-in feed, match panel, résumé editor and tracker were not seen** — the
+founder can sign in in the browser pane if a signed-in audit is wanted.
+
+**The audit — [AUDIT] pass/fail against what Jobright publishes:**
+
+| Jobright mechanism | Saaf | Verdict |
+|---|---|---|
+| Match score on skills, experience, seniority, industry, preferences — "not just title" | Deterministic score, every component tied to the posting's sentence | ✅ pass |
+| Orion explains fit: relevant experience, seniority, skills, gaps, highlights | Match Analysis tab + /copilot | ✅ pass |
+| Personalised new-job alerts | Daily digest email, sends on empty days too | ✅ pass |
+| "Filters suspicious and outdated listings" | Reads employers' own ATS boards only; ingest deletes a role the day it leaves the board | ✅ pass (structurally) |
+| Resume AI: fast builder, report card, guided per-JD refinement | ATS checker, Résumé Studio, tailoring studio with fabrication guard | ✅ pass |
+| 1-click autofill across ATSs, score before autofill | Extension 0.4.0 (Stage AE) | ✅ pass (not live) |
+| Tailored résumé attached during autofill | Stored résumé attached; per-posting tailoring stays on the web app | ⚠️ partial — Groq free-tier budget (extension README) |
+| Tracker: auto-track applied, full-cycle statuses incl. **Rejected** | Six stages; no Rejected | ❌ → **fixed (TASK-130)** |
+| Tracker: "upload external jobs — the system parses the details" | Typed by hand | ❌ → **fixed (TASK-129)** |
+| **Public job page per role** (company, posted, location, type, seniority, pay, summary, tags, responsibilities, qualifications, benefits, company tab, score/referral/autofill rail) — their acquisition engine | None — index behind sign-in by decision | ❌ → **fixed (TASK-127/128)**, founder reversal below |
+| Salary on every job | 2.2% of our postings state pay | ⛔ held (Stage T) |
+| Company tab: funding, leadership, news (Crunchbase) | Open roles / cities / ATS from our own index | ⛔ held — no free licensed source |
+| "Top applicants" score comparison | — | ⛔ held — we hold no applicant data and will not invent it |
+| Insider referrals, named hiring managers | Contact types + LinkedIn's own search | ⛔ held — people data / LinkedIn ToS |
+| **Jobright Agent "submits applications on behalf of job seekers"** | Fills, never submits | ⛔ held — permanent decision |
+| H1B jobs | — | ➖ US-specific; no Indian equivalent asked for |
+
+**Reversed by founder decision, 2026-09-25** (asked with the trade-off stated —
+"reveals which companies Saaf reads to anyone who looks, competitors included" —
+answer: "Yes, publish them"):
+
+| Was | Now |
+|---|---|
+| ~~Titles, companies and apply URLs stay behind sign-in; publishing the list "would give away the index one query at a time"~~ (index-match.ts) | One role per public page, 5,000 newest India roles in the sitemap. `boards` and `registry/boards.json` stay private; the public-index count endpoints still return counts only |
+
+**Found while building:**
+
+1. **PostgREST returns at most 1,000 rows per request whatever `.limit()` says.**
+   The first sitemap would have silently listed 1,000 jobs, not 5,000. Paged.
+2. **The "Rejected" label was deliberately avoided** (application-board.tsx: it
+   "would name a verdict we do not know"). That argument is about the catch-all
+   column. A separate Rejected the candidate sets themselves names a verdict
+   they *do* know, so Archived is unchanged and Rejected sits beside it.
+
+**Measured 2026-09-25:** `npm test` **855 pass** (54 files; +30 from 825), lint 0
+errors / 23 warnings (pre-existing), typecheck clean, build green (`/jobs/[id]`
+dynamic, cached 1 h; `/sitemap.xml` rebuilt daily). **Walked in a browser on
+localhost against the live database:** a job page renders dark with posting,
+company block and rail; signed-out `curl` → 200; a made-up uuid and a junk id →
+404 "This role has closed"; JSON-LD parses as a JobPosting with IN address;
+sitemap lists **5,000** job URLs; "See my match score" → `/today?role=…` opened
+that role's panel; 375 px: no sideways scroll, pinned bar visible. Tracker
+paste-link: an indexed Greenhouse link filled "CDD Analyst / Modulrfinance" from
+the index; example.com filled its `<title>` via the fenced fetch; a LinkedIn
+link was refused with the reason; `127.0.0.1.nip.io` was refused as not public.
+Nothing was added to the tracker. Moving the founder's card to Rejected before
+0029 → rolled back with "needs a database update (0029)", card still in
+Applying. **Not verified:** production, Google actually indexing the pages, the
+Rejected column after 0029 is applied.
 
 ### Deliberate residue — do not "tidy" these away
 

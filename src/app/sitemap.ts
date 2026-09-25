@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/site'
+import { listPublicJobsForSitemap } from '@/lib/services/public-jobs'
 
 /**
  * Every public URL, and nothing else.
@@ -12,10 +13,18 @@ import { siteUrl } from '@/lib/site'
  * The tools are listed FIRST and weighted highest because they are the pages
  * this product needs to rank — see the acquisition note in
  * src/app/(marketing)/tools/ats-checker/page.tsx.
+ *
+ * Public job pages were added 2026-09-25 (founder decision, PROJECT-STATE
+ * Stage AF): the newest 5,000 roles in India. Rebuilt daily, after the ingest.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 86400
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl()
   const now = new Date()
+  // A sitemap that fails to build is worse than one without jobs: the tools
+  // must stay listed even if the database is unreachable at build time.
+  const jobs = await listPublicJobsForSitemap(5000).catch(() => [])
 
   return [
     { url: `${base}/tools/ats-checker`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
@@ -26,5 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/audit`, lastModified: now, changeFrequency: 'daily', priority: 0.5 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    ...jobs.map((j) => ({ url: `${base}/jobs/${j.id}`, lastModified: new Date(j.lastSeenAt), changeFrequency: 'daily' as const, priority: 0.6 })),
   ]
 }

@@ -418,6 +418,13 @@ function DescriptionTab({ j }: { j: JobInsight }) {
       >
         Open the original posting ↗
       </a>
+      <Link
+        href={`/jobs/${j.roleId}`}
+        target="_blank"
+        className="ml-4 mt-6 inline-block text-xs font-semibold text-accent underline underline-offset-4"
+      >
+        Shareable page ↗
+      </Link>
     </div>
   )
 }

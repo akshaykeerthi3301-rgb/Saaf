@@ -120,7 +120,7 @@ export function outreachTemplates(me: CandidateFacts, role: RoleFacts): Outreach
 
 // ---------------------------------------------------------------- follow-up
 
-export type FollowUpStage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'closed'
+export type FollowUpStage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'rejected' | 'closed'
 
 /**
  * A follow-up email worded by stage and by days in that stage.
@@ -164,6 +164,12 @@ export function followUpEmail(input: {
         subject: `Question about the ${title} role`,
         body: `Hi [Name],\n\nI'm preparing my application for the ${title} role at ${company} and had one quick question before I submit: [Your question].\n\nThank you,\n[Your Name]`,
         advice: d >= 5 ? `This has sat in Applying for ${d} days. Postings close — submit soon.` : 'Only send this if you genuinely have a question; otherwise, just apply.',
+      }
+    case 'rejected':
+      return {
+        subject: `Thank you — ${title}`,
+        body: `Hi [Name],\n\nThank you for letting me know about the ${title} role, and for the time the team spent on my application. I'd genuinely welcome any feedback you can share, and I'd be glad to be considered for future roles at ${company}.\n\nBest regards,\n[Your Name]`,
+        advice: 'A short, gracious reply keeps the door open — recruiters remember it, and some share feedback when asked.',
       }
     default:
       return null

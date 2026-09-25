@@ -22,9 +22,11 @@ import type { CandidateProfile } from '@/gates/types'
  * surface, so anything it returns is returned to anybody — and the registry is
  * the moat this whole product is built on (docs/PROJECT-STATE.md: "the registry
  * is the moat", `boards` has RLS enabled with zero policies precisely so nobody
- * can enumerate it). Titles, companies and apply URLs stay behind sign-in.
- * Publishing a count is what /api/audit/today already does; publishing the list
- * would give away the index one query at a time.
+ * can enumerate it). ~~Titles, companies and apply URLs stay behind sign-in.~~
+ * **Superseded 2026-09-25:** the founder chose to publish one role per page
+ * (/jobs/[id], src/lib/services/public-jobs.ts; PROJECT-STATE Stage AF). This
+ * function still returns counts only — a bulk list from a public endpoint
+ * remains the cheapest way to copy the index, and nothing here needs one.
  *
  * ⚠️ IT USES THE SERVICE CLIENT, AND THAT NEEDS SAYING OUT LOUD. `roles` carries
  * an "authenticated read roles" policy, so an anon client legitimately reads

@@ -143,5 +143,5 @@ export function formatDescription(description: string): JdBlock[] {
 /** Tracker stage names as the board shows them ('closed' reads Archived). */
 export const STAGE_LABEL: Record<string, string> = {
   saved: 'Saved', applying: 'Applying', applied: 'Applied',
-  interviewing: 'Interviewing', offer: 'Offer', closed: 'Archived',
+  interviewing: 'Interviewing', offer: 'Offer', rejected: 'Rejected', closed: 'Archived',
 }

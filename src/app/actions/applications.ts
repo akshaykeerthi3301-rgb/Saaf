@@ -18,7 +18,8 @@ import { moveApplications, quickApply, stampStage, writeApplicationRecord } from
 
 // 'applying' arrives with migration 0028. Until it is applied the database
 // rejects it, the write returns { ok: false }, and the board rolls back.
-const STATUSES = ['saved', 'applying', 'applied', 'interviewing', 'offer', 'closed'] as const
+// 'rejected' arrives with migration 0029, same fallback as 'applying' above.
+const STATUSES = ['saved', 'applying', 'applied', 'interviewing', 'offer', 'rejected', 'closed'] as const
 export type ApplicationStatus = (typeof STATUSES)[number]
 
 const failed = (error: string) => ({ ok: false as const, error })
@@ -111,9 +112,9 @@ export async function setApplicationStatus(input: z.input<typeof statusSchema>) 
 
 /** Named, so a refused move into the new column says what is missing. */
 function moveFailure(status: ApplicationStatus): string {
-  return status === 'applying'
-    ? 'The Applying column needs a database update that has not been applied yet.'
-    : 'Could not move that.'
+  if (status === 'applying') return 'The Applying column needs a database update that has not been applied yet.'
+  if (status === 'rejected') return 'The Rejected column needs a database update (0029) that has not been applied yet.'
+  return 'Could not move that.'
 }
 
 const bulkSchema = z.object({

@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/server'
  * security. The actions re-authenticate before calling any of these.
  */
 
-type Stage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'closed'
+type Stage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'rejected' | 'closed'
 
 /** Move several rows at once (the table view's bulk action). */
 export async function moveApplications(ids: string[], status: Stage, now: string): Promise<{ ok: boolean }> {

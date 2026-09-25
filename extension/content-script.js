@@ -22,7 +22,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 /** Same page, ignoring query and hash — how the tracker and this card agree a job is "this one". */
 const pageKey = (u) => { try { const x = new URL(u); return x.origin + x.pathname.replace(/\/+$/, '') } catch { return u } }
 
-const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', closed: 'Archived' }
+const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', rejected: 'Rejected', closed: 'Archived' }
 
 /**
  * The palette is copied from the app's `.dark` block in src/app/globals.css

@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server'
  * before calling any of it.
  */
 
-type Stage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'closed'
+type Stage = 'saved' | 'applying' | 'applied' | 'interviewing' | 'offer' | 'rejected' | 'closed'
 
 /** What the extension's form filler may hold. Salary and yes/no answers are not here — the web app does not collect them. */
 export type ExtensionProfile = {
