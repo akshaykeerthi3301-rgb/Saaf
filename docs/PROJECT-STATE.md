@@ -2410,9 +2410,12 @@ not exist today.
 | Paid tier ("Turbo Plan") | ₹0 | Different model |
 
 **What this does to the parity question.** Feature-for-feature, Saaf is **not
-near parity**: of the rows above, 4 match, 3 are partial, and 12 are missing —
-5 of them buildable, 7 blocked by data, licensing or a permanent decision
-(counts are of this table, i.e. of what was seen; the Profile and Coaching
+near parity**: of the 19 rows above, 4 match, 2 are partial, 12 are missing —
+4 buildable (filters/saved filters, hide, skill correction, plain-language
+search), 8 blocked by data, licensing or a permanent decision — and 1 is a
+business-model difference (paid tier). ~~4 match, 3 partial, 12 missing — 5
+buildable, 7 blocked~~ was a miscount of this same table, caught by [REALITY]
+before it was reported (counts are of this table, i.e. of what was seen; the Profile and Coaching
 pages were not opened in depth, and the extension was not compared inside a
 real ATS form). **But Jobright does not offer India in its feed**, so for the
 Indian candidate Saaf is built for, the comparison is between a product that
