@@ -34,13 +34,14 @@ API. Reading one in the user's own browser adds no access we do not already have
 | Stores | Your résumé text and file, form details, salary figures and yes/no answers, in `chrome.storage.local`, on your machine |
 | Receives | From the signed-in Saaf website only: your profile, latest saved résumé, and the stage of each tracked job |
 | Never sends | Browsing history, page URLs from unlisted hosts, anything from an unlisted host, your salary figures or yes/no answers |
-| Never does | Submit, apply, or navigate on your behalf. The only clicks are the dropdown option, radio or tick-box it chose |
+| Never does | ~~Submit, apply, or navigate on your behalf.~~ Get past a CAPTCHA, answer a question it has no stored answer for, or submit anything outside **Apply for me** — which is off until you switch it on (reversed 2026-09-25) |
 
 ## Form autofill
 
 Press **“⚡ Fill this application”** on a posting. It is a button and never
-automatic — filling a form on page load is both surprising and the shape of the
-auto-apply behaviour this product refuses.
+automatic — filling a form on page load is surprising. ~~…and the shape of the
+auto-apply behaviour this product refuses.~~ Automatic applying now exists as a
+separate, opt-in mode — see **Apply for me** below.
 
 It fills name, email, phone, city, preferred cities, current title and employer,
 years of experience, notice period, work authorisation, LinkedIn and portfolio —
@@ -65,9 +66,28 @@ PROJECT-STATE Stage AE)** — but only from answers *you* stored:
 | Consent boxes (“I agree”, “I certify”) | Agreeing to terms is yours |
 | Passwords, Aadhaar, PAN, bank details | Never entered by us |
 
-It never overwrites an answer you already typed or chose, and **never presses
-Submit**. Filling a form puts the role on your Saaf tracker as **Applying** —
-never Applied, because we cannot see whether you pressed Submit.
+It never overwrites an answer you already typed or chose. The Fill button
+**never presses Submit**; filling a form puts the role on your Saaf tracker as
+**Applying** — never Applied, because we cannot see whether you pressed Submit.
+
+## Apply for me (0.5.0, 2026-09-25)
+
+~~Saaf never applies on your behalf.~~ **Reversed 2026-09-25 by founder direction.**
+Queue jobs with **Apply for me** on the Saaf website, switch the mode on in the
+extension, and press **Start**. The extension opens each job in a background tab,
+one at a time, fills it, and presses the form's own Submit button — only when:
+
+| It submits only if | Otherwise |
+|---|---|
+| Every required field is filled from your own stored answers | Stops, names the unfilled field, leaves the tab open for you |
+| There is no CAPTCHA on the page | Stops — a CAPTCHA means the employer wants a person; we never get past one |
+| A required upload has your stored résumé file | Stops |
+| — | A job counts as **Applied** only when the employer's page confirms it; a click with no confirmation is "check this tab" |
+
+Off by default, runs only when you press Start, at most **25 a day**, only on the
+ATS hosts in `manifest.json`. Demographic questions, free-text essays and consent
+boxes are still never answered — if the employer made one required, the job waits
+for you.
 
 ## Syncing with the Saaf website
 
@@ -99,10 +119,11 @@ our control, so it must never sit on a critical path.
 
 ## Parity with Jobright's extension, and the two gaps that stay
 
-Measured against their Chrome Web Store listing on 2026-09-15 (200,000+ users,
-4.9★). **Their extension fills but does not auto-submit either** — *"instantly
-completes every field... so you can submit an application in seconds"* — so the
-locked "never applies on your behalf" decision costs us nothing here.
+Measured against their Chrome Web Store listing on 2026-09-15 (200,000+ users
+and 4.9★ — both CLAIMED on their listing). Their extension fills; their web
+**Agent** submits (OBSERVED inside their app, 2026-09-25: "Awaiting Application
+Start → Start"). ~~…so the locked "never applies on your behalf" decision costs
+us nothing here.~~ Saaf's "Apply for me" is the parity answer (2026-09-25).
 
 | Jobright | Saaf |
 |---|---|

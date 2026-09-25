@@ -105,3 +105,22 @@ steps before building, not the building.
 | EVAL | **7** | 3 of 6 fixes from the last scorecard done (criteria first, blueprint, ranges partly); security review, double DB read on `/jobs/[id]`, sitemap fallback log still open | Carry the three forward |
 
 **Team average (scored roles): 7.8 / 10** (was 6.9).
+
+---
+
+## 2026-09-25 (night) — Phase 16, the eight blocked gaps
+
+| Role | Score | Evidence | Fix |
+|---|---|---|---|
+| PM | **7** | Stated the three lines that stay (fabricated counts, scraping/email-guessing, CAPTCHAs) before building and built substitutes; no written "done means" per task this time | Criteria first, again |
+| TPM | **8** | Blueprint in chat before building; ROADMAP Phase 16 with results; HANDOFF lists 0031, coaches, the browser block | — |
+| AI-ENG | **9** | Zero model calls added; open data instead of paid APIs | — |
+| CTX | **7** | Targeted reads; some broad greps across docs for the rewrite (necessary) | — |
+| UX | **5** | Tokens only; Swiggy page seen. **Cards, panel, question bank, coaching, connections not seen** — classifier block | Walk them (TASK-149) |
+| BE | **8** | Invariants held; new tables with owner-only / read-only RLS; every action re-auths, Zod, per-user limits | — |
+| QA | **7** | 931 tests; tests caught two real Apply-for-me defects and four company-match defects before shipping. **No browser walk** of most screens, stated as unverified | TASK-149 |
+| REALITY | **9** | Every number tagged and measured (0.7% pay, 35/60 companies, GDELT limit quoted); wrong company matches caught in measurement, not after | — |
+| EVAL | **8** | All three carried fixes closed (security review, double read, sitemap log) | — |
+| BIZ | **4** | Eight features shipped to zero users; three (connections, questions, coaching) are empty until real people use them. Still no domain, no beta | Launch before building more |
+
+**Team average (scored roles): 7.2 / 10.**

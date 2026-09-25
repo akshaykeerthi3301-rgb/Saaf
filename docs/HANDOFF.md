@@ -2,6 +2,36 @@
 
 ---
 
+## 🔶 2026-09-25 (night) — the eight "blocked" gaps are BUILT, NOT LIVE, NOT FULLY SEEN
+
+On `public-job-pages`. Details: ROADMAP Phase 16, PROJECT-STATE Stage AI.
+**Your permanent rule "never apply on the candidate's behalf" is reversed** as
+you asked — "Apply for me" submits applications (off by default, 25 a day,
+never past a CAPTCHA, Applied only on the employer's confirmation).
+
+**What only you can do (TASK-149, TASK-150):**
+
+1. **Let a session look at the screens, or look yourself.** The permission
+   system blocked my browser checks of this round (it flags anything near
+   submitting applications). Either allow the in-app browser for localhost, or
+   run the site locally and open /today, a job's panel, /interview-prep,
+   /coaching and /profile. Nothing of this round should go live unseen.
+2. **Apply `supabase/migrations/0031_network_questions_coaching.sql`** in the
+   Supabase SQL editor, then `npm run verify:rls`. It creates tables holding
+   your users' uploaded connections (other people's names), so read its
+   comments first — you are now the controller of that data under India's
+   DPDP Act.
+3. **Add your first coaches** in Supabase → Table editor → `coaches` (name,
+   headline, booking link). The page is empty until you do; applications land
+   in `coach_applications`.
+4. **Reload the extension** (0.5.0) and try **Apply for me** on ONE real job
+   you want, watching the tab. A wrong submission cannot be taken back.
+5. **Decide on funding data.** Company pages show open data but no funding
+   rounds; that needs a Crunchbase licence (paid).
+6. Then, as before: 0029 + 0030, and say go to deploy.
+
+---
+
 ## 🔶 2026-09-25 (later) — public job pages + tracker link reading + Rejected: BUILT, NOT LIVE
 
 **What exists:** on the branch **`public-job-pages`** (built on top of

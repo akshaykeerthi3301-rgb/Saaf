@@ -2,7 +2,7 @@
 
 ## ⚡ Start here: read `docs/PROJECT-STATE.md` first
 
-This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio artifact built like a real product. No auto-apply. (The repo directory is still `jobmatch`; that's a path, not the brand.)
+This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio artifact built like a real product. ~~No auto-apply.~~ **Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): "Apply for me" in the extension submits applications — off by default, 25 a day, never past a CAPTCHA, never a guessed answer, marked Applied only on the employer's confirmation. (The repo directory is still `jobmatch`; that's a path, not the brand.)
 
 `docs/PROJECT-STATE.md` carries the locked decisions, the live-probed technical facts, and the current phase. Read it before proposing anything — several decisions in it were made deliberately and against the obvious default (no LinkedIn/Naukri sourcing; never gate users out; gates typed per function rather than years-only; the founder's personal job tracker is never publishable). Re-deriving or reversing them silently is the main failure mode for a fresh session here.
 

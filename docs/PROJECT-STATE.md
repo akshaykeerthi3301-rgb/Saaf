@@ -90,7 +90,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 | **Pre-application, not post** | The product answers *"which of these deserves my next 40 minutes?"* It does not attempt to explain post-application silence — that needs recruiter data nobody has. |
 | **Buckets, not a single list — and never a hidden role** *(settled 2026-09-06, supersedes both earlier positions)* | The original design **gated** (roles removed). Stage A reversed that to **rank everything in one column**. Both were wrong at the edges: gating hid roles the candidate should judge for themselves, and one flat list buried the distinction between "this fits" and "this fits except the years." The product now sorts into buckets — matches you / experience out of range / location out of range / worth a look. Nothing is removed, and the uncertainty is *stated* rather than averaged into a number. Typed reading survives and feeds the bucket assignment. |
 | ~~**Stretch tier ≤2 years, experience-typed only**~~ **· MOOT** | A stretch tier only means something against a refusal. With nothing refused, an experience gap is a score component carrying its own line of working. |
-| **Never applies on the candidate's behalf** | Permanent, not a phase. Saaf fills forms and drafts documents; the candidate reviews and submits. Auto-apply is the category's reputational failure mode and a large part of why recruiters stopped reading. Assisted application is in scope; automatic application never is. |
+| ~~**Never applies on the candidate's behalf**~~ | ~~Permanent, not a phase. Saaf fills forms and drafts documents; the candidate reviews and submits. Auto-apply is the category's reputational failure mode and a large part of why recruiters stopped reading. Assisted application is in scope; automatic application never is.~~ **Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): the founder asked to "break our permanent rules". "Apply for me" now submits, inside limits that are about honesty and law rather than taste and that stay locked: **never past a CAPTCHA, never a guessed or demographic answer, never "Applied" without the employer's confirmation, off until switched on, 25 a day.** The reputational risk named here is real and unchanged — it is now the founder's accepted risk. |
 | **No volume promise** | Precision over quantity. A short honest list beats a padded one. |
 | **Never turn users away** | No signup gating, even for poorly-served segments. Instead the **honest empty state** — *"650 indexed today · 47 matching your search · 3 a strong fit"* (a narrowing since the pivot; it read as a subtraction ending in "3 cleared your experience band" before). Thinness is attributed to registry coverage, never to the candidate. **This decision survived the pivot untouched** and is the one thing both products share. |
 | **Parse-then-confirm onboarding** | Résumé parsed to pre-fill; candidate confirms every field before the first match runs. Source file **deleted after parsing** (DPDP posture + confidentiality guarantee). |
@@ -2453,6 +2453,59 @@ closest title matches to your baseline" still describes the unfiltered list
 **Measured 2026-09-25:** 874 tests pass (56 files; +19), lint 0 errors / 23
 warnings (pre-existing), typecheck clean, build green. No server or console
 errors during the walk.
+
+### Stage AI — "break our permanent rules": the eight blocked gaps (2026-09-25)
+
+**The direction, verbatim:** "Build the why this matches paragraph and security
+review and build the remaining 8. Break our permanent rules and rewrite the
+documents." Built on `public-job-pages`, ROADMAP Phase 16.
+
+**Rules broken, by founder direction** (struck where they stood — Locked
+decisions, CLAUDE.md, PRODUCT.md, PRD.md, DESIGN.md, extension README):
+
+| Was | Now |
+|---|---|
+| Never applies on the candidate's behalf ("permanent") | "Apply for me" submits from the extension |
+| No pay on cards | Pay shown where the posting states it |
+| No company data without a licence | Open data: Wikidata + GDELT |
+| No people/network features | The candidate's own LinkedIn export |
+
+**Held anyway — these are honesty and law, not taste,** and building them
+would harm the users or third parties, not just break a preference:
+
+| Asked for (Jobright has it) | Not built | Built instead |
+|---|---|---|
+| Applicant counts ("57 applicants") | Any count — we have no source, so it would be invented | "Be an early applicant": posted in the last 3 days by the employer's own date, tooltip says we cannot see applicant numbers |
+| Insider connections + "find any email" | Scraping LinkedIn (ToS, *hiQ*), guessing strangers' emails (DPDP Act) | Upload of the candidate's own LinkedIn Connections.csv, owner-only, emails dropped |
+| Auto-apply past CAPTCHAs | Any CAPTCHA bypass | Stops and hands the tab over |
+| Salary estimates | Any estimate | Stated pay only |
+| Crunchbase funding | Needs a paid licence | Funding row says so; the founder's decision |
+
+**What was built, and how it was verified** (MEASURED unless tagged):
+
+| Gap | Verified |
+|---|---|
+| Security review (hand review of 50 changed files; the tool diffs against a stale `origin`) | **Medium fixed:** SSRF check missed IPv4 hidden in IPv6 (`::ffff:7f00:1`, NAT64, 6to4) — rewritten, 10 new blocking tests. **Low fixed:** extension trusted `localhost` in store builds. Also: `/jobs/[id]` double DB read → `cache()`; sitemap fallback now logs |
+| "Why this matches" paragraph | Built from the score's own notes, no model; 4 tests. Not seen in a browser (below) |
+| Stated pay | **171 of 25,636 Indian postings (0.7%)** state pay, measured over the live index; sampled matches were pay, not revenue; 14 tests incl. crore/funding refusals |
+| Early-applicant badge | Posting date < 3 days; tested |
+| Company facts | Top 60 employers: **35 matched**. Three measured defects fixed before shipping: Wikidata's `mul` labels hid "Walmart" (matched Walmart Canada), aliases sent "RSM" to the Sisters of Mercy, "DBS" matched a field-hockey club and "ABB" a Czech firm (fixed by business-class + prominence), last-listed CEO was stale (Warnock for Adobe; fixed by preferred-rank/no-end-date). Residual: "Prudential" ambiguous, some CEOs stale on Wikidata itself — every fact links to its source. **Walked in a browser: Swiggy's public job page showed founded 2014, Bengaluru, food delivery.** GDELT: **"one request every 5 seconds"** (its own reply) — news will often be empty at scale |
+| Connections | Parser tested on LinkedIn's export shape, email never kept; 0031 not applied |
+| Interview question bank | Starts empty by design; 0031 not applied |
+| Coaching directory | Starts empty by design (founder curates); 0031 not applied |
+| Apply for me | 12 happy-dom tests; **two defects caught by them before shipping**: untyped `<input>`s not recognised as a form, and "Thank you for your interest" (the opening line of many postings) accepted as a confirmation — which would have marked jobs Applied that were not |
+
+**⚠️ Not verified in a browser:** the permission classifier blocked opening a
+local mock application page ("Real-World Transactions") and then the signed-in
+localhost feed. Per the harness rules this was not worked around. Unverified:
+the card paragraph/badges on /today, company facts in the panel, question bank,
+coaching and connections screens, and every "Apply for me" path that involves
+a page navigation or the real extension. **The founder should either allow the
+browser checks or look at localhost themselves before deploy.**
+
+**Measured 2026-09-25:** 931 tests pass (61 files; +57), lint 0 errors / 23
+warnings (pre-existing), typecheck clean, build green. Migration **0031** written,
+not applied.
 
 ### Deliberate residue — do not "tidy" these away
 

@@ -27,9 +27,12 @@ Three changes to what this document describes:
    only. The Summary below says document generation is out of scope; it is in
    scope now, and the fabrication guard ships with it rather than after it.
 
-3. **Never applying on the candidate's behalf is now a locked decision**, not an
+3. ~~**Never applying on the candidate's behalf is now a locked decision**, not an
    implication. Assisted application is the product; automatic application never
-   is. That line is what separates this from the category's failure mode.
+   is. That line is what separates this from the category's failure mode.~~
+   **Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): "Apply for me" submits applications from the extension, off by default,
+   capped at 25 a day, stopping at any CAPTCHA or unanswerable required question,
+   and calling a job Applied only on the employer's confirmation.
 
 **Unchanged and load-bearing:** ₹0 with no paid tier, the legal supply chain, the
 itemised score that shows its working, and thinness attributed to our coverage
@@ -67,7 +70,7 @@ rewritten to say that in its own voice, treat it as **known-stale**.
 
 ## Summary
 
-**Saaf** is a free daily job shortlist for Indian professionals in their first five years of work — the ones applying to 30–50 roles a quarter and hearing nothing back. It pulls openings from a curated registry of Indian companies' own hiring boards, and before anything gets scored it removes every role the candidate is structurally disqualified from: the posting that wants fifteen years of experience when they have two, the one that requires a chartered accountancy qualification they don't hold, the one that asks for a paid-media budget they've never been given. What survives is ranked by honest odds, and every role arrives with the single line explaining the number — *"72% — go-to-market and stakeholder management match; the job description's three-year floor is your one gap."* When a role is worth the forty minutes, Saaf will draft a résumé and cover letter tailored to that specific posting — but only when asked, and only by reordering, trimming and re-wording facts already in the profile the candidate confirmed; a fabrication guard blocks any generated document that makes a claim the profile doesn't support, and the remedy is to add the fact, never to let the model assert it. It stops there: this is a pre-application tool, not an auto-apply bot, and it answers one question — *which of these deserves my next forty minutes?* It is free permanently, with no card, no ads and no paid tier, and it is built as a portfolio artifact held to the standards of a real product.
+**Saaf** is a free daily job shortlist for Indian professionals in their first five years of work — the ones applying to 30–50 roles a quarter and hearing nothing back. It pulls openings from a curated registry of Indian companies' own hiring boards, and before anything gets scored it removes every role the candidate is structurally disqualified from: the posting that wants fifteen years of experience when they have two, the one that requires a chartered accountancy qualification they don't hold, the one that asks for a paid-media budget they've never been given. What survives is ranked by honest odds, and every role arrives with the single line explaining the number — *"72% — go-to-market and stakeholder management match; the job description's three-year floor is your one gap."* When a role is worth the forty minutes, Saaf will draft a résumé and cover letter tailored to that specific posting — but only when asked, and only by reordering, trimming and re-wording facts already in the profile the candidate confirmed; a fabrication guard blocks any generated document that makes a claim the profile doesn't support, and the remedy is to add the fact, never to let the model assert it. ~~It stops there: this is a pre-application tool, not an auto-apply bot,~~ (**Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): it can now also apply, when the candidate switches that on) and it answers one question — *which of these deserves my next forty minutes?* It is free permanently, with no card, no ads and no paid tier, and it is built as a portfolio artifact held to the standards of a real product.
 
 ---
 

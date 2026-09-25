@@ -209,8 +209,9 @@ because the first two are made up and the third is parked.
 
 The named anti-reference is still **the maximalist résumé-tool look**, but for its argument rather
 than its shadows: its headline is *"Your Job Search, Fully Automated — applies
-for you while you sleep"*, which is the auto-apply behaviour this product exists
-to argue against.
+for you while you sleep"*, which is the auto-apply behaviour this product ~~exists
+to argue against~~ now offers too, inside hard limits (Reversed 2026-09-25, PROJECT-STATE Stage AI).
+The visual anti-reference stands: no "while you sleep" promises, no volume boasts.
 
 ## Colors
 
