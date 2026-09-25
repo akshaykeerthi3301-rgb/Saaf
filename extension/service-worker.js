@@ -19,9 +19,16 @@ const ENDPOINT = 'https://saaf-ten.vercel.app/api/extension/score'
  * silently widen who can write the candidate's profile.
  */
 const SAAF_ORIGINS = ['https://saaf-ten.vercel.app']
+/**
+ * localhost is trusted only in the unpacked development copy. A store-installed
+ * extension carries `update_url` in its manifest; an unpacked one does not.
+ * Found by the 2026-09-25 security review: otherwise any page served from a
+ * user's own machine, on any port, could read their queued jobs.
+ */
+const IS_DEV_BUILD = !('update_url' in chrome.runtime.getManifest())
 const isSaaf = (sender) => {
   const o = sender?.origin || (sender?.url ? new URL(sender.url).origin : '')
-  return SAAF_ORIGINS.includes(o) || /^http:\/\/localhost(:\d+)?$/.test(o)
+  return SAAF_ORIGINS.includes(o) || (IS_DEV_BUILD && /^http:\/\/localhost(:\d+)?$/.test(o))
 }
 
 /** Fields the web app may write. Anything else in a sync message is dropped. */

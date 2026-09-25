@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/service'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
@@ -71,8 +72,12 @@ type RoleRow = {
   first_seen_at: string
 }
 
-/** One role, or null when the id is malformed or the role has closed (ingest deletes closed roles). */
-export async function readPublicJob(id: string): Promise<PublicJob | null> {
+/**
+ * One role, or null when the id is malformed or the role has closed (ingest deletes closed roles).
+ * Wrapped in React `cache()`: generateMetadata and the page both ask for the same
+ * role in one request, and without it that was two database round trips (scorecard, 2026-09-25).
+ */
+export const readPublicJob = cache(async (id: string): Promise<PublicJob | null> => {
   if (!UUID.test(id)) return null
   const db = createServiceClient()
   const { data } = await db
@@ -118,7 +123,7 @@ export async function readPublicJob(id: string): Promise<PublicJob | null> {
     },
     more: sib.filter((s) => s.id !== r.id).slice(0, 5).map((s) => ({ id: s.id, title: s.title, city: displayCity(s.city) || null })),
   }
-}
+})
 
 /**
  * The newest roles in India, for the sitemap. Capped: a sitemap file holds

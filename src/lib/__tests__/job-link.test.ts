@@ -28,7 +28,10 @@ describe('parseJobHtml', () => {
 describe('isPrivateAddress — what a server fetch must never reach', () => {
   it.each(['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:10.0.0.1'])(
     'blocks %s', (ip) => { expect(isPrivateAddress(ip)).toBe(true) })
-  it.each(['8.8.8.8', '172.32.0.1', '104.18.2.3', '2606:4700::1111'])(
+  // Added by the 2026-09-25 security review: IPv4 hidden inside IPv6.
+  it.each(['::ffff:7f00:1', '::ffff:a9fe:a9fe', '64:ff9b::7f00:1', '2002:7f00:1::', '::127.0.0.1', '[::1]', 'fe80::1%en0', 'not-an-ip', '198.18.0.1', '203.0.113.5'])(
+    'blocks the disguised or reserved %s', (ip) => { expect(isPrivateAddress(ip)).toBe(true) })
+  it.each(['8.8.8.8', '172.32.0.1', '104.18.2.3', '2606:4700::1111', '::ffff:8.8.8.8', '2404:6800:4009::200e'])(
     'allows %s', (ip) => { expect(isPrivateAddress(ip)).toBe(false) })
 })
 

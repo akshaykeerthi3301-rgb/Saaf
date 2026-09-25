@@ -24,7 +24,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // A sitemap that fails to build is worse than one without jobs: the tools
   // must stay listed even if the database is unreachable at build time.
-  const jobs = await listPublicJobsForSitemap(5000).catch(() => [])
+  const jobs = await listPublicJobsForSitemap(5000).catch((e: unknown) => {
+    // Loud, not silent: a sitemap without jobs looks fine to everyone but Google.
+    console.error('sitemap: job pages left out — database unreachable at build/revalidate', e)
+    return []
+  })
 
   return [
     { url: `${base}/tools/ats-checker`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
