@@ -843,7 +843,7 @@ Founder direction, 2026-09-25: "activate all agents … achieve parity with Jobr
   Notes: the candidate sets it because they were told; Archived stays the catch-all. Gracious follow-up note for rejections. Until 0029 is applied a move into Rejected rolls back with the reason (verified).
 - [x] **TASK-132** — Add the [EVAL] role and its first scorecard
   Files: `docs/AGENT-SCORECARD.md`
-  Notes: founder request 2026-09-25. Scores the other eight roles on checkable evidence only; first run averaged 6.9/10, lowest PM and TPM (no acceptance criteria or blueprint before building). Its fix list is open work for the next session.
+  Notes: founder request 2026-09-25. Scores the other eight roles on checkable evidence only; first run averaged 6.9/10, lowest PM and TPM (no acceptance criteria or blueprint before building). Its fix list is open work for the next session. [BIZ] (business success evaluator) added the same day.
 - [ ] **TASK-131** — Apply 0029, merge `extension-parity` + `public-job-pages`, deploy, submit the sitemap to Google Search Console · P1 · **founder**
 
 ## Agent Session Guide

@@ -1,7 +1,8 @@
 # Agent scorecard — the [EVAL] role
 
-The founder's working team is nine roles run by one session (PM, TPM, AI-ENG,
-CTX, UX, BE, QA, AUDIT, EVAL). **[EVAL]** was added 2026-09-25. It scores the
+The founder's working team is ten roles run by one session (PM, TPM, AI-ENG,
+CTX, UX, BE, QA, AUDIT, EVAL, BIZ). **[EVAL]** was added 2026-09-25; **[BIZ]**, the
+business success evaluator, the same day. It scores the
 other eight after each piece of work, before the session's final message, and
 appends the result here so scores can be compared over time.
 
@@ -43,6 +44,7 @@ founder-only item left out of HANDOFF → TPM max 5. A hardcoded colour in `src/
 | QA | Every claim backed by an executed check; unverified things labelled |
 | AUDIT | Parity claims sourced; coverage gaps admitted |
 | EVAL | (scored by the next evaluation) did the last scorecard's fixes happen? |
+| BIZ | Judges work by whether it moves real users, activation or revenue — and says when it does not. Scored on whether its calls were backed by numbers we hold |
 
 ---
 
