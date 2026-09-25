@@ -5,6 +5,8 @@ import { ProfileForm } from '@/components/features/profile-form'
 import { PreferencesPanel } from '@/components/features/preferences-panel'
 import { readPreferences } from '@/lib/services/workspace'
 import { profileHealth } from '@/lib/profile-health'
+import { countConnections } from '@/lib/services/network'
+import { ConnectionsImport } from '@/components/features/connections-import'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -33,7 +35,7 @@ export default async function ProfilePage() {
   if (!profile) redirect('/start')
 
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
-  const prefs = await readPreferences(user.id)
+  const [prefs, connections] = await Promise.all([readPreferences(user.id), countConnections(user.id)])
   const health = profileHealth({
     currentTitle: profile.current_title, employer: profile.employer,
     yearsExperience: profile.years_experience === null ? null : Number(profile.years_experience),
@@ -75,6 +77,7 @@ export default async function ProfilePage() {
           portfolioUrl: profile.portfolio_url ?? '',
           noticePeriod: profile.notice_period ?? '',
         }} />
+        <ConnectionsImport count={connections ?? 0} stored={connections !== null} />
       </div>
     </AppShell>
   )

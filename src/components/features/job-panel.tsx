@@ -15,6 +15,7 @@ import { ReviewDrawer } from '@/components/features/review-drawer'
 import { HideRole } from '@/components/features/feed-controls'
 import { correctSkillFromJob } from '@/app/actions/feed-prefs'
 import { CompanyFactsCard } from '@/components/features/company-facts'
+import { ConnectionsAt } from '@/components/features/connections-at'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
@@ -216,6 +217,7 @@ function AnalysisTab({ j }: { j: JobInsight }) {
   const skill = useSkillCorrection(j.roleId)
   return (
     <>
+      <ConnectionsAt company={j.company} />
       <Section title="Skill gap breakdown" icon={Sparkles}>
         <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
           Wrong? Click a skill to add it to your profile or take it off — only claim what you would defend in an interview.

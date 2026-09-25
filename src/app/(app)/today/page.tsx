@@ -18,6 +18,8 @@ import { readTrackedStatuses } from '@/lib/services/workspace'
 import { applyQuickPills, arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
+import { connectionsByCompany } from '@/lib/services/network'
+import { normaliseCompany } from '@/lib/company-name'
 import { applyTextFilter, viewFromParams, viewToQuery } from '@/lib/feed-query'
 import { FeedSearch, HideRole, SavedFilters } from '@/components/features/feed-controls'
 
@@ -193,6 +195,8 @@ export default async function TodayPage({
     capSearch ? countMatchingRoles(capSearch.searches, capSearch.adjacent) : Promise.resolve(null),
     readTrackedStatuses(arranged.flatMap((s) => s.visible).map((r) => r.role_id)),
   ])
+  // Who the candidate knows at each visible company (their own LinkedIn export, 0031).
+  const knownAt = await connectionsByCompany(user.id, [...cards.values()].map((c) => normaliseCompany(displayEmployer(c.roles?.company_name))))
   const holding = holdingLine(allRows.length, MAX_ROLES_PER_CANDIDATE, matched)
   // At the cap the list is the top of a larger set, and the tab must not call
   // it "All" two lines above a sentence saying it is not (QA-05's lesson).
@@ -843,6 +847,7 @@ export default async function TodayPage({
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
                           statedPay={card.stated_pay}
+                          connections={knownAt.get(normaliseCompany(displayEmployer(card.roles?.company_name)))}
                         />
                         </SelectableCard>
                       </div>

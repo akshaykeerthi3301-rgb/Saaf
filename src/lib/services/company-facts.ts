@@ -21,6 +21,10 @@
  * slowly, and both sources ask callers to be gentle.
  */
 
+import { normaliseCompany } from '@/lib/company-name'
+
+export { normaliseCompany }
+
 const UA = 'SaafBot/1.0 (https://saaf-ten.vercel.app; job-seeker tool)'
 const WEEK = 7 * 24 * 3600
 const TIMEOUT_MS = 4000
@@ -46,15 +50,6 @@ const BUSINESS = new Set([
   'Q4830453', 'Q783794', 'Q6881511', 'Q891723', 'Q167037', 'Q1058914', 'Q18388277', 'Q219577', 'Q658255',
   'Q1589009', 'Q210167', 'Q2995256', 'Q17127659', 'Q22687', 'Q740752', 'Q15911314', 'Q3477381',
 ])
-
-export function normaliseCompany(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9 ]+/g, ' ')
-    .replace(/\b(inc|incorporated|ltd|limited|pvt|private|plc|llc|llp|corp|corporation|co|company|gmbh|bv|sa|ag|technologies|technology|india)\b/g, ' ')
-    .replace(/\s+/g, '')
-}
 
 type Claim = { rank?: 'preferred' | 'normal' | 'deprecated'; mainsnak?: { datavalue?: { value?: unknown } }; qualifiers?: Record<string, unknown> }
 type Entity = {

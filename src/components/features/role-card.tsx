@@ -1,4 +1,4 @@
-import { AlertCircle, BarChart3, ChevronRight, Clock, MapPin, Quote, Sparkles, Zap } from 'lucide-react'
+import { AlertCircle, BarChart3, ChevronRight, Clock, MapPin, Quote, Sparkles, Users, Zap } from 'lucide-react'
 import { ReportScore } from '@/components/features/report-score'
 import { TrackRole } from '@/components/features/track-role'
 import { QuickApply } from '@/components/features/quick-apply'
@@ -52,6 +52,8 @@ type Props = {
   hideControl?: ReactNode
   /** Pay as the posting states it (src/lib/stated-pay.ts). Never estimated. */
   statedPay?: string | null
+  /** How many of the candidate's own LinkedIn connections work at this company. */
+  connections?: number
 }
 
 /**
@@ -73,7 +75,7 @@ type Props = {
  */
 export function RoleCard({
   gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl, statedPay,
+  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl, statedPay, connections,
 }: Props) {
   const band = bandFor(score)
   const posted = postedAgo(postedAt)
@@ -179,6 +181,12 @@ export function RoleCard({
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary" title="As stated in the job title">
                 <BarChart3 className="size-3" aria-hidden="true" />
                 {seniority}
+              </span>
+            ) : null}
+            {connections ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-score-high/30 bg-score-high/10 px-2.5 py-1 text-xs text-score-high" title="From the LinkedIn connections you uploaded">
+                <Users className="size-3" aria-hidden="true" />
+                {connections === 1 ? '1 connection works here' : `${connections} connections work here`}
               </span>
             ) : null}
             {isEarlyPosting(postedAt) ? (
