@@ -56,6 +56,7 @@ export default async function PublicJobPage({ params }: Props) {
       '@type': 'Place',
       address: { '@type': 'PostalAddress', addressLocality: job.city ?? job.location ?? undefined, addressCountry: job.inIndia ? 'IN' : undefined },
     },
+    ...(job.pay ? { baseSalary: { '@type': 'MonetaryAmount', currency: job.pay.currency, value: { '@type': 'QuantitativeValue', minValue: job.pay.low, maxValue: job.pay.high, unitText: job.pay.period === 'year' ? 'YEAR' : 'MONTH' } } } : {}),
     directApply: false,
     url: `${siteUrl()}/jobs/${job.id}`,
   }
@@ -96,6 +97,7 @@ export default async function PublicJobPage({ params }: Props) {
               {job.city || job.location ? <Chip icon={MapPin}>{job.city ?? job.location}</Chip> : null}
               {job.seniority ? <Chip icon={BarChart3}>{job.seniority}</Chip> : null}
               {job.easyApply ? <Chip icon={Zap}>Easy Apply</Chip> : null}
+              {job.pay ? <Chip icon={Tag}>{job.pay.text}</Chip> : null}
             </div>
             {job.culture.length ? (
               <div className="mt-5 flex flex-wrap gap-2">

@@ -145,3 +145,15 @@ export const STAGE_LABEL: Record<string, string> = {
   saved: 'Saved', applying: 'Applying', applied: 'Applied',
   interviewing: 'Interviewing', offer: 'Offer', rejected: 'Rejected', closed: 'Archived',
 }
+
+/**
+ * "Be an early applicant" (Phase 16, 2026-09-25). Jobright shows applicant
+ * COUNTS ("57 applicants", OBSERVED); we have no source for those and will not
+ * invent one. What we do know is the employer's own posting date, so the badge
+ * means exactly that: posted within the last three days. The tooltip says so.
+ */
+export const EARLY_WITHIN_DAYS = 3
+export function isEarlyPosting(postedAt: string | null | undefined, now: number = Date.now()): boolean {
+  const t = postedAt ? Date.parse(postedAt) : NaN
+  return Number.isFinite(t) && now - t >= 0 && now - t < EARLY_WITHIN_DAYS * 86_400_000
+}

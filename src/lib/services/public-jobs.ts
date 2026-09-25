@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/service'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
+import { findStatedPay, type StatedPay } from '@/lib/stated-pay'
 
 /**
  * Public job pages — one indexed role, readable without an account.
@@ -36,6 +37,8 @@ export type PublicJob = {
   firstSeenAt: string
   easyApply: boolean
   seniority: TitleSeniority | null
+  /** Pay as the posting states it, or null. Never estimated. */
+  pay: StatedPay | null
   description: JdBlock[]
   /** The posting's own text as plain lines, for the JobPosting structured data. */
   plainDescription: string
@@ -113,6 +116,7 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
     firstSeenAt: r.first_seen_at,
     easyApply: isEasyApply(r.apply_url),
     seniority: titleSeniority(r.title),
+    pay: findStatedPay(r.description ?? ''),
     description: blocks,
     plainDescription: blocks.map((b) => (b.kind === 'bullet' ? `• ${b.text}` : b.text)).join('\n'),
     culture: cultureTags(r.description ?? ''),

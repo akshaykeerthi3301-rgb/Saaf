@@ -69,3 +69,14 @@ describe('formatDescription', () => {
     expect(blocks.map((b) => b.text).join(' ')).not.toMatch(/<|>/)
   })
 })
+
+describe('isEarlyPosting — from the posting date, never an applicant count', () => {
+  const now = Date.parse('2026-09-25T12:00:00Z')
+  it('is early inside three days, not after, and not without a date', async () => {
+    const { isEarlyPosting } = await import('../job-facts')
+    expect(isEarlyPosting('2026-09-24T12:00:00Z', now)).toBe(true)
+    expect(isEarlyPosting('2026-09-22T11:00:00Z', now)).toBe(false)
+    expect(isEarlyPosting(null, now)).toBe(false)
+    expect(isEarlyPosting('2026-09-30T00:00:00Z', now)).toBe(false)
+  })
+})

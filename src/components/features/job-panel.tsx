@@ -148,6 +148,7 @@ function PanelHeader({ j }: { j: JobInsight }) {
             {j.seniority ? <Chip icon={BarChart3}>{j.seniority}</Chip> : null}
             {posted ? <Chip icon={Clock}>{posted}</Chip> : null}
             {j.easyApply ? <Chip icon={Zap}>Easy Apply</Chip> : null}
+            {j.statedPay ? <Chip icon={Tag}>{j.statedPay}</Chip> : null}
           </div>
         </div>
         {j.score !== null ? <ScoreRing score={j.score} size={96} stroke={8} label="match" /> : null}

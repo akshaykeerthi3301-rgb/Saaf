@@ -6,11 +6,12 @@ import { ViewMatchButton } from '@/components/features/feed-selection'
 import { bandFor } from '@/components/ui/fit-ring'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { factorHighlight } from '@/lib/job-insight'
-import { isEasyApply, titleSeniority } from '@/lib/job-facts'
+import { isEarlyPosting, isEasyApply, titleSeniority } from '@/lib/job-facts'
 import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import { postedAgo, postedOn } from '@/lib/day'
 import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 import type { ReactNode } from 'react'
+import { whyThisMatches } from '@/lib/why-match'
 import type { ScoreBreakdown } from '@/match/score'
 import { requirementLabel } from '@/lib/display-names'
 
@@ -49,6 +50,8 @@ type Props = {
   trackedStatus?: string
   /** The Hide / Unhide control (Phase 15), passed in so this card stays a server component. */
   hideControl?: ReactNode
+  /** Pay as the posting states it (src/lib/stated-pay.ts). Never estimated. */
+  statedPay?: string | null
 }
 
 /**
@@ -70,13 +73,14 @@ type Props = {
  */
 export function RoleCard({
   gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl,
+  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl, statedPay,
 }: Props) {
   const band = bandFor(score)
   const posted = postedAgo(postedAt)
   const easy = isEasyApply(applyUrl)
   const seniority = titleSeniority(title)
   const highlight = factorHighlight(breakdown)
+  const why = whyThisMatches(breakdown, reason)
 
   /**
    * One quote, shown once.
@@ -177,6 +181,19 @@ export function RoleCard({
                 {seniority}
               </span>
             ) : null}
+            {isEarlyPosting(postedAt) ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-lg border border-score-high/30 bg-score-high/10 px-2.5 py-1 text-xs text-score-high"
+                title="Posted in the last 3 days, by the employer's own date. We cannot see how many people have applied."
+              >
+                Be an early applicant
+              </span>
+            ) : null}
+            {statedPay ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary" title="As stated in the posting. We never estimate pay.">
+                {statedPay}
+              </span>
+            ) : null}
             {posted && postedAt ? (
               <span
                 className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary"
@@ -201,6 +218,15 @@ export function RoleCard({
       {/* The one line explaining the number. Never removed: a score without
           its reason is the exact failure this product exists to correct. */}
       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{reason}</p>
+      {why.strength || why.gap ? (
+        /* "Why this job is a match" (TASK-138): assembled from the score's own
+           notes, never written by a model — src/lib/why-match.ts. */
+        <div className="mt-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs leading-5">
+          <span className="font-semibold text-primary">Why this matches: </span>
+          {why.strength ? <span className="text-primary">{why.strength} </span> : null}
+          {why.gap ? <span className="text-muted-foreground">Check first: {why.gap}</span> : null}
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} labelled trackedStatus={trackedStatus} />

@@ -842,6 +842,7 @@ export default async function TodayPage({
                           postedAt={card.roles?.posted_at ?? undefined}
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
+                          statedPay={card.stated_pay}
                         />
                         </SelectableCard>
                       </div>

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { analyseFit, type FitAnalysis } from '@/lib/job-insight'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
+import { findStatedPay } from '@/lib/stated-pay'
 import type { ScoreBreakdown } from '@/match/score'
 
 /**
@@ -35,6 +36,8 @@ export type JobInsight = {
   postedAt: string | null
   easyApply: boolean
   seniority: TitleSeniority | null
+  /** Pay as the posting states it, or null. Never estimated. */
+  statedPay: string | null
   score: number | null
   reason: string | null
   analysis: FitAnalysis
@@ -133,6 +136,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     postedAt: r.posted_at,
     easyApply: isEasyApply(r.apply_url),
     seniority: titleSeniority(r.title),
+    statedPay: findStatedPay(r.description ?? '')?.text ?? null,
     score: g?.score === null || g?.score === undefined ? null : Number(g.score),
     reason: g?.reason ?? null,
     analysis,
