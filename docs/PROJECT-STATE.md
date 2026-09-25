@@ -2314,7 +2314,13 @@ post (2025-06-24), and a live public job page (Glean, Principal PMM). **The
 signed-in feed, match panel, résumé editor and tracker were not seen** — the
 founder can sign in in the browser pane if a signed-in audit is wanted.
 
-**The audit — [AUDIT] pass/fail against what Jobright publishes:**
+~~**The audit — [AUDIT] pass/fail against what Jobright publishes:**~~
+⚠️ **Struck the same evening (Stage AG).** This table scores Saaf against
+Jobright's *marketing pages*, not its product, and a later brainstorm turned it
+into "9 of 16 match" and repeated "2 million users" as fact. The founder called
+it hallucinated. Inside the real product, the feed offers no India option at
+all and has a dozen features Saaf lacks. Kept, struck, as the example the
+[REALITY] role exists to prevent. The rows below are claims, not observations.
 
 | Jobright mechanism | Saaf | Verdict |
 |---|---|---|
@@ -2367,6 +2373,50 @@ Nothing was added to the tracker. Moving the founder's card to Rejected before
 0029 → rolled back with "needs a database update (0029)", card still in
 Applying. **Not verified:** production, Google actually indexing the pages, the
 Rejected column after 0029 is applied.
+
+### Stage AG — reality: Jobright observed from the inside (2026-09-25)
+
+**Method.** The founder's own Chrome, where they are signed in to Jobright on
+the paid "Turbo Plan". Read only: panels opened and closed, nothing applied,
+started, sent or saved. Every row below is **OBSERVED** on 2026-09-25 unless
+tagged. Saaf's side is **MEASURED** by grepping `src/` the same evening.
+
+**The finding that changes the picture — OBSERVED:** Jobright's job-feed
+location filter offers exactly six countries: US, Canada, UK, Australia,
+Ireland, New Zealand. **No India.** Whether they carry any Indian roles at all
+was not tested; their Indian-candidate matching, as a user can set it, does
+not exist today.
+
+| Jobright, as observed inside | Saaf, as measured | Gap |
+|---|---|---|
+| Feed card: AI "Why this job is a match" paragraph + company one-liner | One deterministic reason line | Partial |
+| Three sub-scores on every card (experience level, skills, industry) + overall | Six-component breakdown in the panel | ✅ |
+| Pay on most cards (US postings state it) | None — 2.2% of our postings state pay (MEASURED, Stage T) | Structural |
+| Applicant count ("57 applicants", "Early applicant") | None | ❌ source unknown to us |
+| Network tags ("5 former colleagues", "1 school alum") and named insider connections from the user's past employer, "Find any email" | None | ❌ needs people data (held) |
+| Company tags: Late Stage, Public, "Raised $115M", H1B Sponsor Likely | None beyond our own open-role count | ❌ Crunchbase-licensed (held) |
+| Rich filters: role (+5), level, type, work mode, recency, industry, years, hidden jobs; **saved filters** | Pills (easy, min80, fresh, remote); **no saved filters, no industry, no hide** | ❌ buildable |
+| Hide / like a job from the card | Save only | ❌ buildable |
+| Job page: skill tags the user can **click to correct** ("select or unselect skills") | Skills edited only on the profile | ❌ buildable |
+| Job page: responsibilities / required / preferred / benefits split | Headings as the employer wrote them, requirements highlighted | Partial |
+| Company tab: founded, HQ, size, funding rounds, leadership, news (Crunchbase), H1B history (US Dept of Labor) | Open roles / cities / ATS from our index | ❌ licensing (held) |
+| Per-job AI tools: customise résumé, cover letter, analyse fit | Tailoring studio, cover-letter studio, match analysis | ✅ |
+| **Explore:** plain-language job search ("Fintech product with salary above $125000") | None | ❌ buildable |
+| **Agent:** chat that adjusts filters, queues jobs, "Awaiting Application Start → Start" — it applies | Never applies (permanent) | ⛔ held |
+| Résumé: 5 slots, "Analysis Complete" | Saved résumés + ATS checker | ✅ |
+| Interview: bank of real questions — "476 companies, 11,534 questions, +1,201 last 30 days" (CLAIMED on their page), paywalled | Five questions generated from this posting | ❌ data we do not have |
+| Coaching: marketplace of human coaches, rated, "Book a Session" | None | ❌ business line, not a feature |
+| Tracker: Applied / Interviewing / Offer Received / Rejected / Archived + **External** tab | Seven stages incl. Rejected (0029 pending) | ✅ once 0029 applied |
+| Paid tier ("Turbo Plan") | ₹0 | Different model |
+
+**What this does to the parity question.** Feature-for-feature, Saaf is **not
+near parity**: of the rows above, 4 match, 3 are partial, and 12 are missing —
+5 of them buildable, 7 blocked by data, licensing or a permanent decision
+(counts are of this table, i.e. of what was seen; the Profile and Coaching
+pages were not opened in depth, and the extension was not compared inside a
+real ATS form). **But Jobright does not offer India in its feed**, so for the
+Indian candidate Saaf is built for, the comparison is between a product that
+matches Indian roles and one that, as observed, does not.
 
 ### Deliberate residue — do not "tidy" these away
 

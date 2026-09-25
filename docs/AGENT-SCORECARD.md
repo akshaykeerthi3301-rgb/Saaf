@@ -1,8 +1,9 @@
 # Agent scorecard — the [EVAL] role
 
-The founder's working team is ten roles run by one session (PM, TPM, AI-ENG,
-CTX, UX, BE, QA, AUDIT, EVAL, BIZ). **[EVAL]** was added 2026-09-25; **[BIZ]**, the
-business success evaluator, the same day. It scores the
+The founder's working team is eleven roles run by one session (PM, TPM, AI-ENG,
+CTX, UX, BE, QA, AUDIT, EVAL, BIZ, REALITY). **[EVAL]** was added 2026-09-25; **[BIZ]**, the
+business success evaluator, the same day; **[REALITY]**, the evidence gatekeeper,
+the same evening — after the founder caught marketing numbers presented as facts. It scores the
 other eight after each piece of work, before the session's final message, and
 appends the result here so scores can be compared over time.
 
@@ -17,6 +18,27 @@ session that did the work, so it is grading itself. The evidence rule limits
 that, it does not remove it. For an independent grade, ask for one: a separate
 reviewer with no memory of the session re-scores from the repo alone. It costs
 more and is worth it at the end of a phase.
+
+## [REALITY] — the evidence gatekeeper (added 2026-09-25)
+
+It reads every reply before it is sent and **can stop it**. Every number and
+every verdict carries one tag:
+
+| Tag | Means | Allowed as a verdict? |
+|---|---|---|
+| **OBSERVED** | Seen in the actual product or page, with the date and where | Yes |
+| **MEASURED** | Our own data, with the command or test that produced it | Yes |
+| **CLAIMED** | Someone's self-report — a competitor's marketing, a store listing | Only labelled "they claim" |
+| **INFERRED** | My own reasoning or tally | Never as a number or verdict |
+
+Rules: marketing copy is not the product. A parity verdict needs OBSERVED on
+**both** sides. "We lack X" also needs checking — grep our own code first. A
+count of my own list is INFERRED, however precise it looks.
+
+Why it exists: on 2026-09-25 a "9 of 16 features match" verdict was built from
+Jobright's landing pages, with their "2 million users" repeated as fact. Inside
+the real product the same evening, Jobright's feed turned out to offer no India
+option at all, and a dozen features Saaf lacks.
 
 ## Scale
 
@@ -45,6 +67,7 @@ founder-only item left out of HANDOFF → TPM max 5. A hardcoded colour in `src/
 | AUDIT | Parity claims sourced; coverage gaps admitted |
 | EVAL | (scored by the next evaluation) did the last scorecard's fixes happen? |
 | BIZ | Judges work by whether it moves real users, activation or revenue — and says when it does not. Scored on whether its calls were backed by numbers we hold |
+| REALITY | Every number tagged; no INFERRED verdicts shipped; caught claims before the founder did |
 
 ---
 
