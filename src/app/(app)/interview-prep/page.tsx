@@ -7,6 +7,8 @@ import { getCookieContext, listScoredRoles } from '@/lib/services/cookie'
 import { buildPrepPlan, type PrepQuestion } from '@/lib/interview-prep'
 import { displayEmployer } from '@/lib/display-names'
 import { PracticeBox } from '@/components/features/practice-box'
+import { QuestionBank } from '@/components/features/question-bank'
+import { listCompanyQuestions } from '@/lib/services/question-bank'
 
 /**
  * Interview prep.
@@ -93,7 +95,10 @@ export default async function InterviewPrepPage({
   // The best-scoring role rather than the newest: the one they are most likely
   // to actually interview for.
   const selected = options.find((o) => o.id === roleParam) ?? options[0]
-  const ctx = await getCookieContext(user.id, selected.id)
+  const [ctx, bank] = await Promise.all([
+    getCookieContext(user.id, selected.id),
+    selected.company ? listCompanyQuestions(user.id, displayEmployer(selected.company)) : Promise.resolve({ questions: [], stored: true }),
+  ])
 
   return (
     <AppShell title="Interview prep" initials={initials}>
@@ -148,6 +153,9 @@ export default async function InterviewPrepPage({
         ) : (
           <PrepBody me={ctx.context.me} role={ctx.context.role} roleId={selected.id} />
         )}
+        {selected.company ? (
+          <QuestionBank company={displayEmployer(selected.company)} roleTitle={selected.title} questions={bank.questions} stored={bank.stored} />
+        ) : null}
       </div>
     </AppShell>
   )
