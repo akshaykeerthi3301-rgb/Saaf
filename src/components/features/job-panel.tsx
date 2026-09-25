@@ -14,6 +14,7 @@ import { TrackRole } from '@/components/features/track-role'
 import { ReviewDrawer } from '@/components/features/review-drawer'
 import { HideRole } from '@/components/features/feed-controls'
 import { correctSkillFromJob } from '@/app/actions/feed-prefs'
+import { CompanyFactsCard } from '@/components/features/company-facts'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
@@ -349,8 +350,9 @@ function AnalysisTab({ j }: { j: JobInsight }) {
             "should" be reads as a loading failure. */}
         <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
           Counts are from the boards we index. Culture tags come from this posting&apos;s own words (hover
-          to see them). Funding stage and employee ratings are not shown: we have no free, licensed source for them.
+          to see them).
         </p>
+        <CompanyFactsCard company={j.company} />
       </Section>
     </>
   )

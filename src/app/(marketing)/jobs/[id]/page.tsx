@@ -5,6 +5,8 @@ import { ArrowUpRight, BarChart3, Building2, FileSearch, MapPin, Quote, Sparkles
 import { readPublicJob } from '@/lib/services/public-jobs'
 import { postedAgo } from '@/lib/day'
 import { siteUrl } from '@/lib/site'
+import { readCompanyFacts, readCompanyNews } from '@/lib/services/company-facts'
+import { CompanyFactsView } from '@/components/features/company-facts'
 
 /**
  * A public page for one indexed role — Jobright's job page, Saaf's data
@@ -45,6 +47,10 @@ export default async function PublicJobPage({ params }: Props) {
   if (!job) notFound()
 
   const posted = postedAgo(job.postedAt)
+  // Open company data, capped at 5 s so a slow outside source never holds the page (cached a week).
+  const within = <T,>(p: Promise<T>, fallback: T) => Promise.race([p, new Promise<T>((r) => setTimeout(() => r(fallback), 5000))])
+  const facts = await within(readCompanyFacts(job.company).catch(() => null), null)
+  const news = facts ? await within(readCompanyNews(facts.label).catch(() => []), []) : []
   const structured = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
@@ -147,7 +153,8 @@ export default async function PublicJobPage({ params }: Props) {
               <Stat label="Hiring in" value={job.employer.cities.join(', ') || '—'} />
               <Stat label="Applications through" value={job.employer.ats ?? 'Their own site'} />
             </dl>
-            <p className="mt-3 text-[11px] text-muted-foreground">Counted from the roles we read off {job.company}&apos;s own hiring page today — no third-party data.</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">Counted from the roles we read off {job.company}&apos;s own hiring page today.</p>
+            <CompanyFactsView facts={facts} news={news} />
             {job.more.length ? (
               <div className="mt-5">
                 <p className="text-xs font-semibold text-primary">More at {job.company}</p>
