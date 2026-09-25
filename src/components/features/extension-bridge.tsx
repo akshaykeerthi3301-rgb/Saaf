@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fileFromExtension, getExtensionSync } from '@/app/actions/extension-bridge'
+import { askExtension } from '@/lib/extension-client'
 
 /**
  * Keeps the Saaf browser extension in step with the signed-in app.
@@ -10,44 +11,14 @@ import { fileFromExtension, getExtensionSync } from '@/app/actions/extension-bri
  * On load, and each time the tab comes back into view:
  *  1. asks whether the extension is installed (nothing happens if not);
  *  2. collects roles the candidate saved or filled on job sites and files them
- *     on the tracker — Saved, or Applying for a form they filled;
+ *     on the tracker — Saved, Applying for a form they filled, or Applied when
+ *     "Apply for me" saw the employer's confirmation;
  *  3. pushes the profile, the latest saved résumé and each tracked page's stage
  *     into the extension, so its card on a job site shows the current stage.
- *
- * ⚠️ THE EXTENSION ID IS PUBLIC, NOT A SECRET. It is derived from the `key` in
- * extension/manifest.json, which pins the same ID for the unpacked build and
- * the store build. Anyone can read it from the manifest; the extension checks
- * the sender's origin itself (service-worker.js `isSaaf`).
  */
-const EXTENSION_ID = 'idbookligbjgjhnohmgpklloakhoecpd'
 
-type Runtime = {
-  sendMessage: (id: string, msg: unknown, cb: (res: unknown) => void) => void
-  lastError?: { message?: string }
-}
-type Queued = { url: string; title: string; company: string; status: 'saved' | 'applying' }
-
-function runtime(): Runtime | null {
-  const rt = (globalThis as unknown as { chrome?: { runtime?: Partial<Runtime> } }).chrome?.runtime
-  return rt && typeof rt.sendMessage === 'function' ? (rt as Runtime) : null
-}
-
-/** One message to the extension; null when it is not installed or does not answer. */
-function ask<T>(msg: unknown): Promise<T | null> {
-  const rt = runtime()
-  if (!rt) return Promise.resolve(null)
-  return new Promise((resolve) => {
-    try {
-      rt.sendMessage(EXTENSION_ID, msg, (res) => {
-        // Reading lastError is what stops Chrome logging "Unchecked runtime.lastError"
-        // on every page for candidates without the extension.
-        resolve(rt.lastError ? null : ((res as T) ?? null))
-      })
-    } catch {
-      resolve(null)
-    }
-  })
-}
+type Queued = { url: string; title: string; company: string; status: 'saved' | 'applying' | 'applied' }
+const ask = askExtension
 
 export function ExtensionBridge() {
   const router = useRouter()

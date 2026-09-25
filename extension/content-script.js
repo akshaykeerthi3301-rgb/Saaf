@@ -227,7 +227,42 @@ function mountActions(root, job) {
   setTimeout(() => obs.disconnect(), 15000)
 }
 
-;(function run() {
+/**
+ * "Apply for me" on this tab, when the service worker assigned it one
+ * (autoapply.js holds the rules). Phases: 'fill' → (click Submit) →
+ * 'await-confirm' on whatever page loads next.
+ */
+async function autoApplyIfAssigned() {
+  const state = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-state' }).catch(() => null)
+  if (!state) return false
+  const report = (status, reason) => chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status, reason })
+  const A = globalThis.SaafAutoApply
+
+  if (state.phase === 'await-confirm') {
+    for (let i = 0; i < 20; i++) {
+      if (A.confirmationSeen(document)) { await report('submitted', 'The employer’s page confirmed it'); return true }
+      await new Promise((r) => setTimeout(r, 500))
+    }
+    await report('unconfirmed', 'Submitted, but the next page showed no confirmation — check this tab')
+    return true
+  }
+
+  const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
+  if (!profile?.fullName) { await report('needs-you', 'Add your details in the Saaf extension first'); return true }
+  const beforeSubmit = () => chrome.runtime.sendMessage({ type: 'saaf:autoapply-phase', phase: 'await-confirm' })
+  let r = await A.run(document, profile, { resumeFile, beforeSubmit })
+  if (r.status === 'open-form') {
+    // Same-page forms appear a beat after the Apply button; a navigating one reloads this script.
+    await new Promise((res) => setTimeout(res, 3000))
+    r = await A.run(document, profile, { resumeFile, beforeSubmit })
+    if (r.status === 'open-form') r = { status: 'needs-you', reason: 'Could not reach the application form' }
+  }
+  await report(r.status, r.reason)
+  return true
+}
+
+;(async function run() {
+  if (await autoApplyIfAssigned()) return
   const job = globalThis.SaafExtract.extractJob(document, location)
   if (job.description.length < globalThis.SaafExtract.MIN_JD_CHARS) return
   const root = mount()

@@ -16,6 +16,7 @@ import { HideRole } from '@/components/features/feed-controls'
 import { correctSkillFromJob } from '@/app/actions/feed-prefs'
 import { CompanyFactsCard } from '@/components/features/company-facts'
 import { ConnectionsAt } from '@/components/features/connections-at'
+import { ApplyForMe } from '@/components/features/apply-for-me'
 import { ScoreRing } from '@/components/ui/score-ring'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
@@ -159,6 +160,7 @@ function PanelHeader({ j }: { j: JobInsight }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <QuickApply roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} easy={j.easyApply} size="lg" />
         <TrackRole roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} labelled trackedStatus={j.trackedStatus ?? undefined} />
+        <ApplyForMe url={j.applyUrl} title={j.title} company={j.company} />
         <HideRole roleId={j.roleId} />
       </div>
     </div>

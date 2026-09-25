@@ -58,3 +58,32 @@ $('save').addEventListener('click', async () => {
   await chrome.storage.local.set(patch)
   $('msg').textContent = 'Saved'
 })
+
+// ------------------------------------------------------------ Apply for me
+const STATUS = { submitted: 'Applied', 'needs-you': 'Needs you', unconfirmed: 'Check this tab' }
+const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+
+async function renderAutoApply() {
+  const { autoApply = {}, autoApplyQueue = [], autoApplyLog = [], autoApplyDay = {} } =
+    await chrome.storage.local.get(['autoApply', 'autoApplyQueue', 'autoApplyLog', 'autoApplyDay'])
+  const todayCount = autoApplyDay.date === new Date().toISOString().slice(0, 10) ? autoApplyDay.count : 0
+  $('aaEnabled').checked = !!autoApply.enabled
+  $('aaStatus').textContent = `${autoApplyQueue.length} queued · ${todayCount} of 25 applied today. Queue jobs with "Apply for me" on any job in Saaf.`
+  $('aaStart').disabled = !autoApply.enabled || !autoApplyQueue.length
+  $('aaLog').innerHTML = autoApplyLog.slice(0, 8).map((l) =>
+    `<li><b>${esc(STATUS[l.status] ?? l.status)}</b> — ${esc(l.title)} · ${esc(l.company)}<br>${esc(l.reason)}</li>`).join('')
+}
+
+$('aaEnabled').addEventListener('change', async (e) => {
+  await chrome.storage.local.set({ autoApply: { enabled: e.target.checked, at: new Date().toISOString() } })
+  renderAutoApply()
+})
+$('aaStart').addEventListener('click', async () => {
+  const r = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-start' })
+  $('aaMsg').textContent = r?.error ?? (r?.done ? 'Queue is empty.' : 'Started — keep Chrome open.')
+  renderAutoApply()
+})
+chrome.storage.onChanged.addListener((c, area) => {
+  if (area === 'local' && (c.autoApplyLog || c.autoApplyQueue || c.autoApplyDay)) renderAutoApply()
+})
+renderAutoApply()

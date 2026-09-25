@@ -33,7 +33,7 @@ const queueSchema = z.array(z.object({
   url: z.string().url().max(2000).refine((u) => /^https?:\/\//i.test(u)),
   title: z.string().min(1).max(300),
   company: z.string().min(1).max(200),
-  status: z.enum(['saved', 'applying']),
+  status: z.enum(['saved', 'applying', 'applied']),
 })).max(50)
 
 export async function fileFromExtension(input: z.input<typeof queueSchema>) {

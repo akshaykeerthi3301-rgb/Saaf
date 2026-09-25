@@ -99,7 +99,10 @@ export async function readExtensionSync(userId: string, email: string): Promise<
   }
 }
 
-export type QueuedRole = { url: string; title: string; company: string; status: 'saved' | 'applying' }
+export type QueuedRole = { url: string; title: string; company: string; status: 'saved' | 'applying' | 'applied' }
+
+/** Pipeline order for promotion: a queued stage only ever moves a card forward. */
+const ORDER: Record<string, number> = { saved: 0, applying: 1, applied: 2, interviewing: 3, offer: 4, rejected: 5, closed: 6 }
 
 /**
  * File the roles the extension queued. Returns the urls handled — filed,
@@ -125,13 +128,17 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
     const key = pageKey(item.url)
     const have = existing.get(key)
     if (have) {
-      if (item.status === 'applying' && have.status === 'saved') {
+      if (ORDER[item.status] > ORDER[have.status] && ORDER[have.status] <= ORDER.applying) {
         const { error } = await supabase
           .from('applications')
-          .update({ status: 'applying', updated_at: now, status_changed_at: now })
+          .update({
+            status: item.status, updated_at: now, status_changed_at: now,
+            // "Apply for me" saw the employer's confirmation, so Applied carries its date.
+            ...(item.status === 'applied' ? { applied_on: now.slice(0, 10) } : {}),
+          })
           .eq('id', have.id)
         if (error) continue
-        have.status = 'applying'
+        have.status = item.status
       }
       handled.push(item.url)
       continue
@@ -143,6 +150,7 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
       title: item.title,
       apply_url: item.url,
       status: item.status,
+      ...(item.status === 'applied' ? { applied_on: now.slice(0, 10) } : {}),
     })
     if (error) continue
     existing.set(key, { id: '', status: item.status })
