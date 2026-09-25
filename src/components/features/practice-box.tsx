@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { ChevronRight, Loader2, Sparkles } from 'lucide-react'
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { ChevronRight, Loader2, Mic, Sparkles, Square, Volume2 } from 'lucide-react'
 import { scorePracticeAnswer, type ScoreAnswerResult } from '@/app/actions/copilot-tools'
 import { ScoreRing } from '@/components/ui/score-ring'
 
@@ -14,11 +14,85 @@ import { ScoreRing } from '@/components/ui/score-ring'
  * collapsing, because losing a typed answer to a click is the worst outcome
  * this box can have.
  */
+/**
+ * Speaking the answer (2026-09-25, Jobright parity). The browser's own Web
+ * Speech API — ₹0, no key, no server of ours. Where it is missing (Firefox,
+ * most in-app browsers) the controls are not rendered and typing still works.
+ *
+ * ⚠️ IN CHROME THE AUDIO GOES TO GOOGLE'S SPEECH SERVICE, not to Saaf. The box
+ * says so under the mic, because "nothing about your search is shared" is a
+ * product guarantee and a silent third party would break it.
+ */
+type Recognition = {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  start: () => void
+  stop: () => void
+  onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
+  onend: (() => void) | null
+  onerror: ((e: { error: string }) => void) | null
+}
+type RecognitionCtor = new () => Recognition
+
+const noop = () => () => {}
+
+function recognitionCtor(): RecognitionCtor | null {
+  const w = globalThis as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+}
+
 export function PracticeBox({ roleId, question }: { roleId: string; question: string }) {
   const [open, setOpen] = useState(false)
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState<ScoreAnswerResult>()
   const [pending, start] = useTransition()
+  // Feature detection that is false on the server and real in the browser,
+  // without a hydration mismatch or a setState-in-effect.
+  const canSpeak = useSyncExternalStore(noop, () => recognitionCtor() !== null, () => false)
+  const canHear = useSyncExternalStore(noop, () => 'speechSynthesis' in window, () => false)
+  const [listening, setListening] = useState(false)
+  const [interim, setInterim] = useState('')
+  const [micNote, setMicNote] = useState<string | null>(null)
+  const rec = useRef<Recognition | null>(null)
+
+  useEffect(() => () => rec.current?.stop(), [])
+
+  function toggleMic() {
+    if (listening) { rec.current?.stop(); return }
+    const Ctor = recognitionCtor()
+    if (!Ctor) return
+    const r = new Ctor()
+    r.lang = 'en-IN'
+    r.continuous = true
+    r.interimResults = true
+    r.onresult = (e) => {
+      let finalText = ''
+      let pendingText = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i]
+        if (res.isFinal) finalText += res[0].transcript
+        else pendingText += res[0].transcript
+      }
+      if (finalText) setAnswer((a) => `${a}${a && !/\s$/.test(a) ? ' ' : ''}${finalText.trim()}`)
+      setInterim(pendingText)
+    }
+    r.onerror = (e) => {
+      setMicNote(e.error === 'not-allowed' ? 'Microphone access was blocked. Allow it in the address bar, or type instead.' : 'Voice input stopped. Try again, or type instead.')
+    }
+    r.onend = () => { setListening(false); setInterim('') }
+    rec.current = r
+    setMicNote(null)
+    r.start()
+    setListening(true)
+  }
+
+  function readQuestion() {
+    window.speechSynthesis.cancel()
+    const u = new SpeechSynthesisUtterance(question)
+    u.lang = 'en-IN'
+    window.speechSynthesis.speak(u)
+  }
 
   function submit() {
     start(async () => {
@@ -50,6 +124,35 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
             aria-label={`Your answer to: ${question}`}
             className="w-full rounded-xl border border-input bg-background p-3 text-sm leading-6 text-primary outline-none focus:border-accent"
           />
+          {interim ? <p className="-mt-2 text-xs italic text-muted-foreground" aria-live="polite">{interim}</p> : null}
+          {canSpeak || canHear ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {canHear ? (
+                <button
+                  type="button"
+                  onClick={readQuestion}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-primary"
+                >
+                  <Volume2 className="size-3.5" /> Hear the question
+                </button>
+              ) : null}
+              {canSpeak ? (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  aria-pressed={listening}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold ${listening ? 'border-accent text-accent' : 'border-border text-primary'}`}
+                >
+                  {listening ? <Square className="size-3.5" /> : <Mic className="size-3.5" />}
+                  {listening ? 'Stop' : 'Speak your answer'}
+                </button>
+              ) : null}
+              {canSpeak ? (
+                <span className="text-[10px] text-muted-foreground">Your browser turns speech into text — in Chrome that is Google&apos;s speech service, not Saaf.</span>
+              ) : null}
+            </div>
+          ) : null}
+          {micNote ? <p role="status" className="text-xs text-muted-foreground">{micNote}</p> : null}
           <div className="flex items-center gap-3">
             <button
               type="button"

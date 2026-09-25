@@ -2,6 +2,41 @@
 
 ---
 
+## 🔶 2026-09-25 — the extension parity pass is BUILT, NOT MERGED, NOT LIVE
+
+**What exists:** on the branch **`extension-parity`**, committed. The extension
+(version 0.4.0) now fills dropdowns, yes/no questions, tick-box lists, searchable
+pickers, your résumé file and your CTC (only from figures you type into it),
+shows a dark card with a match ring, and syncs with the website — roles you save
+or fill on job sites land on your tracker next time you open Saaf. The mock
+interview has "Speak your answer" and "Hear the question". **Nothing of it is on
+`main`, the live website, or anyone's Chrome.** Details: ROADMAP Phase 13,
+PROJECT-STATE Stage AE.
+
+**No migration.** Nothing to paste into Supabase this time.
+
+**What only you can do (TASK-126):**
+
+1. **Decide you want it.** It reverses four refusals the extension was built
+   around (salary, dropdowns, radios/tick-boxes, file uploads). Each now works
+   only from answers you store, and every pick is listed on the card — but it is
+   your call, and it is recorded as reversed.
+2. **Merge `extension-parity` into `main` and deploy** the website (putting the
+   new code on the live site — a session can run it on your go-ahead, per
+   RUNBOOK).
+3. **Reload the extension in your own Chrome:** `chrome://extensions` → Saaf →
+   the reload arrow. Then open the Saaf website signed in once, so your profile
+   syncs into it, and add your CTC and yes/no answers in its popup if you want
+   those filled.
+4. **Try it on one real application you were going to send anyway** — a
+   Greenhouse or Lever form. Nobody has run it on a real ATS form yet; the
+   preview browser cannot load extensions.
+
+**Still not done, and not a session's to do:** Chrome Web Store submission
+(needs your developer account and a $5 fee; review takes days to weeks).
+
+---
+
 ## ✅ 2026-09-24 — the Jobright-style workspace is LIVE, `dpl_RdV14SSjhUtJTeAvZyewSTjDxeHK` (~~BUILT, NOT MERGED, NOT LIVE~~)
 
 **Done on your go-ahead:** migration 0028 was already applied (checked), access

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { readAccountSummary } from '@/lib/services/workspace'
 import { AccountProvider } from '@/components/features/account-context'
+import { ExtensionBridge } from '@/components/features/extension-bridge'
 
 /**
  * The signed-in workspace. Reads the account once for the shell's user card.
@@ -16,5 +17,10 @@ export default async function WorkspaceLayout({ children }: { children: ReactNod
   if (!user) return children
 
   const account = await readAccountSummary(user.id, user.email ?? '')
-  return <AccountProvider value={account}>{children}</AccountProvider>
+  return (
+    <AccountProvider value={account}>
+      {children}
+      <ExtensionBridge />
+    </AccountProvider>
+  )
 }

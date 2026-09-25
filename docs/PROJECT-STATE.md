@@ -2236,6 +2236,72 @@ full sign-up flow (would re-confirm the founder's profile), Export Word/PDF
 downloads, native pointer drag (the preview's synthetic drag does not fire
 HTML5 DnD — verified with dispatched drag events).
 
+### Stage AE — the extension parity pass: four autofill refusals reversed, the legal limits held (2026-09-25)
+
+**The brief.** A second "replicate Jobright.ai" directive (web app + MV3 extension,
+"hands-free", a `web-app/` + `extension/` directory map, Naukri/LinkedIn/Indeed
+adapters, 1-click apply that logs to the Kanban). **Measured against the repo
+first: ~80% already existed** — the whole web half went live in Stage AD. One
+pushback listed what was built, what was held, and the three reversals needing a
+yes. Founder answer: "Everything on parity with extension of jobright." Built on
+branch `extension-parity`, ROADMAP Phase 13 (TASK-119 → TASK-126).
+
+**Reversed by founder direction, 2026-09-25** (the refusals lived in
+`extension/autofill.js` and `extension/README.md`; struck there too):
+
+| Was | Now | What keeps it honest |
+|---|---|---|
+| Salary/CTC always refused ("we hold no figure we trust") | Filled from the candidate's own figure, typed in the extension | Stored in lakhs, written in the box's unit or not at all: a bare number box (lakhs or rupees?) and any non-INR box are refused. With no figure stored, still refused |
+| Dropdowns never touched ("a wrong choice is invisible") | Picked when exactly one option matches | Every pick listed on the card; two matches → left, with the reason |
+| Radios/tick-boxes never touched | Yes/no groups answered; preferred-location lists ticked | Only from the candidate's own stored yes/no — never inferred. "Are you based in Bengaluru?" is still refused |
+| File inputs never touched | Résumé attached to a résumé/CV upload | Only with a stored file, only if the upload's `accept` allows its type; never a cover-letter upload |
+
+**Held, and what was built instead:**
+
+| The brief asked for | Built instead | Why |
+|---|---|---|
+| Naukri, LinkedIn, Indeed, Glassdoor, Foundit, Instahyre adapters | None; `detectAts()` returns null for them and the manifest never matches them | Their terms prohibit it and the ban lands on the candidate (extension README) |
+| 1-click *apply* | 1-click *fill*; the role is filed as **Applying**, never Applied | Never applies on anyone's behalf (permanent). We cannot see whether they pressed Submit, so "Applied" would be a guess |
+| `web-app/` + `extension/` directory restructure | Existing layout | CLAUDE.md invariant 1; moving a live app to rename folders gives users nothing |
+| Demographic / EEO answers | Still refused | Not a legal requirement for the tool — a product line. One-line change if the founder overrules it |
+| Real-time sync through `chrome.storage` from the web app | The signed-in app pushes on load/focus via `externally_connectable`; the card re-renders on storage change | The extension holds no session by design, so the app pushes and collects — the extension never writes to our database |
+
+**Found while building — each worth more than the feature line:**
+
+1. **"Track this in Saaf" never tracked anything.** The overlay linked to
+   `/applications?add=…&url=…`; nothing in `src/` reads `add`. Every click since
+   the extension shipped opened the tracker with nothing added. Replaced by the
+   queue → bridge path (TASK-124).
+2. **The overlay wrote a quote from the host page into `innerHTML` unescaped.**
+   A posting containing markup would have rendered it inside our card on their
+   page. All page/server strings are now escaped; checked in a browser with an
+   `<img onerror>` planted in the quote (rendered as text).
+3. **`el.value = x` is swallowed by React.** Proven with a negative-control test
+   against a real controlled input. In a real content script the isolated world
+   usually sidesteps React's value tracker, so this was probably working in
+   Chrome by accident; the prototype setter makes it work by construction.
+4. **The popup never stored `workAuth`**, though the filler had a field for it.
+   Added.
+
+**Measured 2026-09-25:** `npm test` **825 pass** (53 files; was 777 on 2026-09-24,
++48 net: new `autofill.dom.test.ts`, `extractor.test.ts`, `extension-sync.test.ts`; existing
+autofill tests rewritten where the rules changed), lint 0
+errors / 23 warnings (all pre-existing), typecheck clean, `npm run build` green.
+`bench` and `bench:match` not run — neither the ATS checker nor the scorer was
+touched. **Walked in a browser:** (a) a mock ATS page loading the real extension
+scripts with a stubbed `chrome` — dark card, host's `!important` red rule did not
+leak through the shadow root, Fill wrote 6 fields (first/last name, email, notice
+dropdown, CTC in lakhs, work-auth radio) and left gender, "why us" and the
+consent box with reasons, role queued as Applying, card switched to "On your Saaf
+tracker · Applied" when a tracked list was written; (b) localhost `/interview-prep`
+signed in as the founder — "Hear the question" and "Speak your answer" render;
+(c) the bridge against the live database with a stand-in extension — one role
+filed as Applying, acked, profile and 2 tracked stages pushed back; a second
+drain filed nothing (dedupe); the test row was removed from the founder's
+tracker (2 → 1, as found). **Not verified:** the real extension loaded in Chrome
+(the preview browser cannot load unpacked extensions), real speech capture (no
+microphone), any real ATS form, and anything on production.
+
 ### Deliberate residue — do not "tidy" these away
 
 - ~~**`WithheldSection` and the report-refusal action are orphaned and kept.**~~

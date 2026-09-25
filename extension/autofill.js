@@ -10,14 +10,25 @@
  *
  * ⚠️ IT FILLS, IT NEVER SUBMITS. The locked decision is that Saaf never applies
  * on the candidate's behalf. Assisted application is in scope and automatic
- * application never is, so nothing here clicks a button, and the fill only runs
- * when the candidate asks for it — never on page load.
+ * application never is. The only things this module ever clicks are the radio,
+ * tick-box or dropdown OPTION it chose — never a button, a link, or anything
+ * that submits or navigates — and it only runs when the candidate asks.
  *
- * ⚠️ THE REFUSAL LIST IS THE INTERESTING HALF. Most of what this module knows is
- * what NOT to touch, and each refusal is surfaced to the candidate with its
- * reason rather than silently skipped. A form filler that quietly leaves gaps
- * looks broken; one that says "salary expectation — yours to answer" is making
- * an argument.
+ * ⚠️ WHAT CHANGED ON 2026-09-25, BY FOUNDER DIRECTION (Jobright parity).
+ * Until then this refused salary, every dropdown, every radio and tick-box, and
+ * file inputs. It now fills them — but only from answers the CANDIDATE typed:
+ *  - Salary/CTC comes from the figure they entered in the extension. With none
+ *    stored it is still refused, with the reason. We never guess one.
+ *  - Yes/no questions (work authorisation, sponsorship, relocation) are answered
+ *    from their own stored yes/no, never inferred from other facts. "Are you
+ *    based in Bengaluru?" is still refused: answering it means inferring from
+ *    the city, which is the mistake that went wrong on a real form.
+ *  - Choices (dropdown option, radio, tick-box) are picked only when exactly one
+ *    option matches. Every pick is listed back on the card, because a wrong
+ *    choice in a closed dropdown is the one the candidate is least likely to see.
+ *  - The résumé file is attached only to an upload whose label says résumé/CV.
+ * Still refused, and not a preference: demographic/EEO questions, free text the
+ * employer asked them, consent boxes, credentials and identity numbers.
  *
  * Attached to a global rather than exported, because MV3 content scripts are
  * not ES modules. The test imports this file for its side effect and reads the
@@ -27,21 +38,15 @@
   /**
    * Never filled, with the reason the candidate is shown.
    *
-   * Three categories and they are refused for different reasons:
-   *  - MONEY      an anchor the candidate should set deliberately, not inherit
-   *               from a box we filled. Also: we do not hold a reliable figure.
    *  - PROTECTED  demographic and EEO questions. Answering these for somebody is
    *               not assistance, and several are unlawful to require in India.
    *               Caste, religion and marital status appear on real Indian forms.
    *  - WRITTEN    free text the employer asked THEM. A pre-filled "why do you
    *               want to work here" is the auto-apply failure mode in miniature.
+   *  - CREDENTIAL never entered by us, anywhere.
+   *  - CONSENT    ticking "I agree" is accepting terms on their behalf.
    */
   const REFUSALS = [
-    // "Total Target Cash expectation" is a real Bluevine/Greenhouse field and it
-    // contains none of salary, CTC, pay or compensation. Any *expectation* of
-    // *cash* is money; so is a "band", a "range" and an "in hand" figure.
-    { re: /\b(salary|compensation|ctc|cost\s*to\s*company|remuneration|package|payout|in\s*hand|take\s*home|target\s*cash|expected\s*(pay|cash|amount)|(pay|cash|comp)\s*expectation|expectation\b.*\bcash|cash\b.*\bexpectation|desired\s*(pay|salary)|\bpay\s*(range|band|expectation))\b/i,
-      reason: 'salary — yours to set, and we hold no figure we trust' },
     // ⚠️ STEMS NEED NO TRAILING \b. `\bdisab\b` never matched "Disability" —
     // the boundary requires a non-word character and the word continues. Caught
     // by the test, which is the entire reason a form filler has one.
@@ -51,6 +56,28 @@
       reason: 'free text the employer asked you — not us' },
     { re: /\b(password|passcode|ssn|social\s*security|aadhaar|\bpan\b|bank|account\s*number|ifsc)\b/i,
       reason: 'a credential or identity number — never entered by us' },
+    { re: /\b(i\s*agree|agree\s*to|consent|terms\s*(and|&)\s*conditions|privacy\s*(policy|notice)|i\s*(hereby\s*)?(certify|confirm|declare|acknowledge))/i,
+      reason: 'a consent box — yours to agree to' },
+  ]
+
+  /**
+   * Money. Formerly a refusal; now a field filled from the candidate's own
+   * figure. "Total Target Cash expectation" is a real Bluevine/Greenhouse field
+   * and contains none of salary, CTC, pay or compensation — any *expectation*
+   * of *cash* is money; so is a "band", a "range" and an "in hand" figure.
+   */
+  const MONEY = /\b(salary|compensation|ctc|cost\s*to\s*company|remuneration|package|payout|in\s*hand|take\s*home|target\s*cash|expected\s*(pay|cash|amount)|(pay|cash|comp)\s*expectation|expectation\b.*\bcash|cash\b.*\bexpectation|desired\s*(pay|salary)|\bpay\s*(range|band|expectation))\b/i
+  const EXPECTED = /\b(expect|expected|expectation|desired|target|asking|looking\s*for)/i
+
+  /**
+   * Yes/no questions we answer ONLY from the candidate's stored yes/no.
+   * Checked before FIELDS, so "Are you legally authorised to work in India?"
+   * reaches the stored answer rather than the free-text work-auth statement.
+   */
+  const ANSWERS = [
+    { key: 'needsSponsorship', re: /\b(sponsor|require\s*(a\s*)?visa|need\s*(a\s*)?visa)/i },
+    { key: 'authorisedToWork', re: /\b(legally\s*authori[sz]|authori[sz]ed\s*to\s*work|eligible\s*to\s*work|right\s*to\s*work|work\s*permit)/i },
+    { key: 'willingToRelocate', re: /\brelocat/i },
   ]
 
   /**
@@ -75,14 +102,31 @@
     // "experience".
     { key: 'yearsExperience', re: /\b(years?\s*of\s*(\w+\s+){0,3}experience|total\s*experience|experience\s*\(years?\)|yrs\s*exp|how\s*many\s*years)\b/i },
     { key: 'noticePeriod',    re: /\b(notice\s*period|availability|when\s*can\s*you\s*(start|join)|joining\s*time)\b/i },
+    // Before `city`: "Preferred locations" contains "location".
+    { key: 'preferredLocations', re: /\b(preferred\s*(work\s*)?(locations?|cities)|locations?\s*(you\s*)?prefer|open\s*to\s*(work\s*in|relocat\w*\s*to))\b/i },
     { key: 'city',            re: /\b(city|current\s*location|location|based\s*in|town)\b/i },
     // ⚠️ NO TRAILING \b — THIRD TIME THIS EXACT MISTAKE APPEARED IN THIS FILE.
     // `work\s*authoris\b` never matches "Work authorisation status", because
     // the boundary needs a non-word character and the word carries on. Same
     // shape as `\bdisab\b` failing on "Disability". **A stem takes \b at the
     // START only.** Grep this file for `\b/i` before adding a pattern.
-    { key: 'workAuth',        re: /\b(work\s*authoriz|work\s*authoris|right\s*to\s*work|visa\s*status|legally\s*authoriz)/i },
+    { key: 'workAuth',        re: /\b(work\s*authoriz|work\s*authoris|visa\s*status)/i },
   ]
+
+  /** How each key is matched against a choice, and how it is written as text. */
+  const NUMERIC = { yearsExperience: 'years', noticePeriod: 'days', currentCtc: 'lakhs', expectedCtc: 'lakhs' }
+  const YES_NO = new Set(ANSWERS.map((a) => a.key))
+
+  /** Why a recognised field went unfilled when the candidate stored nothing. */
+  const MISSING = {
+    currentCtc: 'salary — add your own figure in the extension to fill it; we never guess one',
+    expectedCtc: 'salary — add your own figure in the extension to fill it; we never guess one',
+    needsSponsorship: 'a yes/no question — add your answer in the extension to fill it',
+    authorisedToWork: 'a yes/no question — add your answer in the extension to fill it',
+    willingToRelocate: 'a yes/no question — add your answer in the extension to fill it',
+  }
+
+  const textOf = (n) => (n ? (n.textContent || '') : '')
 
   /**
    * Everything the page says about one input, joined into one haystack.
@@ -94,55 +138,87 @@
     const bits = []
     if (el.id && doc) {
       const lab = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)
-      if (lab) bits.push(lab.textContent || '')
+      if (lab) bits.push(textOf(lab))
     }
     const wrapping = el.closest ? el.closest('label') : null
-    if (wrapping) bits.push(wrapping.textContent || '')
+    if (wrapping) bits.push(textOf(wrapping))
     bits.push(el.getAttribute?.('aria-label') || '')
+    const by = el.getAttribute?.('aria-labelledby')
+    if (by && doc) for (const id of by.split(/\s+/)) bits.push(textOf(doc.getElementById?.(id)))
     bits.push(el.getAttribute?.('placeholder') || '')
     bits.push(el.getAttribute?.('autocomplete') || '')
     bits.push(el.getAttribute?.('name') || '')
     bits.push(el.id || '')
-    /**
-     * ⚠️ SEPARATORS BECOME SPACES, AND WITHOUT THIS THE WHOLE MODULE IS INERT
-     * ON REAL FORMS. Machine names are snake_case or kebab-case almost
-     * universally — `full_name`, `expected_ctc`, `first-name`, `cand.email` —
-     * and every pattern here is written with `\s*` between words, which does
-     * not match an underscore. The first version matched single-word labels
-     * like "gender" and nothing else, so on a genuine ATS form it would have
-     * filled nothing, refused nothing, and reported success. Caught by the
-     * fillForm tests, which is the reason they use attribute names rather than
-     * tidy human labels.
-     */
-    return bits.join(' ').replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim()
+    return tidy(bits.join(' '))
   }
 
   /**
-   * What this input is, or why we will not touch it.
-   * Returns { key } | { refused, reason } | null.
-   *
-   * ⚠️ REFUSALS ARE CHECKED FIRST AND THAT ORDER IS LOAD-BEARING. "Expected CTC"
-   * also matches nothing else, but "current company salary band" matches both
-   * `currentEmployer` and the money refusal — and the refusal has to win. When
-   * the two disagree, not filling is always the safe answer.
+   * ⚠️ SEPARATORS BECOME SPACES, AND WITHOUT THIS THE WHOLE MODULE IS INERT ON
+   * REAL FORMS. Machine names are snake_case or kebab-case almost universally —
+   * `full_name`, `expected_ctc`, `first-name`, `cand.email` — and every pattern
+   * here is written with `\s*` between words, which does not match an
+   * underscore. Caught by the fillForm tests, which is the reason they use
+   * attribute names rather than tidy human labels.
    */
+  function tidy(s) {
+    return s.replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+
+  /**
+   * The question a radio or tick-box GROUP asks: the fieldset legend, the
+   * radiogroup's own label, or the group's machine name. An option's own label
+   * ("Yes", "Bengaluru") is the answer, not the question.
+   */
+  function questionFor(el, doc) {
+    const bits = []
+    const fs = el.closest ? el.closest('fieldset') : null
+    if (fs) bits.push(textOf(fs.querySelector('legend')))
+    const group = el.closest ? el.closest('[role="radiogroup"], [role="group"]') : null
+    if (group) {
+      bits.push(group.getAttribute('aria-label') || '')
+      const by = group.getAttribute('aria-labelledby')
+      if (by && doc) for (const id of by.split(/\s+/)) bits.push(textOf(doc.getElementById?.(id)))
+    }
+    bits.push(el.getAttribute?.('name') || '')
+    return tidy(bits.join(' '))
+  }
+
+  /** The visible label of one option (radio or tick-box). */
+  function optionLabel(el, doc) {
+    if (el.id && doc) {
+      const lab = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)
+      if (lab) return textOf(lab).trim()
+    }
+    const wrapping = el.closest ? el.closest('label') : null
+    if (wrapping) return textOf(wrapping).trim()
+    return (el.getAttribute?.('aria-label') || el.value || '').trim()
+  }
+
   /**
    * ⚠️ A YES/NO QUESTION IS NEVER ANSWERED WITH A FACT, AND THIS IS THE ONE THAT
    * ACTUALLY WENT WRONG ON A REAL FORM. Bluevine's Greenhouse application asks
    * "Are you currently based in Bengaluru ?" as a free-text box. That matches
    * the `city` pattern via "based in", so the first version wrote **Bengaluru**
-   * into it — where the employer expected "Yes". A recruiter reads a non-answer
-   * and the candidate never sees why.
-   *
-   * We hold facts, not answers to questions about those facts, and turning one
-   * into the other is inference. So an interrogative box is skipped and left to
-   * the candidate, whatever else it matches.
+   * into it — where the employer expected "Yes". Only questions in ANSWERS are
+   * answered, and only from the candidate's own stored yes/no.
    */
   const INTERROGATIVE = /^\s*(are|do|did|does|have|has|will|would|can|could|is|were|was)\s+you\b|\?\s*\*?\s*$/i
 
+  /**
+   * What this input is, or why we will not touch it.
+   * Returns { key } | { refused, reason } | null.
+   *
+   * ⚠️ REFUSALS ARE CHECKED FIRST AND THAT ORDER IS LOAD-BEARING. When a label
+   * matches both a refusal and a field, not filling is always the safe answer.
+   * Money next, because "Current company salary band" also matches
+   * `currentEmployer`, and the employer's name is not a salary.
+   */
   function classify(signals) {
     if (!signals) return null
     for (const r of REFUSALS) if (r.re.test(signals)) return { refused: true, reason: r.reason }
+    if (MONEY.test(signals)) return { key: EXPECTED.test(signals) ? 'expectedCtc' : 'currentCtc' }
+    const answer = ANSWERS.find((a) => a.re.test(signals))
+    if (answer) return { key: answer.key }
     const field = FIELDS.find((f) => f.re.test(signals))
     if (!field) return null
     // A question wins over the field match, except where the question IS the
@@ -171,55 +247,369 @@
       case 'yearsExperience': return p.yearsExperience
       case 'noticePeriod': return p.noticePeriod
       case 'city': return p.city
+      case 'preferredLocations': return p.preferredLocations
       case 'workAuth': return p.workAuth
+      case 'currentCtc': return p.currentCtcLakhs
+      case 'expectedCtc': return p.expectedCtcLakhs
+      case 'authorisedToWork': return yesNo(p.authorisedToWork)
+      case 'needsSponsorship': return yesNo(p.needsSponsorship)
+      case 'willingToRelocate': return yesNo(p.willingToRelocate)
       default: return undefined
     }
   }
 
-  /** An input we may write to at all, before we know what it is. */
+  function yesNo(v) {
+    const s = String(v || '').trim().toLowerCase()
+    return s === 'yes' || s === 'no' ? s : undefined
+  }
+
+  /**
+   * Notice period in days, from what the candidate typed. Indian forms bucket
+   * it as Immediate / 15 / 30 / 60 / 90 days, or in months.
+   */
+  function noticeDays(v) {
+    const s = String(v || '').toLowerCase()
+    if (/immediate|serving|\bnone\b/.test(s)) return 0
+    const n = parseFloat(s)
+    if (Number.isNaN(n)) return null
+    return /month/.test(s) ? Math.round(n * 30) : n
+  }
+
+  function numberFor(key, raw) {
+    if (NUMERIC[key] === 'days') return noticeDays(raw)
+    const n = parseFloat(String(raw || '').replace(/,/g, ''))
+    return Number.isNaN(n) ? null : n
+  }
+
+  /**
+   * A stored value as text for one particular box, or the reason it cannot be.
+   *
+   * ⚠️ CTC IS STORED IN LAKHS AND WRITTEN IN THE BOX'S OWN UNIT, OR NOT AT ALL.
+   * "18" in a box labelled "in Lakhs" is right; "18" in a bare number box that
+   * might mean rupees tells a recruiter the candidate expects eighteen rupees.
+   * A text box with no unit gets "18 LPA", which no Indian recruiter misreads.
+   * A box in dollars is refused: we hold an INR figure and will not convert it.
+   */
+  function formatFor(key, raw, el, signals) {
+    const isNumberBox = (el.type || '').toLowerCase() === 'number'
+    if (YES_NO.has(key)) return { value: raw === 'yes' ? 'Yes' : 'No' }
+    if (key === 'currentCtc' || key === 'expectedCtc') {
+      const lakhs = numberFor(key, raw)
+      if (lakhs == null) return { refused: MISSING[key] }
+      if (/\$|\busd\b|dollar|\beur\b|£|gbp/i.test(signals)) {
+        return { refused: 'salary asked in another currency — we hold only your INR figure' }
+      }
+      if (/lakh|\blpa\b|\blac\b|\blacs\b/i.test(signals)) return { value: String(lakhs) }
+      if (isNumberBox) {
+        if (/inr|₹|rupee|per\s*annum|annual|yearly/i.test(signals)) return { value: String(Math.round(lakhs * 100000)) }
+        return { refused: 'salary box with no unit — we could not tell lakhs from rupees, so left it' }
+      }
+      return { value: `${lakhs} LPA` }
+    }
+    if (key === 'noticePeriod' && isNumberBox) {
+      const d = noticeDays(raw)
+      return d == null ? { refused: null } : { value: String(d) }
+    }
+    if (key === 'yearsExperience' && isNumberBox) {
+      const n = numberFor(key, raw)
+      return n == null ? { refused: null } : { value: String(n) }
+    }
+    return { value: String(raw) }
+  }
+
+  /** An input we may write text into, before we know what it is. */
   function isFillable(el) {
     if (!el || el.disabled || el.readOnly) return false
     const tag = (el.tagName || '').toLowerCase()
-    if (tag === 'select' || tag === 'textarea') return tag === 'textarea'
+    if (tag === 'textarea' || tag === 'select') return true
     if (tag !== 'input') return false
     const type = (el.type || 'text').toLowerCase()
-    // Never a file, never a password, never a checkbox or radio — those encode a
-    // choice rather than a fact, and a wrong one is invisible to the candidate.
+    // Choices (radio, checkbox) and files take their own paths below; password,
+    // hidden and submit are never touched by any path.
     return ['text', 'email', 'tel', 'url', 'number', 'search'].includes(type)
+  }
+
+  // ---------------------------------------------------------------- choices --
+
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim()
+  const isPlaceholder = (text, value) =>
+    value === '' || /^\s*(select|choose|please|--|—|pick)\b/i.test(text || '')
+
+  /**
+   * A numeric range read out of an option label: "3-5 years", "5+", "Less
+   * than 1", "Immediate", "1 month", "₹10,00,000 - ₹15,00,000". Null when the
+   * label carries no number.
+   */
+  function rangeOf(label, unit) {
+    const s = String(label || '').toLowerCase().replace(/,/g, '')
+    if (unit === 'days' && /immediate/.test(s)) return { lo: 0, hi: 0 }
+    const nums = (s.match(/\d+(\.\d+)?/g) || []).map(Number)
+    if (!nums.length) return null
+    let scale = 1
+    if (unit === 'days' && /month/.test(s)) scale = 30
+    if (unit === 'lakhs' && nums.some((n) => n >= 1000)) scale = 1 / 100000
+    const [a, b] = nums.map((n) => n * scale)
+    if (/less\s*than|under|below|up\s*to|upto|<|within/.test(s)) return { lo: 0, hi: a }
+    if (/\+|more\s*than|above|over|or\s*more|>|and\s*above/.test(s)) return { lo: a, hi: Infinity }
+    if (b != null) return { lo: Math.min(a, b), hi: Math.max(a, b) }
+    return { lo: a, hi: a }
+  }
+
+  /**
+   * The one option that matches, or null. Never guesses between two.
+   * options: [{ text, value, ref }] with placeholders already removed.
+   */
+  function pickOption(key, raw, options) {
+    if (!options.length || raw == null || raw === '') return null
+    const only = (list) => (list.length === 1 ? list[0] : null)
+
+    if (YES_NO.has(key)) {
+      const want = raw === 'yes' ? /^\s*yes\b/i : /^\s*no\b/i
+      return only(options.filter((o) => want.test(o.text)))
+    }
+    if (NUMERIC[key]) {
+      const n = numberFor(key, raw)
+      if (n == null) return null
+      const hits = options.filter((o) => {
+        const r = rangeOf(o.text, NUMERIC[key])
+        return r && n >= r.lo && n <= r.hi
+      })
+      if (hits.length <= 1) return only(hits)
+      // Bins overlap at their edges ("3-5", "5-7"). Half-open decides: 5 is in
+      // "5-7", not "3-5". Still two → leave it for the candidate.
+      return only(hits.filter((o) => { const r = rangeOf(o.text, NUMERIC[key]); return n < r.hi || r.hi === Infinity }))
+    }
+    const want = norm(raw)
+    if (!want) return null
+    const exact = options.filter((o) => norm(o.text) === want || norm(o.value) === want)
+    if (exact.length) return only(exact)
+    return only(options.filter((o) => {
+      const t = norm(o.text)
+      return t.length >= 3 && (t.includes(want) || want.includes(t))
+    }))
+  }
+
+  // ---------------------------------------------------------------- writing --
+
+  /**
+   * Write a value the way a person typing would, so framework state follows.
+   *
+   * ⚠️ THROUGH THE PROTOTYPE'S NATIVE SETTER, NOT `el.value =`. React (and
+   * several Vue/Angular wrappers) install their own `value` property on the
+   * element to track what they last rendered. A plain assignment goes through
+   * that tracker, React sees "no change", swallows the input event, and the box
+   * looks filled but submits empty — or is wiped on the next render. The
+   * prototype's setter bypasses the tracker, so the event reads as a real edit.
+   * Proven against a real React controlled input in autofill.dom.test.ts.
+   */
+  function setNativeValue(el, value) {
+    const view = el.ownerDocument && el.ownerDocument.defaultView
+    const tag = (el.tagName || '').toLowerCase()
+    const Ctor = view && (tag === 'select' ? view.HTMLSelectElement : tag === 'textarea' ? view.HTMLTextAreaElement : view.HTMLInputElement)
+    const setter = Ctor && Object.getOwnPropertyDescriptor(Ctor.prototype, 'value')?.set
+    if (setter) setter.call(el, value)
+    else el.value = value
+    fire(el)
+  }
+
+  function fire(el) {
+    const view = el.ownerDocument && el.ownerDocument.defaultView
+    const Ev = (view && view.Event) || Event
+    for (const type of ['input', 'change', 'blur']) el.dispatchEvent(new Ev(type, { bubbles: true }))
+  }
+
+  /** Attach the stored résumé to a file input. False if the page refuses it. */
+  function attachFile(el, file) {
+    const view = el.ownerDocument && el.ownerDocument.defaultView
+    if (!view || !view.DataTransfer || !view.File) return false
+    const accept = (el.getAttribute('accept') || '').toLowerCase()
+    const ext = (file.name.match(/\.[a-z0-9]+$/i) || [''])[0].toLowerCase()
+    if (accept && !accept.split(',').some((a) => {
+      a = a.trim()
+      return a === ext || a === file.type || (a.endsWith('/*') && file.type.startsWith(a.slice(0, -1)))
+    })) return false
+    const bytes = Uint8Array.from(atob(file.base64), (c) => c.charCodeAt(0))
+    const dt = new view.DataTransfer()
+    dt.items.add(new view.File([bytes], file.name, { type: file.type }))
+    el.files = dt.files
+    fire(el)
+    return true
+  }
+
+  const RESUME_UPLOAD = /(resume|résumé|\bcv\b|curriculum)/i
+
+  /**
+   * A combobox (React-Select, Headless UI, Ashby's pickers): type the value,
+   * wait for the list, click the one option that matches. If none or several
+   * match, the typed text is cleared again — half-typed search text in a picker
+   * looks answered and is not.
+   */
+  async function fillCombobox(el, key, raw, text, doc, waitMs) {
+    setNativeValue(el, text)
+    const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
+    const deadline = Date.now() + waitMs
+    let choice = null
+    do {
+      await new Promise((r) => setTimeout(r, 40))
+      const scope = (listId && doc.getElementById(listId)) || doc
+      const options = [...scope.querySelectorAll('[role="option"]')]
+        .map((o) => ({ text: textOf(o).trim(), value: o.getAttribute('data-value') || '', ref: o }))
+        .filter((o) => o.text && !/^no (options|results)/i.test(o.text))
+      choice = pickOption(key, raw, options)
+      if (choice) break
+    } while (Date.now() < deadline)
+    if (!choice) { setNativeValue(el, ''); return null }
+    const view = el.ownerDocument.defaultView
+    for (const type of ['mousedown', 'mouseup', 'click']) {
+      choice.ref.dispatchEvent(new view.MouseEvent(type, { bubbles: true, cancelable: true }))
+    }
+    return choice.text
   }
 
   /**
    * Fill what we can, report everything.
-   * Returns { filled: [{key, value}], refused: [{reason}], skipped: n }.
-   * Never submits, never clicks, never navigates.
+   * Returns { filled: [{key, value, how}], refused: [{reason}], skipped: n }.
+   * `how` is typed | chose | ticked | attached, so the card can say exactly
+   * what was picked for the candidate to check. Never submits, never navigates.
    */
-  function fillForm(profile, doc) {
+  async function fillForm(profile, doc, opts = {}) {
     const out = { filled: [], refused: [], skipped: 0 }
+    const refuse = (reason) => {
+      if (reason && !out.refused.some((r) => r.reason === reason)) out.refused.push({ reason })
+    }
     const seen = new Set()
-    for (const el of doc.querySelectorAll('input, textarea')) {
-      if (!isFillable(el)) continue
-      const verdict = classify(signalsFor(el, doc))
-      if (!verdict) { out.skipped++; continue }
-      if (verdict.refused) {
-        if (!out.refused.some((r) => r.reason === verdict.reason)) out.refused.push({ reason: verdict.reason })
+    const waitMs = opts.waitMs ?? 800
+    const all = [...doc.querySelectorAll('input, textarea, select')]
+
+    const groups = new Map()
+    for (const el of all) {
+      if (el.disabled || el.readOnly) continue
+      const tag = (el.tagName || '').toLowerCase()
+      const type = (el.type || 'text').toLowerCase()
+
+      // ---- choices: grouped by name, answered once per group, below.
+      if (tag === 'input' && (type === 'radio' || type === 'checkbox')) {
+        const name = el.getAttribute('name') || el.id || `__${groups.size}`
+        if (!groups.has(name)) groups.set(name, [])
+        groups.get(name).push(el)
         continue
       }
+
+      // ---- files: only a résumé upload, only with a stored résumé file.
+      if (tag === 'input' && type === 'file') {
+        const signals = signalsFor(el, doc)
+        if (!RESUME_UPLOAD.test(signals) || /cover/i.test(signals)) { out.skipped++; continue }
+        if (el.files && el.files.length) { out.skipped++; continue }
+        if (!opts.resumeFile) { refuse('résumé upload — add your résumé PDF in the extension to attach it'); continue }
+        if (attachFile(el, opts.resumeFile)) out.filled.push({ key: 'resume', value: opts.resumeFile.name, how: 'attached' })
+        else refuse('résumé upload that does not accept your file type — left for you')
+        continue
+      }
+
+      if (!isFillable(el)) continue
+      const signals = signalsFor(el, doc)
+      const verdict = classify(signals)
+      if (!verdict) { out.skipped++; continue }
+      if (verdict.refused) { refuse(verdict.reason); continue }
+      const raw = valueFor(verdict.key, profile)
+      if (raw == null || raw === '') {
+        if (MISSING[verdict.key]) refuse(MISSING[verdict.key])
+        else out.skipped++
+        continue
+      }
+
+      // ---- dropdown.
+      if (tag === 'select') {
+        const options = [...el.options].map((o) => ({ text: o.text, value: o.value, ref: o }))
+        const real = options.filter((o) => !isPlaceholder(o.text, o.value))
+        const hasPlaceholder = real.length < options.length
+        const current = el.options[el.selectedIndex]
+        // An answer the candidate already chose is never changed. With no
+        // placeholder the browser pre-selects option 1 itself, so that alone is
+        // not taken as the candidate's answer.
+        if (current && !isPlaceholder(current.text, current.value) && (hasPlaceholder || el.selectedIndex !== 0)) {
+          out.skipped++; continue
+        }
+        const choice = pickOption(verdict.key, raw, real)
+        if (!choice) { refuse('a dropdown whose options did not match your answer — left for you'); continue }
+        setNativeValue(el, choice.value)
+        out.filled.push({ key: verdict.key, value: choice.text.trim(), how: 'chose' })
+        continue
+      }
+
       // An answer the candidate already typed is never overwritten.
       if (el.value && el.value.trim()) { out.skipped++; continue }
-      const value = valueFor(verdict.key, profile)
-      if (!value) { out.skipped++; continue }
       if (seen.has(verdict.key) && verdict.key !== 'city') { out.skipped++; continue }
-      seen.add(verdict.key)
 
-      el.value = value
-      // React and most ATS front ends listen for these rather than reading
-      // .value, so a silent assignment looks filled and submits empty.
-      el.dispatchEvent(new Event('input', { bubbles: true }))
-      el.dispatchEvent(new Event('change', { bubbles: true }))
-      out.filled.push({ key: verdict.key, value })
+      const text = formatFor(verdict.key, raw, el, signals)
+      if (text.refused !== undefined) { if (text.refused) refuse(text.refused); else out.skipped++; continue }
+
+      // ---- searchable picker.
+      const role = el.getAttribute?.('role')
+      if (role === 'combobox' || el.getAttribute?.('aria-autocomplete') === 'list') {
+        const picked = await fillCombobox(el, verdict.key, raw, text.value, doc, waitMs)
+        if (picked) { seen.add(verdict.key); out.filled.push({ key: verdict.key, value: picked, how: 'chose' }) }
+        else refuse('a dropdown whose options did not match your answer — left for you')
+        continue
+      }
+
+      seen.add(verdict.key)
+      setNativeValue(el, text.value)
+      out.filled.push({ key: verdict.key, value: text.value, how: 'typed' })
     }
+
+    // ---- radio and tick-box groups.
+    for (const els of groups.values()) {
+      const first = els[0]
+      const isRadio = (first.type || '').toLowerCase() === 'radio'
+      if (els.some((e) => e.checked)) { out.skipped++; continue }
+      const single = !isRadio && els.length === 1
+      const question = single ? signalsFor(first, doc) : questionFor(first, doc)
+      const verdict = classify(question)
+      if (!verdict) { out.skipped++; continue }
+      if (verdict.refused) { refuse(verdict.reason); continue }
+      const raw = valueFor(verdict.key, profile)
+      if (raw == null || raw === '') {
+        if (MISSING[verdict.key]) refuse(MISSING[verdict.key]); else out.skipped++
+        continue
+      }
+
+      // One tick-box that IS the question ("I will require visa sponsorship"):
+      // ticked for yes, left clear for no. Nothing else is ticked alone.
+      if (single) {
+        if (YES_NO.has(verdict.key) && raw === 'yes') {
+          first.click()
+          out.filled.push({ key: verdict.key, value: 'ticked', how: 'ticked' })
+        } else out.skipped++
+        continue
+      }
+
+      const options = els.map((e) => ({ text: optionLabel(e, doc), value: e.value, ref: e }))
+      // Several tick-boxes: tick every preferred location the candidate named.
+      if (!isRadio && (verdict.key === 'preferredLocations' || verdict.key === 'city')) {
+        const wanted = String(raw).split(/[,;/]/).map((s) => s.trim()).filter(Boolean)
+        const ticked = []
+        for (const w of wanted) {
+          const o = pickOption('city', w, options)
+          if (o && !o.ref.checked) { o.ref.click(); ticked.push(o.text) }
+        }
+        if (ticked.length) out.filled.push({ key: verdict.key, value: ticked.join(', '), how: 'ticked' })
+        else refuse('a list of options that did not match your answer — left for you')
+        continue
+      }
+      if (!isRadio) { out.skipped++; continue }
+
+      const choice = pickOption(verdict.key, raw, options)
+      if (!choice) { refuse('a choice whose options did not match your answer — left for you'); continue }
+      choice.ref.click()
+      out.filled.push({ key: verdict.key, value: choice.text, how: 'chose' })
+    }
+
     return out
   }
 
-  root.SaafAutofill = { classify, signalsFor, valueFor, isFillable, fillForm, REFUSALS, FIELDS }
+  root.SaafAutofill = {
+    classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS,
+  }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

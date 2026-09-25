@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Saaf \u2014 score any job posting",
-  "version": "0.3.0",
-  "description": "Score any job posting against your resume, see the missing keywords, and fill the application form. Never submits. Reads only the page you are on.",
+  "version": "0.4.0",
+  "description": "Score any job posting against your resume, see the missing keywords, fill the application form and track it in Saaf. Never submits. Reads only the page you are on.",
   "permissions": [
     "storage",
     "activeTab"
@@ -83,6 +83,7 @@
         "https://*.freshteam.com/*"
       ],
       "js": [
+        "extractor.js",
         "autofill.js",
         "content-script.js"
       ],

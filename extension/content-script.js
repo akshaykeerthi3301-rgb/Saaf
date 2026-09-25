@@ -2,39 +2,78 @@
  * Saaf extension — reads the posting on screen and renders the score.
  *
  * ⚠️ IT TOUCHES THE NETWORK NEVER, AND THE PAGE'S DATA ONLY. It reads the
- * active document, hands the text to the service worker, and draws the result.
- * No fetch, no storage, no navigation, no clicking. The extension does not act
- * on the candidate's behalf, which is the same guarantee the product makes
- * everywhere else.
+ * active document (extractor.js), hands the text to the service worker, and
+ * draws the result. The only writes to the page are the form fills the
+ * candidate asks for (autofill.js). No submitting, no navigating.
  *
  * ⚠️ THE OVERLAY LIVES IN A SHADOW ROOT, AND THAT IS NOT OPTIONAL. It renders
  * on sites with arbitrary CSS; style bleeding in either direction is both the
  * commonest cause of a broken-looking overlay and the commonest cause of a
- * store review rejection.
+ * store review rejection. `:host { all: initial }` resets anything inherited.
+ *
+ * ⚠️ EVERY STRING FROM THE PAGE OR THE SERVER IS ESCAPED BEFORE innerHTML. The
+ * quote shown under the score is text read out of the host page; written raw,
+ * a posting containing markup would render it inside our card, on their page.
  */
-const MIN_JD_CHARS = 120
+const SITE = 'https://saaf-ten.vercel.app'
 
-/** The posting body, per provider, falling back to the largest text block. */
-function readPosting() {
-  const sel = [
-    '#content', '.opening', '[class*="posting"]', '[class*="job-description"]',
-    '[data-automation-id="jobPostingDescription"]', 'main article', 'main',
-  ]
-  let best = ''
-  for (const s of sel) {
-    for (const el of document.querySelectorAll(s)) {
-      const t = (el.innerText || '').trim()
-      if (t.length > best.length) best = t
-    }
-  }
-  if (best.length < MIN_JD_CHARS) best = (document.body.innerText || '').trim()
-  return best.slice(0, 20000)
-}
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
-function readTitle() {
-  const h = document.querySelector('h1, h2, [data-automation-id="jobPostingHeader"]')
-  return (h?.innerText || document.title || '').trim().slice(0, 200)
-}
+/** Same page, ignoring query and hash — how the tracker and this card agree a job is "this one". */
+const pageKey = (u) => { try { const x = new URL(u); return x.origin + x.pathname.replace(/\/+$/, '') } catch { return u } }
+
+const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', closed: 'Archived' }
+
+/**
+ * The palette is copied from the app's `.dark` block in src/app/globals.css
+ * (2026-09-25). An extension cannot load the app's stylesheet, so these are the
+ * one place those tokens are restated — change them together. Score bands
+ * follow src/lib/score-bands.ts: green from 75 (HIGH_PRECISION_MIN), amber from
+ * 60, red below.
+ */
+const STYLE = `
+  :host { all: initial }
+  .card { --bg: oklch(0.21 0.006 285.885 / 0.86); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
+    --line: oklch(1 0 0 / 10%); --chip: oklch(0.274 0.006 286.033); --brand: oklch(0.585 0.233 277.117);
+    --brand-2: oklch(0.558 0.288 302.321); --accent: oklch(0.673 0.182 276.935);
+    --high: oklch(0.765 0.177 163.223); --mid: oklch(0.828 0.189 84.429); --low: oklch(0.704 0.191 22.216);
+    width: 320px; box-sizing: border-box; font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--fg); background: var(--bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
+    box-shadow: 0 12px 40px oklch(0 0 0 / 45%), 0 0 0 1px oklch(0.585 0.233 277.117 / 18%) }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+  .brand { font-weight: 700; letter-spacing: .01em; background: linear-gradient(135deg, var(--accent), var(--brand-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--muted) }
+  .x { all: unset; cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; padding: 2px 4px }
+  .head { display: flex; gap: 12px; align-items: center; margin-top: 10px }
+  .ring { width: 58px; height: 58px; flex: none; position: relative }
+  .ring svg { transform: rotate(-90deg) }
+  .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 17px; font-variant-numeric: tabular-nums }
+  .job { min-width: 0 }
+  .job .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .muted { color: var(--muted); font-size: 11px }
+  .status { margin-top: 8px; font-size: 11px; color: var(--accent) }
+  .comp { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--muted) }
+  .comp span:last-child { color: var(--fg); font-variant-numeric: tabular-nums }
+  .kw { margin-top: 10px; font-size: 10px; line-height: 1.8 }
+  .kw b { font-weight: 600; margin-right: 2px }
+  .tag { display: inline-block; padding: 1px 7px; margin: 1px 3px 1px 0; border-radius: 6px; background: var(--chip); color: var(--fg) }
+  .tag.have { box-shadow: inset 0 0 0 1px oklch(0.765 0.177 163.223 / 45%) }
+  .tag.miss { box-shadow: inset 0 0 0 1px oklch(0.828 0.189 84.429 / 55%) }
+  .q { margin-top: 10px; padding: 7px 9px; background: var(--chip); border-radius: 8px; font-size: 11px; color: var(--muted); max-height: 82px; overflow: auto }
+  .actions { display: flex; gap: 8px; margin-top: 12px }
+  .primary { all: unset; cursor: pointer; flex: 1; text-align: center; padding: 8px 10px; border-radius: 10px; font-weight: 600; font-size: 12px;
+    color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 18px oklch(0.585 0.233 277.117 / 40%) }
+  .primary:hover { box-shadow: 0 0 26px oklch(0.585 0.233 277.117 / 60%) }
+  .ghost { all: unset; cursor: pointer; padding: 8px 10px; border-radius: 10px; font-size: 12px; color: var(--fg); background: var(--chip) }
+  .primary[disabled], .ghost[disabled] { opacity: .55; cursor: default; box-shadow: none }
+  .report { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 11px }
+  .report ul { margin: 4px 0 0; padding-left: 16px; color: var(--muted) }
+  .report li { margin: 2px 0 }
+  .report .ok { color: var(--fg) }
+  a { color: var(--accent); text-decoration: none }
+`
 
 function mount() {
   const host = document.createElement('div')
@@ -42,73 +81,79 @@ function mount() {
   host.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647'
   document.documentElement.appendChild(host)
   const root = host.attachShadow({ mode: 'open' })
-  root.innerHTML = `
-    <style>
-      .card{width:300px;font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:14px;
-        box-shadow:0 6px 24px rgba(15,23,42,.12);padding:14px 16px}
-      .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-      .score{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
-      .muted{color:#64748b;font-size:11px}
-      .comp{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:11px}
-      .q{margin-top:8px;padding:7px 9px;background:#f8fafc;border-radius:8px;
-        font-size:11px;color:#475569;max-height:82px;overflow:auto}
-      .kw{margin-top:8px;font-size:10px;line-height:1.7}
-      .kw b{color:#0f172a;font-weight:600}
-      .tag{display:inline-block;padding:1px 6px;margin:1px 3px 1px 0;border-radius:5px;
-        background:#f1f5f9;color:#475569}
-      .tag.miss{background:#fef3c7;color:#854d0e}
-      .track{display:inline-block;margin-top:9px;color:#0f766e;font-weight:600;
-        font-size:11px;text-decoration:none}
-      button{all:unset;cursor:pointer;color:#0f766e;font-weight:600;font-size:11px;margin-top:10px}
-      button:disabled{color:#94a3b8;cursor:default}
-      .fill{margin-top:10px;padding-top:9px;border-top:1px solid #f1f5f9}
-      .refused{margin-top:6px;font-size:10px;color:#64748b}
-      .refused li{margin:2px 0}
-    </style>
-    <div class="card"><div class="muted">Saaf</div><div id="body">Scoring…</div></div>`
+  root.innerHTML = `<style>${STYLE}</style>
+    <div class="card">
+      <div class="top"><span class="brand">Saaf</span><span id="ats"></span><button class="x" id="close" aria-label="Close">×</button></div>
+      <div id="body"><div class="muted" style="margin-top:8px">Scoring this posting…</div></div>
+      <div id="status"></div>
+      <div id="fill"></div>
+    </div>`
+  root.getElementById('close').addEventListener('click', () => host.remove())
   return root
 }
 
-function render(root, data) {
+function ring(score) {
+  const color = score >= 75 ? 'var(--high)' : score >= 60 ? 'var(--mid)' : 'var(--low)'
+  const r = 25, c = 2 * Math.PI * r, dash = (Math.max(0, Math.min(100, score)) / 100) * c
+  return `<div class="ring"><svg width="58" height="58" viewBox="0 0 58 58">
+    <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--chip)" stroke-width="5"/>
+    <circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+      stroke-dasharray="${dash} ${c}"/></svg><b>${esc(score)}</b></div>`
+}
+
+function render(root, job, data) {
   const body = root.getElementById('body')
+  if (job.atsPlatform) root.getElementById('ats').innerHTML = `<span class="badge">${esc(job.atsPlatform)}</span>`
   if (!data?.ok) {
-    body.innerHTML = `<div style="margin-top:6px">${data?.error ?? 'Could not score this posting.'}</div>`
+    body.innerHTML = `<div style="margin-top:8px">${esc(data?.error ?? 'Could not score this posting.')}</div>`
     return
   }
   // ⚠️ NO COMPONENT COUNT IN THIS COPY. This path omits work mode, so it is
   // five components and not seven, and a stated number goes stale the next time
   // the scorer changes shape.
   const comps = (data.components ?? [])
-    .map((c) => `<div class="comp"><span>${c.label}</span><span>${c.points}/${c.max}</span></div>`)
+    .map((c) => `<div class="comp"><span>${esc(c.label)}</span><span>${esc(c.points)}/${esc(c.max)}</span></div>`)
     .join('')
   const quote = (data.requirements ?? []).find((r) => r.sourceQuote)?.sourceQuote
 
   /**
-   * Missing keywords. Every tool in this category shows these; the difference
-   * is that ours come from a vocabulary mined out of our own index, so a term
-   * is listed only because at least twelve distinct employers name it. That is
-   * what stops it saying your résumé is missing the word "synergy".
+   * Missing keywords. Ours come from a vocabulary mined out of our own index,
+   * so a term is listed only because at least twelve distinct employers name
+   * it. That is what stops it saying your résumé is missing "synergy".
    */
-  const tags = (list, cls) => list.map((t) => `<span class="tag ${cls}">${t}</span>`).join('')
+  const tags = (list, cls) => list.slice(0, 8).map((t) => `<span class="tag ${cls}">${esc(t)}</span>`).join('')
   const kw = []
-  if (data.matched?.length) kw.push(`<div><b>You have:</b> ${tags(data.matched, '')}</div>`)
-  if (data.missing?.length) kw.push(`<div><b>Not on your résumé:</b> ${tags(data.missing, 'miss')}</div>`)
-
-  // Track it in Saaf. A link rather than a request: the tracker is behind a
-  // sign-in and the extension deliberately holds no session, so the web app
-  // does the authenticated part. Nothing is sent from here.
-  const track = `https://saaf-ten.vercel.app/applications?add=${encodeURIComponent(
-    (document.querySelector('h1, h2')?.innerText || document.title || '').trim().slice(0, 120),
-  )}&url=${encodeURIComponent(location.href)}`
+  if (data.matched?.length) kw.push(`<div><b>You have</b> ${tags(data.matched, 'have')}</div>`)
+  if (data.missing?.length) kw.push(`<div><b>Not on your résumé</b> ${tags(data.missing, 'miss')}</div>`)
 
   body.innerHTML = `
-    <div class="row"><span class="score">${data.total}</span><span class="muted">out of 100</span></div>
+    <div class="head">${ring(data.total)}
+      <div class="job"><div class="t">${esc(job.title || 'This posting')}</div>
+        <div class="muted">${esc([job.company, job.location].filter(Boolean).join(' · ') || 'out of 100')}</div></div></div>
     ${comps}
     ${kw.length ? `<div class="kw">${kw.join('')}</div>` : ''}
-    ${quote ? `<div class="q">Read from the posting: “${quote.slice(0, 180)}”</div>` : ''}
-    <a class="track" href="${track}" target="_blank" rel="noopener">Track this in Saaf →</a>`
+    ${quote ? `<div class="q">Read from the posting: “${esc(quote.slice(0, 180))}”</div>` : ''}`
 }
+
+/**
+ * Tracker state for this page, from what the web app last synced. Re-renders
+ * on every storage change, so moving the card in Saaf shows here at once.
+ */
+async function renderStatus(root, job) {
+  const { tracked = [], pendingTrack = [] } = await chrome.storage.local.get(['tracked', 'pendingTrack'])
+  const key = pageKey(job.pageUrl)
+  const onBoard = tracked.find((t) => pageKey(t.url) === key)
+  const queued = pendingTrack.find((t) => pageKey(t.url) === key)
+  const el = root.getElementById('status')
+  if (onBoard) el.innerHTML = `<div class="status">On your Saaf tracker · ${esc(STAGE_LABEL[onBoard.status] ?? onBoard.status)}</div>`
+  else if (queued) el.innerHTML = `<div class="status">Goes on your tracker as ${esc(STAGE_LABEL[queued.status])} next time Saaf is open · <a href="${SITE}/applications" target="_blank" rel="noopener">Open Saaf</a></div>`
+  else el.innerHTML = ''
+}
+
+const queue = (job, status) => chrome.runtime.sendMessage({
+  type: 'saaf:queue',
+  item: { url: job.pageUrl, title: job.title || 'Untitled role', company: job.company || new URL(job.pageUrl).hostname, ats: job.atsPlatform, status },
+})
 
 /**
  * The autofill control.
@@ -116,64 +161,83 @@ function render(root, data) {
  * ⚠️ IT IS A BUTTON, AND IT IS NEVER AUTOMATIC. Filling a stranger's form on
  * page load is both surprising and the shape of the auto-apply behaviour this
  * product refuses. The candidate asks; we fill; they read it and press Submit
- * themselves. Nothing here clicks, submits or navigates.
+ * themselves. Nothing here submits or navigates.
  *
- * ⚠️ THE REFUSALS ARE RENDERED, NOT SWALLOWED. A filler that silently leaves
- * gaps looks broken. One that says "salary — yours to set" is making the
- * argument the rest of the product makes.
+ * ⚠️ THE REFUSALS AND THE PICKS ARE RENDERED, NOT SWALLOWED. A filler that
+ * silently leaves gaps looks broken; one that silently picks a dropdown option
+ * is worse. Every choice made is listed for the candidate to check.
  */
-function mountAutofill(root) {
+function mountActions(root, job) {
   const doc = document
+  const wrap = root.getElementById('fill')
   /**
-   * ⚠️ THE FORM OFTEN ARRIVES AFTER THE CARD, AND THE FIRST VERSION GAVE UP.
-   * Greenhouse renders the application below the description, Lever puts it on
-   * a separate /apply URL, and several ATS front ends mount it client-side a
-   * beat later. A one-shot check at document_idle therefore found nothing on
-   * exactly the pages where filling matters, and the button silently never
-   * appeared. This waits, briefly and then stops — an observer left running for
-   * the life of the tab is a cost every page pays forever.
+   * ⚠️ THE FORM OFTEN ARRIVES AFTER THE CARD. Greenhouse renders the
+   * application below the description, Lever puts it on a separate /apply URL,
+   * and several ATS front ends mount it client-side a beat later. So the fill
+   * button appears when a form does, and the observer stops after 15 s — one
+   * left running for the life of the tab is a cost every page pays forever.
    */
-  const FORM_SELECTOR = 'input[type="email"], input[type="tel"], form input[type="text"]'
-  if (!doc.querySelector(FORM_SELECTOR)) {
-    const obs = new MutationObserver(() => {
-      if (doc.querySelector(FORM_SELECTOR)) { obs.disconnect(); mountAutofill(root) }
-    })
-    obs.observe(doc.body, { childList: true, subtree: true })
-    setTimeout(() => obs.disconnect(), 15000)
-    return
-  }
-  if (root.querySelector('.fill')) return
-
-  const wrap = doc.createElement('div')
-  wrap.className = 'fill'
-  const btn = doc.createElement('button')
-  btn.textContent = 'Fill what we can →'
-  wrap.appendChild(btn)
-  root.querySelector('.card').appendChild(wrap)
-
-  btn.addEventListener('click', async () => {
-    btn.disabled = true
-    const { profile } = await chrome.storage.local.get('profile')
-    if (!profile || !profile.fullName) {
-      wrap.innerHTML = '<div class="refused">Add your details in the Saaf extension first.</div>'
-      return
-    }
-    const res = globalThis.SaafAutofill.fillForm(profile, doc)
-    const refusedList = res.refused.length
-      ? `<div class="refused">Left for you:<ul>${res.refused.map((r) => `<li>${r.reason}</li>`).join('')}</ul></div>`
-      : ''
-    wrap.innerHTML =
-      `<div class="refused"><b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> ` +
-      `Check them before you submit — we never do.</div>${refusedList}`
+  const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form select'
+  wrap.innerHTML = `<div class="actions"><button class="ghost" id="save">Save to tracker</button></div>`
+  root.getElementById('save').addEventListener('click', async (e) => {
+    e.currentTarget.disabled = true
+    await queue(job, 'saved')
   })
+
+  const addFill = () => {
+    if (root.getElementById('go')) return
+    const btn = doc.createElement('button')
+    btn.className = 'primary'
+    btn.id = 'go'
+    btn.textContent = '⚡ Fill this application'
+    wrap.querySelector('.actions').prepend(btn)
+    btn.addEventListener('click', async () => {
+      btn.disabled = true
+      btn.textContent = 'Filling…'
+      const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
+      if (!profile || !profile.fullName) {
+        wrap.insertAdjacentHTML('beforeend', '<div class="report">Add your details in the Saaf extension first — or open Saaf once while signed in and they sync.</div>')
+        btn.textContent = '⚡ Fill this application'
+        btn.disabled = false
+        return
+      }
+      const res = await globalThis.SaafAutofill.fillForm(profile, doc, { resumeFile })
+      const how = { typed: 'Typed', chose: 'Chose', ticked: 'Ticked', attached: 'Attached' }
+      const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
+      const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
+      root.querySelector('.report')?.remove()
+      wrap.insertAdjacentHTML('beforeend', `<div class="report">
+        <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
+        ${picks ? `<ul>${picks}</ul>` : ''}
+        ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}</div>`)
+      btn.textContent = 'Fill again'
+      btn.disabled = false
+      // Filling a form is the candidate applying, so the role goes on the
+      // tracker as Applying. It never reaches Applied from here: we cannot see
+      // whether they pressed Submit, and saying they did would be a guess.
+      if (res.filled.length) await queue(job, 'applying')
+    })
+  }
+
+  if (doc.querySelector(FORM_SELECTOR)) { addFill(); return }
+  const obs = new MutationObserver(() => {
+    if (doc.querySelector(FORM_SELECTOR)) { obs.disconnect(); addFill() }
+  })
+  obs.observe(doc.body, { childList: true, subtree: true })
+  setTimeout(() => obs.disconnect(), 15000)
 }
 
 ;(function run() {
-  const jdText = readPosting()
-  if (jdText.length < MIN_JD_CHARS) return
+  const job = globalThis.SaafExtract.extractJob(document, location)
+  if (job.description.length < globalThis.SaafExtract.MIN_JD_CHARS) return
   const root = mount()
+  mountActions(root, job)
+  renderStatus(root, job)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && (changes.tracked || changes.pendingTrack)) renderStatus(root, job)
+  })
   chrome.runtime.sendMessage(
-    { type: 'saaf:score', jdText, jdTitle: readTitle() },
-    (data) => { render(root, data); mountAutofill(root) },
+    { type: 'saaf:score', jdText: job.description, jdTitle: job.title, jdLocation: job.location },
+    (data) => render(root, job, data),
   )
 })()

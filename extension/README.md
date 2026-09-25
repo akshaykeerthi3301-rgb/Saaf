@@ -29,43 +29,67 @@ API. Reading one in the user's own browser adds no access we do not already have
 
 | | |
 |---|---|
-| Reads | The active tab's DOM, on listed hosts only |
+| Reads | The active tab's DOM, on listed hosts only — the page's schema.org `JobPosting` first, the visible text second (`extractor.js`) |
 | Sends | Posting text and title, to `/api/extension/score` |
-| Stores | Your résumé text, in `chrome.storage.local`, on your machine |
-| Never sends | Browsing history, page URLs from unlisted hosts, anything from an unlisted host |
-| Never does | Click, submit, apply, or navigate on your behalf |
+| Stores | Your résumé text and file, form details, salary figures and yes/no answers, in `chrome.storage.local`, on your machine |
+| Receives | From the signed-in Saaf website only: your profile, latest saved résumé, and the stage of each tracked job |
+| Never sends | Browsing history, page URLs from unlisted hosts, anything from an unlisted host, your salary figures or yes/no answers |
+| Never does | Submit, apply, or navigate on your behalf. The only clicks are the dropdown option, radio or tick-box it chose |
 
 ## Form autofill
 
-Press **“Fill what we can”** on a posting. It is a button and never automatic —
-filling a form on page load is both surprising and the shape of the auto-apply
-behaviour this product refuses.
+Press **“⚡ Fill this application”** on a posting. It is a button and never
+automatic — filling a form on page load is both surprising and the shape of the
+auto-apply behaviour this product refuses.
 
-It fills name, email, phone, city, current title and employer, years of
-experience, notice period, LinkedIn and portfolio — from the details you typed
-into the extension, which never leave your machine.
+It fills name, email, phone, city, preferred cities, current title and employer,
+years of experience, notice period, work authorisation, LinkedIn and portfolio —
+typed boxes, dropdowns, radio groups, tick-box lists and searchable pickers.
+~~It never touches a dropdown, a radio, a tick-box or a file input, and always
+refuses salary.~~ **Reversed 2026-09-25 by founder direction (Jobright parity;
+PROJECT-STATE Stage AE)** — but only from answers *you* stored:
+
+| Filled only from what you typed | How |
+|---|---|
+| Current and expected CTC | Stored in lakhs. Written as “18 LPA”, bare lakhs where the box says lakhs, or rupees where the box says rupees. A unit-less number box or a box in another currency is left for you |
+| “Authorised to work?”, “Need sponsorship?”, “Willing to relocate?” | From your own yes/no. Never inferred — “Are you based in Bengaluru?” is still left for you |
+| Dropdowns, radios, pickers | Only when exactly one option matches. Every pick is listed on the card |
+| Résumé upload | Your stored file, only on an upload labelled résumé/CV that accepts its type |
 
 **It will not fill, and tells you so on the card:**
 
 | Refused | Why |
 |---|---|
-| Salary and CTC expectations | Yours to set, and we hold no figure we trust |
 | Gender, caste, religion, marital status, disability, veteran status, date of birth | Yours alone to answer, and several are unlawful to require in India |
 | "Why do you want to work here", cover letters, essays | Free text the employer asked *you* |
+| Consent boxes (“I agree”, “I certify”) | Agreeing to terms is yours |
 | Passwords, Aadhaar, PAN, bank details | Never entered by us |
 
-It also never overwrites an answer you already typed, never touches a dropdown
-(a wrong choice there is invisible to you), and **never presses Submit**.
+It never overwrites an answer you already typed or chose, and **never presses
+Submit**. Filling a form puts the role on your Saaf tracker as **Applying** —
+never Applied, because we cannot see whether you pressed Submit.
 
-The server holds nothing. `/api/extension/score` reads no database and writes no
-row — it scores the text in the request and forgets it, which is why the
-extension needs no account.
+## Syncing with the Saaf website
+
+The extension holds no account. When you open Saaf signed in, the website:
+
+1. files the roles you saved or filled on job sites onto your tracker (once each);
+2. sends your profile, latest saved résumé and each tracked job's stage to the
+   extension, so the card on a job site says “On your Saaf tracker · Interviewing”.
+
+Only `saaf-ten.vercel.app` (and `localhost` in development) can reach it —
+`externally_connectable` in the manifest, re-checked in `service-worker.js`. A
+sync fills blanks and updates; it never erases what you typed, and never touches
+salary, yes/no answers or the résumé file, which the website does not hold.
+
+The server holds nothing for scoring. `/api/extension/score` reads no database
+and writes no row — it scores the text in the request and forgets it.
 
 ## Install (unpacked, for development)
 
 1. `chrome://extensions` → enable Developer mode
 2. "Load unpacked" → select this directory
-3. Open the extension, paste your résumé once
+3. Open Saaf signed in once (profile syncs), or fill the extension's popup by hand
 4. Visit any listed ATS posting
 
 ## Not yet done
@@ -82,10 +106,10 @@ locked "never applies on your behalf" decision costs us nothing here.
 
 | Jobright | Saaf |
 |---|---|
-| One-click autofill, "thousands of ATS sites" | ✅ 32 host patterns across 22 ATS platforms |
+| One-click autofill, "thousands of ATS sites" | ✅ 32 host patterns across 22 ATS platforms — text, dropdowns, radios, pickers, résumé upload, CTC (2026-09-25) |
 | Match score on the posting | ✅ and every component opens into the posting's own sentence |
 | Missing keywords / ATS gaps | ✅ from a vocabulary mined out of our index, not a generic word list |
-| Track the application | ✅ via a link into the Saaf tracker |
+| Track the application | ✅ filed on the Saaf tracker when you next open Saaf; stage shown back on the card (2026-09-25). ~~via a link into the Saaf tracker~~ — the link's `?add=` was read by nothing |
 | AI tailored résumé in the extension | ❌ **budget** — see below |
 | Insider connections / referrals | ❌ **structurally impossible** — see below |
 

@@ -14,22 +14,23 @@ type Autofill = {
   classify: (s: string) => Verdict
   valueFor: (k: string, p: Record<string, string>) => string | undefined
   isFillable: (el: unknown) => boolean
-  fillForm: (p: Record<string, string>, doc: Document) => {
-    filled: { key: string; value: string }[]
+  fillForm: (p: Record<string, string>, doc: Document, opts?: Record<string, unknown>) => Promise<{
+    filled: { key: string; value: string; how: string }[]
     refused: { reason: string }[]
     skipped: number
-  }
+  }>
 }
 let A: Autofill
 beforeAll(() => { A = (globalThis as unknown as { SaafAutofill: Autofill }).SaafAutofill })
 
 describe('what it refuses, which is the important half', () => {
+  // Money was refused outright until 2026-09-25. It is now a field filled only
+  // from the candidate's own figure (see 'salary, from their own figure').
   it.each([
-    'Expected CTC', 'Current Salary', 'Desired Pay', 'Expected Salary (per annum)', 'Remuneration',
-  ])('refuses money: %s', (label) => {
-    const v = A.classify(label)
-    expect(v?.refused).toBe(true)
-    expect(v?.reason).toMatch(/salary/)
+    ['Expected CTC', 'expectedCtc'], ['Current Salary', 'currentCtc'], ['Desired Pay', 'expectedCtc'],
+    ['Expected Salary (per annum)', 'expectedCtc'], ['Remuneration', 'currentCtc'],
+  ])('reads money as a salary field, never as anything else: %s', (label, key) => {
+    expect(A.classify(label)?.key).toBe(key)
   })
 
   it.each([
@@ -53,11 +54,14 @@ describe('what it refuses, which is the important half', () => {
       expect(A.classify(label)?.refused).toBe(true)
     })
 
-  it('lets a refusal beat a field match when a label triggers both', () => {
+  it('lets money beat a field match when a label triggers both', () => {
     // "current company salary band" matches currentEmployer AND the money rule.
-    // Not filling has to win; this is the ordering the classifier depends on.
-    const v = A.classify('Current company salary band')
-    expect(v?.refused).toBe(true)
+    // The employer's name is not a salary; money has to win.
+    expect(A.classify('Current company salary band')?.key).toBe('currentCtc')
+  })
+
+  it('lets a refusal beat everything', () => {
+    expect(A.classify('Gender pay gap salary disclosure')?.refused).toBe(true)
   })
 })
 
@@ -113,7 +117,9 @@ describe('what it fills', () => {
 
 describe('what it will not write into', () => {
   const el = (attrs: Record<string, unknown>) => ({ tagName: 'INPUT', type: 'text', ...attrs })
-  it('never a password, file, checkbox or radio', () => {
+  // Radios, tick-boxes and files take their own paths in fillForm; none is a
+  // box text is typed into.
+  it('never types into a password, file, checkbox or radio', () => {
     for (const type of ['password', 'file', 'checkbox', 'radio', 'hidden', 'submit']) {
       expect(A.isFillable(el({ type }))).toBe(false)
     }
@@ -122,8 +128,8 @@ describe('what it will not write into', () => {
     expect(A.isFillable(el({ disabled: true }))).toBe(false)
     expect(A.isFillable(el({ readOnly: true }))).toBe(false)
   })
-  it('never a select — a wrong choice there is invisible to the candidate', () => {
-    expect(A.isFillable({ tagName: 'SELECT' })).toBe(false)
+  it('does consider a select — picked only when exactly one option matches', () => {
+    expect(A.isFillable({ tagName: 'SELECT' })).toBe(true)
   })
   it('does fill an ordinary text, email, tel or url input', () => {
     for (const type of ['text', 'email', 'tel', 'url', 'number']) {
@@ -170,32 +176,32 @@ const PROFILE = {
   linkedin: 'linkedin.com/in/priyaiyer', portfolio: 'github.com/priyaiyer',
 }
 
-describe('fillForm, against a form', () => {
-  it('fills what it recognises and fires the events a React form listens for', () => {
+describe('fillForm, against a form', async () => {
+  it('fills what it recognises and fires the events a React form listens for', async () => {
     const name = input({ name: 'full_name' })
     const email = input({ name: 'email' }, { type: 'email' })
-    const res = A.fillForm(PROFILE, docOf([name, email]))
+    const res = await A.fillForm(PROFILE, docOf([name, email]))
 
     expect(name.value).toBe('Priya Iyer')
     expect(email.value).toBe('priya@example.com')
     expect(res.filled.map((f) => f.key).sort()).toEqual(['email', 'fullName'])
     // ⚠️ Most ATS front ends read React state, not el.value. A silent
     // assignment looks filled on screen and submits empty.
-    expect(name.events).toEqual(['input', 'change'])
+    expect(name.events).toEqual(['input', 'change', 'blur'])
   })
 
-  it('never overwrites something the candidate already typed', () => {
+  it('never overwrites something the candidate already typed', async () => {
     const el = input({ name: 'email' }, { value: 'their.own@address.com' })
-    const res = A.fillForm(PROFILE, docOf([el]))
+    const res = await A.fillForm(PROFILE, docOf([el]))
     expect(el.value).toBe('their.own@address.com')
     expect(res.filled).toHaveLength(0)
   })
 
-  it('leaves every refused field untouched and reports why', () => {
+  it('leaves every refused field untouched and reports why', async () => {
     const salary = input({ name: 'expected_ctc' })
     const gender = input({ name: 'gender' })
     const why = input({ name: 'why_do_you_want_to_work_here' })
-    const res = A.fillForm(PROFILE, docOf([salary, gender, why]))
+    const res = await A.fillForm(PROFILE, docOf([salary, gender, why]))
 
     expect(salary.value).toBe('')
     expect(gender.value).toBe('')
@@ -205,25 +211,25 @@ describe('fillForm, against a form', () => {
     expect(res.refused.map((r) => r.reason).join(' ')).toMatch(/salary/)
   })
 
-  it('does not touch a disabled, readonly or password input', () => {
+  it('does not touch a disabled, readonly or password input', async () => {
     const off = input({ name: 'email' }, { disabled: true })
     const ro = input({ name: 'phone' }, { readOnly: true })
     const pw = input({ name: 'password' }, { type: 'password' })
-    A.fillForm(PROFILE, docOf([off, ro, pw]))
+    await A.fillForm(PROFILE, docOf([off, ro, pw]))
     expect([off.value, ro.value, pw.value]).toEqual(['', '', ''])
   })
 
-  it('fills a first/last pair from one stored full name', () => {
+  it('fills a first/last pair from one stored full name', async () => {
     const first = input({ name: 'first_name' })
     const last = input({ name: 'last_name' })
-    A.fillForm(PROFILE, docOf([first, last]))
+    await A.fillForm(PROFILE, docOf([first, last]))
     expect(first.value).toBe('Priya')
     expect(last.value).toBe('Iyer')
   })
 
-  it('skips a field the profile has no value for rather than writing empty', () => {
+  it('skips a field the profile has no value for rather than writing empty', async () => {
     const el = input({ name: 'portfolio' })
-    const res = A.fillForm({ ...PROFILE, portfolio: '' }, docOf([el]))
+    const res = await A.fillForm({ ...PROFILE, portfolio: '' }, docOf([el]))
     expect(el.value).toBe('')
     expect(res.filled).toHaveLength(0)
   })
@@ -236,16 +242,14 @@ describe('fillForm, against a form', () => {
  * the hand-written form above.
  */
 describe('a real Greenhouse form, 2026-09-15', () => {
-  it('refuses "Total Target Cash expectation", which names no money word', () => {
+  it('reads "Total Target Cash expectation", which names no money word, as money', () => {
     // Contains neither salary, nor CTC, nor pay, nor compensation. It went
     // unmatched and therefore unreported: left blank by luck, not by rule.
-    const v = A.classify('What is your Total Target Cash expectation?*')
-    expect(v?.refused).toBe(true)
-    expect(v?.reason).toMatch(/salary/)
+    expect(A.classify('What is your Total Target Cash expectation?*')?.key).toBe('expectedCtc')
   })
 
-  it('still refuses the plainly worded one beside it', () => {
-    expect(A.classify('What is your current CTC ?*')?.refused).toBe(true)
+  it('reads the plainly worded one beside it as current, despite the question mark', () => {
+    expect(A.classify('What is your current CTC ?*')?.key).toBe('currentCtc')
   })
 
   it('never answers a yes/no question with a fact', () => {
@@ -279,12 +283,13 @@ describe('a real Greenhouse form, 2026-09-15', () => {
 })
 
 describe('the yes/no guard applies to work authorisation too', () => {
-  it('refuses the interrogative form and fills the statement form', () => {
+  it('answers the interrogative form only from a stored yes/no, and fills the statement form', () => {
     // We hold "Indian citizen"; the employer asked "yes or no". Writing the
-    // former into the latter is the Bengaluru mistake with a different label,
-    // and an earlier test in this file asserted the buggy behaviour until the
-    // real Greenhouse form exposed the pattern.
-    expect(A.classify('Are you legally authorized to work in India?')?.refused).toBe(true)
+    // former into the latter is the Bengaluru mistake with a different label.
+    // Since 2026-09-25 the question maps to the candidate's OWN yes/no answer,
+    // which is never derived from the statement.
+    expect(A.classify('Are you legally authorized to work in India?')?.key).toBe('authorisedToWork')
+    expect(A.valueFor('authorisedToWork', { workAuth: 'Indian citizen' })).toBeUndefined()
     expect(A.classify('Work authorisation status')?.key).toBe('workAuth')
   })
 })
