@@ -11,11 +11,10 @@ never past a CAPTCHA, Applied only on the employer's confirmation).
 
 **What only you can do (TASK-149, TASK-150):**
 
-1. **Let a session look at the screens, or look yourself.** The permission
-   system blocked my browser checks of this round (it flags anything near
-   submitting applications). Either allow the in-app browser for localhost, or
-   run the site locally and open /today, a job's panel, /interview-prep,
-   /coaching and /profile. Nothing of this round should go live unseen.
+1. ~~**Let a session look at the screens, or look yourself.**~~ **Done 2026-10-02**
+   — the screens were walked on localhost and two small defects fixed. What is
+   still unseen: "Apply for me" actually running, which needs the real extension
+   in your Chrome (step 4).
 2. **Apply `supabase/migrations/0031_network_questions_coaching.sql`** in the
    Supabase SQL editor, then `npm run verify:rls`. It creates tables holding
    your users' uploaded connections (other people's names), so read its

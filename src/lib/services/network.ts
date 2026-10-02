@@ -35,7 +35,10 @@ export async function deleteConnections(userId: string): Promise<boolean> {
 export async function countConnections(userId: string): Promise<number | null> {
   const supabase = await createClient()
   const { count, error } = await supabase.from('connections').select('id', { count: 'exact', head: true }).eq('user_id', userId)
-  return error ? null : count ?? 0
+  // ⚠️ A head-only count on a MISSING table returns error: null, count: null
+  // (status 204) — measured 2026-10-02 before 0031 was applied. So a null
+  // count means "no table", not zero; reading it as 0 hid the missing-update note.
+  return error || count === null ? null : count
 }
 
 /** company key → how many connections work there, for the given keys only. */

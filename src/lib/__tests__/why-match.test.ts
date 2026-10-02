@@ -30,6 +30,14 @@ describe('whyThisMatches — built only from the score\'s own notes', () => {
     expect(whyThisMatches(null)).toEqual({ strength: null, gap: null })
   })
 
+  it('never names a skills note as the gap — it reads as good news (observed on /today, 2026-10-02)', () => {
+    const r = whyThisMatches(bd([
+      { key: 'location', label: 'Location', points: 10, max: 10, note: 'In Bengaluru' },
+      { key: 'skills', label: 'Skills', points: 4, max: 20, note: 'Mentions 2 of your skills: stakeholder management, Excel.' },
+    ]))
+    expect(r).toEqual({ strength: 'In Bengaluru.', gap: null })
+  })
+
   it('has no gap when nothing scored under half', () => {
     expect(whyThisMatches(bd(components.slice(0, 1))).gap).toBeNull()
   })

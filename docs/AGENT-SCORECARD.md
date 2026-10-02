@@ -124,3 +124,15 @@ steps before building, not the building.
 | BIZ | **4** | Eight features shipped to zero users; three (connections, questions, coaching) are empty until real people use them. Still no domain, no beta | Launch before building more |
 
 **Team average (scored roles): 7.2 / 10.**
+
+---
+
+## 2026-10-02 — TASK-149, the browser walk
+
+| Role | Score | Evidence | Fix |
+|---|---|---|---|
+| UX | **8** (was 5) | Every new screen walked; the misleading "Check first" caught by reading the cards, not by a test | — |
+| QA | **8** (was 7) | Two defects found only by looking (wording, missing-table check), fixed, re-walked; 932 tests | — |
+| REALITY | **9** | Measured the 204-with-no-error behaviour before writing the fix | — |
+| EVAL | **8** | TASK-149 closed; the only carried item is the Apply-for-me run, which needs the founder's Chrome | — |
+| BIZ | **4** | Unchanged: no users, no domain, nothing deployed | Launch |

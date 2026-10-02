@@ -2495,15 +2495,25 @@ would harm the users or third parties, not just break a preference:
 | Coaching directory | Starts empty by design (founder curates); 0031 not applied |
 | Apply for me | 12 happy-dom tests; **two defects caught by them before shipping**: untyped `<input>`s not recognised as a form, and "Thank you for your interest" (the opening line of many postings) accepted as a confirmation — which would have marked jobs Applied that were not |
 
-**⚠️ Not verified in a browser:** the permission classifier blocked opening a
+~~**⚠️ Not verified in a browser:** the permission classifier blocked opening a
 local mock application page ("Real-World Transactions") and then the signed-in
-localhost feed. Per the harness rules this was not worked around. Unverified:
+localhost feed.~~ **Walked 2026-10-02 (TASK-149)** — the browser was allowed in the
+next session. OBSERVED: the paragraph on all 10 visible cards; company facts in
+the panel (Diligent Corporation — SaaS, New York, 1994 — the right company);
+skill buttons; the Apply-for-me button (not clicked); question bank, coaching
+and connections screens. **Two defects found by looking, fixed and re-walked:**
+(1) a skills note under "Check first" — "Mentions 2 of your skills…" labelled as
+a warning on an ABB card; skills/keywords notes can no longer be the gap;
+(2) the profile hid its "needs 0031" note because a head-only count on a missing
+table returns `error: null, count: null` (status 204, MEASURED) — null now means
+missing. Still unseen: a pay chip or early badge (none among the first 10 cards),
+and any Apply-for-me run (needs the real extension). Original note, kept: Per the harness rules this was not worked around. Unverified:
 the card paragraph/badges on /today, company facts in the panel, question bank,
 coaching and connections screens, and every "Apply for me" path that involves
 a page navigation or the real extension. **The founder should either allow the
 browser checks or look at localhost themselves before deploy.**
 
-**Measured 2026-09-25:** 931 tests pass (61 files; +57), lint 0 errors / 23
+**Measured 2026-09-25:** 931 tests pass (61 files; +57) — 932 on 2026-10-02 after the fixes above, lint 0 errors / 23
 warnings (pre-existing), typecheck clean, build green. Migration **0031** written,
 not applied.
 

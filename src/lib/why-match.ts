@@ -24,11 +24,20 @@ export function whyThisMatches(breakdown: ScoreBreakdown | null | undefined, rea
 
   const byShare = [...fresh].sort((a, b) => b.share - a.share || b.max - a.max)
   const best = byShare[0]
-  const worst = [...fresh].sort((a, b) => a.share - b.share || b.max - a.max)[0]
+  /**
+   * ⚠️ SKILLS AND KEYWORDS ARE NEVER THE GAP. Their notes always say what the
+   * candidate HAS ("Mentions 2 of your skills: …"), even when the component
+   * scored low, so under "Check first" they read as a warning about good news.
+   * OBSERVED on /today 2026-10-02 on an ABB card. Only components whose notes
+   * describe a shortfall (title, experience, location, credential, work mode)
+   * may be named as the thing to check.
+   */
+  const SHORTFALL = new Set(['title', 'seniority', 'location', 'credential', 'work_mode'])
+  const worst = fresh.filter((c) => SHORTFALL.has(c.key)).sort((a, b) => a.share - b.share || b.max - a.max)[0]
   const sentence = (s: string) => (/[.!?”"]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`)
 
   return {
     strength: best.share >= 0.5 ? sentence(best.note) : null,
-    gap: worst !== best && worst.share < 0.5 ? sentence(worst.note) : null,
+    gap: worst && worst !== best && worst.share < 0.5 ? sentence(worst.note) : null,
   }
 }
