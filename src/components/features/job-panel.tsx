@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import Link from 'next/link'
 import {
-  AlertTriangle, BarChart3, Building2, CheckCircle2, Clock, FileText, Loader2, Mail, MapPin,
+  AlertTriangle, BarChart3, Building2, CheckCircle2, CircleHelp, Clock, FileText, Loader2, Mail, MapPin,
   MessageCircle, PenLine, Quote, Sparkles, Tag, X, Zap,
 } from 'lucide-react'
 import { useFeed } from '@/components/features/feed-selection'
@@ -21,6 +21,7 @@ import { ScoreRing } from '@/components/ui/score-ring'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
 import type { JobInsight } from '@/lib/services/job-insight'
+import type { FitSection } from '@/lib/fit-sections'
 
 /**
  * The right-hand Deep Match Analysis panel.
@@ -189,6 +190,53 @@ function Section({ title, icon: Icon, children }: { title: string; icon: typeof 
 }
 
 /**
+ * The four-section fit analysis (TASK-160): each section is aligned, not aligned
+ * or "can't check", and opens to the words it rests on — a quote from the posting
+ * and the fact from your profile it was checked against. Text only.
+ */
+const FIT_LABEL: Record<FitSection['status'], string> = { aligned: 'Aligned', not_aligned: 'Not aligned', unknown: 'Can’t check' }
+
+function FitSections({ sections }: { sections: FitSection[] }) {
+  return (
+    <Section title="Fit analysis" icon={CheckCircle2}>
+      <ul className="space-y-2">
+        {sections.map((s) => {
+          const Icon = s.status === 'aligned' ? CheckCircle2 : s.status === 'not_aligned' ? AlertTriangle : CircleHelp
+          const tone = s.status === 'aligned' ? 'text-score-high' : s.status === 'not_aligned' ? 'text-score-mid' : 'text-muted-foreground'
+          const head = (
+            <span className="flex items-start gap-2">
+              <Icon className={`mt-0.5 size-4 shrink-0 ${tone}`} aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="text-sm font-semibold text-primary">{s.title}</span>
+                <span className={`ml-2 text-[10px] font-bold uppercase tracking-[0.12em] ${tone}`}>{FIT_LABEL[s.status]}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{s.summary}</span>
+              </span>
+            </span>
+          )
+          return (
+            <li key={s.key} className="rounded-lg border border-border bg-card px-3 py-2.5">
+              {s.evidence.length ? (
+                <details>
+                  <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">{head}</summary>
+                  <ul className="mt-2 space-y-2 border-t border-border pt-2">
+                    {s.evidence.map((e, i) => (
+                      <li key={i} className="space-y-0.5 text-xs leading-5">
+                        {e.posting ? <p className="text-muted-foreground"><span className="font-semibold text-primary">Posting:</span> “{e.posting}”</p> : null}
+                        {e.you ? <p className="text-muted-foreground"><span className="font-semibold text-primary">You:</span> {e.you}</p> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : head}
+            </li>
+          )
+        })}
+      </ul>
+    </Section>
+  )
+}
+
+/**
  * Correct your skills from the job (Phase 15; Jobright lets you click a skill
  * tag to say you do or do not have it). Writes the profile, rescores every
  * role, then refetches this panel and the feed — and says what moved.
@@ -220,6 +268,7 @@ function AnalysisTab({ j }: { j: JobInsight }) {
   return (
     <>
       <ConnectionsAt company={j.company} />
+      <FitSections sections={j.sections} />
       <Section title="Skill gap breakdown" icon={Sparkles}>
         <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
           Wrong? Click a skill to add it to your profile or take it off — only claim what you would defend in an interview.

@@ -140,6 +140,39 @@ describe('skills', () => {
     const c = scoreRole(withSkills, jd, []).components.find((x) => x.key === 'skills')!
     expect(c.note).toMatch(/SQL/)
   })
+
+  describe('a skill is a whole word, not a fragment of another (found on /today 2026-10-07)', () => {
+    const skill = (skills: string[], description: string) =>
+      scoreRole({ ...junior, skills }, { ...role, description: description.repeat(3) }, []).components.find((x) => x.key === 'skills')!
+
+    it('"Excel" is not found inside "Excellent"', () => {
+      const c = skill(['Excel'], 'Excellent communication and presentation skills are essential for this role. ')
+      expect(c.note).toBe('Names none of the skills on your profile.')
+      expect(c.points).toBe(0)
+    })
+    it.each([
+      ['SQL', 'We run MySQL and PostgreSQL clusters. '],
+      ['Java', 'Our stack is JavaScript end to end. '],
+      ['Go', 'Work with Google and Gopher teams. '],
+      ['R', 'Strong reporting and research skills needed. '],
+    ])('%s is not found inside another word', (s, text) => {
+      expect(skill([s, 'Padding skill'], text).note).toBe('Names none of the skills on your profile.')
+    })
+    it.each([
+      ['Excel', 'Advanced Excel is a plus. '],
+      ['SQL', 'SQL, Python and Tableau. '],
+      ['C++', 'Experience with C++ and Rust. '],
+      ['A/B testing', 'You will run A/B testing weekly. '],
+      ['Node.js', 'Backend in Node.js. '],
+      ['Stakeholder management', 'Strong stakeholder management skills. '],
+    ])('%s is still found as a whole word or phrase', (s, text) => {
+      expect(skill([s], text).note).toMatch(new RegExp(`Mentions 1 of your skills: ${s.replace(/[.+/]/g, '\\$&')}`))
+    })
+    it('the candidate\'s own keywords follow the same rule', () => {
+      const c = scoreRole({ ...junior, keywords: ['sales'] }, { ...role, description: 'Wholesales distribution experience. '.repeat(3) }, []).components.find((x) => x.key === 'keywords')
+      expect(c?.note).toBe('Names none of the keywords you added.')
+    })
+  })
 })
 
 describe('a candidate under the stated bar is never a top choice', () => {

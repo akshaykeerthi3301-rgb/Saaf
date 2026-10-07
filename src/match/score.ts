@@ -250,10 +250,34 @@ function titleAffinity(preferredRoles: string[], title: string): ScoreComponent 
   return { key: 'title', label: 'Role match', points, max, note }
 }
 
+const WORD_RE = new Map<string, RegExp>()
+
+/**
+ * `needle` appears in `text` as a whole word or phrase, not inside a longer word.
+ *
+ * ⚠️ THIS WAS `text.includes(needle)`, AND IT AWARDED POINTS FOR WORDS THE POSTING
+ * NEVER USED: the skill "Excel" was found inside "Excellent communication skills",
+ * "SQL" inside "MySQL", "Java" inside "JavaScript", "Go" inside "Google". OBSERVED
+ * on /today 2026-10-07 — a card said "Mentions 1 of your skills: Excel" on a
+ * customer-success posting that never mentions the spreadsheet. A match is meant to
+ * be evidence from both sides; a fragment of another word is not evidence. Both
+ * text and needle arrive lower-cased. Patterns are cached: a candidate is scored
+ * against hundreds of roles with the same few dozen skills.
+ */
+export function containsWord(text: string, needle: string): boolean {
+  let re = WORD_RE.get(needle)
+  if (!re) {
+    re = new RegExp(`(?:^|[^a-z0-9])${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z0-9])`)
+    if (WORD_RE.size > 2000) WORD_RE.clear()
+    WORD_RE.set(needle, re)
+  }
+  return re.test(text)
+}
+
 /**
  * The candidate's own keywords, found in the posting.
  *
- * Deliberately the same shape as skillsFit — substring match against the
+ * Deliberately the same shape as skillsFit — whole-word match against the
  * posting's text, null when there is nothing to score. The difference is what
  * they are: skills are read off a résumé, keywords are typed by the candidate
  * to say what they care about. Both BOOST and neither hides anything.
@@ -264,7 +288,7 @@ function keywordsFit(keywords: string[], role: RoleFacts): ScoreComponent | null
   const wanted = keywords.map((k) => k.trim()).filter((k) => k.length > 1)
   if (wanted.length === 0 || text.length < 50) return null
 
-  const hits = wanted.filter((k) => text.includes(k.toLowerCase()))
+  const hits = wanted.filter((k) => containsWord(text, k.toLowerCase()))
   // Full marks at three, for the same reason skillsFit stops at five: no
   // posting names them all, and requiring that makes the component unreachable.
   const ratio = Math.min(1, hits.length / Math.min(3, wanted.length))
@@ -292,7 +316,7 @@ function skillsFit(skills: string[], role: RoleFacts): ScoreComponent | null {
 
   const hits = skills.filter((s) => {
     const needle = s.toLowerCase().trim()
-    return needle.length > 1 && text.includes(needle)
+    return needle.length > 1 && containsWord(text, needle)
   })
 
   // Full marks well before every skill matches — no posting names them all,

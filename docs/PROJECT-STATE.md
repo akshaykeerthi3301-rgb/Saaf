@@ -2723,6 +2723,8 @@ by hand): HAS 36 · PARTIAL 55 · MISSING 42 · total 133.** 97 open rows sit un
 size:** 51 tasks across many sessions, and built is not live — nothing since
 Phase 12 is deployed.
 
+**A scorer defect found on 2026-10-08 (TASK-160, Stage AL):** `skillsFit` and `keywordsFit` in `src/match/score.ts` matched with `text.includes(needle)`, so a candidate's skill "Excel" earned points from "Excellent" (also SQL in MySQL, Java in JavaScript, Go in Google). OBSERVED on a live card ("Mentions 1 of your skills: Excel" on a posting that never names it). ~~substring match~~ → whole word (`containsWord`). MEASURED with `npm run bench:match`, same five profiles, same index: skills component average award **34% → 24%** (a third of the "hits" were fragments); medians −1 to −2 points on four profiles; strong-match counts 15→14, 57→56, 20→19, 91→91, 3→3; 0 components at 90%+. Every score in the live index is therefore up to a few points high until the next recompute; nothing was re-scored here. `analyseFit` (the panel) had the same bug and now reads "0 of 12" where it read "1 of 13".
+
 **Needs the founder, by task:** TASK-170 (price, provider, Vercel Pro), TASK-175
 and TASK-182 (a funding-data licence), TASK-180 (verified domain), TASK-196
 (coaches, webinars), TASK-204 (Apple developer account), TASK-193 (employer keys),

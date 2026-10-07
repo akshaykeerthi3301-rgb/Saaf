@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { analyseFit, type FitAnalysis } from '@/lib/job-insight'
+import { fitSections, type FitSection } from '@/lib/fit-sections'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay } from '@/lib/stated-pay'
@@ -41,6 +42,8 @@ export type JobInsight = {
   score: number | null
   reason: string | null
   analysis: FitAnalysis
+  /** Experience, Seniority, Education, Core skills — each with the words it rests on (TASK-160). */
+  sections: FitSection[]
   description: JdBlock[]
   snapshot: CompanySnapshot
   /** The candidate's tracker stage for this role, when tracked. */
@@ -69,7 +72,7 @@ function atsOf(url: string): string | null {
 export async function readJobInsight(userId: string, roleId: string): Promise<JobInsight | null> {
   const supabase = await createClient()
   const [{ data: profile }, { data: role }, { data: gate }, { data: reqs }, { data: app }] = await Promise.all([
-    supabase.from('profiles').select('skills, years_experience').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('skills, years_experience, current_title, credential').eq('id', userId).maybeSingle(),
     supabase
       .from('roles')
       .select('id, title, company_name, description, city, apply_url, posted_at')
@@ -81,7 +84,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
       .eq('user_id', userId)
       .eq('role_id', roleId)
       .maybeSingle(),
-    supabase.from('role_requirements').select('kind, min_years, source_quote').eq('role_id', roleId),
+    supabase.from('role_requirements').select('kind, min_years, credential, confidence, source_quote').eq('role_id', roleId),
     supabase.from('applications').select('status').eq('role_id', roleId).maybeSingle(),
   ])
   if (!role) return null
@@ -97,7 +100,8 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
   }
   const r = role as unknown as RoleRow
   const g = gate as unknown as { score: number | null; reason: string; score_breakdown: ScoreBreakdown | null } | null
-  const p = profile as unknown as { skills: string[] | null; years_experience: number | null } | null
+  const p = profile as unknown as { skills: string[] | null; years_experience: number | null; current_title: string | null; credential: string | null } | null
+  const reqRows = (reqs ?? []) as unknown as { kind: string; min_years: number | null; credential: string | null; confidence: number | null; source_quote: string }[]
 
   // The company's other open roles in India — the one company figure we can
   // state without a licence: we indexed them ourselves.
@@ -120,10 +124,28 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     title: r.title,
     yearsExperience: p?.years_experience === null || p?.years_experience === undefined ? null : Number(p.years_experience),
     breakdown: g?.score_breakdown ?? null,
-    requirements: ((reqs ?? []) as { kind: string; min_years: number | null; source_quote: string }[]).map((q) => ({
+    requirements: reqRows.map((q) => ({
       kind: q.kind,
       minYears: q.min_years === null ? null : Number(q.min_years),
       sourceQuote: q.source_quote,
+    })),
+  })
+
+  const sections = fitSections({
+    title: r.title,
+    description: r.description ?? '',
+    yearsExperience: p?.years_experience === null || p?.years_experience === undefined ? null : Number(p.years_experience),
+    currentTitle: p?.current_title?.trim() || null,
+    credential: p?.credential ?? null,
+    skills: p?.skills ?? [],
+    matchedSkills: analysis.matched,
+    missingSkills: analysis.missing.map((m) => m.term),
+    requirements: reqRows.map((q) => ({
+      kind: q.kind,
+      minYears: q.min_years === null ? null : Number(q.min_years),
+      credential: q.credential,
+      sourceQuote: q.source_quote,
+      confidence: q.confidence === null ? undefined : Number(q.confidence),
     })),
   })
 
@@ -140,6 +162,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     score: g?.score === null || g?.score === undefined ? null : Number(g.score),
     reason: g?.reason ?? null,
     analysis,
+    sections,
     description: formatDescription(r.description ?? ''),
     snapshot: {
       name: displayEmployer(r.company_name),

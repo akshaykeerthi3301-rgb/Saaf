@@ -47,7 +47,14 @@ export function analyseFit(input: {
   for (const t of named) if (held.has(t.toLowerCase())) matchedMap.set(t.toLowerCase(), held.get(t.toLowerCase())!)
   // A profile skill written out in full in the posting counts even when it is
   // outside the mined vocabulary ("Financial modelling", "Stakeholder management").
-  for (const [k, s] of held) if (k.length > 2 && hay.includes(k)) matchedMap.set(k, s)
+  //
+  // ⚠️ WHOLE WORDS ONLY. This was `hay.includes(k)`, so the skill "Excel" was
+  // "found" inside "Excellent communication skills" and a candidate was told they
+  // held a skill the posting never named. OBSERVED on /today 2026-10-07 on a
+  // Customer Success Manager posting while building the four-section fit analysis.
+  for (const [k, s] of held) {
+    if (k.length > 2 && new RegExp(`(?:^|[^a-z0-9])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z0-9])`).test(hay)) matchedMap.set(k, s)
+  }
   const matched = [...matchedMap.values()]
 
   const missing = named
