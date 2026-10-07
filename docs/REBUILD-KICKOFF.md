@@ -2,7 +2,7 @@
 
 Prepared 2026-10-07. Founder direction: **the rebuild starts next session.** This reverses the 2026-10-02 brainstorm verdict ("ship and launch, no new building") — recorded in PROJECT-STATE Stage AJ; the old verdict is struck there, not deleted.
 
-**What "the rebuild" means here (default, confirm in the first minute):** work through ROADMAP **Phase 17** (TASK-155–166), the gaps found by comparing Saaf with the teardown of a competing product. It is not a copy of that product; Saaf's locked decisions stand.
+**What "the rebuild" means (founder, 2026-10-07, Stage AL): all 133 rows are in Saaf.** Work ROADMAP **Phase 17** then **Phase 18** (TASK-155–210); the scoreboard is `docs/PARITY.md` (`npm run parity`). It is not a copy of that product; Saaf's locked decisions stand.
 
 ## 1. Read, in this order
 
@@ -48,7 +48,7 @@ If any baseline differs, find out why before writing code. Touching scoring? Als
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D1 | Counsel review of the teardown guardrails — status? | Needed before any public launch; not blocking local work |
+| ~~D1~~ | ~~Counsel review of the teardown guardrails — status?~~ | **Closed 2026-10-07: founder says the legal check is complete (Stage AL).** |
 | D2 | Which Phase 17 tasks, in what order? | Start TASK-155 (filter drawer, sort, company filters): cheap, visible, uses data Saaf already has |
 | D3 | Deploy the backlog first? | Yes (§4) |
 | D4 | Lawful content source for the interview bank (TASK-164) | Candidate reports with provenance; no scraping; label verbatim vs paraphrased |

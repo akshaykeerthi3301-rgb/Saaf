@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "parity": "node scripts/parity-status.mjs",
     "verify:rls": "tsx --env-file=.env.local scripts/verify-rls.ts",
     "seed:fixture": "tsx scripts/seed-fixture.ts",
     "gates:demo": "tsx scripts/evaluate-fixture.ts",

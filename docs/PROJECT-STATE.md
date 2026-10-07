@@ -2683,6 +2683,51 @@ Of the 34 MISSING, **24 are buildable now** and **10 are unlocked but gated** (p
 
 **Unverified:** a production build (`next build`); save-then-restore of a drawer filter in the browser (it writes to the founder's profile, so it was left to unit and service tests); the deployed behaviour (nothing here is deployed).
 
+
+### Stage AL — all 133 rows (2026-10-07)
+
+**The direction, verbatim:** "we need the total 133 to be in Saaf. Reverse any
+decisions pulling us back. Also the legal check is complete and we are ok to move
+forward. There is no IP. Lets start."
+
+**Legal check:** closed by the founder's word. CLAIMED — no written opinion was
+seen, and its scope is taken to be what HANDOFF asked counsel to read (the
+teardown guardrails: don't copy code, wording, visuals or data; no scraping; no
+evasion). It is **not** taken to cover DPDP for guessing strangers' emails,
+answering sensitive questions for a candidate, or getting past a CAPTCHA — none of
+which is an IP question. Kickoff D1 is closed. Saaf's own wording, numbers and
+design still stand on their own because the product is built from its own tokens
+and its own data.
+
+**Reversed, on top of Stage AK:** ~~India-first as a limit on what is built~~ —
+the US-only rows (visa-sponsorship signals, clearance flags, US DOL data) are in
+scope as an opt-in Abroad mode (TASK-209); ~~"the HELD and N/A rows are not
+backlog"~~ — every row is backlog.
+
+**How a row can be HAS when the compared feature breaks a limit:** the row is
+closed by the version that does not. These are not preferences, so they are not
+reversed; they are what "in its lawful form" means in `docs/PARITY.md`:
+
+| Row | Compared feature | Saaf's lawful form |
+|---|---|---|
+| F-107 | Applicant counts | Count of Saaf candidates tracking the role, shown from 3 up |
+| F-108 | Pay on most cards | Pay the posting or its ATS states; coverage raised from the providers' own fields (TASK-176) |
+| F-308 | Find any email | Addresses the employer published, and the candidate's own contacts — never guessed |
+| F-602 | Answers the sensitive questions | The candidate's own typed answers, optional (TASK-171) |
+| F-704 | Submit through the ATS's API | Needs an employer-issued key; built to the documented API, live only where a key exists |
+
+**The scoreboard:** `docs/PARITY.md` (one line per row, `npm run parity` fails if a
+non-HAS row has no task). **2026-10-07 (MEASURED from the register, re-sorted
+by hand): HAS 36 · PARTIAL 55 · MISSING 42 · total 133.** 97 open rows sit under
+51 tasks: Phase 17 (TASK-155–171) and the new Phase 18 (TASK-172–210). **Honest
+size:** 51 tasks across many sessions, and built is not live — nothing since
+Phase 12 is deployed.
+
+**Needs the founder, by task:** TASK-170 (price, provider, Vercel Pro), TASK-175
+and TASK-182 (a funding-data licence), TASK-180 (verified domain), TASK-196
+(coaches, webinars), TASK-204 (Apple developer account), TASK-193 (employer keys),
+TASK-164 (a lawful interview-content source), TASK-209 (database storage budget).
+
 ---
 
 ## Index coverage by function — probed live 2026-09-08
