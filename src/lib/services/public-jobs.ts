@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/service'
+import { jobPostingFields, structureJob } from '@/lib/job-sections'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay, type StatedPay } from '@/lib/stated-pay'
@@ -40,6 +41,8 @@ export type PublicJob = {
   /** Pay as the posting states it, or null. Never estimated. */
   pay: StatedPay | null
   description: JdBlock[]
+  /** schema.org JobPosting fields for the sections we could read; each present only when its section is. */
+  postingFields: { responsibilities?: string; qualifications?: string; jobBenefits?: string }
   /** The posting's own text as plain lines, for the JobPosting structured data. */
   plainDescription: string
   culture: { tag: string; evidence: string }[]
@@ -118,6 +121,7 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
     seniority: titleSeniority(r.title),
     pay: findStatedPay(r.description ?? ''),
     description: blocks,
+    postingFields: jobPostingFields(structureJob(r.description ?? '').sections),
     plainDescription: blocks.map((b) => (b.kind === 'bullet' ? `• ${b.text}` : b.text)).join('\n'),
     culture: cultureTags(r.description ?? ''),
     employer: {

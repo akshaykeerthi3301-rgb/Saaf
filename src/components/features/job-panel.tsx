@@ -537,6 +537,30 @@ function CopilotTab({ j }: { j: JobInsight }) {
   )
 }
 
+/** One run of description blocks. Untrusted text: rendered as text nodes only. */
+function Blocks({ blocks, mark }: { blocks: JobInsight['description']; mark: (t: string) => ReactNode }) {
+  return (
+    <div className="space-y-2.5 text-sm leading-6 text-muted-foreground">
+      {blocks.map((b, i) =>
+        b.kind === 'heading' ? (
+          <h5 key={i} className="pt-3 text-sm font-semibold text-primary">{b.text}</h5>
+        ) : (
+          <p
+            key={i}
+            className={`${b.kind === 'bullet' ? 'pl-4' : ''} ${
+              b.requirement ? 'rounded-r-lg border-l-2 border-brand bg-brand/10 py-1 pl-3 pr-2 text-primary' : ''
+            }`}
+          >
+            {b.kind === 'bullet' && !b.requirement ? <span className="-ml-3 mr-1.5 text-accent">•</span> : null}
+            {b.requirement ? <Quote className="mr-1.5 inline size-3 text-accent" aria-hidden="true" /> : null}
+            {mark(b.text)}
+          </p>
+        ),
+      )}
+    </div>
+  )
+}
+
 function DescriptionTab({ j }: { j: JobInsight }) {
   const matched = j.analysis.matched
   const missing = j.analysis.missing.map((m) => m.term)
@@ -571,24 +595,28 @@ function DescriptionTab({ j }: { j: JobInsight }) {
         <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-sm bg-score-mid" /> missing</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-sm bg-brand" /> key requirement</span>
       </p>
-      <div className="space-y-2.5 text-sm leading-6 text-muted-foreground">
-        {j.description.map((b, i) =>
-          b.kind === 'heading' ? (
-            <h4 key={i} className="pt-3 text-sm font-semibold text-primary">{b.text}</h4>
-          ) : (
-            <p
-              key={i}
-              className={`${b.kind === 'bullet' ? 'pl-4' : ''} ${
-                b.requirement ? 'rounded-r-lg border-l-2 border-brand bg-brand/10 py-1 pl-3 pr-2 text-primary' : ''
-              }`}
-            >
-              {b.kind === 'bullet' && !b.requirement ? <span className="-ml-3 mr-1.5 text-accent">•</span> : null}
-              {b.requirement ? <Quote className="mr-1.5 inline size-3 text-accent" aria-hidden="true" /> : null}
-              {mark(b.text)}
-            </p>
-          ),
-        )}
-      </div>
+      {j.jobSections ? (
+        <>
+          <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
+            Sorted under the employer’s own headings by what they say. The original wording is unchanged.
+          </p>
+          <div className="space-y-6">
+            {j.jobSections.map((s, i) => (
+              <section key={i} data-section={s.key}>
+                <h4 className="mb-2 text-sm font-semibold text-primary">
+                  {s.label}
+                  {s.heading && s.heading.toLowerCase() !== s.label.toLowerCase() ? (
+                    <span className="ml-2 text-[11px] font-normal text-muted-foreground">“{s.heading}”</span>
+                  ) : null}
+                </h4>
+                <Blocks blocks={s.blocks} mark={mark} />
+              </section>
+            ))}
+          </div>
+        </>
+      ) : (
+        <Blocks blocks={j.description} mark={mark} />
+      )}
       <a
         href={j.applyUrl}
         target="_blank"

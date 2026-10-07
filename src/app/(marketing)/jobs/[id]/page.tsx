@@ -56,6 +56,8 @@ export default async function PublicJobPage({ params }: Props) {
     '@type': 'JobPosting',
     title: job.title,
     description: job.plainDescription,
+    // Only the parts the posting's own headings let us read — never a field filled with a guess.
+    ...job.postingFields,
     datePosted: (job.postedAt ?? job.firstSeenAt).slice(0, 10),
     hiringOrganization: { '@type': 'Organization', name: job.company },
     jobLocation: {
