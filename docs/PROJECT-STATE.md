@@ -2666,7 +2666,20 @@ Success Manager in Bengaluru with 2 years (MEASURED, one profile):
 2. With a filter on, the page still said "Showing the 500 closest title matches" above 14 cards (true of the quick pills since 2026-09-23). It now says "Showing 55 of your 500 scored roles after your filters."
 3. A test caught `viewFromStored` turning a stored number into text for every field, not just pay; made strict.
 
-**Corrections to the teardown comparison:** ~~F-115 "Sort control — MISSING"~~ — `/today` already had Best match / Newest (`sort=new`). Row stays HAS (two options). Filters not built, because the data cannot honour them: hybrid / on-site, company stage, a staffing-agency switch (registry carries about 10 agency-like boards; ~100 India roles of ~25k).
+**Corrections to the teardown comparison:** ~~F-115 "Sort control — MISSING"~~ — `/today` already had Best match / Newest (`sort=new`). ~~Row stays HAS~~ **Row is PARTIAL, not MISSING** (two options; the compared product's depth is B, so its full set is unknown) — an earlier version of this sentence said "stays HAS", which was wrong: the row was MISSING. Filters not built, because the data cannot honour them: hybrid / on-site, company stage, a staffing-agency switch (registry carries about 10 agency-like boards; ~100 India roles of ~25k).
+
+**Register status after 2026-10-07 (re-sorted by hand from file 11; INFERRED, the register file itself was not edited, and Saaf behaviour was not re-walked row by row):**
+
+| Status | File 11 (MEASURED 2026-10-07) | After the reversals + TASK-155 | What moved |
+|---|---|---|---|
+| ✅ HAS | 36 | 36 | — |
+| ◐ PARTIAL | 52 | 55 | +3: F-112 drawer (5 of ~25 fields), F-115 sort (2 options), F-120 employer exclusion (no agency/stage) — all were MISSING |
+| ❌ MISSING | 27 | 34 | −3 to PARTIAL; +7 un-held (F-1101 plans, F-1102 credits, F-1104 promotions, F-1301–F-1304 employer side); +3 un-N/A'd (F-1003 interview entitlement, F-1103 wallet, F-1106 student reminders — "N/A" only because of ₹0) |
+| ⛔ HELD | 9 | 2 | F-308 find-any-email (law/DPDP), F-602 self-ID answers (law; substitute TASK-171) |
+| ➖ N/A | 9 | 6 | US-only (F-118, F-119, F-306, F-705, F-1208) and LinkedIn-derived (F-505) |
+| **Total** | **133** | **133** | |
+
+Of the 34 MISSING, **24 are buildable now** and **10 are unlocked but gated** (paid plan: Pro, provider, price; employer side: consent → RLS → identity → routing). None of the 10 is started.
 
 **Unverified:** a production build (`next build`); save-then-restore of a drawer filter in the browser (it writes to the founder's profile, so it was left to unit and service tests); the deployed behaviour (nothing here is deployed).
 
