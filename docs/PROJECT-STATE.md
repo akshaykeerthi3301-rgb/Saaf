@@ -2535,6 +2535,82 @@ not applied.
   "withheld" figure on a public endpoint is worth retiring; it is a known loose
   end, not a live claim.
 
+### Stage AJ — Jobright product teardown, clean-room (2026-10-07)
+
+**Founder direction:** "consider this a new subproject inside saaf. dont draw
+what we know or knew." So `docs/jobright-map/` (README, 01 architecture, 02 UI
+and flows, 03 functions) draws on nothing earlier in this file and compares
+against nothing in Saaf. Files are `*.local.md` (gitignored by the existing
+competitor-research rule). **Method:** built-in browser pane, read-only,
+passive (DOM, page-embedded data, the page's own request log); no calls to their
+backend from our side; founder signed in themselves. Every claim is tagged
+OBSERVED / MEASURED / CLAIMED / INFERRED.
+
+**Measured or observed on 2026-10-07 (the numbers worth keeping):**
+
+| Finding | Tag |
+|---|---|
+| Stack: Next.js pages router, Ant Design, Sentry via first-party tunnel, all data under one same-origin gateway `/swan/*` | OBSERVED |
+| **57** distinct `/swan` endpoints in **23** namespaces (script count; ~~47 / 22~~ then ~~54~~ were smaller samples); five separate AI surfaces (copilot chat, NL search, auto-apply agent, résumé analysis, tailoring) | OBSERVED, hand count |
+| **55** live A/B experiments on one anonymous visitor; **16 (29%)** are pricing/upsell | OBSERVED / MEASURED from my grouping |
+| Overall match % is **not** a function of the three displayed sub-scores: linear fit **R² = 0.37** on 8 cards, with contradictory pairs (higher skills+industry, 11 points lower overall) | MEASURED (n = 8; small) |
+| Same job: **66% FAIR MATCH** on the feed, **4.5/10 POOR** in the tailor studio — two scales (~~same résumé~~ not established: the studio used the primary résumé; the feed's source résumé was not shown) | OBSERVED |
+| Explore parses a sentence into the same ~25-field filter schema as the manual drawer; a preset chip stayed on as a hard filter and left **1** result | OBSERVED (n = 1 query) |
+| Auto-apply has two human gates only: confirm the tailored résumé, press Start; modes Supervised/Automated; volume target <20 / 20–50 / >50 per week | OBSERVED |
+| Tracker on the founder's account: 13 applied, 5 of 8 sampled "Applied by Agent", 4 of 8 "JOB CLOSED" | MEASURED (n = 8) |
+| Interview bank 493 companies / 12,165 questions; coaching 5 coaches, $99.99–$119.99 for 60 min; both paywalled or paid on top of the plan | CLAIMED counters / OBSERVED prices |
+
+**Defence met, and respected:** a full page reload on `/jobs/search` led to a
+Cloudflare "Verify you are human" check. It was **not** completed or bypassed;
+it was cleared before the signed-in walk began (by the founder — INFERRED, a session did not do it). Cause of the check is INFERRED (about 25 page loads in
+25 minutes from one browser).
+
+**What this decides:** nothing about Saaf. It is raw material. Any comparison,
+parity claim or build decision made from it is a separate step and must keep the
+tags (a parity verdict needs OBSERVED on both sides).
+
+**Not walked:** onboarding (needs a new account), the extension, the paid-plan
+page and price, tailor step 3, card "…" menu.
+
+**Stage AJ, second pass (same day) — turned into a build spec.** Founder: the teardown must
+let the product be rebuilt bottom-up "without losing any function". Files 04–10 added
+(`docs/jobright-map/`). Measured/observed additions worth keeping:
+
+| Finding | Tag |
+|---|---|
+| **Their Terms of Service forbid** decompiling/reverse-engineering their software, scrapers/automation, and bypassing access controls → this pass stayed black-box (no bundle reading, no injected scripts, no crawling). Counsel should review before a public launch | OBSERVED (ToS text, 2026-10-07) |
+| Match features are `q_seniority_match`, `q_job_skill_match`, `q_industry_match` ∈ [0,1]; per-skill scores ∈ {0, 0.5, 1}. On one full record the skill sub-score (0.533) ≠ mean of per-skill scores (0.458) and the overall 66.5 ≠ equal-weight mean (64.8) | MEASURED (n = 1 record) |
+| Filter object is shared by drawer, saved searches, Agent and Explore; encodings confirmed from the app's own messages: seniority 1 Intern/New Grad · 2 Entry · 3 Mid · 4 Senior; workModel 2 Remote · 3 Hybrid | OBSERVED |
+| Agent can submit by itself only for Greenhouse-hosted forms; Workday-hosted = autofill only (6 tasks). One sampled form: 19 fields, 18 filled (incl. voluntary self-ID answers), 1 missing | OBSERVED / hand-counted |
+| Credit weights {base 1, tailor 2, email 2, autofill 4, coverLetter 2}; easy-apply wallet has total/frozen/available/version; referral = 300¢ × max 10; account's plan `priceAmount 0` (period 91.0 days) | OBSERVED / MEASURED |
+| Interview bank: 20 recent items, 13 distinct titles, 7 rows share a title with another company; categories look inconsistent | MEASURED (n = 20) |
+| Public footprint: **4,548** programmatic pages (two sitemaps of 2,274), 11 competitor-compare pages, 17 remote-hub pages, 16 blog posts, free ATS checker; Chrome extension v1.23.1, 2.49 MiB, 300,000 users (store), 4.9 from 368 ratings | OBSERVED |
+| Jobright's own user counts disagree across pages: 100,000+ (checker), 200K–300K (store), 500K+ (store text), 3,000,000 (site) | CLAIMED |
+| Mobile web is a reduced product: menu lacks Explore/Agent/Coaching; résumé tools say "use a computer"; detail has no AI rail/email/autofill/Orion | OBSERVED |
+| ~~"Same job + same résumé"~~ was never established (corrected in 02 §B8, here, and 03) | correction |
+
+**Stage AJ, third pass (same day) — founder: "complete 2, 3 and 4 from your side".**
+
+| Finding | Tag |
+|---|---|
+| Tailor step 3 run once (authorised): gauge **4.5 "Poor" → 7.0 "Fair" with zero keywords added**; change list "Summary updated", "Enhanced 4 work experience bullets"; inline diff; per-job copy, **not** in the 5-slot library (library stayed 2 of 5) | OBSERVED / MEASURED (n = 1) |
+| Extension walk in the founder's Chrome **blocked by a safety classifier**, not retried; documented from the Web Store listing (v1.23.1, 2.49 MiB, 300,000 users, 4.9 / 368) and Jobright's blog (claims "won't be flagged" — detection evasion, never to copy) | OBSERVED / CLAIMED |
+| Employer pricing page: **$499 vs $36,000** headhunter fee for one $180,000 hire (earlier note "no price shown" corrected) | OBSERVED |
+| **Saaf vs register (file 11):** 133 rows → HAS 36 · PARTIAL 52 · MISSING 27 · HELD 9 · N/A 9; 110 claimable rows (Jobright A/B), 23 claim-only. Saaf side MEASURED from the repo; **tests today: 61 files, 932 pass** (Node 22.23.2). Saaf supply: **1,398 boards** (greenhouse 567, workday 324, ashby 200, smartrecruiters 165, workable 96, recruitee 36, lever 10); extension 0.5.0 with 33 host permissions | MEASURED |
+| Saaf's extension **refuses** demographic/EEO questions (`extension/autofill.js` REFUSALS); Jobright's agent filled them on a sampled form | MEASURED / OBSERVED |
+| Phase 17 (ROADMAP TASK-155–166) proposes 12 gap tasks, **not started** — the 2026-10-02 verdict (ship and launch) stands until the founder says otherwise | decision pending |
+
+**Stage AJ, fourth pass (same day) — "try finding" the four unseen items.** Found: plan prices in cents from the app's own price call (weekly 1799; monthly 4999 list / 3999; quarterly 14997 list / 8999 → 20% and 40% off, MEASURED), Interview passes $19.99/7 days and $39.99/30 days, employer AI recruiter **$499/month per active role**, `/pricing` is a 404, and an official App Store note that Jobright **"currently lists U.S.-based roles only"** (OBSERVED). Reported, not verified: $7.7M raised, $5M ARR with 9 people, free tier ≈ 2 credits/day, countdown-timer checkout, no refunds. **Not found:** checkout screen, onboarding questions, autofill mechanism, signed-in employer product (details and who can unblock: `docs/jobright-map/12-unseen-items-findings.local.md`). Run stopped at the usage limit; files 01–11 not yet updated with fourth-pass facts (credit-weights ambiguity, Jobvite logo, STRONG MATCH band) — file 12 is the source for those.
+
+**Direction, 2026-10-07 (founder):** ~~2026-10-02 brainstorm verdict: ship and launch, no new building~~ → **the rebuild starts next session** (ROADMAP Phase 17; kickoff in `docs/REBUILD-KICKOFF.md`). The teardown files are committed only on the local branch `jobright-teardown` because the GitHub remote is public.
+
+**A guard blocked one step** (generating a tailored résumé, which would have saved a
+document in the founder's account). It was not retried; library verified unchanged (2 of 5).
+**Register:** 133 features — 75 observed in full (A), 35 partly (B), 23 claimed/inferred only (C).
+ **Side effects left on the
+founder's Jobright account** are listed in the README of the subproject (one
+Explore history entry, one generated cover letter for one job).
+
 ---
 
 ## Index coverage by function — probed live 2026-09-08

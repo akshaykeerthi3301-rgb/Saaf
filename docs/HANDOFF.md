@@ -2,6 +2,31 @@
 
 ---
 
+## 🔶 2026-10-07 — Jobright teardown + build spec done (subproject, nothing deployed, no app code changed)
+
+> ⚠️ **The GitHub repo is PUBLIC.** The 14 teardown files are committed only on the **local** branch `jobright-teardown`, which must **never be pushed** or merged into `main` before counsel reads `docs/jobright-map/10-build-blueprint.local.md` §0 — your own `.gitignore` says competitor research is "not ours to publish". `public-job-pages` carries only the records and `docs/REBUILD-KICKOFF.md` (what to read, preflight, decisions, first task) for the next session.
+
+Files: `docs/jobright-map/` (private, untracked). **Only you can:**
+
+1. **Check your Jobright Agent setting.** It reads *Automated Mode, more than 50
+   jobs a week, tailored résumé and cover letter on* — set before this session,
+   not changed by it. One job is queued ("Awaiting Application Start"); a session
+   never pressed Start. Confirm that is what you want.
+2. **Tidy the test traces on your Jobright account (optional):** one Explore
+   history entry and one generated cover letter on the DaVita "Analyst, Business
+   (ROPS)" job.
+3. **Legal check before building from this.** Jobright's Terms of Service bar reverse-engineering
+   their software, scraping and bypassing access limits, and claim their text, graphics and design.
+   The teardown was black-box and read-only, but have a lawyer read `docs/jobright-map/10-build-blueprint.local.md`
+   §0 (guardrails) before a public launch. Never copy their code, wording, visuals or data.
+4. **Status of the two things you asked me to finish (2026-10-07):** (a) the tailored résumé **was generated once** (authorised) — one copy now sits in the DaVita "Analyst, Business (ROPS)" job's tailor history; delete it there if unwanted; (b) the **extension walk was blocked** by a safety classifier when it tried to open a real application form in your Chrome — not retried. If you still want it, do it yourself while I read your description, or tell me a specific form you accept being filled (never submitted) and I'll ask the guard again.
+4b. **Four things can only be seen by you (2026-10-07, file 12):** create a throwaway free Jobright account and have me read-only walk **onboarding** and stop at the **checkout** payment form; run the **extension** on a form yourself and describe it; decide whether the **employer** side is worth an account. Prices already found: see `docs/jobright-map/12-unseen-items-findings.local.md`.
+5. **Decide Phase 17** (ROADMAP TASK-155–166, proposed only): the comparison found 27 buildable gaps; your 2026-10-02 verdict was ship and launch with no new building. Say which, if any, to start.
+6. **Say whether to continue:** onboarding, the extension and the plan price were
+   not seen (they need a new account, the extension, or you opening the plan page).
+
+---
+
 ## 🔶 2026-09-25 (night) — the eight "blocked" gaps are BUILT, NOT LIVE, NOT FULLY SEEN
 
 On `public-job-pages`. Details: ROADMAP Phase 16, PROJECT-STATE Stage AI.
