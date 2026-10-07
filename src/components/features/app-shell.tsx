@@ -74,6 +74,7 @@ export function AppShell({
         href={href}
         onClick={() => setOpen(false)}
         aria-current={active ? 'page' : undefined}
+        data-tour={href === '/applications' ? 'nav-tracker' : undefined}
         className={`group relative flex w-full items-center gap-3 rounded-xl px-3 ${small ? 'py-2 text-xs' : 'py-2.5 text-sm'} font-medium transition-colors ${
           active
             ? 'bg-secondary text-primary'
@@ -165,6 +166,7 @@ export function AppShell({
               <div className="min-w-0">{children}</div>
               <aside
                 aria-label="Context panel"
+                data-tour="panel"
                 className={`border-t border-border bg-card/40 xl:sticky xl:top-16 xl:block xl:h-[calc(100vh-4rem)] xl:self-start xl:overflow-y-auto xl:border-l xl:border-t-0 print:hidden ${
                   contextOnMobile === 'hide' ? 'hidden' : ''
                 }`}

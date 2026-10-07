@@ -10,6 +10,9 @@ vi.mock('@/app/actions/confirm-profile', () => ({ confirmProfile: m.confirmProfi
 vi.mock('@/app/actions/delete-account', () => ({ deleteAccount: vi.fn() }))
 vi.mock('@/app/actions/restart-onboarding', () => ({ restartOnboarding: vi.fn() }))
 vi.mock('@/app/actions/sign-out', () => ({ signOut: vi.fn() }))
+const nav = vi.hoisted(() => ({ push: vi.fn(), replay: vi.fn() }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: nav.push }) }))
+vi.mock('@/components/features/nudge-host', () => ({ replayNudge: nav.replay }))
 const stub = (name: string) => {
   const Stub = () => createElement('div', { 'data-stub': name }, name)
   Stub.displayName = `Stub(${name})`
@@ -40,7 +43,7 @@ const saveButton = () => [...host.querySelectorAll('button')].find((b) => b.text
 
 beforeEach(async () => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-  m.exportMyData.mockReset(); m.confirmProfile.mockReset()
+  m.exportMyData.mockReset(); m.confirmProfile.mockReset(); nav.push.mockReset(); nav.replay.mockReset()
   m.confirmProfile.mockResolvedValue({ ok: true })
   host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host)
   await act(async () => { root.render(createElement(ProfileForm, { initial, email: 'asha@example.com', accountExtras: createElement('div', { 'data-extra': '1' }, 'connections') })) })
@@ -122,7 +125,7 @@ describe('Account & data', () => {
   it('says who is signed in and offers sign-out, the data download, the connections extra, restart and delete', () => {
     const t = host.textContent!
     expect(t).toContain('asha@example.com')
-    for (const s of ['Sign out', 'Download my data', 'connections', 'Start again with a different résumé', 'Delete your account']) expect(t).toContain(s)
+    for (const s of ['Sign out', 'Download my data', 'Show the tour again', 'connections', 'Start again with a different résumé', 'Delete your account']) expect(t).toContain(s)
   })
 
   it('Download my data asks the server for the account\'s data and saves it as the file it names', async () => {
@@ -137,6 +140,20 @@ describe('Account & data', () => {
     expect(m.exportMyData.mock.calls[0]).toEqual([]) // no argument: the account is the session's
     expect(clicked).toEqual(['saaf-my-data-2026-10-08.json'])
     expect(host.textContent).toContain('Downloaded saaf-my-data-2026-10-08.json.')
+  })
+
+  it('"Show the tour again" resets the tour and takes you to the feed', async () => {
+    nav.replay.mockReturnValue(true)
+    await click([...host.querySelectorAll('button')].find((b) => b.textContent === 'Show the tour again')!)
+    expect(nav.replay).toHaveBeenCalledWith('tour:feed')
+    expect(nav.push).toHaveBeenCalledWith('/today')
+  })
+
+  it('says so, and goes nowhere, when this browser cannot remember (so no tour could be shown)', async () => {
+    nav.replay.mockReturnValue(false)
+    await click([...host.querySelectorAll('button')].find((b) => b.textContent === 'Show the tour again')!)
+    expect(nav.push).not.toHaveBeenCalled()
+    expect(host.textContent).toContain('cannot remember tours')
   })
 
   it('a failed download says why and saves nothing', async () => {

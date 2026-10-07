@@ -358,3 +358,11 @@
     }
   }
 }
+
+/* The product tour (TASK-185): the element a coach-mark is talking about. */
+[data-tour-active="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 1rem;
+  transition: outline-color 0.2s ease;
+}

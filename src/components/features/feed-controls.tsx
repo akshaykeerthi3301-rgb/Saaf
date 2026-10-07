@@ -27,7 +27,7 @@ export function FeedSearch({ initial, current, chips = [] }: { initial: string; 
   const router = useRouter()
   const [text, setText] = useState(initial)
   return (
-    <div className="mb-3">
+    <div className="mb-3" data-tour="search">
       <form
         role="search"
         className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:border-accent"

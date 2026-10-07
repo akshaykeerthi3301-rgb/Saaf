@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { readAccountSummary } from '@/lib/services/workspace'
 import { AccountProvider } from '@/components/features/account-context'
 import { ExtensionBridge } from '@/components/features/extension-bridge'
+import { NudgeHost } from '@/components/features/nudge-host'
 
 /**
  * The signed-in workspace. Reads the account once for the shell's user card.
@@ -21,6 +22,7 @@ export default async function WorkspaceLayout({ children }: { children: ReactNod
     <AccountProvider value={account}>
       {children}
       <ExtensionBridge />
+      <NudgeHost />
     </AccountProvider>
   )
 }

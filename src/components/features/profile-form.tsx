@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useState, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RoleInput } from '@/components/features/role-input'
@@ -13,6 +14,7 @@ import { deleteAccount } from '@/app/actions/delete-account'
 import { restartOnboarding } from '@/app/actions/restart-onboarding'
 import { signOut } from '@/app/actions/sign-out'
 import { exportMyData } from '@/app/actions/account'
+import { replayNudge } from '@/components/features/nudge-host'
 
 type Initial = {
   currentTitle: string; employer: string; yearsExperience: string
@@ -46,6 +48,8 @@ const WORK_MODE_OPTIONS = [
 
 export function ProfileForm({ initial, email, accountExtras }: { initial: Initial; email: string; accountExtras?: ReactNode }) {
   const ids = useId()
+  const router = useRouter()
+  const [tourNote, setTourNote] = useState<string>()
   const [tab, setTab] = useState<TabKey>('basics')
   const [exporting, setExporting] = useState(false)
   const [exportNote, setExportNote] = useState<string>()
@@ -264,6 +268,21 @@ export function ProfileForm({ initial, email, accountExtras }: { initial: Initia
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Button type="button" variant="ghost" onClick={download} disabled={exporting}>{exporting ? 'Putting it together…' : 'Download my data'}</Button>
               {exportNote ? <span role="status" className="text-xs text-muted-foreground">{exportNote}</span> : null}
+            </div>
+          </div>
+
+          <div className="mt-8 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">Help</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">A five-stop tour of the job feed, shown once on your first visit.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => (replayNudge('tour:feed') ? router.push('/today') : setTourNote('This browser cannot remember tours, so none is shown.'))}
+              >
+                Show the tour again
+              </Button>
+              {tourNote ? <span role="status" className="text-xs text-muted-foreground">{tourNote}</span> : null}
             </div>
           </div>
 

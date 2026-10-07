@@ -116,7 +116,7 @@ export function RoleCard({
   const strongBand = score >= HIGH_PRECISION_MIN
 
   return (
-    <article className="rounded-2xl bg-card p-5 sm:p-6">
+    <article data-tour="card" className="rounded-2xl bg-card p-5 sm:p-6">
       <div className="flex gap-4">
         {/* A monogram, not a logo: no licensed logo source is wired, and a
             fetched favicon would be a third-party request per card. */}

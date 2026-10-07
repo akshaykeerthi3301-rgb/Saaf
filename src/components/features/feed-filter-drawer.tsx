@@ -68,7 +68,7 @@ export function FeedFilterDrawer({
   }
 
   return (
-    <details open={active > 0} className="mb-3 rounded-2xl border border-border bg-card">
+    <details open={active > 0} data-tour="filters" className="mb-3 rounded-2xl border border-border bg-card">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-primary">
         <SlidersHorizontal className="size-3.5" aria-hidden="true" />
         More filters{active ? ` · ${active} on` : ''}
