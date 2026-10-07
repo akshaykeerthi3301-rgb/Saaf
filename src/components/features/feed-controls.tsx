@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bookmark, EyeOff, Eye, Search, X } from 'lucide-react'
 import { deleteFilter, hideRole, saveFilter } from '@/app/actions/feed-prefs'
-import { isEmptyView, parseFeedQuery, viewToQuery, type FeedView } from '@/lib/feed-query'
+import { interpretFeedQuery, isEmptyView, viewToQuery, type FeedView } from '@/lib/feed-query'
 
 /**
  * The feed controls added in Phase 15 (2026-09-25; gaps observed inside
@@ -15,30 +15,57 @@ import { isEmptyView, parseFeedQuery, viewToQuery, type FeedView } from '@/lib/f
  * view the pills could produce.
  */
 
-/** "PM in Bengaluru, easy apply" → the pills, shown back for editing. No model call. */
-export function FeedSearch({ initial }: { initial: string }) {
+/**
+ * "PM in Bengaluru, easy apply" → the pills, shown back for editing. No model call.
+ *
+ * A plain sentence REPLACES what is on screen; "also remote", "only senior level"
+ * refine it; "remove remote" takes one filter off (see interpretFeedQuery). The
+ * chips under the box are searches built from the candidate's own profile —
+ * clicking one fills the box without searching, so it can be edited first.
+ */
+export function FeedSearch({ initial, current, chips = [] }: { initial: string; current: FeedView; chips?: string[] }) {
   const router = useRouter()
   const [text, setText] = useState(initial)
   return (
-    <form
-      role="search"
-      className="mb-3 flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:border-accent"
-      onSubmit={(e) => {
-        e.preventDefault()
-        const q = viewToQuery(parseFeedQuery(text))
-        router.push(`/today${q ? `?${q}` : ''}`)
-      }}
-    >
-      <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        aria-label="Describe the jobs you want"
-        placeholder="Describe it — “product manager in Bengaluru, easy apply, posted today”"
-        className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none placeholder:text-muted-foreground"
-      />
-      <button type="submit" className="bg-brand-gradient shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold">Search</button>
-    </form>
+    <div className="mb-3">
+      <form
+        role="search"
+        className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:border-accent"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const q = viewToQuery(interpretFeedQuery(text, current))
+          router.push(`/today${q ? `?${q}` : ''}`)
+        }}
+      >
+        <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          aria-label="Describe the jobs you want"
+          placeholder="Describe it — “product manager in Bengaluru, easy apply, posted this week”"
+          className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none placeholder:text-muted-foreground"
+        />
+        <button type="submit" className="bg-brand-gradient shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold">Search</button>
+      </form>
+      {chips.length > 0 ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label="Try a search">
+          <span className="text-[11px] text-muted-foreground">Try</span>
+          {chips.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setText(c)}
+              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-accent/60 hover:text-primary"
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
+        A new sentence starts over. Start with “also” or “only” to add to what you have, or “remove remote” to take one filter off.
+      </p>
+    </div>
   )
 }
 

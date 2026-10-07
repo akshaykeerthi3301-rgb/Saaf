@@ -20,7 +20,7 @@ import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
-import { applyDrawerFilters, applyTextFilter, drawerParams, viewFromParams, viewToQuery } from '@/lib/feed-query'
+import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey } from '@/lib/feed-query'
 import { FeedSearch, HideRole, SavedFilters } from '@/components/features/feed-controls'
 import { FeedFilterDrawer } from '@/components/features/feed-filter-drawer'
 
@@ -138,24 +138,42 @@ export default async function TodayPage({
   // Title/company/city are read only when a text filter is on (Phase 15). Job
   // type and "leave out" need the same title and employer.
   const roleText = view.q || view.city || view.type || view.skip ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
-  const textFiltered = applyTextFilter(
-    applyQuickPills(allRows, pills, {
-      postedAt: postedAll,
-      isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
-    }),
-    view,
-    roleText,
-  )
-  // The drawer (TASK-155). Floors and pay are read only for the rows that have
-  // survived everything above, and only when their filter is on — pay reads
-  // descriptions, which the list read deliberately does not.
+  // The drawer (TASK-155). Floors and pay are read for every scored role, and only
+  // when their filter is on — pay reads descriptions, which the list read
+  // deliberately does not. Every role, not just the survivors of the other
+  // filters, so the "why so few results" counts below are exact when one of the
+  // other filters is taken off.
   const [floorsAll, paysAll] = await Promise.all([
-    view.level ? readExperienceFloors(textFiltered.map((r) => r.role_id)) : Promise.resolve(undefined),
-    view.pay ? readStatedPays(textFiltered.map((r) => r.role_id)) : Promise.resolve(undefined),
+    view.level ? readExperienceFloors(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    view.pay ? readStatedPays(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
   ])
-  const { rows, notes: drawerNotes } = applyDrawerFilters(textFiltered, view, {
-    text: roleText, postedAt: postedAll, floors: floorsAll, pays: paysAll,
-  })
+  /**
+   * The whole filter pipeline as a function of a view, over data already read.
+   * The page runs it once for what is on screen and once more per active filter
+   * to say what taking that filter off would show — the same code, so the figure
+   * quoted is the figure the candidate gets.
+   */
+  const runFilters = (v: FeedView) =>
+    applyDrawerFilters(
+      applyTextFilter(
+        applyQuickPills(allRows, { min80: v.min80, fresh: v.fresh, remote: v.remote, easy: v.easy }, {
+          postedAt: postedAll,
+          isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
+        }),
+        v,
+        roleText,
+      ),
+      v,
+      { text: roleText, postedAt: postedAll, floors: floorsAll, pays: paysAll },
+    )
+  const { rows, notes: drawerNotes } = runFilters(view)
+  // F-204 "why so few results": with filters on and few roles left, offer each filter's removal with its exact count.
+  const fewRows = activeFilters(view).length > 0 && rows.length <= 5
+  const relaxed = fewRows ? relaxations(view, (x) => runFilters(x).rows.length) : []
+  // No single filter to blame (taking any one off still leaves the list short): say what each leaves alone.
+  const solo = fewRows && relaxed.length === 0 && activeFilters(view).length > 1
+    ? soloCounts(view, (x) => runFilters(x).rows.length)
+    : []
   const drawerPairs = drawerParams(view)
   const pillCount = Object.values(pills).filter(Boolean).length + (view.q ? 1 : 0) + (view.city ? 1 : 0) + drawerPairs.length
   // The text filter, the drawer and the hidden view ride along on every link, like the pills.
@@ -171,6 +189,14 @@ export default async function TodayPage({
     view.level && drawerNotes.unstatedLevel > 0 ? `${drawerNotes.unstatedLevel} role${drawerNotes.unstatedLevel === 1 ? ' states' : 's state'} no experience requirement and ${drawerNotes.unstatedLevel === 1 ? 'is' : 'are'} kept.` : '',
     view.pay && drawerNotes.unstatedPay > 0 ? `${drawerNotes.unstatedPay} role${drawerNotes.unstatedPay === 1 ? ' states' : 's state'} no pay in rupees and ${drawerNotes.unstatedPay === 1 ? 'is' : 'are'} left out.` : '',
   ].filter(Boolean)
+  /** The words for any one filter, pill or drawer, for the "take one off" links. */
+  const filterLabel = (k: FilterKey): string =>
+    k === 'min80' ? 'Match > 80%'
+      : k === 'fresh' ? 'Posted < 24 hours'
+        : k === 'remote' ? 'Remote only'
+          : k === 'easy' ? 'Easy Apply'
+            : k === 'q' ? `“${view.q}”`
+              : chipLabel(k, String(view[k]))
   /** The words on a filter chip. Every drawer filter says what it is, so the chip can be removed knowingly. */
   const chipLabel = (k: string, v: string): string => {
     if (k === 'city') return `In ${v}`
@@ -567,7 +593,15 @@ export default async function TodayPage({
 
           {/* Quick filters. Plain links, like every other control here: no client
               JavaScript, and each filtered view is its own shareable URL. */}
-          <FeedSearch initial="" />
+          <FeedSearch
+            initial=""
+            current={view}
+            chips={promptChips({
+              role: profile.preferred_role,
+              city: resolveCity(profile.city)?.name ?? profile.city,
+              years: profile.years_experience,
+            })}
+          />
           <SavedFilters
             saved={feedPrefs.saved.map((f) => ({ name: f.name, query: viewToQuery(f.view) }))}
             current={view}
@@ -638,7 +672,55 @@ export default async function TodayPage({
             </p>
           ) : null}
 
-          {pillCount > 0 && rows.length === 0 ? (
+          {relaxed.length > 0 ? (
+            <div className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
+              <p>
+                {rows.length === 0 ? 'No role' : `Only ${rows.length} ${rows.length === 1 ? 'role' : 'roles'}`} in your{' '}
+                {allRows.length} {rows.length === 0 ? 'matches passes' : 'matches pass'} {activeFilters(view).length === 1 ? 'that filter' : 'all of those filters'}.
+                That is the filter, not the market. Take one off to see more:
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {relaxed.map(({ key, count }) => {
+                  const q = new URLSearchParams(viewToQuery(withoutFilter(view, key)))
+                  if (onlyNew) q.set('tab', 'new')
+                  if (showHidden) q.set('hidden', '1')
+                  return (
+                    <Link
+                      key={key}
+                      href={`/today${q.size ? `?${q}` : ''}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-primary transition hover:border-accent/60"
+                    >
+                      Remove {filterLabel(key)} <span className="font-mono tabular-nums text-muted-foreground">→ {count}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ) : solo.length > 0 ? (
+            <div className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
+              <p>
+                {rows.length === 0 ? 'No role' : `Only ${rows.length} ${rows.length === 1 ? 'role' : 'roles'}`} in your{' '}
+                {allRows.length} {rows.length === 0 ? 'matches passes' : 'matches pass'} all of those filters, and taking any
+                one of them off does not change that — it is the combination. On its own, each one leaves:
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {solo.map(({ key, count }) => {
+                  const q = new URLSearchParams(viewToQuery(onlyFilter(view, key)))
+                  if (onlyNew) q.set('tab', 'new')
+                  if (showHidden) q.set('hidden', '1')
+                  return (
+                    <Link
+                      key={key}
+                      href={`/today${q.size ? `?${q}` : ''}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-primary transition hover:border-accent/60"
+                    >
+                      {filterLabel(key)} <span className="font-mono tabular-nums text-muted-foreground">→ {count}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ) : pillCount > 0 && rows.length === 0 ? (
             <p className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
               No role in your {allRows.length} matches passes {pillCount === 1 ? 'that filter' : 'all of those filters'}.
               That is the filter, not the market —{' '}

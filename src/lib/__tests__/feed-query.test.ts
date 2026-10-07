@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  applyDrawerFilters, applyTextFilter, cleanSkip, drawerParams, EMPTY_VIEW, feedViewSchema, isEmptyView, jobTypeOf,
-  levelOfYears, matchesQuery, parseFeedQuery, toggleSkill, viewFromParams, viewFromStored, viewToParams, viewToQuery,
+  activeFilters, applyDrawerFilters, applyTextFilter, cleanSkip, drawerParams, EMPTY_VIEW, feedViewSchema, isEmptyView, jobTypeOf,
+  levelOfYears, matchesQuery, onlyFilter, parseFeedQuery, promptChips, relaxations, soloCounts, toggleSkill, viewFromParams,
+  viewFromStored, viewToParams, viewToQuery, withoutFilter,
   type FeedView,
 } from '../feed-query'
 
@@ -326,5 +327,88 @@ describe('applyDrawerFilters — one field moves the count the expected way', ()
     const bare = [{ role_id: 'zz' }]
     expect(applyDrawerFilters(bare, { ...EMPTY_VIEW, skip: 'Zeta' }, { text: new Map() }, NOW).rows).toHaveLength(1)
     expect(applyDrawerFilters(bare, { ...EMPTY_VIEW, type: 'intern' }, { text: new Map() }, NOW).rows).toHaveLength(0)
+  })
+})
+
+describe('"why so few results" (TASK-156)', () => {
+  // A toy pipeline: 100 roles; each filter keeps a fixed share, independently.
+  const KEEP: Record<string, (i: number) => boolean> = {
+    remote: (i) => i % 2 === 0,      // 50
+    posted: (i) => i % 5 === 0,      // 20
+    level: (i) => i % 7 === 0,       // 15
+    city: (i) => i < 40,             // 40
+  }
+  const count = (v: FeedView) => {
+    let n = 0
+    for (let i = 0; i < 100; i++) {
+      if (v.remote && !KEEP.remote(i)) continue
+      if (v.posted && !KEEP.posted(i)) continue
+      if (v.level && !KEEP.level(i)) continue
+      if (v.city && !KEEP.city(i)) continue
+      n++
+    }
+    return n
+  }
+  const all: FeedView = { ...EMPTY_VIEW, remote: true, posted: '7', level: 'mid', city: 'Pune' }
+
+  it('lists the active filters, and withoutFilter takes exactly one off', () => {
+    expect(activeFilters(all)).toEqual(['remote', 'city', 'posted', 'level'])
+    expect(withoutFilter(all, 'remote').remote).toBe(false)
+    expect(withoutFilter(all, 'level').level).toBe('')
+    expect(activeFilters(withoutFilter(all, 'city'))).toEqual(['remote', 'posted', 'level'])
+  })
+
+  it('the sort is not a filter: it survives both operations', () => {
+    const sorted = { ...all, sort: 'new' as const }
+    expect(withoutFilter(sorted, 'remote').sort).toBe('new')
+    expect(onlyFilter(sorted, 'remote').sort).toBe('new')
+    expect(activeFilters({ ...EMPTY_VIEW, sort: 'new' })).toEqual([])
+  })
+
+  it('reports the exact count with one filter off, biggest gain first, only where it adds roles', () => {
+    expect(count(all)).toBe(1) // only role 0 is even, a multiple of 5 and of 7, and under 40
+    const r = relaxations(all, count)
+    expect(r).toHaveLength(4) // every filter, taken off alone, adds roles
+    for (const x of r) expect(x.count).toBe(count(withoutFilter(all, x.key)))
+    expect(r.every((x) => x.count > 0)).toBe(true)
+    expect(r.map((x) => x.count)).toEqual([...r.map((x) => x.count)].sort((a, b) => b - a))
+  })
+
+  it('offers nothing to relax when removing any one filter still leaves nothing', () => {
+    const none = (v: FeedView) => (v.remote && v.posted && v.level && v.city ? 0 : v.remote || v.posted || v.level || v.city ? 0 : 100)
+    expect(relaxations(all, none)).toEqual([])
+  })
+
+  it('soloCounts: what each filter leaves alone, narrowest first', () => {
+    expect(soloCounts(all, count)).toEqual([
+      { key: 'level', count: 15 }, { key: 'posted', count: 20 }, { key: 'city', count: 40 }, { key: 'remote', count: 50 },
+    ])
+  })
+
+  it('onlyFilter keeps just the one filter', () => {
+    expect(onlyFilter(all, 'posted')).toEqual({ ...EMPTY_VIEW, posted: '7' })
+    expect(onlyFilter({ ...EMPTY_VIEW, pay: 12, q: 'pm' }, 'pay')).toEqual({ ...EMPTY_VIEW, pay: 12 })
+  })
+})
+
+describe('promptChips — searches built from the candidate\'s own profile', () => {
+  it('uses the role, city and experience', () => {
+    const c = promptChips({ role: 'Product Manager', city: 'Pune', years: 8 })
+    expect(c).toContain('Product Manager in Pune')
+    expect(c).toContain('Product Manager, senior level')
+    expect(c.length).toBeLessThanOrEqual(6)
+  })
+  it('reads years into a level', () => {
+    expect(promptChips({ role: 'Analyst', years: 1 })).toContain('entry level Analyst')
+    expect(promptChips({ role: 'Analyst', years: 4 })).toContain('Analyst, mid level')
+  })
+  it('every chip parses back into the search it describes', () => {
+    for (const chip of promptChips({ role: 'Data Analyst', city: 'Pune', years: 1 })) {
+      const v = parseFeedQuery(chip)
+      expect(v.q).toBe('data analyst')
+    }
+  })
+  it('offers general chips when there is no role yet', () => {
+    expect(promptChips({}).length).toBeGreaterThan(0)
   })
 })

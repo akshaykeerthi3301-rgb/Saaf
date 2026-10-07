@@ -192,29 +192,80 @@ const STOP = new Set([
   'or', 'with', 'me', 'show', 'find', 'get', 'some', 'any', 'job', 'jobs', 'role', 'roles', 'position', 'positions',
   'opening', 'openings', 'based', 'near', 'around', 'please', 'only', 'that', 'which', 'are', 'is', 'be', 'my', 'city',
   'india', 'work', 'working', 'from', 'within', 'than', 'more', 'less', 'posted', 'match', 'matches', 'fit',
+  'recent', 'recently', 'postings',
 ])
 
+/** Words that start a pay figure's unit: "12 lpa", "12 lakh", "₹12L", "1.5 cr". */
+const PAY_RE = /(?:₹|rs\.?\s*|inr\s*)?\b(\d{1,3}(?:\.\d+)?)\s*(lpa|lakhs?|lacs?|l|cr|crores?)\b\+?(?:\s*(?:per annum|per year|a year|p\.?a\b|annually))?/
+
+/** "excluding Accenture, TCS" → ['Accenture','TCS'], read from the original casing before punctuation is stripped. */
+const SKIP_RE = /\b(?:excluding|exclude|except|avoid|not at|not from|other than)\s+([^.;!?]*?)(?=\s+(?:in|at|for|posted|remote|jobs|roles|with|paying|pay|and only|that|which)\b|[.;!?]|$)/i
+
 /**
- * A typed sentence → the view the pills would set, plus words to match.
+ * A typed sentence → the view the pills and the drawer would set, plus words to
+ * match.
  *
- * Deterministic on purpose: "remote", "easy apply", "posted today", "strong
- * match" and a city name are recognised; every other meaningful word becomes
- * the title/company query. Whatever was understood is shown back as pills the
- * candidate can remove, so a misreading is visible and one click undoes it.
+ * Deterministic on purpose: "remote", "easy apply", "posted today / this week /
+ * this month", "entry level", "internship", "contract", "paying 12 lakh",
+ * "excluding Accenture", "newest first", "strong match" and a city name are
+ * recognised; every other meaningful word becomes the title/company query.
+ * Whatever was understood is shown back as chips the candidate can remove, so a
+ * misreading is visible and one click undoes it.
  *
  * "remote ok" / "or remote" means remote is ALLOWED, not required, so it does
  * not switch on "Remote only" — the pill that hides every office role.
+ *
+ * ⚠️ TITLE WORDS STAY TITLE WORDS. "senior", "junior", "lead" are part of a job
+ * title far more often than a statement about years, and the experience filter
+ * reads the years a posting asks for, not its title. "Senior product manager"
+ * therefore searches the title; only an explicit "entry level", "fresher",
+ * "mid level" or a years range sets the experience band.
  */
 export function parseFeedQuery(text: string): FeedView {
-  let s = ` ${text.toLowerCase().replace(/[,.;!?()]/g, ' ').replace(/\s+/g, ' ')} `
   const v: FeedView = { ...EMPTY_VIEW }
+
+  // Employers to leave out come first, from the original text: a list needs its commas.
+  let original = ` ${text} `
+  const skipHit = SKIP_RE.exec(original)
+  if (skipHit) {
+    v.skip = cleanSkip(skipHit[1].split(/,|\s+and\s+|\s+or\s+|\s+&\s+/i).join(','))
+    original = original.replace(SKIP_RE, ' ')
+  }
+
+  let s = ` ${original.toLowerCase().replace(/[,.;!?()]/g, ' ').replace(/\s+/g, ' ')} `
   const take = (re: RegExp) => { const hit = re.test(s); if (hit) s = s.replace(re, ' '); return hit }
+
+  // Pay before the match-score pattern: "above 80 lakh" is pay, "above 80" is a score.
+  const pay = PAY_RE.exec(s)
+  if (pay) {
+    const n = Number(pay[1])
+    const lakh = /^cr|^crore/.test(pay[2]) ? n * 100 : n
+    const floor = Math.floor(lakh)
+    if (floor >= 1 && floor <= MAX_PAY_LAKH) v.pay = floor
+    s = s.replace(PAY_RE, ' ').replace(/\b(paying|pay|salary|ctc|package|at least|minimum|min|more than|or more|above|over)\b/g, ' ')
+  }
 
   if (take(/\b(remote (ok|okay|fine|also)|or remote|remote or \w+|hybrid or remote)\b/g)) { /* allowed, not required */ }
   if (take(/\b(fully remote|remote only|work from home|wfh|remote)\b/g)) v.remote = true
   if (take(/\b(easy apply|quick apply|one page apply|easy to apply)\b/g)) v.easy = true
+
+  // Posted windows, widest last so "this week" is not read as "today".
+  if (take(/\b(past 3 days|last 3 days|past few days|last few days|couple of days|last three days|past three days)\b/g)) v.posted = '3'
+  if (take(/\b(this week|past week|last week|last 7 days|past 7 days|within a week|in a week|last seven days)\b/g)) v.posted = '7'
+  if (take(/\b(this month|past month|last month|last 30 days|past 30 days|within a month|in a month)\b/g)) v.posted = '30'
   if (take(/\b(posted today|last 24 hours|past 24 hours|past day|last day|today|fresh|just posted|new today)\b/g)) v.fresh = true
-  if (take(/\b((strong|high|good|best|top|great) (match|fit)|above 80|over 80|80\+|80 plus|> ?80)\b/g)) v.min80 = true
+
+  if (take(/\b(entry level|entry-level|fresher|freshers|fresh graduate|new grad|new graduate|graduate role|no experience|0 ?(to|-) ?2 (years|yrs)|0-2 (years|yrs))\b/g)) v.level = 'entry'
+  if (take(/\b(mid level|mid-level|midlevel|3 ?(to|-) ?5 (years|yrs)|3-5 (years|yrs))\b/g)) v.level = 'mid'
+  if (take(/\b(senior level|senior-level|6\+ (years|yrs)|6 ?(to|-) ?10 (years|yrs)|10\+ (years|yrs))\b/g)) v.level = 'senior'
+
+  if (take(/\b(intern(ship)?s?)\b/g)) v.type = 'intern'
+  else if (take(/\b(part[- ]time)\b/g)) v.type = 'parttime'
+  else if (take(/\b(contract basis|contractual|contract roles?|contract jobs?|contract work|freelance|temporary|c2h)\b/g)) v.type = 'contract'
+  else if (take(/\b(full[- ]time|permanent)\b/g)) v.type = 'fulltime'
+
+  if (take(/\b(newest first|latest first|most recent first|sort by newest|sorted by newest|newest|latest|most recent)\b/g)) v.sort = 'new'
+  if (take(/\b(?:(?:strong|high|good|best|top|great) (?:match|fit)|above 80|over 80|80 plus)\b|\b80\+|(?:^|\s)> ?80\b/g)) v.min80 = true
 
   // Longest city name first, so "navi mumbai" is not read as "mumbai".
   const names = CITIES.flatMap((c) => [c.name, ...(c.aliases ?? [])].map((n) => ({ n: n.toLowerCase(), c })))
@@ -227,6 +278,142 @@ export function parseFeedQuery(text: string): FeedView {
   const words = s.split(' ').map((w) => w.trim()).filter((w) => w && !STOP.has(w) && !/^\d+$/.test(w))
   v.q = words.join(' ').slice(0, MAX_Q)
   return v
+}
+
+// ------------------------------------------------------------ conversation
+
+/**
+ * Words that mean "change what is on screen" rather than "start over". A typed
+ * sentence REPLACES the whole view unless it opens with one of these — so a
+ * stale preset can never silently survive a new request, which is the failure
+ * this rule exists for: a preset chip left on as a hard filter turning a
+ * 25-result search into 1.
+ */
+const REFINE_OPENERS = /^\s*(also|and also|and|plus|add|only|make it|now|but|just)\b[\s,:]*/i
+const REMOVE_OPENERS = /^\s*(remove|drop|clear|ignore|forget|no more|without the|take off)\b[\s,:]*/i
+
+/** What each word in "remove …" switches off. */
+const REMOVABLE: [RegExp, (v: FeedView) => void][] = [
+  [/\b(everything|all|filters|all filters|reset)\b/, (v) => Object.assign(v, EMPTY_VIEW)],
+  [/\b(remote|wfh)\b/, (v) => { v.remote = false }],
+  [/\b(easy|quick)\b/, (v) => { v.easy = false }],
+  [/\b(fresh|today|24)\b/, (v) => { v.fresh = false }],
+  [/\b(strong|match|80)\b/, (v) => { v.min80 = false }],
+  [/\b(city|location|place)\b/, (v) => { v.city = '' }],
+  [/\b(week|month|posted|date|days?)\b/, (v) => { v.posted = ''; v.fresh = false }],
+  [/\b(entry|mid|senior|level|experience)\b/, (v) => { v.level = '' }],
+  [/\b(intern|internship|contract|part|full|type)\b/, (v) => { v.type = '' }],
+  [/\b(pay|salary|lakh|lpa|ctc)\b/, (v) => { v.pay = 0 }],
+  [/\b(employers?|compan(y|ies)|excluded|exclusion)\b/, (v) => { v.skip = '' }],
+  [/\b(sort|newest|latest|order)\b/, (v) => { v.sort = '' }],
+]
+
+/**
+ * Read a typed sentence against what is on screen now. "also remote" or "only
+ * senior level" refines the current view; "remove remote" takes one filter off;
+ * anything else is a fresh search that replaces the view. Pure.
+ */
+export function interpretFeedQuery(text: string, current: FeedView): FeedView {
+  const rm = REMOVE_OPENERS.exec(text)
+  if (rm) {
+    const next = { ...current }
+    const rest = text.slice(rm[0].length).toLowerCase()
+    for (const [re, off] of REMOVABLE) if (re.test(rest)) off(next)
+    return next
+  }
+  const rf = REFINE_OPENERS.exec(text)
+  if (rf) {
+    const add = parseFeedQuery(text.slice(rf[0].length))
+    const next = { ...current }
+    for (const k of ['min80', 'fresh', 'remote', 'easy'] as const) if (add[k]) next[k] = true
+    if (add.city) next.city = add.city
+    if (add.posted) next.posted = add.posted
+    if (add.level) next.level = add.level
+    if (add.type) next.type = add.type
+    if (add.pay) next.pay = add.pay
+    if (add.sort) next.sort = add.sort
+    if (add.skip) next.skip = cleanSkip(`${next.skip},${add.skip}`)
+    if (add.q) next.q = [...new Set(`${next.q} ${add.q}`.split(' ').filter(Boolean))].join(' ').slice(0, MAX_Q)
+    return next
+  }
+  return parseFeedQuery(text)
+}
+
+// ------------------------------------------------------------ "why so few results"
+
+export type FilterKey = 'min80' | 'fresh' | 'remote' | 'easy' | 'q' | 'city' | 'posted' | 'level' | 'type' | 'pay' | 'skip'
+export const FILTER_KEYS: FilterKey[] = ['min80', 'fresh', 'remote', 'easy', 'q', 'city', 'posted', 'level', 'type', 'pay', 'skip']
+
+export function activeFilters(v: FeedView): FilterKey[] {
+  return FILTER_KEYS.filter((k) => Boolean(v[k]))
+}
+
+/** The same view with one filter off. The sort is not a filter and is kept. */
+export function withoutFilter(v: FeedView, k: FilterKey): FeedView {
+  const next: FeedView = { ...v }
+  if (k === 'min80' || k === 'fresh' || k === 'remote' || k === 'easy') next[k] = false
+  else if (k === 'pay') next.pay = 0
+  else next[k] = '' as never
+  return next
+}
+
+/**
+ * For each active filter: how many roles would show with ONLY that filter taken
+ * off. `count` is the page's own pipeline run on a view, so the figure shown is
+ * the figure the candidate will get, not an estimate. Only filters whose removal
+ * adds roles are returned, the biggest gain first.
+ */
+export function relaxations(v: FeedView, count: (view: FeedView) => number): { key: FilterKey; count: number }[] {
+  const now = count(v)
+  return activeFilters(v)
+    .map((key) => ({ key, count: count(withoutFilter(v, key)) }))
+    .filter((r) => r.count > now)
+    .sort((a, b) => b.count - a.count)
+}
+
+/** The view with every filter off except one (and the sort). */
+export function onlyFilter(v: FeedView, k: FilterKey): FeedView {
+  const next: FeedView = { ...EMPTY_VIEW, sort: v.sort }
+  if (k === 'min80' || k === 'fresh' || k === 'remote' || k === 'easy') next[k] = v[k]
+  else if (k === 'pay') next.pay = v.pay
+  else next[k] = v[k] as never
+  return next
+}
+
+/**
+ * When taking any ONE filter off still leaves the list short, no single filter is
+ * to blame — the combination is. Then the useful fact is how many roles each
+ * filter leaves on its own, narrowest first: it shows which one is doing the
+ * damage. Same `count` as relaxations(), so the figures are the real ones.
+ */
+export function soloCounts(v: FeedView, count: (view: FeedView) => number): { key: FilterKey; count: number }[] {
+  return activeFilters(v)
+    .map((key) => ({ key, count: count(onlyFilter(v, key)) }))
+    .sort((a, b) => a.count - b.count)
+}
+
+// ------------------------------------------------------------ prompt chips
+
+/**
+ * Sentences to offer under the search box, built from the candidate's own
+ * profile so each one is a search they would actually run. Clicking one fills
+ * the box; it does not search, so it can be edited first.
+ */
+export function promptChips(p: { role?: string | null; city?: string | null; years?: number | null }): string[] {
+  const role = (p.role ?? '').trim()
+  const city = (p.city ?? '').trim()
+  if (!role) return ['remote jobs posted this week', 'easy apply, posted today']
+  const out = [
+    city ? `${role} in ${city}` : role,
+    `${role}, remote`,
+    `${role} posted this week`,
+    `${role}, easy apply`,
+  ]
+  if (p.years !== null && p.years !== undefined) {
+    out.push(p.years <= 2 ? `entry level ${role}` : p.years >= 6 ? `${role}, senior level` : `${role}, mid level`)
+  }
+  out.push(`${role}, newest first`)
+  return out.slice(0, 6)
 }
 
 // ------------------------------------------------------------ text filtering
