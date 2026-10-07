@@ -19,6 +19,7 @@ import { ConnectionsAt } from '@/components/features/connections-at'
 import { ApplyForMe } from '@/components/features/apply-for-me'
 import { ScoreRing, ringBand } from '@/components/ui/score-ring'
 import { ReportScore } from '@/components/features/report-score'
+import { JobActions } from '@/components/features/job-actions'
 import { barsFromShares } from '@/lib/score-bars'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
@@ -163,6 +164,7 @@ function PanelHeader({ j }: { j: JobInsight }) {
         <ApplyForMe url={j.applyUrl} title={j.title} company={j.company} />
         <TrackRole roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} trackedStatus={j.trackedStatus ?? undefined} />
         <HideRole roleId={j.roleId} />
+        <JobActions roleId={j.roleId} applyUrl={j.applyUrl} title={j.title} />
       </div>
     </div>
   )

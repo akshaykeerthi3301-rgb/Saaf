@@ -353,6 +353,19 @@ async function crossUserIsolation() {
     })
     check('gate_results: A cannot INSERT even its own row (ingest-written only)', insGate.status >= 400, `http ${insGate.status}`)
 
+    // job_reports (0036): a candidate files and reads only their own.
+    const forgeReport = await asA('job_reports', { method: 'POST', body: JSON.stringify({ user_id: b.id, role_id: roleId, kind: 'other' }) })
+    if (forgeReport.status === 404) {
+      console.log('  – job_reports: table not present, skipped (migration 0036 pending)')
+    } else {
+      check('job_reports: A cannot INSERT a report as B', forgeReport.status >= 400, `http ${forgeReport.status}`)
+      const ownReport = await asA('job_reports', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ user_id: a.id, role_id: roleId, kind: 'other' }) })
+      check('job_reports: A CAN file their own', ownReport.status < 400, `http ${ownReport.status}`)
+      const seen = await (await asA(`job_reports?user_id=eq.${b.id}&select=id`)).json()
+      check("job_reports: A cannot read B's reports", Array.isArray(seen) && seen.length === 0)
+      await asA(`job_reports?user_id=eq.${a.id}`, { method: 'DELETE' })
+    }
+
     // role_interest (0033) is SECURITY DEFINER — the one function here that reads
     // across users — so it is checked for what it must NOT return: who, or a count under 3.
     const interest = await asA('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })

@@ -500,7 +500,7 @@ export default async function TodayPage({
   const chipKeys = ['q', 'city', 'pay', 'skip']
 
   return (
-    <FeedProvider initial={roleParam ?? firstVisible}>
+    <FeedProvider initial={roleParam ?? firstVisible} openInitially={Boolean(roleParam)}>
     <AppShell
       title="Job Search Feed"
       eyebrow="AI job matches"

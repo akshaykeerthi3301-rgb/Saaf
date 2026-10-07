@@ -55,8 +55,8 @@ const FeedContext = createContext<{
  * phone sheet are two views of one read — a job opened on either is never
  * fetched twice, and returning to a job already seen is instant.
  */
-export function FeedProvider({ initial, children }: { initial: string | null; children: ReactNode }) {
-  const [selection, setSelection] = useState<Selection>({ roleId: initial, opened: false })
+export function FeedProvider({ initial, openInitially = false, children }: { initial: string | null; /** A deep link (?role=) was followed: open the sheet on a phone too. */ openInitially?: boolean; children: ReactNode }) {
+  const [selection, setSelection] = useState<Selection>({ roleId: initial, opened: openInitially && !!initial })
   // Results by role, as state: `current` is DERIVED from it, so the effect
   // below only ever sets state from the fetch's callback, never synchronously.
   const [results, setResults] = useState<Record<string, JobInsightResult>>({})
