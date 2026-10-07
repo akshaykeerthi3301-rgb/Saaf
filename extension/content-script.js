@@ -235,7 +235,7 @@ function mountActions(root, job) {
 async function autoApplyIfAssigned() {
   const state = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-state' }).catch(() => null)
   if (!state) return false
-  const report = (status, reason) => chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status, reason })
+  const report = (status, reason, coverage) => chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status, reason, coverage })
   const A = globalThis.SaafAutoApply
 
   if (state.phase === 'await-confirm') {
@@ -257,7 +257,7 @@ async function autoApplyIfAssigned() {
     r = await A.run(document, profile, { resumeFile, beforeSubmit })
     if (r.status === 'open-form') r = { status: 'needs-you', reason: 'Could not reach the application form' }
   }
-  await report(r.status, r.reason)
+  await report(r.status, r.reason, r.coverage)
   return true
 }
 

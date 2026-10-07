@@ -69,10 +69,38 @@ async function renderAutoApply() {
   const todayCount = autoApplyDay.date === new Date().toISOString().slice(0, 10) ? autoApplyDay.count : 0
   $('aaEnabled').checked = !!autoApply.enabled
   $('aaStatus').textContent = `${autoApplyQueue.length} queued · ${todayCount} of 25 applied today. Queue jobs with "Apply for me" on any job in Saaf.`
-  $('aaStart').disabled = !autoApply.enabled || !autoApplyQueue.length
-  $('aaLog').innerHTML = autoApplyLog.slice(0, 8).map((l) =>
-    `<li><b>${esc(STATUS[l.status] ?? l.status)}</b> — ${esc(l.title)} · ${esc(l.company)}<br>${esc(l.reason)}</li>`).join('')
+  // Saaf's remote switch: when applications are paused, say so and do not offer Start.
+  const gate = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-gate' }).catch(() => null)
+  $('aaPaused').hidden = !gate?.paused
+  $('aaPaused').textContent = gate?.paused ? `Paused by Saaf — ${gate.message}` : ''
+  $('aaStart').disabled = !autoApply.enabled || !autoApplyQueue.length || !!gate?.paused
+  // The queue itself: what will be opened next, each removable. Order is the order it runs in.
+  $('aaQueue').innerHTML = autoApplyQueue.slice(0, 12).map((q, i) =>
+    `<li>${i + 1}. ${esc(q.title)} · ${esc(q.company)} <a href="#" data-drop="${i}" title="Take this job off the queue">remove</a></li>`).join('') +
+    (autoApplyQueue.length > 12 ? `<li>…and ${autoApplyQueue.length - 12} more</li>` : '')
+  $('aaClear').hidden = !autoApplyQueue.length
+  // Per application: how much of what the employer REQUIRED was answered, and which fields.
+  $('aaLog').innerHTML = autoApplyLog.slice(0, 8).map((l) => {
+    const c = l.coverage
+    const cov = c
+      ? `<br><span title="${esc((c.filled || []).join(', '))}">${c.percent}% of required fields answered</span>` +
+        (c.missing && c.missing.length ? ` · missing: ${esc(c.missing.slice(0, 4).join('; '))}${c.missing.length > 4 ? '…' : ''}` : '')
+      : ''
+    return `<li><b>${esc(STATUS[l.status] ?? l.status)}</b> — ${esc(l.title)} · ${esc(l.company)}<br>${esc(l.reason)}${cov}</li>`
+  }).join('')
 }
+
+$('aaQueue').addEventListener('click', async (e) => {
+  const a = e.target.closest('a[data-drop]')
+  if (!a) return
+  e.preventDefault()
+  const { autoApplyQueue = [] } = await chrome.storage.local.get('autoApplyQueue')
+  autoApplyQueue.splice(Number(a.dataset.drop), 1)
+  await chrome.storage.local.set({ autoApplyQueue })
+})
+$('aaClear').addEventListener('click', async () => {
+  await chrome.storage.local.set({ autoApplyQueue: [] })
+})
 
 $('aaEnabled').addEventListener('change', async (e) => {
   await chrome.storage.local.set({ autoApply: { enabled: e.target.checked, at: new Date().toISOString() } })

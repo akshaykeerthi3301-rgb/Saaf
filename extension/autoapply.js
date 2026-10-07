@@ -40,8 +40,12 @@
 
   const isRequired = (el) => el.required || el.getAttribute('aria-required') === 'true'
 
-  /** Labels of required fields that are still empty. Empty list = ready. */
-  function missingRequired(doc) {
+  /**
+   * Every visible required field, with whether it holds an answer. The one place
+   * "required" is read, so the coverage report and the stop-before-submit rule
+   * can never disagree about what was required.
+   */
+  function requiredFields(doc) {
     const out = []
     const seenGroups = new Set()
     for (const el of doc.querySelectorAll('input, select, textarea')) {
@@ -59,9 +63,28 @@
       } else {
         empty = !String(el.value || '').trim()
       }
-      if (empty) out.push(labelOf(el, doc))
+      out.push({ label: labelOf(el, doc), filled: !empty })
     }
     return out
+  }
+
+  /** Labels of required fields that are still empty. Empty list = ready. */
+  function missingRequired(doc) {
+    return requiredFields(doc).filter((f) => !f.filled).map((f) => f.label)
+  }
+
+  /**
+   * How much of what the employer REQUIRED is answered — for the queue view. It
+   * counts required fields only: counting optional ones would make a form we
+   * left half-empty look done, and "100%" is a claim about what will be sent.
+   * No required field at all reads 100%, and the labels still say what was filled.
+   */
+  function coverage(doc) {
+    const fields = requiredFields(doc)
+    const filled = fields.filter((f) => f.filled).map((f) => f.label)
+    const missing = fields.filter((f) => !f.filled).map((f) => f.label)
+    const percent = fields.length ? Math.round((100 * filled.length) / fields.length) : 100
+    return { percent, filled: filled.slice(0, 20), missing: missing.slice(0, 20), required: fields.length }
   }
 
   function labelOf(el, doc) {
@@ -112,7 +135,7 @@
 
   /**
    * Fill, check, and submit only when nothing is missing.
-   * Returns { status: 'submitted' | 'needs-you' | 'open-form' | 'unconfirmed', reason, filled }.
+   * Returns { status: 'submitted' | 'needs-you' | 'open-form' | 'unconfirmed', reason, filled, coverage }.
    */
   async function run(doc, profile, opts = {}) {
     if (!hasForm(doc)) {
@@ -124,28 +147,40 @@
 
     const res = await root.SaafAutofill.fillForm(profile, doc, { resumeFile: opts.resumeFile, waitMs: opts.waitMs })
     await sleep(opts.settleMs ?? 400)
-    if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled: res.filled }
+    if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled: res.filled, coverage: coverage(doc) }
 
+    const cov = coverage(doc)
     const missing = missingRequired(doc)
     if (missing.length) {
-      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled: res.filled }
+      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled: res.filled, coverage: cov }
     }
     const submit = findSubmit(doc)
-    if (!submit) return { status: 'needs-you', reason: 'Could not find the form’s own Submit button', filled: res.filled }
+    if (!submit) return { status: 'needs-you', reason: 'Could not find the form’s own Submit button', filled: res.filled, coverage: cov }
 
     // Tell the service worker before clicking: most ATS forms navigate on
     // submit, which ends this script — the NEXT page then checks for the
     // confirmation (content-script.js, phase 'await-confirm').
-    if (opts.beforeSubmit) await opts.beforeSubmit()
+    //
+    // ⚠️ THE SAME CALL IS THE KILL SWITCH'S LAST CHANCE. The service worker
+    // checks Saaf's remote switch here and answers { allow: false, reason } when
+    // applications are paused; nothing is clicked, and the tab is handed back.
+    // Anything other than an explicit `allow: false` goes ahead (a worker that
+    // cannot answer must not strand the candidate's own run).
+    if (opts.beforeSubmit) {
+      const verdict = await opts.beforeSubmit()
+      if (verdict && verdict.allow === false) {
+        return { status: 'needs-you', reason: verdict.reason || 'Apply for me is paused by Saaf', filled: res.filled, coverage: cov }
+      }
+    }
     submit.click()
     const deadline = Date.now() + (opts.confirmMs ?? 15000)
     while (Date.now() < deadline) {
       await sleep(500)
-      if (confirmationSeen(doc)) return { status: 'submitted', reason: 'The employer’s page confirmed it', filled: res.filled }
-      if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared on submit — that one is yours', filled: res.filled }
+      if (confirmationSeen(doc)) return { status: 'submitted', reason: 'The employer’s page confirmed it', filled: res.filled, coverage: cov }
+      if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared on submit — that one is yours', filled: res.filled, coverage: cov }
     }
-    return { status: 'unconfirmed', reason: 'Clicked Submit but saw no confirmation — check this tab', filled: res.filled }
+    return { status: 'unconfirmed', reason: 'Clicked Submit but saw no confirmation — check this tab', filled: res.filled, coverage: cov }
   }
 
-  root.SaafAutoApply = { run, hasCaptcha, missingRequired, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
+  root.SaafAutoApply = { run, hasCaptcha, missingRequired, requiredFields, coverage, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

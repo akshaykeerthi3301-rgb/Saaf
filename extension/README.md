@@ -85,9 +85,20 @@ one at a time, fills it, and presses the form's own Submit button — only when:
 | — | A job counts as **Applied** only when the employer's page confirms it; a click with no confirmation is "check this tab" |
 
 Off by default, runs only when you press Start, at most **25 a day**, only on the
-ATS hosts in `manifest.json`. Demographic questions, free-text essays and consent
-boxes are still never answered — if the employer made one required, the job waits
-for you.
+ATS hosts in `manifest.json`. Free-text essays and consent boxes are still never
+answered — if the employer made one required, the job waits for you. **Demographic
+questions** are left for you unless you typed your own answer to that exact
+question on your Saaf profile (0.6.0, TASK-171); date of birth, age and pregnancy
+are never answered.
+
+**0.6.0 (2026-10-08):** the popup shows the **queue** (remove a job, or clear it),
+and each finished application shows **how much of what the employer required was
+answered** and which fields were missing. Saaf can **pause every extension at
+once**: before each job is opened, and again just before each Submit click, the
+extension asks `/api/extension/status`; if it says paused, nothing is submitted
+and the tab is handed back (docs/RUNBOOK.md). If Saaf cannot be reached it carries
+on — the run is yours, and a switch that also failed during an outage would be a
+second failure.
 
 ## Syncing with the Saaf website
 

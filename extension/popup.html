@@ -74,7 +74,9 @@
 <p>Saaf opens each queued job in a background tab, fills it from the details above, and presses Submit — <b>only</b> when every required answer is filled. It stops and leaves the tab for you at any CAPTCHA, any question it has no answer for, or a required file it doesn't have. Up to 25 a day. A job counts as applied only when the employer's page confirms it.</p>
 <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--fg)"><input id="aaEnabled" type="checkbox" style="width:auto;margin-top:2px" /> Let Saaf submit applications for me</label>
 <div class="sync" id="aaStatus" style="margin-top:8px"></div>
-<div><button id="aaStart">Start applying</button><span class="ok" id="aaMsg"></span></div>
+<div class="sync" id="aaPaused" hidden></div>
+<ol id="aaQueue" style="padding-left:18px;font-size:10px;color:var(--muted);margin:8px 0 0"></ol>
+<div><button id="aaStart">Start applying</button> <button id="aaClear" style="background:var(--card);border:1px solid var(--line);color:var(--muted)" hidden>Clear queue</button><span class="ok" id="aaMsg"></span></div>
 <ul id="aaLog" style="padding-left:16px;font-size:10px;color:var(--muted);margin:10px 0 0"></ul>
 
 <div class="note">

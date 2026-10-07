@@ -192,6 +192,33 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
  * reports back is closed out the next time Start is pressed (STALE_MS).
  */
 const DAILY_CAP = 25
+
+/**
+ * Saaf's remote kill switch. If an application goes out wrong for anyone, the
+ * founder sets one flag (docs/RUNBOOK.md) and every extension stops submitting
+ * on its next check — it is asked before each job is opened AND again just
+ * before each Submit click, so a run already in progress stops too.
+ *
+ * ⚠️ FAILS OPEN, ON PURPOSE AND SAID HERE. If Saaf cannot be reached the check
+ * returns "not paused": the run is the candidate's own, started by their own
+ * press of Start, against an employer's site that does not depend on ours. A
+ * switch that also stopped everyone whenever Saaf had an outage would be a
+ * second way to fail, not a safety. The cost: a kill switch cannot reach a
+ * browser that is offline — and an offline browser cannot submit anything.
+ */
+const STATUS_URL = 'https://saaf-ten.vercel.app/api/extension/status'
+async function pausedBySaaf() {
+  try {
+    const res = await fetch(STATUS_URL, { cache: 'no-store', signal: AbortSignal.timeout(4000) })
+    if (!res.ok) return { paused: false }
+    const body = await res.json()
+    return body && body.applyForMe === 'paused'
+      ? { paused: true, message: String(body.message || 'Apply for me is paused by Saaf').slice(0, 200) }
+      : { paused: false }
+  } catch {
+    return { paused: false }
+  }
+}
 const STALE_MS = 90_000
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -200,9 +227,18 @@ const SUPPORTED = (chrome.runtime.getManifest().content_scripts?.[0]?.matches ??
   .map((m) => new RegExp('^' + m.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'))
 const supported = (url) => SUPPORTED.some((re) => re.test(url))
 
-async function logResult(job, status, reason) {
+/** Coverage as the content script measured it, bounded: it came from a page. */
+function cleanCoverage(c) {
+  if (!c || typeof c !== 'object') return undefined
+  const labels = (a) => (Array.isArray(a) ? a.slice(0, 20).map((x) => String(x).slice(0, 80)) : [])
+  const percent = Number(c.percent)
+  if (!Number.isFinite(percent)) return undefined
+  return { percent: Math.max(0, Math.min(100, Math.round(percent))), filled: labels(c.filled), missing: labels(c.missing) }
+}
+
+async function logResult(job, status, reason, coverage) {
   const { autoApplyLog = [] } = await chrome.storage.local.get('autoApplyLog')
-  autoApplyLog.unshift({ url: job.url, title: job.title, company: job.company, status, reason, at: new Date().toISOString() })
+  autoApplyLog.unshift({ url: job.url, title: job.title, company: job.company, status, reason, coverage: cleanCoverage(coverage), at: new Date().toISOString() })
   await chrome.storage.local.set({ autoApplyLog: autoApplyLog.slice(0, 50) })
 }
 
@@ -227,6 +263,10 @@ async function processNext() {
   const count = autoApplyDay.date === today() ? autoApplyDay.count : 0
   if (count >= DAILY_CAP) { await chrome.storage.session.remove('autoApplyActive'); return { ok: false, error: `Today's limit of ${DAILY_CAP} applications is reached.` } }
 
+  // Asked before a job is taken off the queue, so a paused run leaves it queued.
+  const gate = await pausedBySaaf()
+  if (gate.paused) { await chrome.storage.session.remove('autoApplyActive'); return { ok: false, error: gate.message } }
+
   const job = autoApplyQueue.shift()
   await chrome.storage.local.set({ autoApplyQueue })
   if (!job) { await chrome.storage.session.remove('autoApplyActive'); return { ok: true, done: true } }
@@ -245,16 +285,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const { autoApplyActive } = await chrome.storage.session.get('autoApplyActive')
     const mine = autoApplyActive && sender.tab && sender.tab.id === autoApplyActive.tabId
 
+    if (msg.type === 'saaf:autoapply-gate') { sendResponse(await pausedBySaaf()); return }
     if (msg.type === 'saaf:autoapply-start') { sendResponse(await processNext()); return }
     if (msg.type === 'saaf:autoapply-state') { sendResponse(mine ? { job: autoApplyActive.job, phase: autoApplyActive.phase } : null); return }
     if (msg.type === 'saaf:autoapply-phase' && mine) {
+      // 'await-confirm' is sent immediately before the Submit click: the last
+      // moment the kill switch can stop this application.
+      if (msg.phase === 'await-confirm') {
+        const gate = await pausedBySaaf()
+        if (gate.paused) { sendResponse({ ok: true, allow: false, reason: gate.message }); return }
+      }
       await chrome.storage.session.set({ autoApplyActive: { ...autoApplyActive, phase: msg.phase, startedAt: Date.now() } })
-      sendResponse({ ok: true }); return
+      sendResponse({ ok: true, allow: true }); return
     }
     if (msg.type === 'saaf:autoapply-result' && mine) {
       const job = autoApplyActive.job
       await chrome.storage.session.remove('autoApplyActive')
-      await logResult(job, msg.status, msg.reason)
+      await logResult(job, msg.status, msg.reason, msg.coverage)
       if (msg.status === 'submitted') {
         const { autoApplyDay = {} } = await chrome.storage.local.get('autoApplyDay')
         const count = autoApplyDay.date === today() ? autoApplyDay.count : 0

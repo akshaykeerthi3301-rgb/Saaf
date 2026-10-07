@@ -231,6 +231,16 @@ daily ingest's decision, made on its own evidence.
 
 ---
 
+## Pausing "Apply for me" for everyone (the kill switch)
+
+If an application ever goes out wrong, stop all of them first and investigate second.
+
+1. Supabase → Table editor → `service_flags` → the row `apply_for_me_paused` → set `value` to `true` (and, if you like, edit `message`, up to 200 characters — it is shown in the extension). **Instant; no deploy.** (Needs migration 0039. Without it: set the Vercel environment variable `APPLY_FOR_ME_PAUSED=1` and redeploy.)
+2. Every extension (0.6.0 or later) asks `GET /api/extension/status` before it opens each job and again just before it clicks Submit, so a run already in progress stops at its next Submit and hands the tab back; queued jobs stay queued.
+3. To resume, set `value` back to `false`.
+
+Check it: `curl https://saaf-ten.vercel.app/api/extension/status` answers `{"applyForMe":"paused",…}`. **It fails open** — if Saaf cannot be reached the extension carries on, because a switch that also stopped everyone during an outage would be a second failure. An extension older than 0.6.0 does not check at all.
+
 ## GitHub
 
 Push and Actions both work; only third-party OAuth is blocked.
