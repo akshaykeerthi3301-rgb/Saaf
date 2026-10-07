@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { analyseFit, type FitAnalysis } from '@/lib/job-insight'
 import { fitSections, type FitSection } from '@/lib/fit-sections'
+import { postingEvidence, type PostingEvidence } from '@/lib/posting-evidence'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay } from '@/lib/stated-pay'
@@ -30,6 +31,10 @@ export type CompanySnapshot = {
 
 export type JobInsight = {
   roleId: string
+  /** gate_results.id — what "this score looks wrong" is filed against; null when the role is not scored for this candidate. */
+  gateResultId: string | null
+  /** What the extractor read from the posting, one quote each — the "how this score is built" list. */
+  evidence: PostingEvidence[]
   title: string
   company: string
   city: string | null
@@ -80,7 +85,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
       .maybeSingle(),
     supabase
       .from('gate_results')
-      .select('score, reason, score_breakdown')
+      .select('id, score, reason, score_breakdown')
       .eq('user_id', userId)
       .eq('role_id', roleId)
       .maybeSingle(),
@@ -99,7 +104,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     posted_at: string | null
   }
   const r = role as unknown as RoleRow
-  const g = gate as unknown as { score: number | null; reason: string; score_breakdown: ScoreBreakdown | null } | null
+  const g = gate as unknown as { id: string; score: number | null; reason: string; score_breakdown: ScoreBreakdown | null } | null
   const p = profile as unknown as { skills: string[] | null; years_experience: number | null; current_title: string | null; credential: string | null } | null
   const reqRows = (reqs ?? []) as unknown as { kind: string; min_years: number | null; credential: string | null; confidence: number | null; source_quote: string }[]
 
@@ -151,6 +156,8 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
 
   return {
     roleId: r.id,
+    gateResultId: g?.id ?? null,
+    evidence: postingEvidence(reqRows.map((q) => ({ kind: q.kind, minYears: q.min_years === null ? null : Number(q.min_years), confidence: Number(q.confidence ?? 1), sourceQuote: q.source_quote }))),
     title: r.title,
     company: displayEmployer(r.company_name),
     city: displayCity(r.city) || null,

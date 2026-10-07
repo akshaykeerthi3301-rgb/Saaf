@@ -16,24 +16,31 @@ import { interpretFeedQuery, isEmptyView, viewToQuery, type FeedView } from '@/l
  */
 
 /**
- * "PM in Bengaluru, easy apply" → the pills, shown back for editing. No model call.
+ * The feed's one search box: "Search by title or company", which also understands a
+ * sentence ("PM in Bengaluru, easy apply, posted this week"). No model call.
  *
  * A plain sentence REPLACES what is on screen; "also remote", "only senior level"
- * refine it; "remove remote" takes one filter off (see interpretFeedQuery). The
- * chips under the box are searches built from the candidate's own profile —
- * clicking one fills the box without searching, so it can be edited first.
+ * refine it; "remove remote" takes one filter off (see interpretFeedQuery).
+ *
+ * ⚠️ THE EXAMPLES LIVE IN A DROPDOWN, NOT ON THE PAGE. They were a permanent row of
+ * six chips and a paragraph of instructions above the filters — the first thing a
+ * candidate met, and the reason the screen read as cluttered (redesign
+ * 2026-10-08). They open when the box takes focus: searches built from the
+ * candidate's own profile, which fill the box without searching so they can be edited.
  */
 export function FeedSearch({ initial, current, chips = [] }: { initial: string; current: FeedView; chips?: string[] }) {
   const router = useRouter()
   const [text, setText] = useState(initial)
+  const [focused, setFocused] = useState(false)
   return (
-    <div className="mb-3" data-tour="search">
+    <div className="relative min-w-0 basis-full sm:flex-1 sm:basis-0" data-tour="search" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false) }}>
       <form
         role="search"
-        className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:border-accent"
+        className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 focus-within:border-accent"
         onSubmit={(e) => {
           e.preventDefault()
           const q = viewToQuery(interpretFeedQuery(text, current))
+          setFocused(false)
           router.push(`/today${q ? `?${q}` : ''}`)
         }}
       >
@@ -41,36 +48,49 @@ export function FeedSearch({ initial, current, chips = [] }: { initial: string; 
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          aria-label="Describe the jobs you want"
-          placeholder="Describe it — “product manager in Bengaluru, easy apply, posted this week”"
+          onFocus={() => setFocused(true)}
+          onKeyDown={(e) => { if (e.key === 'Escape') { setFocused(false); (e.target as HTMLInputElement).blur() } }}
+          aria-label="Search by title or company, or describe the job you want"
+          placeholder="Search by title or company — or describe it"
           className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none placeholder:text-muted-foreground"
         />
-        <button type="submit" className="bg-brand-gradient shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold">Search</button>
+        {text ? (
+          <button type="button" aria-label="Clear the search box" onClick={() => setText('')} className="rounded p-0.5 text-muted-foreground hover:text-primary">
+            <X className="size-3.5" />
+          </button>
+        ) : null}
       </form>
-      {chips.length > 0 ? (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label="Try a search">
-          <span className="text-[11px] text-muted-foreground">Try</span>
-          {chips.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setText(c)}
-              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-accent/60 hover:text-primary"
-            >
-              {c}
-            </button>
-          ))}
+      {focused ? (
+        <div className="absolute inset-x-0 top-full z-30 mt-1.5 rounded-2xl border border-border bg-popover p-3 shadow-lg">
+          {chips.length > 0 ? (
+            <>
+              <p className="px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Try</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {chips.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setText(c)}
+                    className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground transition hover:border-accent/60 hover:text-primary"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+          <p className="mt-2.5 border-t border-border px-1 pt-2.5 text-[11px] leading-4 text-muted-foreground">
+            A new sentence starts over. Begin with “also” or “only” to add to what you have, or “remove remote” to take one filter off.
+          </p>
         </div>
       ) : null}
-      <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
-        A new sentence starts over. Start with “also” or “only” to add to what you have, or “remove remote” to take one filter off.
-      </p>
     </div>
   )
 }
 
 /** Named views, one click to restore; "Save this view" when a filter is on. */
-export function SavedFilters({ saved, current, stored }: { saved: { name: string; query: string }[]; current: FeedView; stored: boolean }) {
+export function SavedFilters({ saved, current, stored, alwaysShow = false }: { saved: { name: string; query: string }[]; current: FeedView; stored: boolean; alwaysShow?: boolean }) {
   const router = useRouter()
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState('')
@@ -78,9 +98,12 @@ export function SavedFilters({ saved, current, stored }: { saved: { name: string
   const [pending, start] = useTransition()
   const canSave = !isEmptyView(current)
 
-  if (!saved.length && !canSave) return null
+  if (!saved.length && !canSave && !alwaysShow) return null
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="Saved filters">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Saved filters">
+      {!saved.length && !canSave ? (
+        <p className="text-[11px] leading-4 text-muted-foreground">Set a filter or two, then save the view here to come back to it in one click.</p>
+      ) : null}
       {saved.map((f) => (
         <span key={f.name} className="inline-flex items-center rounded-full border border-border bg-card text-xs">
           <Link href={`/today${f.query ? `?${f.query}` : ''}`} className="inline-flex items-center gap-1.5 py-1.5 pl-3 pr-1 font-semibold text-primary hover:text-accent">

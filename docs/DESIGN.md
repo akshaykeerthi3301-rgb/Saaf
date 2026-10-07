@@ -263,8 +263,12 @@ Weight 600 does the work at every heading size, with tight negative tracking
 Three shells, and every screen uses one of them.
 
 - **`AppShell`** (`src/components/features/app-shell.tsx`) — the signed-in
-  frame. Fixed 256px sidebar on desktop, a drawer on mobile, and a 80px header
-  carrying eyebrow, page title and the account initials. It takes the page body
+  frame. ~~Fixed 256px sidebar on desktop, a drawer on mobile, and a 80px header
+  carrying eyebrow, page title and the account initials.~~ **Since 2026-10-08 (feed
+  redesign): an 84px icon-over-label rail on desktop (one-word labels, the long name
+  as the hover title; the account card is a popover behind the avatar), a full
+  drawer on mobile, and a 56px header carrying the page title and the account
+  initials (the eyebrow is screen-reader text only).** It takes the page body
   as `children`, so every screen inside it stays a **server component** and
   keeps its auth check and its database read on the server. Used by `/today`,
   `/applications`, `/profile`.
@@ -339,10 +343,22 @@ the message below in `destructive` — the only place chromatic red appears.
 code is the two action buttons, and **the breakdown is never behind a request**
 — a candidate can check the arithmetic without a round trip.
 
-**Four rows of text, and that is the budget.** Left column: title, then
+**Four rows of text, and that is the budget.** ~~Left column: title, then
 `company · city` on one line, then the reason line, then a single *Insights*
 disclosure sitting beside two icon buttons. Right column is the score ring — the
-number in `text-3xl tabular-nums` and its band, nothing else.
+number in `text-3xl tabular-nums` and its band, nothing else.~~
+**Re-set 2026-10-08 after the card had grown back to about twenty things** (a band
+tag, New, Easy Apply, "Bar unread", five fact chips, a highlight line, the reason
+line, a "why" box, five buttons, an Insights disclosure) and the founder called the
+feed cluttered. The card is now: **chips** (at most four, quiet: New, age, early
+applicant, connections) → **title** → **one line** `company · city · level · stated
+pay` → **one paragraph** (the reason line in full, then the score's own strength and
+gap) → **three mini bars** (Role · Skills · Experience, each one stored component's
+points over its maximum) → **actions** (save, hide, Quick apply). The ring and its
+band word sit on the right. What moved to the detail panel, one click away: the
+Insights notes, the requirement quotes, "this score looks wrong". The budget is
+enforced by `src/components/features/__tests__/role-card.test.ts`; adding an element
+to the card means changing a number in that file, in review, on purpose.
 
 **The band follows the bucket, not the score.** It read the score alone until
 2026-09-07, so a role sitting under *Good match, short on experience* announced

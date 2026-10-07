@@ -111,6 +111,13 @@ function chunks(ids: string[]): string[][] {
 export async function readCards(
   userId: string,
   rows: Pick<ArrangeableRow, 'id' | 'role_id'>[],
+  /**
+   * `requirements: false` skips the role_requirements read. The feed card stopped
+   * showing requirement quotes in the 2026-10-08 redesign (they live in the detail
+   * panel, which reads its own), so the page no longer pays for ~40 rows of quotes
+   * it does not render.
+   */
+  opts: { requirements?: boolean } = {},
 ): Promise<{ cards: Map<string, ShortlistCard>; requirements: Map<string, RequirementRow[]> }> {
   const cards = new Map<string, ShortlistCard>()
   const requirements = new Map<string, RequirementRow[]>()
@@ -127,14 +134,16 @@ export async function readCards(
           .in('id', ids),
       ),
     ),
-    Promise.all(
-      chunks(rows.map((r) => r.role_id)).map((ids) =>
-        supabase
-          .from('role_requirements')
-          .select('role_id, kind, min_years, credential, value_text, source_quote, confidence')
-          .in('role_id', ids),
-      ),
-    ),
+    opts.requirements === false
+      ? Promise.resolve([] as { data: unknown[] | null }[])
+      : Promise.all(
+          chunks(rows.map((r) => r.role_id)).map((ids) =>
+            supabase
+              .from('role_requirements')
+              .select('role_id, kind, min_years, credential, value_text, source_quote, confidence')
+              .in('role_id', ids),
+          ),
+        ),
   ])
 
   // The description is read only to find stated pay, then dropped — it is

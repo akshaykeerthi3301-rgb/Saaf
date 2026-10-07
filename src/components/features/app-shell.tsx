@@ -26,20 +26,26 @@ import {
  * Active state reads the URL, not the title a page passes: two pages with one
  * title (or a renamed one) could otherwise light up the wrong item.
  */
-const NAV: { label: string; href: string; icon: typeof BriefcaseBusiness }[] = [
-  { label: 'Job Search Feed', href: '/today', icon: BriefcaseBusiness },
-  { label: 'AI Resume Builder', href: '/resume', icon: FileText },
-  { label: 'Application Tracker', href: '/applications', icon: KanbanSquare },
-  { label: 'Networking / Outreach', href: '/outreach', icon: Send },
+/**
+ * One word each, because the rail is icon-over-label and about 84px wide on a
+ * desktop (the redesign of 2026-10-08, from the teardown's UI spec §0: a narrow
+ * rail of icon + short label, not a 256px sidebar of sentences). The long name
+ * stays as the link's title for anyone who hovers.
+ */
+const NAV: { label: string; short: string; href: string; icon: typeof BriefcaseBusiness }[] = [
+  { label: 'Job search feed', short: 'Jobs', href: '/today', icon: BriefcaseBusiness },
+  { label: 'AI résumé builder', short: 'Résumé', href: '/resume', icon: FileText },
+  { label: 'Application tracker', short: 'Tracker', href: '/applications', icon: KanbanSquare },
+  { label: 'Networking and outreach', short: 'Outreach', href: '/outreach', icon: Send },
   // Unlocked 2026-09-15 on a measured 4.1% noise rate (TASK-080). If that number
   // is ever unknown again, re-lock it.
-  { label: 'Interview Prep', href: '/interview-prep', icon: MessageCircle },
-  { label: 'Coaching', href: '/coaching', icon: GraduationCap },
+  { label: 'Interview prep', short: 'Interview', href: '/interview-prep', icon: MessageCircle },
+  { label: 'Coaching', short: 'Coaching', href: '/coaching', icon: GraduationCap },
 ]
 
-const SECONDARY: { label: string; href: string; icon: typeof BriefcaseBusiness }[] = [
-  { label: 'Copilot Diagnostic', href: '/copilot', icon: Gauge },
-  { label: 'Index audit', href: '/audit', icon: ShieldCheck },
+const SECONDARY: { label: string; short: string; href: string; icon: typeof BriefcaseBusiness }[] = [
+  { label: 'Copilot diagnostic', short: 'Copilot', href: '/copilot', icon: Gauge },
+  { label: 'Index audit', short: 'Audit', href: '/audit', icon: ShieldCheck },
 ]
 
 const STATUS: Record<SearchStatus, { label: string; dot: string }> = {
@@ -66,16 +72,17 @@ export function AppShell({
   const account = useAccount()
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
-  const navItem = ({ label, href, icon: Icon }: (typeof NAV)[number], small = false) => {
+  const navItem = ({ label, short, href, icon: Icon }: (typeof NAV)[number], small = false) => {
     const active = isActive(href)
     return (
       <Link
         key={href}
         href={href}
+        title={label}
         onClick={() => setOpen(false)}
         aria-current={active ? 'page' : undefined}
         data-tour={href === '/applications' ? 'nav-tracker' : undefined}
-        className={`group relative flex w-full items-center gap-3 rounded-xl px-3 ${small ? 'py-2 text-xs' : 'py-2.5 text-sm'} font-medium transition-colors ${
+        className={`group relative flex w-full items-center gap-3 rounded-xl px-3 ${small ? 'py-2 text-xs' : 'py-2.5 text-sm'} font-medium transition-colors lg:flex-col lg:gap-1 lg:px-1 lg:py-2.5 lg:text-[10px] lg:leading-none ${
           active
             ? 'bg-secondary text-primary'
             : 'text-muted-foreground hover:bg-secondary/60 hover:text-primary'
@@ -84,8 +91,8 @@ export function AppShell({
         {active ? (
           <span className="bg-brand-gradient absolute inset-y-2 left-0 w-1 rounded-full" aria-hidden="true" />
         ) : null}
-        <Icon className={small ? 'size-4' : 'size-[18px]'} />
-        {label}
+        <Icon className={small ? 'size-4 lg:size-5' : 'size-[18px] lg:size-5'} />
+        <span className={small ? 'lg:sr-only' : ''}>{short}</span>
       </Link>
     )
   }
@@ -94,16 +101,16 @@ export function AppShell({
     <main className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         <aside
-          className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-y-auto print:hidden border-r border-sidebar-border bg-sidebar px-3 py-5 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-y-auto print:hidden border-r border-sidebar-border bg-sidebar px-3 py-5 transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-[84px] lg:translate-x-0 lg:px-2 ${
             open ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between px-2">
-            <Link href="/today" className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.05em] text-primary">
+          <div className="flex items-center justify-between px-2 lg:justify-center lg:px-0">
+            <Link href="/today" title="Saaf" className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.05em] text-primary">
               <span className="bg-brand-gradient glow-selected flex size-9 items-center justify-center rounded-xl">
                 <Sparkles className="size-4" />
               </span>
-              Saaf
+              <span className="lg:sr-only">Saaf</span>
             </Link>
             <button
               className="rounded-lg p-2 text-muted-foreground lg:hidden"
@@ -114,17 +121,17 @@ export function AppShell({
             </button>
           </div>
 
-          <nav className="mt-8 space-y-1" aria-label="Primary navigation">
+          <nav className="mt-8 space-y-1 lg:mt-6" aria-label="Primary navigation">
             {NAV.map((n) => navItem(n))}
           </nav>
 
-          <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Insights</p>
-          <nav className="mt-2 space-y-0.5" aria-label="Insights">
+          <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground lg:hidden">Insights</p>
+          <nav className="mt-2 space-y-0.5 lg:mt-4 lg:border-t lg:border-border lg:pt-3" aria-label="Insights">
             {SECONDARY.map((n) => navItem(n, true))}
           </nav>
 
           <div className="mt-auto space-y-2 pt-4">
-            {navItem({ label: 'Profile & Preferences', href: '/profile', icon: UserRound })}
+            {navItem({ label: 'Profile and preferences', short: 'Profile', href: '/profile', icon: UserRound })}
             <UserCard fallbackInitials={initials} />
           </div>
         </aside>
@@ -138,7 +145,7 @@ export function AppShell({
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="glass sticky top-0 z-20 flex h-16 print:hidden items-center justify-between border-b border-border px-5 sm:px-8">
+          <header className="glass sticky top-0 z-20 flex h-14 print:hidden items-center justify-between border-b border-border px-5 sm:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 className="rounded-xl border border-border p-2 text-primary lg:hidden"
@@ -148,8 +155,9 @@ export function AppShell({
                 <Menu className="size-5" />
               </button>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
-                <h1 className="truncate text-xl font-semibold tracking-[-0.05em] text-primary">{title}</h1>
+                {/* The eyebrow above every title was the second line of a two-line header; the title is enough. Kept as a prop, and as a screen-reader label. */}
+                <p className="sr-only">{eyebrow}</p>
+                <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-primary">{title}</h1>
               </div>
             </div>
             <Link
@@ -167,7 +175,7 @@ export function AppShell({
               <aside
                 aria-label="Context panel"
                 data-tour="panel"
-                className={`border-t border-border bg-card/40 xl:sticky xl:top-16 xl:block xl:h-[calc(100vh-4rem)] xl:self-start xl:overflow-y-auto xl:border-l xl:border-t-0 print:hidden ${
+                className={`border-t border-border bg-card/40 xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:self-start xl:overflow-y-auto xl:border-l xl:border-t-0 print:hidden ${
                   contextOnMobile === 'hide' ? 'hidden' : ''
                 }`}
               >
@@ -196,6 +204,8 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
   const [status, setStatus] = useState<SearchStatus>(account?.status ?? 'active')
   const [menu, setMenu] = useState(false)
   const [note, setNote] = useState<string>()
+  // On the compact desktop rail the card is a popover behind the avatar; in the mobile drawer it stays open.
+  const [pop, setPop] = useState(false)
 
   async function choose(next: SearchStatus) {
     setMenu(false)
@@ -213,7 +223,20 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-3">
+    <div>
+      <button
+        type="button"
+        onClick={() => setPop((p) => !p)}
+        aria-label="Your account and job-search status"
+        aria-expanded={pop}
+        title={`${account?.name ?? 'Your account'} · ${STATUS[status].label}`}
+        className="relative mx-auto hidden size-10 items-center justify-center rounded-full lg:flex"
+      >
+        <span className="bg-brand-gradient flex size-9 items-center justify-center rounded-full text-xs font-bold">{account?.initials ?? fallbackInitials}</span>
+        <span className={`absolute bottom-0 right-0 size-3 rounded-full border-2 border-sidebar ${STATUS[status].dot}`} aria-hidden="true" />
+      </button>
+      {pop ? <button type="button" aria-label="Close" onClick={() => setPop(false)} className="fixed inset-0 z-40 hidden cursor-default lg:block" /> : null}
+    <div className={`rounded-2xl border border-border bg-card p-3 ${pop ? 'lg:block' : 'lg:hidden'} lg:fixed lg:bottom-4 lg:left-[96px] lg:z-50 lg:w-64 lg:shadow-lg`}>
       <div className="flex items-center gap-3">
         <span className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold">
           {account?.initials ?? fallbackInitials}
@@ -279,6 +302,7 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
           Sign out
         </button>
       </form>
+    </div>
     </div>
   )
 }

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import Link from 'next/link'
 import {
-  AlertTriangle, BarChart3, Building2, CheckCircle2, CircleHelp, Clock, FileText, Loader2, Mail, MapPin,
-  MessageCircle, PenLine, Quote, Sparkles, Tag, X, Zap,
+  AlertTriangle, Building2, CheckCircle2, ChevronRight, CircleHelp, FileText, Loader2, Mail, MapPin,
+  MessageCircle, PenLine, Quote, Sparkles, Tag, X,
 } from 'lucide-react'
 import { useFeed } from '@/components/features/feed-selection'
 import { QuickApply } from '@/components/features/quick-apply'
@@ -17,7 +17,9 @@ import { correctSkillFromJob } from '@/app/actions/feed-prefs'
 import { CompanyFactsCard } from '@/components/features/company-facts'
 import { ConnectionsAt } from '@/components/features/connections-at'
 import { ApplyForMe } from '@/components/features/apply-for-me'
-import { ScoreRing } from '@/components/ui/score-ring'
+import { ScoreRing, ringBand } from '@/components/ui/score-ring'
+import { ReportScore } from '@/components/features/report-score'
+import { barsFromShares } from '@/lib/score-bars'
 import { bandFor } from '@/components/ui/fit-ring'
 import { postedAgo } from '@/lib/day'
 import type { JobInsight } from '@/lib/services/job-insight'
@@ -36,7 +38,7 @@ import type { FitSection } from '@/lib/fit-sections'
  * the tools that call a model, each of which runs its own grounding check.
  */
 
-type Tab = 'analysis' | 'copilot' | 'jd'
+type Tab = 'overview' | 'company' | 'tools' | 'jd'
 
 export function JobPanel({ idle }: { idle: ReactNode }) {
   const { selection } = useFeed()
@@ -91,7 +93,7 @@ export function JobSheet() {
 
 function PanelBody() {
   const { current } = useFeed()
-  const [tab, setTab] = useState<Tab>('analysis')
+  const [tab, setTab] = useState<Tab>('overview')
 
   if (current.status === 'loading' || current.status === 'idle') {
     return (
@@ -109,11 +111,12 @@ function PanelBody() {
   return (
     <div>
       <PanelHeader j={j} />
-      <div role="tablist" aria-label="Job details" className="glass z-10 flex gap-1 border-y border-border px-4 py-2 xl:sticky xl:top-0">
+      <div role="tablist" aria-label="Job details" className="sticky top-0 z-10 flex gap-5 border-b border-border bg-background/95 px-5 backdrop-blur xl:top-0">
         {([
-          ['analysis', 'Match Analysis'],
-          ['copilot', 'AI Co-Pilot'],
-          ['jd', 'Job Description'],
+          ['overview', 'Overview'],
+          ['company', 'Company'],
+          ['tools', 'AI tools'],
+          ['jd', 'Description'],
         ] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
@@ -121,8 +124,8 @@ function PanelBody() {
             type="button"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-              tab === key ? 'bg-brand-gradient' : 'text-muted-foreground hover:bg-secondary hover:text-primary'
+            className={`relative py-3 text-xs font-semibold transition-colors ${
+              tab === key ? 'text-primary after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent' : 'text-muted-foreground hover:text-primary'
             }`}
           >
             {label}
@@ -130,50 +133,195 @@ function PanelBody() {
         ))}
       </div>
       <div className="p-5" role="tabpanel">
-        {tab === 'analysis' ? <AnalysisTab j={j} /> : tab === 'copilot' ? <CopilotTab j={j} /> : <DescriptionTab j={j} />}
+        {tab === 'overview' ? <OverviewTab j={j} /> : tab === 'company' ? <CompanyTab j={j} /> : tab === 'tools' ? <CopilotTab j={j} /> : <DescriptionTab j={j} />}
       </div>
     </div>
   )
 }
 
+/**
+ * Title, one line of facts, and the actions — no ring (it is the first thing in the
+ * Overview), no band tag, no chip row, no reason line (it is in the score card). The
+ * header had five rows of its own above the tabs.
+ */
 function PanelHeader({ j }: { j: JobInsight }) {
   const posted = postedAgo(j.postedAt)
+  const facts = [j.company, j.city, j.seniority, posted, j.statedPay].filter(Boolean)
   return (
-    <div className="p-5">
-      <div className="flex items-start gap-4">
+    <div className="px-5 pb-3 pt-5">
+      <div className="flex items-start gap-3">
+        <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary text-lg font-semibold text-primary">
+          {(j.company || j.title).trim().charAt(0).toUpperCase()}
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
-            {j.score !== null ? bandFor(j.score) : 'Not scored for you'}
-          </p>
-          <h2 className="mt-1 text-lg font-semibold leading-snug tracking-[-0.03em] text-primary">{j.title}</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">{j.company}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-primary">
-            {j.city ? <Chip icon={MapPin}>{j.city}</Chip> : null}
-            {j.seniority ? <Chip icon={BarChart3}>{j.seniority}</Chip> : null}
-            {posted ? <Chip icon={Clock}>{posted}</Chip> : null}
-            {j.easyApply ? <Chip icon={Zap}>Easy Apply</Chip> : null}
-            {j.statedPay ? <Chip icon={Tag}>{j.statedPay}</Chip> : null}
-          </div>
+          <h2 className="text-base font-semibold leading-snug tracking-[-0.02em] text-primary">{j.title}</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">{facts.join(' · ')}</p>
         </div>
-        {j.score !== null ? <ScoreRing score={j.score} size={96} stroke={8} label="match" /> : null}
       </div>
-      {j.reason ? <p className="mt-4 text-sm leading-6 text-muted-foreground">{j.reason}</p> : null}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <QuickApply roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} easy={j.easyApply} size="lg" />
-        <TrackRole roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} labelled trackedStatus={j.trackedStatus ?? undefined} />
         <ApplyForMe url={j.applyUrl} title={j.title} company={j.company} />
+        <TrackRole roleId={j.roleId} company={j.company} title={j.title} applyUrl={j.applyUrl} trackedStatus={j.trackedStatus ?? undefined} />
         <HideRole roleId={j.roleId} />
       </div>
     </div>
   )
 }
 
-function Chip({ icon: Icon, children }: { icon: typeof MapPin; children: ReactNode }) {
+const BAND_TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-muted-foreground' } as const
+const BAR_TONE = { high: 'bg-score-high', mid: 'bg-score-mid', low: 'bg-muted-foreground/50' } as const
+
+/** The ring, its word, and the three bars it is made of — then the one-line reason. */
+function ScoreCard({ j }: { j: JobInsight }) {
+  const bars = barsFromShares(j.analysis.factors)
+  if (j.score === null) {
+    return <p className="mb-6 rounded-2xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">This role is not scored for you.</p>
+  }
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1">
-      <Icon className="size-3" aria-hidden="true" />
-      {children}
-    </span>
+    <div className="mb-6 flex gap-4 rounded-2xl border border-border bg-secondary/30 p-4">
+      <div className="flex shrink-0 flex-col items-center gap-1.5">
+        <ScoreRing score={j.score} size={84} stroke={7} />
+        <span className={`max-w-[92px] text-center text-[10px] font-bold uppercase leading-3 tracking-[0.08em] ${BAND_TONE[ringBand(j.score)]}`}>{bandFor(j.score)}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        {bars.length ? (
+          <ul className="space-y-2" aria-label="Score parts">
+            {bars.map((b) => {
+              const tone = b.share >= 0.7 ? 'high' : b.share >= 0.5 ? 'mid' : 'low'
+              return (
+                <li key={b.label}>
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="font-medium text-primary">{b.label}</span>
+                    <span className="font-mono tabular-nums text-muted-foreground">{Math.round(b.share * 100)}%</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
+                    <div className={`h-full rounded-full ${BAR_TONE[tone]}`} style={{ width: `${Math.max(4, b.share * 100)}%` }} />
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+        {j.reason ? <p className="mt-3 text-xs leading-5 text-muted-foreground">{j.reason}</p> : null}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The long reading, closed by default and one click away — what the feed card's
+ * "Insights" was, plus what the old Why / Gaps / Factors sections said, without
+ * the same note appearing twice. The arithmetic is never behind a request: it is
+ * in the page already.
+ */
+function HowItIsBuilt({ j }: { j: JobInsight }) {
+  const a = j.analysis
+  const noteSet = new Set(a.factors.map((f) => f.note))
+  // Lines the factor notes do not already say: "you hold 1 of 12 skills", the years sentence with its quote, the cap.
+  const extra = [...new Set([...a.whyFit, ...a.gaps])].filter((t) => !noteSet.has(t))
+  return (
+    <details className="group mb-6 rounded-2xl border border-border bg-card p-4" data-breakdown="score">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+        <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
+        How this score is built
+        <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+          {a.strongFactors} of {a.totalFactors} parts strong
+        </span>
+      </summary>
+
+      {a.factors.length ? (
+        <ul className="mt-4 space-y-3">
+          {a.factors.map((f) => (
+            <li key={f.key}>
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="font-medium text-primary">{f.label}</span>
+                <span className="font-mono tabular-nums text-muted-foreground">{Math.round(f.share * 100)}%</span>
+              </div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
+                <div className={`h-full rounded-full ${BAR_TONE[f.share >= 0.7 ? 'high' : f.share >= 0.5 ? 'mid' : 'low']}`} style={{ width: `${Math.max(3, f.share * 100)}%` }} />
+              </div>
+              {f.note ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{f.note}</p> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {extra.length ? (
+        <ul className="mt-4 space-y-1.5 border-t border-border pt-3">
+          {extra.map((t) => (
+            <li key={t} className="flex gap-2 text-xs leading-5 text-muted-foreground">
+              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+              {t}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {j.evidence.length ? (
+        <div className="mt-4 space-y-3 border-t border-border pt-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">What we read from the posting</p>
+          {j.evidence.map((e, i) => (
+            <div key={i}>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                {e.label}
+                {e.lowConfidence ? ' · read with low confidence' : ''}
+              </p>
+              <blockquote className="mt-1 flex gap-2 text-xs leading-5 text-muted-foreground">
+                <Quote className="mt-0.5 size-3 shrink-0 text-accent" aria-hidden="true" />
+                <span>{e.quote}</span>
+              </blockquote>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {j.gateResultId ? (
+        <div className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+          Score look wrong?
+          <ReportScore gateResultId={j.gateResultId} />
+        </div>
+      ) : null}
+    </details>
+  )
+}
+
+/** Employer facts, from our own index and open data — moved out of the Overview, where it was the sixth stacked section. */
+function CompanyTab({ j }: { j: JobInsight }) {
+  return (
+    <>
+      <Section title="Company snapshot" icon={Building2}>
+        <dl className="grid grid-cols-2 gap-2">
+          <Stat label="Open roles in India" value={j.snapshot.openRoles.toLocaleString('en-IN')} />
+          <Stat label="Hiring system" value={j.snapshot.ats ?? 'Own careers site'} />
+        </dl>
+        {j.snapshot.cities.length ? (
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Hiring in <span className="text-primary">{j.snapshot.cities.join(', ')}</span>
+          </p>
+        ) : null}
+        {j.snapshot.culture.length ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {j.snapshot.culture.map((c) => (
+              <span
+                key={c.tag}
+                title={`The posting says “${c.evidence}”`}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs text-primary"
+              >
+                <Tag className="size-3 text-accent" aria-hidden="true" />
+                {c.tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {/* Stated, not left blank: an empty space where funding and ratings
+            "should" be reads as a loading failure. */}
+        <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+          Counts are from the boards we index. Culture tags come from this posting&apos;s own words (hover
+          to see them).
+        </p>
+        <CompanyFactsCard company={j.company} />
+      </Section>
+    </>
   )
 }
 
@@ -262,14 +410,20 @@ function useSkillCorrection(roleId: string) {
   return { run, pending, busy, note }
 }
 
-function AnalysisTab({ j }: { j: JobInsight }) {
+/**
+ * Overview (the feed redesign of 2026-10-08, from the teardown's UI spec §S5): the
+ * score card first, then whether you line up, then your skills against the posting —
+ * and the long reading (every factor with its note, every requirement quote, the
+ * report button) behind one disclosure instead of five stacked sections.
+ */
+function OverviewTab({ j }: { j: JobInsight }) {
   const a = j.analysis
   const skill = useSkillCorrection(j.roleId)
   return (
     <>
-      <ConnectionsAt company={j.company} />
+      <ScoreCard j={j} />
       <FitSections sections={j.sections} />
-      <Section title="Skill gap breakdown" icon={Sparkles}>
+      <Section title="Your skills against this posting" icon={Sparkles}>
         <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
           Wrong? Click a skill to add it to your profile or take it off — only claim what you would defend in an interview.
         </p>
@@ -324,89 +478,9 @@ function AnalysisTab({ j }: { j: JobInsight }) {
         ) : null}
       </Section>
 
-      <Section title="Why you're a fit" icon={CheckCircle2}>
-        {a.whyFit.length ? (
-          <ul className="space-y-2">
-            {a.whyFit.map((w) => (
-              <li key={w} className="flex gap-2 text-sm leading-6 text-primary">
-                <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-score-high" aria-hidden="true" />
-                {w}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No factor scored strongly here — read the gaps below first.</p>
-        )}
-      </Section>
+      <ConnectionsAt company={j.company} />
 
-      <Section title="Potential gaps & risks" icon={AlertTriangle}>
-        {a.gaps.length ? (
-          <ul className="space-y-2">
-            {a.gaps.map((g) => (
-              <li key={g} className="flex gap-2 text-sm leading-6 text-muted-foreground">
-                <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-score-mid" aria-hidden="true" />
-                {g}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nothing in the scoring counted against you.</p>
-        )}
-      </Section>
-
-      {a.factors.length ? (
-        <Section title={`Score factors · ${a.strongFactors} of ${a.totalFactors} strong`} icon={BarChart3}>
-          <ul className="space-y-2.5">
-            {a.factors.map((f) => (
-              <li key={f.key}>
-                <div className="flex items-baseline justify-between text-xs">
-                  <span className="font-medium text-primary">{f.label}</span>
-                  <span className="font-mono tabular-nums text-muted-foreground">{Math.round(f.share * 100)}%</span>
-                </div>
-                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className={`h-full rounded-full ${f.share >= 0.7 ? 'bg-brand-gradient' : f.share >= 0.5 ? 'bg-score-mid' : 'bg-score-low'}`}
-                    style={{ width: `${Math.max(3, f.share * 100)}%` }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
-
-      <Section title="Company snapshot" icon={Building2}>
-        <dl className="grid grid-cols-2 gap-2">
-          <Stat label="Open roles in India" value={j.snapshot.openRoles.toLocaleString('en-IN')} />
-          <Stat label="Hiring system" value={j.snapshot.ats ?? 'Own careers site'} />
-        </dl>
-        {j.snapshot.cities.length ? (
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            Hiring in <span className="text-primary">{j.snapshot.cities.join(', ')}</span>
-          </p>
-        ) : null}
-        {j.snapshot.culture.length ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {j.snapshot.culture.map((c) => (
-              <span
-                key={c.tag}
-                title={`The posting says “${c.evidence}”`}
-                className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs text-primary"
-              >
-                <Tag className="size-3 text-accent" aria-hidden="true" />
-                {c.tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {/* Stated, not left blank: an empty space where funding and ratings
-            "should" be reads as a loading failure. */}
-        <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
-          Counts are from the boards we index. Culture tags come from this posting&apos;s own words (hover
-          to see them).
-        </p>
-        <CompanyFactsCard company={j.company} />
-      </Section>
+      <HowItIsBuilt j={j} />
     </>
   )
 }

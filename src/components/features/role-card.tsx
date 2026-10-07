@@ -1,37 +1,16 @@
-import { AlertCircle, BarChart3, ChevronRight, Clock, MapPin, Quote, Sparkles, Users, Zap } from 'lucide-react'
-import { ReportScore } from '@/components/features/report-score'
+import { AlertCircle, Users } from 'lucide-react'
 import { TrackRole } from '@/components/features/track-role'
 import { QuickApply } from '@/components/features/quick-apply'
-import { ViewMatchButton } from '@/components/features/feed-selection'
 import { bandFor } from '@/components/ui/fit-ring'
-import { ScoreRing } from '@/components/ui/score-ring'
-import { factorHighlight } from '@/lib/job-insight'
+import { ScoreRing, ringBand } from '@/components/ui/score-ring'
 import { isEarlyPosting, isEasyApply, titleSeniority } from '@/lib/job-facts'
-import { CONFIDENCE_THRESHOLD } from '@/gates/types'
 import { postedAgo, postedOn } from '@/lib/day'
-import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
+import { scoreBars } from '@/lib/score-bars'
 import type { ReactNode } from 'react'
 import { whyThisMatches } from '@/lib/why-match'
 import type { ScoreBreakdown } from '@/match/score'
-import { requirementLabel } from '@/lib/display-names'
-
-/** One requirement the extractor read out of a posting, with the sentence it
- *  came from. Lived in the retired `row.tsx` alongside the three-outcome role
- *  row; the row went with gating, this stayed. */
-export type EvidenceItem = {
-  kind: string
-  minYears?: number
-  credential?: string
-  valueText?: string
-  /** The literal sentence from the posting. Rendered as plain text — never
-   *  dangerouslySetInnerHTML — since it's untrusted third-party content. */
-  sourceQuote: string
-  confidence: number
-}
 
 type Props = {
-  /** gate_results.id — what a score report is filed against. */
-  gateResultId: string
   /** roles.id — what an application is tracked against. */
   roleId: string
   title: string
@@ -42,8 +21,6 @@ type Props = {
   reason: string
   applyUrl?: string
   isNew?: boolean
-  requirements?: EvidenceItem[]
-  profileCity?: string
   /** roles.posted_at — the date the employer's board gave, never our own. */
   postedAt?: string
   /** The candidate's tracker stage for this role, when tracked. */
@@ -56,237 +33,131 @@ type Props = {
   connections?: number
 }
 
+const TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-muted-foreground' } as const
+const BAR = { high: 'bg-score-high', mid: 'bg-score-mid', low: 'bg-muted-foreground/50' } as const
+const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium'
+
 /**
- * A scored role, in the feed's split view (2026-09-23 parity pass).
+ * A scored role in the feed — redesigned 2026-10-08 against the teardown's UI spec
+ * §S3 (the job card), after the founder's verdict on the feed: "cluttered … no
+ * similarity". DESIGN.md already set this card a budget of four rows of text and
+ * recorded cutting it from nine; the parity passes had grown it back to about
+ * twenty things, so this is a return to the rule, not a new one.
  *
- * Monogram, title, company, fact chips, the gradient ring coloured by band,
- * a factor highlight, the reason line, and three actions: Save job, Quick
- * Apply, View detailed match. Clicking the card body selects it into the
- * right-hand panel (SelectableCard, in the page), which carries the skill gap,
- * fit/risk lists, company snapshot and the formatted description.
+ *   chips   age · early applicant · connections · (new) — at most four, quiet
+ *   title   and "company · city · level · stated pay" on ONE line
+ *   why     ONE paragraph — the reason line and the score's own strength and gap
+ *   bars    Role · Skills · Experience, each read from the stored arithmetic
+ *   actions save · hide · Quick apply, with the score ring and its word on the right
  *
- * WHAT DID NOT GO: the reason line. A score without its reason is the exact
- * failure this product exists to correct, so it stays on the face of the card
- * at full length even when everything around it is cut.
+ * WHAT MOVED, NOT WHAT WENT: the "Insights" disclosure, the requirement quotes, the
+ * "this score looks wrong" flag and "View detailed match" now live in the detail
+ * panel, one click away (a click anywhere on the card opens it). The reason line
+ * stays on the face of the card in full — a score without its reason is the failure
+ * this product exists to correct.
  *
- * Still a server component. The disclosure is a native <details>, the only
- * client code is the action buttons, and the breakdown is never behind a
- * request — a candidate can check the arithmetic without a round trip.
+ * Still a server component; the only client code is the actions.
  */
 export function RoleCard({
-  gateResultId, roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, requirements, profileCity, postedAt, trackedStatus, hideControl, statedPay, connections,
+  roleId, title, company, city, score, breakdown, reason, applyUrl,
+  isNew, postedAt, trackedStatus, hideControl, statedPay, connections,
 }: Props) {
-  const band = bandFor(score)
+  const band = ringBand(score)
   const posted = postedAgo(postedAt)
   const easy = isEasyApply(applyUrl)
   const seniority = titleSeniority(title)
-  const highlight = factorHighlight(breakdown)
   const why = whyThisMatches(breakdown, reason)
-
-  /**
-   * One quote, shown once.
-   *
-   * A single sentence often yields two legitimate readings — "Exp should be in
-   * between 2 - 4 years, out of which minimum 2 years in product management"
-   * produces both a 2–4 band and a bare 2-year floor. Both are correct, and the
-   * card displays only the quote, so they render as the identical line twice.
-   * A candidate reads that as a bug in the product that is telling them it
-   * shows its working, which is the worst possible place to look sloppy.
-   *
-   * Keeps the better-informed reading of each quote: higher confidence first,
-   * then the one that also captured a ceiling. Nothing is lost that the
-   * candidate could have acted on — the discarded row quotes the same sentence.
-   */
-  const shownRequirements = Object.values(
-    (requirements ?? []).reduce<Record<string, EvidenceItem>>((acc, r) => {
-      const key = `${r.kind}||${r.sourceQuote}`
-      const prev = acc[key]
-      if (
-        !prev ||
-        r.confidence > prev.confidence ||
-        (r.confidence === prev.confidence && r.minYears !== undefined && prev.minYears === undefined)
-      ) {
-        acc[key] = r
-      }
-      return acc
-    }, {}),
-  )
-  const components = breakdown?.components ?? []
-  const strongBand = score >= HIGH_PRECISION_MIN
+  const bars = scoreBars(breakdown)
+  const facts = [company, city, seniority, statedPay].filter(Boolean)
 
   return (
-    <article data-tour="card" className="rounded-2xl bg-card p-5 sm:p-6">
+    <article data-tour="card" className="rounded-2xl bg-card p-5">
       <div className="flex gap-4">
-        {/* A monogram, not a logo: no licensed logo source is wired, and a
-            fetched favicon would be a third-party request per card. */}
-        <span
-          aria-hidden="true"
-          className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary text-lg font-semibold text-primary"
-        >
-          {(company || title).trim().charAt(0).toUpperCase()}
-        </span>
-
         <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${
-                strongBand ? 'bg-brand/15 text-accent' : 'bg-secondary text-muted-foreground'
-              }`}
-            >
-              {band}
-            </span>
+          {/* Quiet chips, and only the ones that are true of this role. */}
+          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
             {isNew ? (
-              <span
-                className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
-                title="First shown to you in the last 7 days"
-              >
-                New
+              <span className={`${chip} bg-accent/10 text-accent`} title="First shown to you in the last 7 days">New</span>
+            ) : null}
+            {posted && postedAt ? (
+              <span className={`${chip} bg-secondary text-muted-foreground`} title={`Posted ${postedOn(postedAt)}, as dated by the employer's job board`}>
+                {posted}
               </span>
             ) : null}
-            {easy ? (
-              <span
-                className="inline-flex items-center gap-1 rounded-md bg-score-high/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-score-high"
-                title="One-page application form, no account needed. Saaf’s extension can fill it; you submit."
-              >
-                <Zap className="size-3" aria-hidden="true" />
-                Easy Apply
+            {isEarlyPosting(postedAt) ? (
+              <span className={`${chip} bg-score-high/10 text-score-high`} title="Posted in the last 3 days, by the employer's own date. We cannot see how many people have applied.">
+                Early applicant
+              </span>
+            ) : null}
+            {connections ? (
+              <span className={`${chip} bg-score-high/10 text-score-high`} title="From the LinkedIn connections you uploaded">
+                <Users className="size-3" aria-hidden="true" />
+                {connections === 1 ? '1 connection' : `${connections} connections`}
               </span>
             ) : null}
             {breakdown?.confidence === 'low' ? (
-              <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
-                title="The posting states an experience bar we could not read confidently"
-              >
+              <span className={`${chip} bg-secondary text-muted-foreground`} title="The posting states an experience bar we could not read confidently">
                 <AlertCircle className="size-3" aria-hidden="true" />
                 Bar unread
               </span>
             ) : null}
           </div>
 
-          <h3 className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary sm:text-xl">{title}</h3>
-          <p className="mt-0.5 text-sm font-medium text-muted-foreground">{company}</p>
+          <h3 className="text-base font-semibold leading-snug tracking-[-0.02em] text-primary sm:text-lg">{title}</h3>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground" title={facts.join(' · ')}>
+            {facts.map((f, i) => (
+              <span key={i}>
+                {i > 0 ? ' · ' : ''}
+                {i === 0 ? <span className="font-medium text-primary/90">{f}</span> : f}
+              </span>
+            ))}
+          </p>
 
-          {/* Fact chips: only values actually read — location, the seniority the
-              TITLE states, the board's own posting date. No salary chip: 2.2%
-              of postings state pay and nothing extracts it (Stage T). */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {city ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary">
-                <MapPin className="size-3" aria-hidden="true" />
-                {city}
-              </span>
-            ) : null}
-            {seniority ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary" title="As stated in the job title">
-                <BarChart3 className="size-3" aria-hidden="true" />
-                {seniority}
-              </span>
-            ) : null}
-            {connections ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-score-high/30 bg-score-high/10 px-2.5 py-1 text-xs text-score-high" title="From the LinkedIn connections you uploaded">
-                <Users className="size-3" aria-hidden="true" />
-                {connections === 1 ? '1 connection works here' : `${connections} connections work here`}
-              </span>
-            ) : null}
-            {isEarlyPosting(postedAt) ? (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-lg border border-score-high/30 bg-score-high/10 px-2.5 py-1 text-xs text-score-high"
-                title="Posted in the last 3 days, by the employer's own date. We cannot see how many people have applied."
-              >
-                Be an early applicant
-              </span>
-            ) : null}
-            {statedPay ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary" title="As stated in the posting. We never estimate pay.">
-                {statedPay}
-              </span>
-            ) : null}
-            {posted && postedAt ? (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs text-primary"
-                title={`Posted ${postedOn(postedAt)}, as dated by the employer's job board`}
-              >
-                <Clock className="size-3" aria-hidden="true" />
-                {posted}
-              </span>
-            ) : null}
-          </div>
+          {/* The one paragraph. The reason line first, in full; then the best part of the
+              score and, if there is one, the thing to check — all from the score's own
+              notes (src/lib/why-match.ts), never written by a model. */}
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            <span className="font-semibold text-primary">Why this matches: </span>
+            {reason}
+            {why.strength ? ` ${why.strength}` : ''}
+            {why.gap ? <span className="text-muted-foreground"> Check first: {why.gap}</span> : null}
+          </p>
+
+          {bars.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2" aria-label="Score parts">
+              {bars.map((b) => {
+                const tone = b.share >= 0.7 ? 'high' : b.share >= 0.5 ? 'mid' : 'low'
+                return (
+                  <div key={b.label} className="w-28">
+                    <div className="flex items-baseline justify-between text-[11px] text-muted-foreground">
+                      <span>{b.label}</span>
+                      <span className="font-mono tabular-nums">{Math.round(b.share * 100)}%</span>
+                    </div>
+                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-secondary">
+                      <div className={`h-full rounded-full ${BAR[tone]}`} style={{ width: `${Math.max(4, b.share * 100)}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
         </div>
 
-        <ScoreRing score={score} size={76} label="match" />
+        <div className="flex shrink-0 flex-col items-center gap-1.5 self-start">
+          <ScoreRing score={score} size={64} stroke={5} />
+          <span className={`max-w-[88px] text-center text-[10px] font-bold uppercase leading-3 tracking-[0.08em] ${TONE[band]}`}>{bandFor(score)}</span>
+        </div>
       </div>
-
-      {highlight ? (
-        <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-accent">
-          <Sparkles className="size-3.5 shrink-0" aria-hidden="true" />
-          {highlight}
-        </p>
-      ) : null}
-      {/* The one line explaining the number. Never removed: a score without
-          its reason is the exact failure this product exists to correct. */}
-      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{reason}</p>
-      {why.strength || why.gap ? (
-        /* "Why this job is a match" (TASK-138): assembled from the score's own
-           notes, never written by a model — src/lib/why-match.ts. */
-        <div className="mt-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs leading-5">
-          <span className="font-semibold text-primary">Why this matches: </span>
-          {why.strength ? <span className="text-primary">{why.strength} </span> : null}
-          {why.gap ? <span className="text-muted-foreground">Check first: {why.gap}</span> : null}
-        </div>
-      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} labelled trackedStatus={trackedStatus} />
-        {applyUrl ? <QuickApply roleId={roleId} company={company} title={title} applyUrl={applyUrl} easy={easy} /> : null}
-        <ViewMatchButton roleId={roleId} />
+        <TrackRole roleId={roleId} company={company} title={title} applyUrl={applyUrl} trackedStatus={trackedStatus} />
         {hideControl}
-        <ReportScore gateResultId={gateResultId} />
+        {applyUrl ? (
+          <span className="ml-auto">
+            <QuickApply roleId={roleId} company={company} title={title} applyUrl={applyUrl} easy={easy} />
+          </span>
+        ) : null}
       </div>
-
-      {breakdown && (
-        /* The working, still inline and still without a round trip — the panel
-           carries the fuller analysis, but a candidate on a phone can check
-           the arithmetic here without opening it. */
-        <details className="group mt-3" data-breakdown="score">
-          <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 whitespace-nowrap py-1 text-xs font-semibold text-muted-foreground hover:text-primary">
-            <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-            Insights
-            {shownRequirements.length ? (
-              <span className="font-mono tabular-nums">({shownRequirements.length})</span>
-            ) : null}
-          </summary>
-
-          <ul className="mt-3 space-y-2 rounded-xl border border-border bg-secondary/40 p-4">
-            {components.map((c) => (
-              <li key={c.key} className="flex gap-2 text-xs leading-5 text-muted-foreground">
-                <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                {c.note}
-              </li>
-            ))}
-          </ul>
-
-          {shownRequirements.length > 0 && (
-            <div className="mt-2 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
-              {shownRequirements.map((r, i) => (
-                <div key={i}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {requirementLabel(r.kind)}
-                    {r.confidence < CONFIDENCE_THRESHOLD ? ' · read with low confidence' : ''}
-                  </p>
-                  {r.kind === 'location' && profileCity && (
-                    <p className="mt-1 text-xs text-muted-foreground">Your city on file: {profileCity}</p>
-                  )}
-                  <blockquote className="mt-1 flex gap-2 text-xs leading-5 text-muted-foreground">
-                    <Quote className="mt-0.5 size-3 shrink-0 text-accent" />
-                    <span>{r.sourceQuote}</span>
-                  </blockquote>
-                </div>
-              ))}
-            </div>
-          )}
-        </details>
-      )}
     </article>
   )
 }

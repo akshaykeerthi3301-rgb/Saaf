@@ -2,19 +2,23 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { SlidersHorizontal } from 'lucide-react'
-import { viewToQuery, type FeedView, type JobType, type Level, type PostedWindow } from '@/lib/feed-query'
+import { Dialog } from '@base-ui/react/dialog'
+import { SlidersHorizontal, X } from 'lucide-react'
+import { SavedFilters } from '@/components/features/feed-controls'
+import { cleanSkip, viewToQuery, type FeedView, type JobType, type Level, type PostedWindow } from '@/lib/feed-query'
 
 /**
- * "More filters" (TASK-155, 2026-10-07): the drawer behind the quick pills.
+ * "All filters" — a drawer from the right (redesign 2026-10-08, from the teardown's
+ * UI spec §S4), behind one pill in the filter row. It was a card of five fields
+ * sitting open in the middle of the page, between the search box and the pills.
  *
- * It does not filter anything itself. Submitting builds a FeedView and pushes
- * the same /today URL the pills, a saved filter and the sentence search
- * produce — through viewToQuery, so the URL it writes is the one the tests
- * round-trip. The page stays the one place that filters.
+ * It does not filter anything itself. Confirming builds a FeedView and pushes the
+ * same /today URL the pills, a saved filter and the sentence search produce — through
+ * viewToQuery, so the URL it writes is the one the tests round-trip. The page stays
+ * the one place that filters.
  *
- * Each control says what it can and cannot see, because a filter that hides
- * roles must never look like the market's answer.
+ * Each control says what it can and cannot see, because a filter that hides roles
+ * must never look like the market's answer.
  */
 
 const POSTED: { value: PostedWindow | ''; label: string }[] = [
@@ -40,116 +44,169 @@ const TYPES: { value: JobType | ''; label: string }[] = [
 const fieldClass =
   'w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-primary outline-none focus:border-accent'
 const hintClass = 'mt-1 block text-[11px] leading-4 text-muted-foreground'
+const headClass = 'mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground'
 
-export function FeedFilterDrawer({
-  view,
-  keep,
-  notes,
+export function AllFiltersDrawer({
+  view, keep, notes, saved, stored, activeCount, withinReach,
 }: {
   /** The view on screen now. */
   view: FeedView
-  /** Params that are not part of a view but must survive a submit — the tab, "within reach", the hidden-jobs view. */
+  /** Params that are not part of a view but must survive a confirm — the tab and the hidden-jobs view. */
   keep: [string, string][]
   /** What the active filters could not decide, in words. */
   notes: string[]
+  saved: { name: string; query: string }[]
+  stored: boolean
+  /** How many filters are on, for the badge. */
+  activeCount: number
+  /** "Within reach" is on (`fit=clears`). */
+  withinReach: boolean
 }) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [posted, setPosted] = useState<PostedWindow | ''>(view.posted)
   const [level, setLevel] = useState<Level | ''>(view.level)
   const [type, setType] = useState<JobType | ''>(view.type)
   const [pay, setPay] = useState(view.pay ? String(view.pay) : '')
   const [skip, setSkip] = useState(view.skip.split(',').filter(Boolean).join(', '))
-  const active = [view.posted, view.level, view.type, view.pay, view.skip].filter(Boolean).length
+  const [reach, setReach] = useState(withinReach)
 
-  const go = (next: FeedView) => {
+  const go = (next: FeedView, reachOn: boolean) => {
     const q = new URLSearchParams(viewToQuery(next))
     for (const [k, v] of keep) q.set(k, v)
+    if (reachOn) q.set('fit', 'clears')
+    setOpen(false)
     router.push(`/today${q.size ? `?${q}` : ''}`)
   }
 
   return (
-    <details open={active > 0} data-tour="filters" className="mb-3 rounded-2xl border border-border bg-card">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-primary">
-        <SlidersHorizontal className="size-3.5" aria-hidden="true" />
-        More filters{active ? ` · ${active} on` : ''}
-      </summary>
-      <form
-        className="space-y-4 border-t border-border px-4 py-4"
-        onSubmit={(e) => {
-          e.preventDefault()
-          go({ ...view, posted, level, type, pay: Number(pay) || 0, skip })
-        }}
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+          activeCount > 0 ? 'border-accent/60 bg-accent/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
+        }`}
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-xs font-semibold text-primary">
-            Date posted
-            <select className={`${fieldClass} mt-1`} value={posted} onChange={(e) => setPosted(e.target.value as PostedWindow | '')}>
-              {POSTED.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <span className={hintClass}>By the employer’s own date. A role whose board gives no date is left out.</span>
-          </label>
+        <SlidersHorizontal className="size-3.5" aria-hidden="true" />
+        All filters
+        {activeCount > 0 ? <span className="font-mono tabular-nums">{activeCount}</span> : null}
+      </button>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-40 bg-background/60" />
+        <Dialog.Popup
+          aria-label="All filters"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-card shadow-lg outline-none"
+        >
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+            <Dialog.Title className="text-base font-semibold tracking-[-0.03em] text-primary">All filters</Dialog.Title>
+            <Dialog.Close aria-label="Close" className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary">
+              <X className="size-4" />
+            </Dialog.Close>
+          </div>
 
-          <label className="block text-xs font-semibold text-primary">
-            Experience asked
-            <select className={`${fieldClass} mt-1`} value={level} onChange={(e) => setLevel(e.target.value as Level | '')}>
-              {LEVELS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <span className={hintClass}>From the years the posting states. A role that states none stays in the list.</span>
-          </label>
+          <div className="flex-1 space-y-7 overflow-y-auto px-5 py-5">
+            <form
+              id="all-filters-form"
+              className="space-y-7"
+              onSubmit={(e) => {
+                e.preventDefault()
+                go({ ...view, posted, level, type, pay: Number(pay) || 0, skip: cleanSkip(skip) }, reach)
+              }}
+            >
+              <section>
+                <p className={headClass}>Basic job criteria</p>
+                <div className="space-y-4">
+                  <label className="block text-xs font-semibold text-primary">
+                    Date posted
+                    <select className={`${fieldClass} mt-1`} value={posted} onChange={(e) => setPosted(e.target.value as PostedWindow | '')}>
+                      {POSTED.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <span className={hintClass}>By the employer’s own date. A role whose board gives no date is left out.</span>
+                  </label>
+                  <label className="block text-xs font-semibold text-primary">
+                    Experience asked
+                    <select className={`${fieldClass} mt-1`} value={level} onChange={(e) => setLevel(e.target.value as Level | '')}>
+                      {LEVELS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <span className={hintClass}>From the years the posting states. A role that states none stays in the list.</span>
+                  </label>
+                  <label className="block text-xs font-semibold text-primary">
+                    Job type
+                    <select className={`${fieldClass} mt-1`} value={type} onChange={(e) => setType(e.target.value as JobType | '')}>
+                      {TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <span className={hintClass}>Read from the title. A title with no marker counts as full-time.</span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-input p-3 text-xs">
+                    <input type="checkbox" checked={reach} onChange={(e) => setReach(e.target.checked)} className="mt-0.5 size-4 accent-accent" />
+                    <span>
+                      <span className="block font-semibold text-primary">Only roles within reach of my experience</span>
+                      <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">Keeps roles whose stated bar is no more than a stretch above your years — and says how many it hides.</span>
+                    </span>
+                  </label>
+                </div>
+              </section>
 
-          <label className="block text-xs font-semibold text-primary">
-            Job type
-            <select className={`${fieldClass} mt-1`} value={type} onChange={(e) => setType(e.target.value as JobType | '')}>
-              {TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <span className={hintClass}>Read from the title. A title with no marker counts as full-time.</span>
-          </label>
+              <section>
+                <p className={headClass}>Compensation</p>
+                <label className="block text-xs font-semibold text-primary">
+                  Pay at least (₹ lakh a year)
+                  <input
+                    className={`${fieldClass} mt-1`}
+                    inputMode="numeric"
+                    value={pay}
+                    onChange={(e) => setPay(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+                    placeholder="e.g. 12"
+                  />
+                  <span className={hintClass}>Only postings that state pay in rupees can pass — about 1 in 50. The rest are left out.</span>
+                </label>
+              </section>
 
-          <label className="block text-xs font-semibold text-primary">
-            Pay at least (₹ lakh a year)
-            <input
-              className={`${fieldClass} mt-1`}
-              inputMode="numeric"
-              value={pay}
-              onChange={(e) => setPay(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
-              placeholder="e.g. 12"
-            />
-            <span className={hintClass}>Only postings that state pay in rupees can pass — about 1 in 50. The rest are left out.</span>
-          </label>
-        </div>
+              <section>
+                <p className={headClass}>Company</p>
+                <label className="block text-xs font-semibold text-primary">
+                  Leave out these employers
+                  <input
+                    className={`${fieldClass} mt-1`}
+                    value={skip}
+                    onChange={(e) => setSkip(e.target.value)}
+                    maxLength={410}
+                    placeholder="Accenture, TCS — separate with commas"
+                  />
+                  <span className={hintClass}>Matched by the employer’s name as the posting shows it. “Accenture” also leaves out “Accenture India”.</span>
+                </label>
+              </section>
+            </form>
 
-        <label className="block text-xs font-semibold text-primary">
-          Leave out these employers
-          <input
-            className={`${fieldClass} mt-1`}
-            value={skip}
-            onChange={(e) => setSkip(e.target.value)}
-            maxLength={410}
-            placeholder="Accenture, TCS — separate with commas"
-          />
-          <span className={hintClass}>Matched by the employer’s name as the posting shows it. “Accenture” also leaves out “Accenture India”.</span>
-        </label>
+            {notes.length > 0 ? (
+              <ul className="space-y-1 text-[11px] leading-4 text-muted-foreground" aria-label="What these filters could not decide">
+                {notes.map((n) => <li key={n}>{n}</li>)}
+              </ul>
+            ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="bg-brand-gradient rounded-xl px-4 py-2 text-xs font-semibold">Apply filters</button>
-          <button
-            type="button"
-            className="text-xs font-semibold text-muted-foreground hover:text-primary"
-            onClick={() => {
-              setPosted(''); setLevel(''); setType(''); setPay(''); setSkip('')
-              go({ ...view, posted: '', level: '', type: '', pay: 0, skip: '' })
-            }}
-          >
-            Clear these
-          </button>
-        </div>
+            {/* Outside the form on purpose: "Save this view" has a small form of its own, and forms cannot nest. */}
+            <section>
+              <p className={headClass}>Saved searches</p>
+              <SavedFilters saved={saved} current={view} stored={stored} alwaysShow />
+            </section>
+          </div>
 
-        {notes.length > 0 ? (
-          <ul className="space-y-1 text-[11px] leading-4 text-muted-foreground" aria-label="What these filters could not decide">
-            {notes.map((n) => <li key={n}>{n}</li>)}
-          </ul>
-        ) : null}
-      </form>
-    </details>
+          <div className="flex items-center gap-3 border-t border-border px-5 py-3.5">
+            <button type="submit" form="all-filters-form" className="bg-brand-gradient rounded-xl px-5 py-2 text-sm font-semibold">Confirm</button>
+            <button
+              type="button"
+              className="text-xs font-semibold text-muted-foreground hover:text-primary"
+              onClick={() => {
+                setPosted(''); setLevel(''); setType(''); setPay(''); setSkip(''); setReach(false)
+                go({ ...view, posted: '', level: '', type: '', pay: 0, skip: '' }, false)
+              }}
+            >
+              Clear these
+            </button>
+          </div>
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

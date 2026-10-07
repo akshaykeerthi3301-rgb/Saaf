@@ -47,7 +47,7 @@ const CONFIDENT = 0.7
 const RANK: Record<TitleSeniority, number> = { Intern: 0, Entry: 1, Mid: 2, Senior: 3, Lead: 4, Executive: 5 }
 const MAX_QUOTE = 180
 
-const plain = (html: string) =>
+export const plain = (html: string) =>
   html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

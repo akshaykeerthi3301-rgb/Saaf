@@ -2,10 +2,10 @@ import Link from 'next/link'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { coverageByFunction } from '@/lib/services/index-match'
 import { redirect } from 'next/navigation'
-import { ChevronRight, Clock, Eye, Globe, Laptop, Pencil, ShieldCheck, Target, Wallet, X, Zap } from 'lucide-react'
+import { ChevronRight, Eye, Laptop, ShieldCheck, Wallet, X } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
-import { RoleCard, type EvidenceItem } from '@/components/features/role-card'
+import { RoleCard } from '@/components/features/role-card'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
@@ -21,8 +21,9 @@ import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
 import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey } from '@/lib/feed-query'
-import { FeedSearch, HideRole, SavedFilters } from '@/components/features/feed-controls'
-import { FeedFilterDrawer } from '@/components/features/feed-filter-drawer'
+import { FeedSearch, HideRole } from '@/components/features/feed-controls'
+import { AllFiltersDrawer } from '@/components/features/feed-filter-drawer'
+import { PillMenu } from '@/components/features/pill-menu'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -246,8 +247,8 @@ export default async function TodayPage({
    * feed only renders below 10 strong matches. The match count only at the
    * cap. All independent, so they run together.
    */
-  const [{ cards, requirements }, coverage, modeMatches, matched, tracked] = await Promise.all([
-    readCards(user.id, arranged.flatMap((s) => s.visible)),
+  const [{ cards }, coverage, modeMatches, matched, tracked] = await Promise.all([
+    readCards(user.id, arranged.flatMap((s) => s.visible), { requirements: false }),
     strong < 10 ? coverageByFunction() : Promise.resolve([]),
     wantsMode ? countWorkModeMatches(user.id) : Promise.resolve(0),
     capSearch ? countMatchingRoles(capSearch.searches, capSearch.adjacent) : Promise.resolve(null),
@@ -259,19 +260,6 @@ export default async function TodayPage({
   // At the cap the list is the top of a larger set, and the tab must not call
   // it "All" two lines above a sentence saying it is not (QA-05's lesson).
   const allLabel = holding.kind === 'complete' ? 'All matches' : 'Top matches'
-
-  // Every requirement extracted for the role — a wrong score is debugged by
-  // seeing what was read, not just the number it produced. Read only for the
-  // cards that render; see src/lib/services/shortlist.ts for why.
-  const evidence = (roleId: string): EvidenceItem[] =>
-    (requirements.get(roleId) ?? []).map((q) => ({
-      kind: q.kind,
-      minYears: q.min_years ?? undefined,
-      credential: q.credential ?? undefined,
-      valueText: q.value_text ?? undefined,
-      sourceQuote: q.source_quote,
-      confidence: Number(q.confidence),
-    }))
 
   const gap = functionGap(profile.preferred_role)
 
@@ -337,7 +325,6 @@ export default async function TodayPage({
     },
   } as const
   const sections = arranged.map((s) => ({ ...s, ...COPY[s.key] }))
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
   // From the signed-in address, matching /applications — a job title makes for
   // confusing initials ("PM" is not who you are).
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
@@ -346,24 +333,6 @@ export default async function TodayPage({
   // filtered list does not silently drop the filter.
   const pillParams = (Object.keys(pills) as (keyof typeof pills)[]).filter((k) => pills[k])
   const pillQuery = pillParams.map((k) => `&${k}=1`).join('') + textParams.map(([k, v]) => `&${k}=${encodeURIComponent(v)}`).join('')
-  const pillHref = (toggle: keyof typeof pills) => {
-    const q = new URLSearchParams()
-    if (onlyNew) q.set('tab', 'new')
-    if (byNewest) q.set('sort', 'new')
-    if (clearsOnly) q.set('fit', 'clears')
-    for (const k of Object.keys(pills) as (keyof typeof pills)[]) {
-      const on = k === toggle ? !pills[k] : pills[k]
-      if (on) q.set(k, '1')
-    }
-    for (const [k, v] of textParams) q.set(k, v)
-    return `/today${q.size ? `?${q}` : ''}`
-  }
-  const PILLS: { key: keyof typeof pills; label: string; icon: typeof Zap; title: string }[] = [
-    { key: 'min80', label: 'Match > 80%', icon: Target, title: 'Only roles scoring above 80 for you' },
-    { key: 'fresh', label: 'Posted < 24 hours', icon: Clock, title: 'Posted in the last day, by the employer’s own date. Roles whose board gives no date are left out.' },
-    { key: 'remote', label: 'Remote only', icon: Globe, title: 'Roles the posting says are remote' },
-    { key: 'easy', label: 'Easy Apply', icon: Zap, title: 'One-page application form, no account needed. The extension can fill it; you submit.' },
-  ]
 
   const firstVisible = arranged.flatMap((sec) => sec.visible)[0]?.role_id ?? null
   /* The panel's idle state carries only figures that are real. The saaf-ai
@@ -493,6 +462,39 @@ export default async function TodayPage({
         </div>
   )
 
+  /**
+   * The feed's controls, as URLs (redesign 2026-10-08). Every pill and every menu
+   * option is a link to the /today address it produces, built from the view — so a
+   * chosen filter is still shareable and the page stays the one place that filters.
+   */
+  const keepParams: [string, string][] = [
+    ...(onlyNew ? [['tab', 'new'] as [string, string]] : []),
+    ...(showHidden ? [['hidden', '1'] as [string, string]] : []),
+  ]
+  const hrefFor = (next: FeedView, reach: boolean = clearsOnly) => {
+    const q = new URLSearchParams(viewToQuery(next))
+    for (const [k, v] of keepParams) q.set(k, v)
+    if (reach) q.set('fit', 'clears')
+    return `/today${q.size ? `?${q}` : ''}`
+  }
+  const POSTED_NAME: Record<string, string> = { '3': 'past 3 days', '7': 'past week', '30': 'past month' }
+  const LEVEL_NAME: Record<string, string> = { entry: 'Entry', mid: 'Mid', senior: 'Senior' }
+  const TYPE_NAME: Record<string, string> = { fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' }
+  const baselineText = [
+    profile.preferred_role,
+    cityLabel,
+    profile.years_experience !== null && profile.years_experience !== undefined ? `${profile.years_experience} yrs` : null,
+    wantsMode ? WORK_MODE_LABEL[profile.work_mode_preference as string] : null,
+  ].filter(Boolean).join(' · ')
+  const shownCount = pillCount > 0 && !onlyNew ? rows.length : holding.kind === 'complete' || onlyNew ? visibleCount : holding.scored
+  const ofLine =
+    pillCount > 0 && !onlyNew ? `of your ${allRows.length.toLocaleString('en-IN')} scored`
+      : holding.kind === 'capped' ? `closest title matches, of ${holding.matched.toLocaleString('en-IN')} that fit`
+        : holding.kind === 'capped-unknown' ? 'closest title matches'
+          : ''
+  /** Filters with no pill of their own stay visible as removable chips: the words, the city, pay, employers. */
+  const chipKeys = ['q', 'city', 'pay', 'skip']
+
   return (
     <FeedProvider initial={roleParam ?? firstVisible}>
     <AppShell
@@ -505,34 +507,44 @@ export default async function TodayPage({
       <ShortlistViewed cleared={strong} withheld={0} />
       <JobSheet />
 
-      <div className="mx-auto max-w-[1100px] p-5 sm:p-8">
+      <div className="mx-auto max-w-[1100px] px-5 pb-8 pt-4 sm:px-8">
         <section className="min-w-0">
-          {/* The headline used to read "Sorted by what fits, and what doesn't."
-              The bucket headings below say that by existing, so it went. */}
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
+          {/* ONE TOP ROW: the tabs and the search box (teardown spec §0 — title, tabs and
+              search in a single bar). The headline, the date, the baseline chips, the
+              example chips, the saved filters and the open filter card that used to
+              stack above the list are gone from here; each lives where it is used. */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-border pb-3">
+            <nav aria-label="Feed tabs" className="flex items-center gap-5 text-sm">
               {[
-                { key: 'all', label: allLabel, count: rows.length, href: '/today' },
-                { key: 'new', label: `New in ${NEW_WITHIN_DAYS} days`, count: newCount, href: '/today?tab=new' },
+                { key: 'all', label: 'Recommended', count: rows.length, href: '/today' },
+                { key: 'new', label: 'New', count: newCount, href: '/today?tab=new', title: `First shown to you in the last ${NEW_WITHIN_DAYS} days` },
               ].map((t) => {
                 const active = (t.key === 'new') === onlyNew
                 return (
                   <Link
                     key={t.key}
                     href={t.href}
+                    title={t.title}
                     aria-current={active ? 'page' : undefined}
-                    className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                      active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-primary'
+                    className={`relative inline-flex items-center gap-1.5 py-1 font-semibold transition-colors ${
+                      active ? 'text-primary after:absolute after:inset-x-0 after:-bottom-3 after:h-0.5 after:bg-accent' : 'text-muted-foreground hover:text-primary'
                     }`}
                   >
                     {t.label}
-                    {/* Full strength: at opacity-70 these measured 3.11:1 (QA-19). */}
-                    <span className="font-mono tabular-nums">{t.count}</span>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">{t.count}</span>
                   </Link>
                 )
               })}
-            </div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">{today}</p>
+            </nav>
+            <FeedSearch
+              initial=""
+              current={view}
+              chips={promptChips({
+                role: profile.preferred_role,
+                city: resolveCity(profile.city)?.name ?? profile.city,
+                years: profile.years_experience,
+              })}
+            />
           </div>
 
           {/* A backend failure must never render as a verdict. If the read failed we
@@ -551,102 +563,89 @@ export default async function TodayPage({
             </p>
           ) : null}
 
-          {/* THE BASELINE, AS CHIPS. The design showed a row of active filters —
-              India, the function, the experience band, the work mode — with an
-              Edit affordance. Every one of those is a real field on the profile
-              and every one is genuinely narrowing the list, so they are read
-              from the profile rather than hardcoded, and Edit goes to the place
-              that changes them. A chip that did not correspond to a stored
-              value would be decoration claiming to be a filter. */}
-          {visibleCount > 0 ? (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground">
-                Your baseline
-              </span>
-              {[
-                'India',
-                profile.preferred_role,
-                profile.years_experience !== null && profile.years_experience !== undefined
-                  ? `${profile.years_experience} yrs experience`
-                  : null,
-                cityLabel,
-                wantsMode ? WORK_MODE_LABEL[profile.work_mode_preference as string] : null,
-              ]
-                .filter(Boolean)
-                .map((chip) => (
-                  <span
-                    key={String(chip)}
-                    className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-primary"
-                  >
-                    {chip}
-                  </span>
-                ))}
+          {/* ONE ROW OF PILLS. Dropdown pills for the filters with a handful of values, toggles
+              for the yes/no ones, and one "All filters" button for the rest. */}
+          <div data-tour="filters" className="mb-3 flex flex-wrap items-center gap-2" aria-label="Filters">
+            <PillMenu
+              label={view.fresh ? 'Posted: 24 hours' : view.posted ? `Posted: ${POSTED_NAME[view.posted]}` : 'Date posted'}
+              active={view.fresh || Boolean(view.posted)}
+              options={[
+                { label: 'Any time', href: hrefFor({ ...view, posted: '', fresh: false }), selected: !view.fresh && !view.posted },
+                { label: 'Past 24 hours', href: hrefFor({ ...view, posted: '', fresh: true }), selected: view.fresh },
+                { label: 'Past 3 days', href: hrefFor({ ...view, posted: '3', fresh: false }), selected: view.posted === '3' },
+                { label: 'Past week', href: hrefFor({ ...view, posted: '7', fresh: false }), selected: view.posted === '7' },
+                { label: 'Past month', href: hrefFor({ ...view, posted: '30', fresh: false }), selected: view.posted === '30' },
+              ]}
+            />
+            <PillMenu
+              label={view.level ? `Experience: ${LEVEL_NAME[view.level]}` : 'Experience'}
+              active={Boolean(view.level)}
+              options={[
+                { label: 'Any', href: hrefFor({ ...view, level: '' }), selected: !view.level },
+                { label: 'Entry — asks up to 2 years', href: hrefFor({ ...view, level: 'entry' }), selected: view.level === 'entry' },
+                { label: 'Mid — asks 3 to 5 years', href: hrefFor({ ...view, level: 'mid' }), selected: view.level === 'mid' },
+                { label: 'Senior — asks 6 or more', href: hrefFor({ ...view, level: 'senior' }), selected: view.level === 'senior' },
+              ]}
+            />
+            <PillMenu
+              label={view.type ? TYPE_NAME[view.type] : 'Job type'}
+              active={Boolean(view.type)}
+              options={[
+                { label: 'Any', href: hrefFor({ ...view, type: '' }), selected: !view.type },
+                ...(['fulltime', 'intern', 'contract', 'parttime'] as const).map((t) => ({ label: TYPE_NAME[t], href: hrefFor({ ...view, type: t }), selected: view.type === t })),
+              ]}
+            />
+            {([
+              { key: 'min80', label: 'Match 80+', title: 'Only roles scoring above 80 for you' },
+              { key: 'remote', label: 'Remote', title: 'Roles the posting says are remote' },
+              { key: 'easy', label: 'Easy apply', title: 'One-page application form, no account needed. The extension can fill it; you submit.' },
+            ] as const).map(({ key, label, title }) => (
               <Link
-                href="/profile"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-primary"
+                key={key}
+                href={hrefFor({ ...view, [key]: !view[key] })}
+                title={title}
+                aria-pressed={view[key]}
+                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  view[key] ? 'border-accent/60 bg-accent/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
+                }`}
               >
-                <Pencil className="size-3" />
-                Edit
+                {label}
               </Link>
-            </div>
-          ) : null}
-
-          {/* Quick filters. Plain links, like every other control here: no client
-              JavaScript, and each filtered view is its own shareable URL. */}
-          <FeedSearch
-            initial=""
-            current={view}
-            chips={promptChips({
-              role: profile.preferred_role,
-              city: resolveCity(profile.city)?.name ?? profile.city,
-              years: profile.years_experience,
-            })}
-          />
-          <SavedFilters
-            saved={feedPrefs.saved.map((f) => ({ name: f.name, query: viewToQuery(f.view) }))}
-            current={view}
-            stored={feedPrefs.stored}
-          />
-          <FeedFilterDrawer
-            key={JSON.stringify(drawerPairs)}
-            view={view}
-            keep={[...(onlyNew ? [['tab', 'new'] as [string, string]] : []), ...(clearsOnly ? [['fit', 'clears'] as [string, string]] : []), ...(showHidden ? [['hidden', '1'] as [string, string]] : [])]}
-            notes={drawerNoteLines}
-          />
-          <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Quick filters">
-            {textParams.filter(([k]) => k !== 'hidden').map(([k, v]) => {
-              const rest = new URLSearchParams()
-              for (const p of pillParams) rest.set(p, '1')
-              for (const [tk, tv] of textParams) if (tk !== k) rest.set(tk, tv)
+            ))}
+            <Link
+              href={hrefFor(view, !clearsOnly)}
+              title="Roles whose stated experience bar is no more than a stretch above your years"
+              aria-pressed={clearsOnly}
+              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                clearsOnly ? 'border-accent/60 bg-accent/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
+              }`}
+            >
+              Within reach
+            </Link>
+            <AllFiltersDrawer
+              key={JSON.stringify([drawerPairs, clearsOnly])}
+              view={view}
+              keep={keepParams}
+              notes={drawerNoteLines}
+              saved={feedPrefs.saved.map((f) => ({ name: f.name, query: viewToQuery(f.view) }))}
+              stored={feedPrefs.stored}
+              activeCount={drawerPairs.length}
+              withinReach={clearsOnly}
+            />
+            {textParams.filter(([k]) => chipKeys.includes(k)).map(([k, v]) => {
+              const next = viewFromParams(Object.fromEntries(textParams.filter(([tk]) => tk !== k).concat(pillParams.map((pk) => [pk, '1'] as [string, string]))))
               return (
                 <Link
                   key={k}
-                  href={`/today${rest.size ? `?${rest}` : ''}`}
+                  href={hrefFor({ ...next, sort: view.sort })}
                   title="Remove this filter"
-                  className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-accent/60 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-primary"
                 >
-                  {k === 'city' ? <Globe className="size-3.5" aria-hidden="true" /> : <Target className="size-3.5" aria-hidden="true" />}
                   {chipLabel(k, v)}
                   <X className="size-3" aria-hidden="true" />
                 </Link>
               )
             })}
-            {PILLS.map(({ key, label, icon: Icon, title }) => (
-              <Link
-                key={key}
-                href={pillHref(key)}
-                title={title}
-                aria-pressed={pills[key]}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                  pills[key]
-                    ? 'bg-brand-gradient border-transparent'
-                    : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
-                }`}
-              >
-                <Icon className="size-3.5" aria-hidden="true" />
-                {label}
-              </Link>
-            ))}
             {pillCount > 0 ? (
               <Link
                 href={`/today${onlyNew ? '?tab=new' : ''}`}
@@ -666,6 +665,7 @@ export default async function TodayPage({
               </Link>
             ) : null}
           </div>
+
           {showHidden ? (
             <p className="mb-4 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
               Jobs you hid. They are still scored — only hidden from your feed and daily email. Unhide any to bring it back.
@@ -729,122 +729,48 @@ export default async function TodayPage({
             </p>
           ) : null}
 
-          {/* ⚠️ AT THE CAP THIS SENTENCE SAYS SO. The scorer takes the roles whose
-              titles rank closest to the candidate's search, 500 at most, and
-              "Showing 500 roles matched" read as the whole market — 6 of 9
-              profiles sat at exactly 500 on 2026-09-23 (QA-06). The remedy
-              named is the one that actually moves the number. */}
-          <p className="mb-4 text-sm leading-6 text-muted-foreground">
-            {pillCount > 0 && !onlyNew ? (
-              // With a filter on, the count is what the filters left of the scored list — not the
-              // list's own size, which read as "500" above a screen showing 14.
-              <>
-                Showing <span className="font-semibold text-primary">{rows.length}</span> of your{' '}
-                <span className="font-semibold text-primary">{allRows.length}</span> scored{' '}
-                {allRows.length === 1 ? 'role' : 'roles'} after your filters.
-              </>
-            ) : holding.kind === 'complete' || onlyNew ? (
-              <>
-                Showing <span className="font-semibold text-primary">{visibleCount}</span>{' '}
-                {visibleCount === 1 ? 'role' : 'roles'} matched to your baseline.
-              </>
-            ) : (
-              <>
-                Showing the <span className="font-semibold text-primary">{holding.scored}</span> closest title
-                matches
-                {holding.kind === 'capped' ? (
-                  <>
-                    {' '}of <span className="font-semibold text-primary">{holding.matched.toLocaleString('en-IN')}</span>{' '}
-                    roles that fit your baseline.
-                  </>
-                ) : (
-                  ' to your baseline.'
-                )}
-              </>
-            )}
-            {holding.kind !== 'complete' ? (
-              <>
-                {' '}
-                {holding.kind === 'capped' ? (
-                  <>
-                    The other <span className="font-semibold text-primary">{holding.unscored.toLocaleString('en-IN')}</span> rank
-                    lower on title and were not scored.
-                  </>
-                ) : (
-                  'More roles fit than we scored.'
-                )}{' '}
-                <Link href="/profile" className="font-semibold text-primary underline underline-offset-4">
-                  {profile.open_to_adjacent ? 'Turning off adjacent roles' : 'A more specific role'}
-                </Link>{' '}
-                narrows the list.
-              </>
-            ) : null}
-          </p>
-
-          {/* Sort and filter. Plain links, so the whole control set costs no
-              client JavaScript and every view is its own shareable URL — the
-              same reason "show all" is a link. Both controls apply to both
-              sections: they are one list split by location, and a candidate
-              sorting one half by newest while the other stays on best-match
-              would be comparing two different things. */}
-          {visibleCount > 0 ? (
-            <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Sort</span>
-                {[
-                  { k: 'best', label: 'Best match' },
-                  { k: 'new', label: 'Newest' },
-                ].map(({ k, label }) => {
-                  const active = (k === 'new') === byNewest
-                  const params = new URLSearchParams()
-                  if (onlyNew) params.set('tab', 'new')
-                  if (k === 'new') params.set('sort', 'new')
-                  if (clearsOnly) params.set('fit', 'clears')
-                  for (const p of pillParams) params.set(p, '1')
-                  for (const [tk, tv] of textParams) params.set(tk, tv)
-                  return (
-                    <Link
-                      key={k}
-                      href={`/today${params.size ? `?${params}` : ''}`}
-                      aria-current={active ? 'true' : undefined}
-                      className={`inline-flex min-h-6 items-center font-medium transition-colors ${
-                        active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  )
-                })}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Show</span>
-                {[
-                  { k: 'all', label: 'Everything' },
-                  { k: 'clears', label: 'Within reach' },
-                ].map(({ k, label }) => {
-                  const active = (k === 'clears') === clearsOnly
-                  const params = new URLSearchParams()
-                  if (onlyNew) params.set('tab', 'new')
-                  if (byNewest) params.set('sort', 'new')
-                  if (k === 'clears') params.set('fit', 'clears')
-                  for (const p of pillParams) params.set(p, '1')
-                  for (const [tk, tv] of textParams) params.set(tk, tv)
-                  return (
-                    <Link
-                      key={k}
-                      href={`/today${params.size ? `?${params}` : ''}`}
-                      aria-current={active ? 'true' : undefined}
-                      className={`inline-flex min-h-6 items-center font-medium transition-colors ${
-                        active ? 'text-primary underline underline-offset-4' : 'text-muted-foreground hover:text-primary'
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
+          {/* ONE COUNT LINE, with the sort beside it. The cap disclosure below stays: at 500 the
+              list is the top of a larger set, and "Showing 500" once read as the whole market
+              (QA-06). It is one muted line now, not a paragraph above the controls. */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-primary">{shownCount.toLocaleString('en-IN')}</span> {shownCount === 1 ? 'job' : 'jobs'}
+              {ofLine ? ` ${ofLine}` : ''}
+              {baselineText ? (
+                <span className="hidden sm:inline">
+                  {' · '}for {baselineText}{' · '}
+                  <Link href="/profile" className="font-semibold text-primary underline underline-offset-4">Edit</Link>
+                </span>
+              ) : null}
+            </p>
+            <PillMenu
+              align="right"
+              label={`Sort: ${byNewest ? 'Newest' : 'Best match'}`}
+              options={[
+                { label: 'Best match', href: hrefFor({ ...view, sort: '' }), selected: !byNewest },
+                { label: 'Newest', href: hrefFor({ ...view, sort: 'new' }), selected: byNewest },
+              ]}
+            />
+          </div>
+          {holding.kind !== 'complete' && !onlyNew ? (
+            <p className="mb-4 text-xs leading-5 text-muted-foreground">
+              {holding.kind === 'capped' ? (
+                <>
+                  The other <span className="font-semibold text-primary">{holding.unscored.toLocaleString('en-IN')}</span> rank lower on title and were not scored.
+                </>
+              ) : (
+                'More roles fit than we scored.'
+              )}{' '}
+              <Link href="/profile" className="font-semibold text-primary underline underline-offset-4">
+                {profile.open_to_adjacent ? 'Turning off adjacent roles' : 'A more specific role'}
+              </Link>{' '}
+              narrows the list.
+            </p>
+          ) : null}
+          {drawerNoteLines.length > 0 ? (
+            <ul className="mb-4 space-y-0.5 text-xs leading-5 text-muted-foreground" aria-label="What your filters could not decide">
+              {drawerNoteLines.map((n) => <li key={n}>{n}</li>)}
+            </ul>
           ) : null}
 
           <BreakdownEngaged>
@@ -887,37 +813,35 @@ export default async function TodayPage({
               // JavaScript and every expanded view is its own shareable URL.
               const hiddenByFilter = all - inSection.length
               return (
-                <section key={key} className="mb-10" aria-labelledby={`bucket-${key}`}>
-                  <div className="mb-1 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                <section key={key} className="mb-8" aria-labelledby={`bucket-${key}`}>
+                  {/* The heading is a label and a count. The sentence that explained each section
+                      is its tooltip now — it was a second line of grey text above every list. */}
+                  <div className="mb-3 flex items-baseline justify-between gap-3">
                     <h3
                       id={`bucket-${key}`}
-                      className="text-xs font-bold uppercase tracking-[0.16em] text-primary"
+                      title={blurb}
+                      className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"
                     >
                       {title}
                     </h3>
-                    <span className="font-mono text-sm tabular-nums text-muted-foreground">
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
                       {inSection.length}
                     </span>
                   </div>
-                  <p className="mb-4 text-xs leading-5 text-muted-foreground">
-                    {blurb}
-                    {/* A filter that removes rows says how many, always. A count
-                        that silently shrinks is indistinguishable from a thin
-                        day, and this product does not let the candidate mistake
-                        our filter for the market's answer. */}
-                    {hiddenByFilter > 0 ? (
-                      <>
-                        {' '}
-                        <Link
-                          href={`/today${onlyNew ? '?tab=new' : ''}`}
-                          className="font-semibold text-primary underline underline-offset-4"
-                        >
-                          {hiddenByFilter} more hidden by your filter
-                        </Link>
-                        .
-                      </>
-                    ) : null}
-                  </p>
+                  {/* A filter that removes rows says how many, always. A count that silently
+                      shrinks is indistinguishable from a thin day, and this product does not let
+                      the candidate mistake our filter for the market's answer. */}
+                  {hiddenByFilter > 0 ? (
+                    <p className="mb-3 text-xs leading-5 text-muted-foreground">
+                      <Link
+                        href={`/today${onlyNew ? '?tab=new' : ''}`}
+                        className="font-semibold text-primary underline underline-offset-4"
+                      >
+                        {hiddenByFilter} more hidden by your filter
+                      </Link>
+                      .
+                    </p>
+                  ) : null}
 
                   {inSection.length === 0 ? (
                     <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -959,7 +883,6 @@ export default async function TodayPage({
                         ) : null}
                         <SelectableCard roleId={card.role_id}>
                         <RoleCard
-                          gateResultId={card.id}
                           roleId={card.role_id}
                           title={card.roles?.title ?? ''}
                           company={displayEmployer(card.roles?.company_name)}
@@ -969,8 +892,6 @@ export default async function TodayPage({
                           reason={card.reason}
                           applyUrl={card.roles?.apply_url}
                           isNew={isNew(r)}
-                          requirements={evidence(card.role_id)}
-                          profileCity={profile.city ?? undefined}
                           postedAt={card.roles?.posted_at ?? undefined}
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
