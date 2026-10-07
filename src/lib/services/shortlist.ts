@@ -5,6 +5,7 @@ import { CONFIDENCE_THRESHOLD, type TypedRequirement } from '@/gates/types'
 import type { ScoreBreakdown } from '@/match/score'
 import type { ArrangeableRow } from '@/lib/shortlist'
 import type { RepostRecord } from '@/lib/repost'
+import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 
 /**
  * The reads behind /today, in two steps. Moved out of the page 2026-09-23
@@ -227,6 +228,28 @@ export async function readInterest(roleIds: string[]): Promise<Map<string, numbe
 }
 
 /**
+ * role_id → what the role's own provider stated: pay, work mode, contract type
+ * (migration 0041). Its own query, so a database without the update costs the
+ * page nothing and `stored: false` lets a filter say what is missing. Only roles
+ * that state something appear in the map.
+ */
+export async function readRoleFacts(roleIds: string[]): Promise<{ facts: Map<string, RoleFactsRow>; stored: boolean }> {
+  const facts = new Map<string, RoleFactsRow>()
+  if (roleIds.length === 0) return { facts, stored: true }
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) => supabase.from('roles').select(`id, ${ROLE_FACT_COLUMNS}`).in('id', ids)),
+  )
+  for (const { data, error } of results) {
+    if (error) return { facts: new Map(), stored: false }
+    for (const r of (data ?? []) as unknown as (RoleFactsRow & { id: string })[]) {
+      if (r.pay_min !== null || r.pay_max !== null || r.work_mode || r.employment_type) facts.set(r.id, r)
+    }
+  }
+  return { facts, stored: true }
+}
+
+/**
  * role_id → apply URL, for the Easy Apply filter. Read only when that filter is
  * on, for the same reason as readPostedDates: the thin read has no roles join.
  */
@@ -291,14 +314,21 @@ export async function readExperienceFloors(roleIds: string[]): Promise<Map<strin
 export async function readStatedPays(roleIds: string[]): Promise<Map<string, number>> {
   const out = new Map<string, number>()
   if (roleIds.length === 0) return out
+  // What the provider's own fields say comes first — and spares reading those roles' descriptions.
+  const { facts } = await readRoleFacts(roleIds)
+  for (const [id, row] of facts) {
+    const pay = payFromRow(row)
+    if (pay && pay.currency === 'INR' && pay.period !== 'hour') out.set(id, pay.period === 'month' ? pay.low * 12 : pay.low)
+  }
   const supabase = await createClient()
+  const rest = roleIds.filter((id) => !facts.get(id) || payFromRow(facts.get(id)!) === null)
   const results = await Promise.all(
-    chunks(roleIds).map((ids) => supabase.from('roles').select('id, description').in('id', ids)),
+    chunks(rest).map((ids) => supabase.from('roles').select('id, description').in('id', ids)),
   )
   for (const { data } of results) {
     for (const r of (data ?? []) as { id: string; description: string | null }[]) {
       const pay = r.description ? findStatedPay(r.description) : null
-      if (pay && pay.currency === 'INR') out.set(r.id, pay.period === 'month' ? pay.low * 12 : pay.low)
+      if (pay && pay.currency === 'INR' && pay.period !== 'hour') out.set(r.id, pay.period === 'month' ? pay.low * 12 : pay.low)
     }
   }
   return out

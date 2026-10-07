@@ -1,4 +1,5 @@
 import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
+import { employmentTypeFrom, payFromAshby, payFromGreenhouse, payFromLever, payFromRecruitee, workModeFrom, workModeFromFlags } from './fields'
 
 type Rec = Record<string, unknown>
 const rec = (v: unknown): Rec => (v && typeof v === 'object' ? (v as Rec) : {})
@@ -18,7 +19,8 @@ const SR_MAX_PAGES = 100
 export const ADAPTERS: Adapter[] = [
   {
     provider: 'greenhouse',
-    url: (t) => `https://boards-api.greenhouse.io/v1/boards/${t}/jobs?content=true`,
+    // pay_transparency=true adds `pay_input_ranges` (measured 2026-10-08: 55% of Databricks postings carry one).
+    url: (t) => `https://boards-api.greenhouse.io/v1/boards/${t}/jobs?content=true&pay_transparency=true`,
     parse: (raw) =>
       arr(rec(raw).jobs).map<NormalisedRole>((j) => ({
         externalId: str(j.id),
@@ -32,6 +34,7 @@ export const ADAPTERS: Adapter[] = [
         // published seven months earlier. Labelled "Posted", it made every
         // Greenhouse role look fresh. `first_published` is the posting date.
         postedAt: (j.first_published as string) || null,
+        pay: payFromGreenhouse(j.pay_input_ranges),
       })),
   },
   {
@@ -45,11 +48,14 @@ export const ADAPTERS: Adapter[] = [
         description: toText(str(j.descriptionPlain ?? j.description)),
         applyUrl: str(j.hostedUrl),
         postedAt: j.createdAt ? new Date(Number(j.createdAt)).toISOString() : null,
+        pay: payFromLever(j.salaryRange),
+        workMode: workModeFrom(j.workplaceType),
+        employmentType: employmentTypeFrom(rec(j.categories).commitment),
       })),
   },
   {
     provider: 'ashby',
-    url: (t) => `https://api.ashbyhq.com/posting-api/job-board/${t}`,
+    url: (t) => `https://api.ashbyhq.com/posting-api/job-board/${t}?includeCompensation=true`,
     parse: (raw) =>
       arr(rec(raw).jobs).map<NormalisedRole>((j) => ({
         externalId: str(j.id),
@@ -58,6 +64,9 @@ export const ADAPTERS: Adapter[] = [
         description: toText(str(j.descriptionPlain ?? j.descriptionHtml)),
         applyUrl: str(j.jobUrl ?? j.applyUrl),
         postedAt: (j.publishedAt as string) ?? null,
+        pay: payFromAshby(j.compensation, str(j.location)),
+        workMode: workModeFrom(j.workplaceType) ?? (j.isRemote === true ? 'remote' : null),
+        employmentType: employmentTypeFrom(j.employmentType),
       })),
   },
   {
@@ -74,6 +83,9 @@ export const ADAPTERS: Adapter[] = [
         description: toText(str(j.description)),
         applyUrl: str(j.url ?? j.shortlink ?? `https://apply.workable.com/${token}/j/${str(j.shortcode)}/`),
         postedAt: (j.published_on as string) ?? null,
+        // `telecommuting: false` is the default, not a statement; only true says anything.
+        workMode: j.telecommuting === true ? 'remote' : null,
+        employmentType: employmentTypeFrom(j.employment_type),
       })),
   },
   {
@@ -87,6 +99,9 @@ export const ADAPTERS: Adapter[] = [
         description: toText(str(j.description)),
         applyUrl: str(j.careers_url ?? j.careers_apply_url),
         postedAt: (j.published_at as string) ?? null,
+        pay: payFromRecruitee(j.salary),
+        workMode: workModeFromFlags({ remote: j.remote, hybrid: j.hybrid, onSite: j.on_site }),
+        employmentType: employmentTypeFrom(j.employment_type_code),
       })),
   },
   {
@@ -108,6 +123,8 @@ export const ADAPTERS: Adapter[] = [
         // links that opened the wrong page.
         applyUrl: `https://jobs.smartrecruiters.com/${str(rec(j.company).identifier) || token}/${str(j.id)}`,
         postedAt: (j.releasedDate as string) ?? null,
+        workMode: workModeFromFlags({ remote: rec(j.location).remote, hybrid: rec(j.location).hybrid }),
+        employmentType: employmentTypeFrom(rec(j.typeOfEmployment).label ?? rec(j.typeOfEmployment).id),
       })),
 
     /**

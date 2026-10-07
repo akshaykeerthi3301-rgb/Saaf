@@ -64,7 +64,7 @@ export default async function PublicJobPage({ params }: Props) {
       '@type': 'Place',
       address: { '@type': 'PostalAddress', addressLocality: job.city ?? job.location ?? undefined, addressCountry: job.inIndia ? 'IN' : undefined },
     },
-    ...(job.pay ? { baseSalary: { '@type': 'MonetaryAmount', currency: job.pay.currency, value: { '@type': 'QuantitativeValue', minValue: job.pay.low, maxValue: job.pay.high, unitText: job.pay.period === 'year' ? 'YEAR' : 'MONTH' } } } : {}),
+    ...(job.pay ? { baseSalary: { '@type': 'MonetaryAmount', currency: job.pay.currency, value: { '@type': 'QuantitativeValue', minValue: job.pay.low, maxValue: job.pay.high, unitText: job.pay.period === 'year' ? 'YEAR' : job.pay.period === 'hour' ? 'HOUR' : 'MONTH' } } } : {}),
     directApply: false,
     url: `${siteUrl()}/jobs/${job.id}`,
   }

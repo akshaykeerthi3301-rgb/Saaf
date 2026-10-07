@@ -271,6 +271,12 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
     console.warn('  roles.closed_at is missing — run supabase/migrations/0035_tracker_signals.sql. Taken-down postings are not being recorded.')
   }
 
+  // And for 0041: what the providers themselves say about pay, work mode and contract type.
+  const hasFacts = !(await db.from('roles').select('pay_min, pay_max, pay_currency, pay_period, work_mode, employment_type').limit(1)).error
+  if (!hasFacts) {
+    console.warn('  roles.work_mode is missing — run supabase/migrations/0041_role_provider_fields.sql. Provider-stated pay, work mode and contract type are not being stored.')
+  }
+
   // Least-recently-ingested first, so a run that runs out of budget resumes
   // where it stopped instead of re-fetching the same head of the list. Paged,
   // because the unlimited select silently stopped at 1,000 boards — which is
@@ -440,6 +446,12 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
               last_seen_at: new Date().toISOString(),
               // Listed today, so not closed — clears a posting that reappeared (0035).
               ...(hasClosed ? { closed_at: null } : {}),
+              // What the provider itself states (0041). Every key on every row — a bulk
+              // upsert writes NULL for a missing one — and null means "not stated".
+              ...(hasFacts ? {
+                pay_min: r.pay?.min ?? null, pay_max: r.pay?.max ?? null, pay_currency: r.pay?.currency ?? null, pay_period: r.pay?.period ?? null,
+                work_mode: r.workMode ?? null, employment_type: r.employmentType ?? null,
+              } : {}),
               // Only once 0032 exists — one unknown column fails the whole batch.
               // Both keys on EVERY row: a bulk upsert with differing keys writes
               // NULL for the missing one, and repost_count is NOT NULL.

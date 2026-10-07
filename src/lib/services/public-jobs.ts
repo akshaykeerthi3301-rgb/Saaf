@@ -4,6 +4,7 @@ import { jobPostingFields, structureJob } from '@/lib/job-sections'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay, type StatedPay } from '@/lib/stated-pay'
+import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 
 /**
  * Public job pages — one indexed role, readable without an account.
@@ -106,6 +107,9 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
     : { data: [], count: 0 }
   const sib = (siblings ?? []) as { id: string; title: string; city: string | null }[]
   const blocks = formatDescription(r.description ?? '')
+  // What the provider itself states about pay (0041); its own query so a missing column costs nothing.
+  const factsRes = await db.from('roles').select(ROLE_FACT_COLUMNS).eq('id', id).maybeSingle()
+  const providerPay = factsRes.error ? null : payFromRow((factsRes.data ?? {}) as unknown as RoleFactsRow)
 
   return {
     id: r.id,
@@ -119,7 +123,7 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
     firstSeenAt: r.first_seen_at,
     easyApply: isEasyApply(r.apply_url),
     seniority: titleSeniority(r.title),
-    pay: findStatedPay(r.description ?? ''),
+    pay: providerPay ?? findStatedPay(r.description ?? ''),
     description: blocks,
     postingFields: jobPostingFields(structureJob(r.description ?? '').sections),
     plainDescription: blocks.map((b) => (b.kind === 'bullet' ? `• ${b.text}` : b.text)).join('\n'),

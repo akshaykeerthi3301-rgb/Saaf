@@ -5,6 +5,7 @@ import { postingEvidence, type PostingEvidence } from '@/lib/posting-evidence'
 import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlock, type TitleSeniority } from '@/lib/job-facts'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay } from '@/lib/stated-pay'
+import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 import { structureJob, SECTION_LABEL, type SectionKey } from '@/lib/job-sections'
 import type { ScoreBreakdown } from '@/match/score'
 
@@ -163,6 +164,10 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     })),
   })
 
+  // What the provider itself states about pay (0041), in its own query so a missing column costs nothing.
+  const factsRes = await supabase.from('roles').select(ROLE_FACT_COLUMNS).eq('id', roleId).maybeSingle()
+  const providerFacts = factsRes.error ? null : (factsRes.data as unknown as RoleFactsRow | null)
+
   return {
     roleId: r.id,
     gateResultId: g?.id ?? null,
@@ -174,7 +179,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     postedAt: r.posted_at,
     easyApply: isEasyApply(r.apply_url),
     seniority: titleSeniority(r.title),
-    statedPay: findStatedPay(r.description ?? '')?.text ?? null,
+    statedPay: (providerFacts ? payFromRow(providerFacts)?.text : null) ?? findStatedPay(r.description ?? '')?.text ?? null,
     score: g?.score === null || g?.score === undefined ? null : Number(g.score),
     reason: g?.reason ?? null,
     analysis,

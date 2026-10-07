@@ -14,7 +14,7 @@
  * Crore, million and billion amounts are never pay here.
  */
 
-export type StatedPay = { text: string; currency: 'INR' | 'USD' | 'EUR' | 'GBP'; low: number; high: number; period: 'year' | 'month' }
+export type StatedPay = { text: string; currency: string; low: number; high: number; period: 'year' | 'month' | 'hour' }
 
 const PAY_WORD = /(salary|ctc|compensation|pay|package|stipend|remuneration|base|ote|earn|offer(?:ing)?|range|band)\b[^.\n]{0,50}$/i
 
@@ -58,7 +58,7 @@ export function findStatedPay(description: string): StatedPay | null {
       const yearlyLow = monthly ? low * 12 : low
       if (currency === 'INR' && (yearlyLow < 50_000 || high > 50_000_000)) continue
       if (currency !== 'INR' && (yearlyLow < 10_000 || high > 2_000_000)) continue
-      return { text: format(currency, low, high, monthly ? 'month' : 'year'), currency, low, high, period: monthly ? 'month' : 'year' }
+      return { text: formatStatedPay(currency, low, high, monthly ? 'month' : 'year'), currency, low, high, period: monthly ? 'month' : 'year' }
     }
   }
   return null
@@ -78,16 +78,20 @@ function parseMatch(m: RegExpMatchArray, currency: StatedPay['currency']): { low
   return low <= high ? { low, high } : { low: high, high: low }
 }
 
-function format(currency: StatedPay['currency'], low: number, high: number, period: 'year' | 'month'): string {
+/** How a figure reads on a card: ₹12–18 LPA, ₹40,000/month, $64K–85K/yr, $10/hr. Any currency code the provider names. */
+export function formatStatedPay(currency: string, low: number, high: number, period: 'year' | 'month' | 'hour'): string {
+  const same = low === high
   if (currency === 'INR') {
-    if (period === 'month') {
+    if (period === 'month' || period === 'hour') {
       const f = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
-      return low === high ? `${f(low)}/month` : `${f(low)}–${f(high)}/month`
+      const unit = period === 'month' ? 'month' : 'hr'
+      return same ? `${f(low)}/${unit}` : `${f(low)}–${f(high)}/${unit}`
     }
     const l = (n: number) => (n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1).replace(/\.0$/, '')
-    return low === high ? `₹${l(low)} LPA` : `₹${l(low)}–${l(high)} LPA`
+    return same ? `₹${l(low)} LPA` : `₹${l(low)}–${l(high)} LPA`
   }
-  const sym = { USD: '$', EUR: '€', GBP: '£' }[currency]
-  const k = (n: number) => `${Math.round(n / 1000)}K`
-  return low === high ? `${sym}${k(low)}/${period === 'year' ? 'yr' : 'mo'}` : `${sym}${k(low)}–${k(high)}/${period === 'year' ? 'yr' : 'mo'}`
+  const sym = ({ USD: '$', EUR: '€', GBP: '£' } as Record<string, string>)[currency] ?? `${currency} `
+  const unit = period === 'year' ? 'yr' : period === 'month' ? 'mo' : 'hr'
+  const f = (n: number) => (period === 'hour' ? String(Math.round(n * 100) / 100) : `${Math.round(n / 1000)}K`)
+  return same ? `${sym}${f(low)}/${unit}` : `${sym}${f(low)}–${f(high)}/${unit}`
 }

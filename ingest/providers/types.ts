@@ -1,3 +1,5 @@
+import type { EmploymentType, RolePay, WorkMode } from './fields'
+
 /** One role, normalised out of whichever ATS returned it. */
 export type NormalisedRole = {
   externalId: string
@@ -6,6 +8,12 @@ export type NormalisedRole = {
   description: string
   applyUrl: string
   postedAt: string | null
+  /** Pay the provider's own API publishes — structured, never estimated. Absent/null = not stated. */
+  pay?: RolePay | null
+  /** Where the work happens, if the provider says. null/absent = not stated (a false "remote" flag is NOT "on-site"). */
+  workMode?: WorkMode | null
+  /** The contract type, if the provider says. */
+  employmentType?: EmploymentType | null
 }
 
 /**
