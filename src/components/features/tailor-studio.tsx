@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useState, useTransition, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
 import {
   Check, CheckCheck, Download, FileDown, Loader2, Pencil, Printer, Save, ShieldCheck, Sparkles, Undo2, X,
 } from 'lucide-react'
-import { tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
+import { scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
+import { DEFAULT_TEMPLATE, TEMPLATES, templateSpec, type TemplateId } from '@/lib/resume-templates'
+import { diffSections, estimatePages, fitToOnePage, tailoredFilename } from '@/lib/resume-review'
 
 /**
  * The Resume Tailoring Studio — current résumé beside an AI-tailored one.
@@ -65,6 +67,35 @@ export function TailorStudio({
   const [note, setNote] = useState<string>()
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
+  const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
+  const [fit, setFit] = useState(false)
+  const [liveScore, setLiveScore] = useState<number | null>(null)
+  const [scoring, setScoring] = useState(false)
+  const scoreSeq = useRef(0)
+
+  // The change list is read from the two documents, so it cannot disagree with the page.
+  const changes = useMemo(() => diffSections(original, working), [original, working])
+  const fitRes = useMemo(() => (fit ? fitToOnePage(working, template) : null), [fit, working, template])
+  const effective: TemplateId = fitRes?.template ?? template
+  const pages = useMemo(() => estimatePages(working, effective), [working, effective])
+  const fileName = tailoredFilename({ name: working.contact.name, role: roleTitle, company })
+  const spec = templateSpec(effective)
+
+  // The score of the draft as it stands, after each accept, dismiss or hand edit. No change yet = the
+  // saved résumé's own score, no call. `scoreSeq` drops a slow answer that a newer edit has overtaken.
+  useEffect(() => {
+    if (!res || changes.length === 0) return
+    const mine = ++scoreSeq.current
+    const t = setTimeout(() => {
+      setScoring(true)
+      scoreDraft({ roleId, sections: working })
+        .then((r) => { if (mine === scoreSeq.current) setLiveScore(r.ok ? r.score : null) })
+        .catch(() => { if (mine === scoreSeq.current) setLiveScore(null) })
+        .finally(() => { if (mine === scoreSeq.current) setScoring(false) })
+    }, 700)
+    return () => clearTimeout(t)
+  }, [res, working, roleId, changes.length])
+  const nowScore = res ? (changes.length === 0 ? res.scores.before : liveScore) : null
 
   const suggestions = useMemo(() => (res ? suggestionsFrom(original, res) : []), [res, original])
   const pending = suggestions.filter((s) => (decisions[s.key] ?? 'pending') === 'pending')
@@ -116,7 +147,7 @@ export function TailorStudio({
   function exportWord() {
     setNote(undefined)
     startBusy(async () => {
-      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle })
+      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, template: effective, company: company || undefined })
         .catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setNote(r.error); return }
       const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0))
@@ -129,6 +160,14 @@ export function TailorStudio({
       a.click()
       URL.revokeObjectURL(url)
     })
+  }
+
+  /** The browser names a printed PDF after the page title, so the title carries the file's name while it prints. */
+  function exportPdf() {
+    const previous = document.title
+    document.title = fileName.replace(/\.docx$/, '')
+    window.addEventListener('afterprint', () => { document.title = previous }, { once: true })
+    window.print()
   }
 
   /** Marks posting keywords the rewrite added. Text nodes only. */
@@ -239,7 +278,7 @@ export function TailorStudio({
             </button>
             <ToolbarButton onClick={saveVersion} disabled={busy} icon={Save}>Save as version</ToolbarButton>
             <ToolbarButton onClick={exportWord} disabled={busy} icon={FileDown}>Export Word</ToolbarButton>
-            <ToolbarButton onClick={() => window.print()} icon={Printer}>Export PDF</ToolbarButton>
+            <ToolbarButton onClick={exportPdf} icon={Printer}>Export PDF</ToolbarButton>
             <ToolbarButton onClick={run} disabled={running} icon={running ? Loader2 : Sparkles}>Re-run</ToolbarButton>
           </>
         )}
@@ -252,6 +291,60 @@ export function TailorStudio({
 
       {error ? <p className="mb-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground print:hidden">{error}</p> : null}
       {note ? <p role="status" className="mb-4 rounded-xl border border-border bg-card p-4 text-sm text-primary print:hidden">{note}</p> : null}
+
+      {res ? (
+        <div className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 print:hidden" aria-label="Score for this posting">
+          <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
+            <ScoreFig label="Saved résumé" value={res.scores.before} />
+            <span className="pb-1 text-muted-foreground" aria-hidden="true">→</span>
+            <ScoreFig label="Your draft now" value={nowScore} pending={scoring} strong />
+            <ScoreFig label="If you accept everything" value={res.scores.after} muted />
+          </div>
+          <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+            ATS readability score against this posting — the same check as the free ATS checker, run on your text each time you accept, dismiss or edit a line.
+            {nowScore !== null && res.scores.before !== null && changes.length > 0
+              ? ` Your draft is ${nowScore === res.scores.before ? 'level with' : nowScore > res.scores.before ? `${nowScore - res.scores.before} point${nowScore - res.scores.before === 1 ? '' : 's'} above` : `${res.scores.before - nowScore} point${res.scores.before - nowScore === 1 ? '' : 's'} below`} the saved résumé.`
+              : ''}
+          </p>
+        </div>
+      ) : null}
+
+      {res ? (
+        <div className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 print:hidden" aria-label="Style and page length">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-primary">Style</span>
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={effective === t.id}
+                disabled={fit && effective !== t.id}
+                onClick={() => setTemplate(t.id)}
+                title={t.note}
+                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-40 ${
+                  effective === t.id ? 'bg-brand-gradient border-transparent' : 'border-border text-muted-foreground hover:border-accent/60 hover:text-primary'
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+            <label className="ml-2 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-primary">
+              <input type="checkbox" checked={fit} onChange={(e) => setFit(e.target.checked)} className="size-3.5 accent-[var(--color-accent)]" />
+              Fit to one page
+            </label>
+            <span role="status" className="text-[11px] text-muted-foreground">
+              {fit && fitRes
+                ? fitRes.fits
+                  ? `Fits one page in ${templateSpec(effective).name} (estimated, about ${pages.toFixed(1)}).`
+                  : `Still about ${pages.toFixed(1)} pages in Compact, the tightest style — shorten older roles or long bullets.`
+                : `About ${pages.toFixed(1)} ${pages.toFixed(1) === '1.0' ? 'page' : 'pages'} in ${templateSpec(effective).name} (estimated).`}
+            </span>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
+            {templateSpec(effective).note} Every style is one column of real text, so each passes the ATS checker. Word and PDF both use the style you pick; the file is named <span className="font-mono text-primary">{fileName}</span>.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-2 print:hidden">
         <DocColumn title="Current résumé" subtitle={resumeLabel}>
@@ -307,6 +400,26 @@ export function TailorStudio({
       </div>
 
       {res ? (
+        <details className="mt-5 rounded-2xl border border-border bg-card p-4 print:hidden" open={changes.length > 0 && changes.length <= 6}>
+          <summary className="cursor-pointer list-none text-xs font-semibold text-primary">
+            {changes.length === 0 ? 'No changes yet — this is your saved résumé.' : `${changes.length} change${changes.length === 1 ? '' : 's'} from your saved résumé`}
+            <span className="ml-2 font-normal text-muted-foreground">Read from the two documents, so it is always exactly what differs.</span>
+          </summary>
+          {changes.length ? (
+            <ul className="mt-3 space-y-2.5">
+              {changes.map((c, i) => (
+                <li key={i} className="rounded-lg bg-secondary/60 p-3 text-xs leading-5">
+                  <p className="font-semibold text-primary">{c.where}{c.note ? <span className="ml-2 font-normal text-muted-foreground">({c.note})</span> : null}</p>
+                  {c.before !== null ? <p className="mt-1 text-muted-foreground line-through">{c.before}</p> : <p className="mt-1 text-muted-foreground">New line</p>}
+                  {c.after !== null ? <p className="mt-0.5 text-primary">{c.after}</p> : <p className="mt-0.5 text-muted-foreground">Line removed</p>}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </details>
+      ) : null}
+
+      {res ? (
         <div className="mt-5 rounded-2xl border border-border bg-card p-4 print:hidden">
           <p className="flex items-center gap-2 text-xs font-semibold text-primary">
             <ShieldCheck className="size-3.5 text-accent" />
@@ -333,21 +446,45 @@ export function TailorStudio({
         </div>
       ) : null}
 
-      {/* What Export PDF prints: the tailored document alone, on paper. */}
-      <div className="hidden bg-paper p-8 text-paper-ink print:block">
-        <h1 className="text-2xl font-bold">{working.contact.name}</h1>
-        <p className="text-sm text-paper-muted">{[working.contact.email, working.contact.phone, ...working.contact.links].filter(Boolean).join(' · ')}</p>
-        {working.summary ? <p className="mt-4 text-sm leading-6">{working.summary}</p> : null}
-        {working.experience.length ? <h2 className="mt-5 border-b border-paper-rule pb-1 text-sm font-bold uppercase">Experience</h2> : null}
+      {/* What Export PDF prints: the tailored document alone, on paper, in the chosen style. */}
+      <div className={`hidden bg-paper p-8 text-paper-ink print:block ${PRINT[spec.density].body}`}>
+        <h1 className={`${PRINT[spec.density].name} font-bold ${spec.align === 'center' ? 'text-center' : ''}`}>{working.contact.name}</h1>
+        <p className={`text-paper-muted ${spec.align === 'center' ? 'text-center' : ''}`}>{[working.contact.email, working.contact.phone, ...working.contact.links].filter(Boolean).join(' · ')}</p>
+        {working.summary ? <p className={PRINT[spec.density].gap}>{working.summary}</p> : null}
+        {working.experience.length ? <h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Experience</h2> : null}
         {working.experience.map((e, i) => (
-          <div key={i} className="mt-3">
-            <p className="text-sm font-bold">{[e.title, e.employer].filter(Boolean).join(' — ')}<span className="font-normal text-paper-muted">{e.dates ? `  ${e.dates}` : ''}</span></p>
-            <ul className="ml-5 list-disc text-sm leading-6">{e.bullets.map((b, j) => <li key={j}>{b}</li>)}</ul>
+          <div key={i} className={PRINT[spec.density].role}>
+            <p className="font-bold">{[e.title, e.employer].filter(Boolean).join(' — ')}<span className="font-normal text-paper-muted">{e.dates ? `  ${e.dates}` : ''}</span></p>
+            <ul className="ml-5 list-disc">{e.bullets.map((b, j) => <li key={j}>{b}</li>)}</ul>
           </div>
         ))}
-        {working.skills.length ? <><h2 className="mt-5 border-b border-paper-rule pb-1 text-sm font-bold uppercase">Skills</h2><p className="mt-2 text-sm">{working.skills.join(', ')}</p></> : null}
-        {working.education.length ? <><h2 className="mt-5 border-b border-paper-rule pb-1 text-sm font-bold uppercase">Education</h2>{working.education.map((ed, i) => <p key={i} className="mt-1 text-sm">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>)}</> : null}
+        {working.skills.length ? <><h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Skills</h2><p className="mt-2">{working.skills.join(', ')}</p></> : null}
+        {working.education.length ? <><h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Education</h2>{working.education.map((ed, i) => <p key={i} className="mt-1">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>)}</> : null}
       </div>
+    </div>
+  )
+}
+
+/** Print sizes per template density — the same three the Word builder uses (src/lib/resume-templates.ts). */
+const PRINT = {
+  tight: { body: 'text-xs leading-5', name: 'text-xl', gap: 'mt-3', role: 'mt-2' },
+  regular: { body: 'text-sm leading-6', name: 'text-2xl', gap: 'mt-5', role: 'mt-3' },
+  airy: { body: 'text-[15px] leading-7', name: 'text-3xl', gap: 'mt-7', role: 'mt-4' },
+} as const
+const HEADING = {
+  ruled: 'border-b border-paper-rule pb-1 font-bold uppercase',
+  caps: 'pb-0.5 font-bold uppercase tracking-wider',
+  bold: 'pb-0.5 font-bold',
+} as const
+
+function ScoreFig({ label, value, strong, muted, pending }: { label: string; value: number | null | undefined; strong?: boolean; muted?: boolean; pending?: boolean }) {
+  return (
+    <div className={muted ? 'opacity-70' : ''}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className={`font-mono tabular-nums ${strong ? 'text-3xl font-bold text-primary' : 'text-2xl text-primary'}`}>
+        {value === null || value === undefined ? '—' : value}
+        {pending ? <Loader2 className="ml-2 inline size-3.5 animate-spin align-middle text-muted-foreground" aria-label="Scoring" /> : null}
+      </p>
     </div>
   )
 }

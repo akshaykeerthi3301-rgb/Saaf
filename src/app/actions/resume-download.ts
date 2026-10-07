@@ -3,6 +3,8 @@
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { buildFullResumeDocx, fullResumeFilename } from '@/lib/resume-docx'
+import { sectionsSchema } from '@/lib/resume-schema'
+import { tailoredFilename } from '@/lib/resume-review'
 
 /**
  * The optimised résumé as a .docx. Sign-in required — this is the conversion
@@ -29,48 +31,14 @@ import { buildFullResumeDocx, fullResumeFilename } from '@/lib/resume-docx'
  * NOTHING IS STORED. Built in memory, returned, forgotten.
  */
 
-const bullet = z.string().max(600)
-
-const sectionsSchema = z.object({
-  contact: z.object({
-    name: z.string().max(120).nullable(),
-    email: z.string().max(200).nullable(),
-    phone: z.string().max(60).nullable(),
-    links: z.array(z.string().max(300)).max(6),
-  }),
-  summary: z.string().max(2000).nullable(),
-  experience: z
-    .array(
-      z.object({
-        title: z.string().max(200).nullable(),
-        employer: z.string().max(200).nullable(),
-        dates: z.string().max(80).nullable(),
-        location: z.string().max(120).nullable(),
-        bullets: z.array(bullet).max(20),
-      }),
-    )
-    .max(15),
-  education: z
-    .array(
-      z.object({
-        qualification: z.string().max(300),
-        institution: z.string().max(200).nullable(),
-        dates: z.string().max(80).nullable(),
-      }),
-    )
-    .max(10),
-  skills: z.array(z.string().max(80)).max(80),
-  other: z.array(z.object({ heading: z.string().max(80), lines: z.array(z.string().max(600)).max(20) })).max(8),
-  unplaced: z.number(),
-  order: z.array(z.string().max(40)).max(20),
-})
-
 const schema = z.object({
   sections: sectionsSchema,
   targetRole: z.string().trim().max(120).default(''),
   /** One of the three ATS-safe templates. An unknown id falls back rather than
    *  failing — a stale client is exactly how a bad value arrives here. */
   template: z.enum(['classic', 'compact', 'headline']).optional(),
+  /** Present for a résumé tailored to one posting: the file is then named for the person, the role AND the company. */
+  company: z.string().trim().max(120).optional(),
 })
 
 export type ResumeDownloadResponse =
@@ -98,7 +66,7 @@ export async function downloadOptimisedResume(
   }
 
   try {
-    const { sections, targetRole, template } = parsed.data
+    const { sections, targetRole, template, company } = parsed.data
     const buffer = await buildFullResumeDocx({
       // `order` is typed as strings by the schema above because it is display
       // metadata the document never reads; casting it back keeps the builder's
@@ -109,7 +77,9 @@ export async function downloadOptimisedResume(
     })
     return {
       ok: true,
-      filename: fullResumeFilename(sections.contact.name, targetRole),
+      filename: company
+        ? tailoredFilename({ name: sections.contact.name, role: targetRole, company })
+        : fullResumeFilename(sections.contact.name, targetRole),
       // Base64 because a Server Action's return value is JSON — the browser
       // turns this back into a Blob.
       base64: buffer.toString('base64'),

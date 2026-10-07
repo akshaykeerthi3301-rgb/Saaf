@@ -9,7 +9,9 @@ import { rewriteResume, RewriteError, type BulletChange } from '@/lib/resume-rew
 import { PROVIDER_LABEL, ModelBusyError } from '@/lib/parse/llm'
 import { extractSkillPhrases } from '@/lib/taxonomy/skills'
 import { extractFields } from '@/lib/parse/extract'
-import type { ResumeSections } from '@/lib/parse/sections'
+import { sectionsToText, type ResumeSections } from '@/lib/parse/sections'
+import { checkResume } from '@/lib/ats-check'
+import { sectionsSchema } from '@/lib/resume-schema'
 
 const schema = z.object({ roleId: z.string().uuid(), resumeId: z.string().uuid() })
 
@@ -30,6 +32,12 @@ export type TailorStudioResult =
       providerLabel: string
       /** Skill terms the posting names — the studio marks any a rewrite inserted. */
       keywords: string[]
+      /**
+       * The ATS check's readability score for THIS posting, on the saved résumé and on
+       * the rewrite with every suggestion accepted. The same function on both, run on
+       * the same posting text; null when a document is too short for the check to run.
+       */
+      scores: { before: number | null; after: number | null }
     }
   | { ok: false; error: string }
 
@@ -90,6 +98,8 @@ export async function tailorSavedResume(input: z.input<typeof schema>): Promise<
       role,
     })
     if (!result) return { ok: false, error: 'We could not tailor it just now. Your saved résumé is unchanged — try again in a moment.' }
+    // Both measured the same way — sections rendered to text — so the only thing that differs is the edit.
+    const posting = role.description ?? undefined
     return {
       ok: true,
       sections: result.sections,
@@ -98,10 +108,57 @@ export async function tailorSavedResume(input: z.input<typeof schema>): Promise<
       skillsReordered: result.skillsReordered,
       providerLabel: result.provider ? PROVIDER_LABEL[result.provider] : '',
       keywords: extractSkillPhrases(`${role.title}\n${role.description ?? ''}`),
+      scores: {
+        before: scoreSections(resume.sections, role.title, posting),
+        after: scoreSections(result.sections, role.title, posting),
+      },
     }
   } catch (e) {
     if (e instanceof RewriteError) return { ok: false, error: e.message }
     if (e instanceof ModelBusyError) return { ok: false, error: 'The writing model is busy right now. Try again in a minute.' }
     return { ok: false, error: 'We could not tailor it just now. Try again in a moment.' }
   }
+}
+
+/** The readability score of a document against one posting, or null when it is too short to check. */
+function scoreSections(sections: ResumeSections, role: string, posting: string | undefined): number | null {
+  try {
+    return checkResume(sectionsToText(sections), role, undefined, posting).readability.score
+  } catch {
+    return null
+  }
+}
+
+const draftSchema = z.object({ roleId: z.string().uuid(), sections: sectionsSchema })
+
+/** Sixty live scores per ten minutes: no model runs, but the check is not free. */
+const DRAFT_LIMIT = { scope: 'score-draft', limit: 60, windowMs: 10 * 60_000 }
+
+export type DraftScoreResult = { ok: true; score: number | null } | { ok: false; error: string }
+
+/**
+ * The score of the tailored draft AS IT IS NOW — after each accept, dismiss or hand
+ * edit — against the posting it is being tailored for.
+ *
+ * ⚠️ THE CLIENT SUPPLIES THE SECTIONS and that is safe here for the reason
+ * resume-download.ts documents: the text goes into a score and returns to the same
+ * person; nothing is stored and nothing claims to be verified. The POSTING is read
+ * server-side from the role id, so a client cannot pick the text it is scored against.
+ * No model runs.
+ */
+export async function scoreDraft(input: z.input<typeof draftSchema>): Promise<DraftScoreResult> {
+  const parsed = draftSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'That draft could not be scored.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+
+  const limit = checkRateLimit(user.id, DRAFT_LIMIT)
+  if (!limit.ok) return { ok: false, error: 'Scoring is paused for a moment — your edits are kept.' }
+
+  const ctx = await getCookieContext(user.id, parsed.data.roleId)
+  if (!ctx.ok) return { ok: false, error: ctx.error }
+  const { role } = ctx.context
+  return { ok: true, score: scoreSections(parsed.data.sections as unknown as ResumeSections, role.title, role.description ?? undefined) }
 }
