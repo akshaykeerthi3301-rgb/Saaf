@@ -144,7 +144,8 @@ export default async function TodayPage({
     easy: params.easy === '1',
   }
   const [postedAll, applyAll] = await Promise.all([
-    byNewest || pills.fresh || view.posted ? readPostedDates(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    // Always: the best-match order breaks ties by freshness (src/lib/shortlist.ts), so the dates are needed on every render.
+    readPostedDates(allRows.map((r) => r.role_id)),
     pills.easy ? readApplyUrls(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
   ])
   // Title/company/city are read only when a text filter is on (Phase 15). Job
@@ -233,7 +234,7 @@ export default async function TodayPage({
   }
 
   // Newest sorts by the board's posting date, which only this view needs.
-  const postedAt = byNewest ? postedAll : undefined
+  const postedAt = postedAll
 
   /**
    * New, sections, order, the Within-reach filter and how many cards render —

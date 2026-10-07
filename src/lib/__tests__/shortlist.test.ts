@@ -227,3 +227,24 @@ describe('Pay stated first and Company A–Z (TASK-210)', () => {
     expect(ids(sections)).toEqual(['c', 'b', 'a', 'd']) // acme, Acme (score 80 then 70), zeta, then d (no name)
   })
 })
+
+describe('freshness breaks ties and nothing else (TASK-178)', () => {
+  const r = (role_id: string, score: number) => ({ id: role_id, role_id, score, score_breakdown: { location: 'exact' as const, experience: 'meets' as const } })
+  const ids = (sections: { visible: { role_id: string }[] }[]) => sections.flatMap((s) => s.visible.map((x) => x.role_id))
+  const postedAt = new Map([['old', daysAgo(40)], ['new', daysAgo(1)], ['mid', daysAgo(10)], ['higher', daysAgo(90)]])
+
+  it('of equal scores the more recently posted leads, and an undated role follows', () => {
+    const rows = [r('old', 80), r('undated', 80), r('new', 80), r('mid', 80)]
+    expect(ids(arrangeShortlist(rows, new Map(), { ...base, postedAt }).sections)).toEqual(['new', 'mid', 'old', 'undated'])
+  })
+
+  it('never lifts a role past one with a higher score, however fresh', () => {
+    const rows = [r('new', 79), r('higher', 80)]
+    expect(ids(arrangeShortlist(rows, new Map(), { ...base, postedAt }).sections)).toEqual(['higher', 'new'])
+  })
+
+  it('without dates the order is exactly what it was', () => {
+    const rows = [r('a', 80), r('b', 80), r('c', 70)]
+    expect(ids(arrangeShortlist(rows, new Map(), base).sections)).toEqual(['a', 'b', 'c'])
+  })
+})

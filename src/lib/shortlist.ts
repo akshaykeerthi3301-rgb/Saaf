@@ -182,7 +182,11 @@ export function arrangeShortlist<T extends ArrangeableRow>(
           : opts.byNewest
         ? newest(a, b)
         : (b.score ?? 0) - (a.score ?? 0) ||
-          locationRank(a.score_breakdown) - locationRank(b.score_breakdown),
+          locationRank(a.score_breakdown) - locationRank(b.score_breakdown) ||
+          // Freshness, as the LAST tie-break only: of two roles the score cannot tell apart, the
+          // more recently posted leads; one with no posting date follows. It never moves a role
+          // past one with a higher score, so the order always agrees with the numbers on the cards.
+          (posted(b) ?? 0) - (posted(a) ?? 0),
     )
 
   const section = (key: SectionKey, list: T[]): ArrangedSection<T> => {
