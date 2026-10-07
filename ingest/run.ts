@@ -15,7 +15,7 @@ import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 import { pool } from './pool'
-import { collapseRepeats } from './dedupe'
+import { collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
 import { chunk, pageAll } from './paging'
 
 const PRUNE_DAYS = 30
@@ -257,6 +257,12 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
     )
   }
 
+  // Same probe, same reason, for migration 0032 (repost evidence on roles).
+  const hasRepost = !(await db.from('roles').select('first_posted_at, repost_count').limit(1)).error
+  if (!hasRepost) {
+    console.warn('  roles.first_posted_at is missing — run supabase/migrations/0032_role_reposts.sql. Reposts are not being recorded.')
+  }
+
   // Least-recently-ingested first, so a run that runs out of budget resumes
   // where it stopped instead of re-fetching the same head of the list. Paged,
   // because the unlimited select silently stopped at 1,000 boards — which is
@@ -365,6 +371,30 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
           india.map((r) => [r.externalId, extractAll(r.description, r.locationRaw, r.title)])
         )
 
+        /**
+         * What this board already stores, read BEFORE the upsert.
+         *
+         * Two things need it and both lose it to the upsert: the repost history
+         * (the survivor's own first_posted_at is about to be overwritten) and the
+         * stale copies to retire below (the upsert adds the survivor, so the
+         * orphans are the stored rows it does not name). Read once, here. Only
+         * when one of them will use it — the retirement is for complete fetches
+         * with time left, exactly as before.
+         */
+        const mayRetire = complete && Date.now() < deadline
+        type Stored = { id: string; external_id: string; title: string; location_raw: string | null; posted_at?: string | null; first_posted_at?: string | null; repost_count?: number }
+        const stored: Stored[] = mayRetire || hasRepost
+          ? await pageAll<Stored>((from, to) => db.from('roles')
+              .select<string, Stored>(hasRepost ? 'id, external_id, title, location_raw, posted_at, first_posted_at, repost_count' : 'id, external_id, title, location_raw')
+              .eq('board_id', b.id).order('id').range(from, to))
+          : []
+        const history = hasRepost
+          ? repostHistory(byExternalId, stored.map((r) => ({
+              externalId: r.external_id, title: r.title, locationRaw: r.location_raw ?? '',
+              postedAt: r.posted_at ?? null, firstPostedAt: r.first_posted_at ?? null, repostCount: r.repost_count ?? 0,
+            })))
+          : null
+
         // Chunked. The returned representation is capped at 1,000 rows, so a
         // single upsert of a large Workday board came back short and every role
         // past the cap silently lost its requirements.
@@ -391,6 +421,13 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
                 extracted.get(r.externalId) ?? []
               ),
               last_seen_at: new Date().toISOString(),
+              // Only once 0032 exists — one unknown column fails the whole batch.
+              // Both keys on EVERY row: a bulk upsert with differing keys writes
+              // NULL for the missing one, and repost_count is NOT NULL.
+              ...(history ? (() => {
+                const h = history.get(repostKeyOf(r.title, r.locationRaw))
+                return { first_posted_at: h?.firstPostedAt ?? null, repost_count: h?.count ?? 0 }
+              })() : {}),
             })),
             { onConflict: 'board_id,external_id' }
           ).select('id, external_id')
@@ -447,16 +484,12 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
          * Complete fetches only, for the same reason the prune is — a partial
          * read is not evidence about what the employer has withdrawn.
          */
-        if (complete && Date.now() < deadline) {
+        if (mayRetire) {
           const keptIds = new Set(india.map((r) => r.externalId))
           const keptKeys = new Set(
             india.map((r) => `${r.title.toLowerCase()}||${r.locationRaw.toLowerCase()}`)
           )
-          const existing = await pageAll<{ id: string; external_id: string; title: string; location_raw: string | null }>(
-            (from, to) => db.from('roles').select('id, external_id, title, location_raw')
-              .eq('board_id', b.id).order('id').range(from, to)
-          )
-          const orphans = existing
+          const orphans = stored
             .filter((r) =>
               !keptIds.has(r.external_id) &&
               keptKeys.has(`${r.title.toLowerCase()}||${(r.location_raw ?? '').toLowerCase()}`))

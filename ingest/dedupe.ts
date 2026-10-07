@@ -37,3 +37,69 @@ export function collapseRepeats(roles: NormalisedRole[]): NormalisedRole[] {
 export function survivorId(externalIds: string[]): string {
   return [...externalIds].sort((a, b) => a.localeCompare(b))[externalIds.length - 1]
 }
+
+/** What the copies of one posting say about when it was first listed. */
+export type RepostInfo = { count: number; firstPostedAt: string }
+
+const repostKey = (title: string, location: string) => `${title.toLowerCase()}||${location.toLowerCase()}`
+
+/** The key repostHistory uses, for the caller to look a survivor up by. */
+export const repostKeyOf = repostKey
+
+type StoredCopy = { externalId: string; title: string; locationRaw: string; postedAt: string | null; firstPostedAt?: string | null; repostCount?: number }
+
+/**
+ * title+location → how many EARLIER copies of the posting existed and the
+ * earliest date any of them carried.
+ *
+ * collapseRepeats throws the other copies away, and with them the only evidence
+ * that an employer lists the same job again and again. This is read from the
+ * same two places it was thrown away from: the copies in today's fetch, and the
+ * rows of this board already stored under a different external_id.
+ *
+ * ⚠️ A COPY IS NOT A REPOST BY ITSELF. H&M's 61 "Sales Advisor" rows can be 61
+ * open vacancies. So only a copy that carries a date counts toward `firstPostedAt`,
+ * and whether the gap is wide enough to call a repost is decided where the chip
+ * is drawn (src/lib/repost.ts), not here — this just keeps the evidence.
+ *
+ * ⚠️ THE COUNT SURVIVES THE ORPHANS BEING DELETED. A stored row with
+ * repost_count r stands for r+1 copies seen (itself and r before it). When its
+ * successor replaces it, the successor's count must be r+1, not 1 — so the total
+ * is the larger of "distinct ids seen now" and "the biggest stored tally plus
+ * the ids that are new since".
+ */
+export function repostHistory(
+  fetched: Pick<NormalisedRole, 'externalId' | 'title' | 'locationRaw' | 'postedAt'>[],
+  stored: StoredCopy[] = [],
+): Map<string, RepostInfo> {
+  type G = { fetched: Set<string>; stored: Set<string>; maxTally: number; dates: number[] }
+  const groups = new Map<string, G>()
+  const group = (title: string, loc: string): G => {
+    const k = repostKey(title, loc)
+    let g = groups.get(k)
+    if (!g) { g = { fetched: new Set(), stored: new Set(), maxTally: 0, dates: [] }; groups.set(k, g) }
+    return g
+  }
+  const date = (g: G, d: string | null | undefined) => {
+    const t = d ? Date.parse(d) : NaN
+    if (Number.isFinite(t)) g.dates.push(t)
+  }
+  for (const r of fetched) { const g = group(r.title, r.locationRaw); g.fetched.add(r.externalId); date(g, r.postedAt) }
+  for (const r of stored) {
+    const g = group(r.title, r.locationRaw)
+    g.stored.add(r.externalId)
+    g.maxTally = Math.max(g.maxTally, (r.repostCount ?? 0) + 1)
+    date(g, r.postedAt)
+    date(g, r.firstPostedAt)
+  }
+
+  const out = new Map<string, RepostInfo>()
+  for (const [k, g] of groups) {
+    const distinct = new Set([...g.fetched, ...g.stored]).size
+    const fresh = [...g.fetched].filter((id) => !g.stored.has(id)).length
+    const count = Math.max(distinct, g.maxTally + fresh) - 1
+    if (count < 1 || g.dates.length === 0) continue
+    out.set(k, { count, firstPostedAt: new Date(Math.min(...g.dates)).toISOString() })
+  }
+  return out
+}

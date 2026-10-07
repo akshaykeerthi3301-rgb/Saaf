@@ -6,11 +6,12 @@ import { ChevronRight, Eye, Laptop, ShieldCheck, Wallet, X } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard } from '@/components/features/role-card'
+import { repostChip } from '@/lib/repost'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readExperienceFloors, readPostedDates, readShortlist, readStatedPays } from '@/lib/services/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readExperienceFloors, readPostedDates, readReposts, readShortlist, readStatedPays } from '@/lib/services/shortlist'
 import { FeedProvider, SelectableCard } from '@/components/features/feed-selection'
 import { JobPanel, JobSheet } from '@/components/features/job-panel'
 import { isEasyApply } from '@/lib/job-facts'
@@ -247,12 +248,13 @@ export default async function TodayPage({
    * feed only renders below 10 strong matches. The match count only at the
    * cap. All independent, so they run together.
    */
-  const [{ cards }, coverage, modeMatches, matched, tracked] = await Promise.all([
+  const [{ cards }, coverage, modeMatches, matched, tracked, reposts] = await Promise.all([
     readCards(user.id, arranged.flatMap((s) => s.visible), { requirements: false }),
     strong < 10 ? coverageByFunction() : Promise.resolve([]),
     wantsMode ? countWorkModeMatches(user.id) : Promise.resolve(0),
     capSearch ? countMatchingRoles(capSearch.searches, capSearch.adjacent) : Promise.resolve(null),
     readTrackedStatuses(arranged.flatMap((s) => s.visible).map((r) => r.role_id)),
+    readReposts(arranged.flatMap((s) => s.visible).map((r) => r.role_id)),
   ])
   // Who the candidate knows at each visible company (their own LinkedIn export, 0031).
   const knownAt = await connectionsByCompany(user.id, [...cards.values()].map((c) => normaliseCompany(displayEmployer(c.roles?.company_name))))
@@ -893,6 +895,7 @@ export default async function TodayPage({
                           applyUrl={card.roles?.apply_url}
                           isNew={isNew(r)}
                           postedAt={card.roles?.posted_at ?? undefined}
+                          repost={repostChip(card.roles?.posted_at, reposts.get(card.role_id))}
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
                           statedPay={card.stated_pay}

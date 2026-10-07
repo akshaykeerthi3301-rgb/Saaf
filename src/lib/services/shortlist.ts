@@ -4,6 +4,7 @@ import { experienceFloor } from '@/gates/evaluate'
 import { CONFIDENCE_THRESHOLD, type TypedRequirement } from '@/gates/types'
 import type { ScoreBreakdown } from '@/match/score'
 import type { ArrangeableRow } from '@/lib/shortlist'
+import type { RepostRecord } from '@/lib/repost'
 
 /**
  * The reads behind /today, in two steps. Moved out of the page 2026-09-23
@@ -183,6 +184,29 @@ export async function readPostedDates(roleIds: string[]): Promise<Map<string, st
   )
   for (const { data } of results) {
     for (const r of (data ?? []) as { id: string; posted_at: string }[]) out.set(r.id, r.posted_at)
+  }
+  return out
+}
+
+/**
+ * role_id → the repost evidence the ingest recorded (migration 0032), for the
+ * cards on screen only. Its own query so that a database without the update
+ * costs the page nothing: an unknown column fails a whole select (the reason
+ * workspace.ts keeps its 0028 fields apart), and here that is caught as "no
+ * evidence", which is also the truth.
+ */
+export async function readReposts(roleIds: string[]): Promise<Map<string, RepostRecord>> {
+  const out = new Map<string, RepostRecord>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) => supabase.from('roles').select('id, first_posted_at, repost_count').in('id', ids).gt('repost_count', 0)),
+  )
+  for (const { data, error } of results) {
+    if (error) return out
+    for (const r of (data ?? []) as { id: string; first_posted_at: string | null; repost_count: number }[]) {
+      if (r.first_posted_at) out.set(r.id, { firstPostedAt: r.first_posted_at, count: r.repost_count })
+    }
   }
   return out
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { collapseRepeats, survivorId } from '../dedupe'
+import { collapseRepeats, repostHistory, survivorId } from '../dedupe'
 
 const role = (externalId: string, title: string, locationRaw: string) =>
   ({ externalId, title, locationRaw, description: '', applyUrl: '', postedAt: null })
@@ -58,5 +58,54 @@ describe('collapseRepeats', () => {
       role('a3', 'Data Analyst', 'Bengaluru'),
     ])
     expect(out).toHaveLength(3)
+  })
+})
+
+describe('repostHistory', () => {
+  const r = (externalId: string, postedAt: string | null, title = 'Analyst', locationRaw = 'Pune') =>
+    ({ externalId, title, locationRaw, postedAt })
+  const key = 'analyst||pune'
+
+  it('says nothing about a posting seen once', () => {
+    expect(repostHistory([r('a1', '2026-09-01')]).size).toBe(0)
+  })
+
+  it('keeps the earliest date across copies in one fetch', () => {
+    const h = repostHistory([r('a1', '2026-08-01'), r('a2', '2026-09-20')]).get(key)
+    expect(h).toEqual({ count: 1, firstPostedAt: '2026-08-01T00:00:00.000Z' })
+  })
+
+  it('finds the earlier copy among rows already stored', () => {
+    const h = repostHistory(
+      [r('b2', '2026-09-20')],
+      [{ externalId: 'b1', title: 'Analyst', locationRaw: 'Pune', postedAt: '2026-07-15' }],
+    ).get(key)
+    expect(h).toEqual({ count: 1, firstPostedAt: '2026-07-15T00:00:00.000Z' })
+  })
+
+  it('does not lose the tally when the old survivor is deleted: A, then B, then C is TWO earlier copies', () => {
+    // B was stored after seeing A (tally 1). A is gone. C arrives and replaces B.
+    const h = repostHistory(
+      [r('c', '2026-10-01')],
+      [{ externalId: 'b', title: 'Analyst', locationRaw: 'Pune', postedAt: '2026-09-01', firstPostedAt: '2026-08-01', repostCount: 1 }],
+    ).get(key)
+    expect(h).toEqual({ count: 2, firstPostedAt: '2026-08-01T00:00:00.000Z' })
+  })
+
+  it('is stable when the same survivor is seen again', () => {
+    const h = repostHistory(
+      [r('b', '2026-09-01')],
+      [{ externalId: 'b', title: 'Analyst', locationRaw: 'Pune', postedAt: '2026-09-01', firstPostedAt: '2026-08-01', repostCount: 1 }],
+    ).get(key)
+    expect(h?.count).toBe(1)
+  })
+
+  it('records nothing when no copy carries a date', () => {
+    expect(repostHistory([r('a1', null), r('a2', null)]).size).toBe(0)
+  })
+
+  it('keeps two cities apart', () => {
+    const h = repostHistory([r('a1', '2026-08-01', 'Analyst', 'Pune'), r('a2', '2026-09-01', 'Analyst', 'Delhi')])
+    expect(h.size).toBe(0)
   })
 })

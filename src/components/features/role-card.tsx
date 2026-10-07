@@ -8,6 +8,7 @@ import { postedAgo, postedOn } from '@/lib/day'
 import { scoreBars } from '@/lib/score-bars'
 import type { ReactNode } from 'react'
 import { whyThisMatches } from '@/lib/why-match'
+import type { RepostChip } from '@/lib/repost'
 import type { ScoreBreakdown } from '@/match/score'
 
 type Props = {
@@ -23,6 +24,8 @@ type Props = {
   isNew?: boolean
   /** roles.posted_at — the date the employer's board gave, never our own. */
   postedAt?: string
+  /** Drawn only where the ingest recorded an earlier listing (src/lib/repost.ts). */
+  repost?: RepostChip | null
   /** The candidate's tracker stage for this role, when tracked. */
   trackedStatus?: string
   /** The Hide / Unhide control (Phase 15), passed in so this card stays a server component. */
@@ -44,7 +47,7 @@ const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px
  * recorded cutting it from nine; the parity passes had grown it back to about
  * twenty things, so this is a return to the rule, not a new one.
  *
- *   chips   age · early applicant · connections · (new) — at most four, quiet
+ *   chips   age · reposted · early applicant · connections · (new) — quiet
  *   title   and "company · city · level · stated pay" on ONE line
  *   why     ONE paragraph — the reason line and the score's own strength and gap
  *   bars    Role · Skills · Experience, each read from the stored arithmetic
@@ -60,7 +63,7 @@ const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px
  */
 export function RoleCard({
   roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, postedAt, trackedStatus, hideControl, statedPay, connections,
+  isNew, postedAt, repost, trackedStatus, hideControl, statedPay, connections,
 }: Props) {
   const band = ringBand(score)
   const posted = postedAgo(postedAt)
@@ -83,6 +86,9 @@ export function RoleCard({
               <span className={`${chip} bg-secondary text-muted-foreground`} title={`Posted ${postedOn(postedAt)}, as dated by the employer's job board`}>
                 {posted}
               </span>
+            ) : null}
+            {repost ? (
+              <span className={`${chip} bg-secondary text-muted-foreground`} title={repost.title}>{repost.label}</span>
             ) : null}
             {isEarlyPosting(postedAt) ? (
               <span className={`${chip} bg-score-high/10 text-score-high`} title="Posted in the last 3 days, by the employer's own date. We cannot see how many people have applied.">
