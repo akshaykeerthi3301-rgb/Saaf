@@ -948,7 +948,7 @@ CREATE POLICY "public read" ON audit_daily
 
 ## 10. Payment Integration
 
-**Intentionally empty.** Saaf is free permanently, with no card, no ads, and no paid tier. There is no payment provider, no checkout, no webhook and no subscription state anywhere in the system.
+~~**Intentionally empty.** Saaf is free permanently, with no card, no ads, and no paid tier.~~ **Reversed 2026-10-07 by founder direction (PROJECT-STATE Stage AK): a paid plan is now allowed.** It is still empty *today*: there is no payment provider, no checkout, no webhook and no subscription state anywhere in the system. The Hobby-plan constraint below is a fact, not a preference, and is unchanged — it is the first step of any paid-plan work.
 
 This section is retained rather than deleted so the omission reads as a decision rather than an oversight, and because the constraint is stronger than "not needed yet": **Vercel's Hobby plan is non-commercial only, and Vercel counts *advertising* a paid product as commercial.** Introducing a paid tier — or even announcing one on the landing page — requires moving to Pro first. Any future work here begins with that migration, not with a Stripe key.
 

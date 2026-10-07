@@ -63,9 +63,10 @@ If any baseline differs, find out why before writing code. Touching scoring? Als
 
 ## 8. Rules that bind every task (do not re-litigate)
 
-- Locked: no LinkedIn/Naukri; supply = ATS public APIs; never turn users away; **fabrication guard blocks, not warns**; parse-then-confirm; **₹0, no paid tier**; monochrome flat design system; the founder's personal tracker is never publishable.
+- Locked: no LinkedIn/Naukri; supply = ATS public APIs; never turn users away; **fabrication guard blocks, not warns**; parse-then-confirm; ~~**₹0, no paid tier**~~ **(reversed 2026-10-07, Stage AK — a paid plan is allowed, none built; Hobby is non-commercial)**; monochrome flat design system; the founder's personal tracker is never publishable.
+- **Reversed the same day by the founder (Stage AK), do not re-litigate the reversal:** ₹0/no paid tier; single-sided/no employer side (invariant 4's *order* stays: consent → RLS → identity → routing); persona/chat and mobile-variant holds. Still held as honesty or law: no LinkedIn/Naukri or strangers' emails, never past a CAPTCHA, no guessed or demographic answers (substitute: TASK-171), no detection evasion, no copying the compared product.
 - Apply for me stays: off by default, Start-gated, 25 a day, never past a CAPTCHA, never guesses, **never answers demographic/EEO questions** (`extension/autofill.js` REFUSALS), marked Applied only on the employer's confirmation.
-- Single-sided product (invariant 4): no employer UI.
+- ~~Single-sided product (invariant 4): no employer UI.~~ Reversed 2026-10-07 (Stage AK): an employer side is allowed, in invariant 4's order — consent model, second RLS policy set, identity, then UI. Until those exist there is nothing lawful to put in `app/(employer)/`.
 - From the teardown guardrails: **do not copy the other product's code, wording, visuals or data**; no scraping it; **no detection evasion** in anything that applies on a user's behalf; a typed sentence overrides conflicting preset filters, or asks.
 - Every number you report is tagged OBSERVED / MEASURED / CLAIMED / INFERRED; a parity verdict needs evidence on both sides.
 

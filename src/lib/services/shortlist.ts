@@ -1,5 +1,7 @@
 import { findStatedPay } from '@/lib/stated-pay'
 import { createClient } from '@/lib/supabase/server'
+import { experienceFloor } from '@/gates/evaluate'
+import { CONFIDENCE_THRESHOLD, type TypedRequirement } from '@/gates/types'
 import type { ScoreBreakdown } from '@/match/score'
 import type { ArrangeableRow } from '@/lib/shortlist'
 
@@ -189,6 +191,67 @@ export async function readApplyUrls(roleIds: string[]): Promise<Map<string, stri
   )
   for (const { data } of results) {
     for (const r of (data ?? []) as { id: string; apply_url: string }[]) out.set(r.id, r.apply_url)
+  }
+  return out
+}
+
+/**
+ * role_id → the years of experience the posting asks for, for the Experience
+ * level filter. Only roles with a CONFIDENT requirement appear in the map — the
+ * same 0.7 bar the scorer uses — and the strictest floor wins, through the same
+ * experienceFloor() the scorer calls, so the filter and the score cannot read
+ * one posting two ways. A role absent from the map states nothing, and the
+ * filter keeps it. Read only when that filter is on, for the reason above.
+ */
+export async function readExperienceFloors(roleIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) =>
+      supabase
+        .from('role_requirements')
+        .select('role_id, kind, min_years, confidence')
+        .in('role_id', ids)
+        .in('kind', ['experience_years', 'title_seniority'])
+        .gte('confidence', CONFIDENCE_THRESHOLD),
+    ),
+  )
+  const byRole = new Map<string, TypedRequirement[]>()
+  for (const { data } of results) {
+    for (const r of (data ?? []) as { role_id: string; kind: TypedRequirement['kind']; min_years: number | null; confidence: number }[]) {
+      if (r.min_years === null) continue
+      const list = byRole.get(r.role_id) ?? []
+      list.push({ kind: r.kind, minYears: Number(r.min_years), sourceQuote: '', confidence: Number(r.confidence) })
+      byRole.set(r.role_id, list)
+    }
+  }
+  for (const [roleId, reqs] of byRole) out.set(roleId, experienceFloor(reqs).required)
+  return out
+}
+
+/**
+ * role_id → stated annual pay in rupees, for the minimum-pay filter. A posting
+ * that states no pay, or states it in another currency, is absent from the map.
+ *
+ * ⚠️ THIS READS DESCRIPTIONS — SEVERAL KB EACH — which TASK-093 took out of the
+ * list read. It is therefore run only when the pay filter is on, over the rows
+ * already narrowed by every other filter, and never for the plain feed. Pay is
+ * stated on ~0.7–2.2% of postings (PROJECT-STATE Stages T and AI), so this
+ * filter returns few roles by nature; the drawer says so.
+ */
+export async function readStatedPays(roleIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const results = await Promise.all(
+    chunks(roleIds).map((ids) => supabase.from('roles').select('id, description').in('id', ids)),
+  )
+  for (const { data } of results) {
+    for (const r of (data ?? []) as { id: string; description: string | null }[]) {
+      const pay = r.description ? findStatedPay(r.description) : null
+      if (pay && pay.currency === 'INR') out.set(r.id, pay.period === 'month' ? pay.low * 12 : pay.low)
+    }
   }
   return out
 }

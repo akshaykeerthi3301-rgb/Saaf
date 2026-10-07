@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { viewFromParams, toggleSkill, type FeedView, type RoleText } from '@/lib/feed-query'
+import { viewFromStored, toggleSkill, type FeedView, type RoleText } from '@/lib/feed-query'
 import { displayEmployer } from '@/lib/display-names'
 
 /**
@@ -25,13 +25,9 @@ function sanitizeSaved(raw: unknown): SavedFilter[] {
     const o = x as { name?: unknown; view?: unknown }
     const name = typeof o.name === 'string' ? o.name.trim().slice(0, 40) : ''
     if (!name || !o.view || typeof o.view !== 'object') return []
-    const v = o.view as Record<string, unknown>
-    // Rebuilt through the whitelist: a stored value can only ever be a view the pills could make.
-    const view = viewFromParams({
-      min80: v.min80 ? '1' : undefined, fresh: v.fresh ? '1' : undefined,
-      remote: v.remote ? '1' : undefined, easy: v.easy ? '1' : undefined,
-      q: typeof v.q === 'string' ? v.q : undefined, city: typeof v.city === 'string' ? v.city : undefined,
-    })
+    // Rebuilt through the whitelist: a stored value can only ever be a view the controls could make.
+    const view = viewFromStored(o.view)
+    if (!view) return []
     return [{ name, view }]
   })
 }

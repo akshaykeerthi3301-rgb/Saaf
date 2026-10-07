@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { evaluateUser } from '@/lib/evaluate-user'
-import { viewFromParams } from '@/lib/feed-query'
+import { feedViewSchema, viewFromParams, viewToParams } from '@/lib/feed-query'
 import {
   MAX_SAVED, correctSkill, readFeedPrefs, readRoleScore, setRoleHidden, writeSavedFilters,
 } from '@/lib/services/feed-prefs'
@@ -37,11 +37,7 @@ export async function hideRole(input: z.input<typeof hideSchema>) {
   return { ok: true as const }
 }
 
-const viewSchema = z.object({
-  min80: z.boolean(), fresh: z.boolean(), remote: z.boolean(), easy: z.boolean(),
-  q: z.string().max(80), city: z.string().max(60),
-})
-const saveSchema = z.object({ name: z.string().trim().min(1).max(40), view: viewSchema })
+const saveSchema = z.object({ name: z.string().trim().min(1).max(40), view: feedViewSchema })
 
 export async function saveFilter(input: z.input<typeof saveSchema>) {
   const parsed = saveSchema.safeParse(input)
@@ -50,9 +46,8 @@ export async function saveFilter(input: z.input<typeof saveSchema>) {
   if (!user) return { ok: false as const, error: 'Not signed in.' }
   const prefs = await readFeedPrefs(user.id)
   if (!prefs.stored) return { ok: false as const, error: MISSING_0030 }
-  const v = parsed.data.view
   // Through the whitelist again, so the stored view is exactly what the URL would carry.
-  const view = viewFromParams({ min80: v.min80 ? '1' : undefined, fresh: v.fresh ? '1' : undefined, remote: v.remote ? '1' : undefined, easy: v.easy ? '1' : undefined, q: v.q, city: v.city })
+  const view = viewFromParams(viewToParams(parsed.data.view))
   const others = prefs.saved.filter((f) => f.name.toLowerCase() !== parsed.data.name.toLowerCase())
   if (others.length >= MAX_SAVED) return { ok: false as const, error: `You can keep ${MAX_SAVED} saved filters — delete one first.` }
   const res = await writeSavedFilters(user.id, [...others, { name: parsed.data.name, view }])

@@ -37,12 +37,15 @@ application forms on the employer's own site so a 40-minute application takes a
 fraction of that, and it drafts a résumé curated to the specific posting — built
 only from facts the candidate has confirmed, never invented.
 
-**It does not apply on anyone's behalf. That is permanent, not a phase.** The
+~~**It does not apply on anyone's behalf. That is permanent, not a phase.** The
 candidate reviews and submits every application themselves. This is the line the
-product is defined by: we make applying faster and better-aimed, never automatic.
+product is defined by: we make applying faster and better-aimed, never automatic.~~
+**Reversed 2026-09-25 (Stage AI):** "Apply for me" submits, inside honesty and law
+limits that stay locked.
 
-**Frame:** portfolio artifact first, built like a real product. ₹0 forever, no
-ads, no paid tier.
+**Frame:** portfolio artifact first, built like a real product. ~~₹0 forever, no
+ads, no paid tier.~~ **Free today; a paid plan is allowed since 2026-10-07 (Stage
+AK) — none is built.**
 
 Named **Saaf** on 2026-09-02 (Design Step 1) — from *saaf saaf batao*, "tell it
 to me straight." The repo directory is still `jobmatch`; that is a path, not the
@@ -74,7 +77,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 
 | Parked | Why it is parked, not cancelled |
 |---|---|
-| **Employer access / B2B portal** | A later phase. **Do not build or design anything toward it** — no schema, no consent surface, no discoverability flag, no UI. When it returns, the opt-in consent model has to be designed first, because four of the five personas are employed and hiding their search. |
+| **Employer access / B2B portal** *(**un-parked by founder direction 2026-10-07 — Stage AK**)* | ~~A later phase. **Do not build or design anything toward it** — no schema, no consent surface, no discoverability flag, no UI.~~ Building and designing toward it is now allowed. **The order is kept, because it is a security property:** the opt-in consent model first, because four of the five personas are employed and hiding their search, then the second RLS policy set, then identity, then UI (CLAUDE.md invariant 4). |
 | **WhatsApp channel** | A later phase, and the right channel for India. **Do not build or design it now.** It also bills per conversation, so it needs a budget decision before any work starts. ⚠️ The landing page currently carries a "WhatsApp Nudges" card at the founder's request — that copy must go live or come off before the deploy hold lifts. |
 | **The daily digest** *(parked 2026-09-08)* | Built and working — `ingest/digest.ts`, wired to a Vercel cron. Parked for THREE reasons, and the weakest one is the one usually given. **(1)** It cannot reach anyone: Resend delivers only to the founder's own address until a domain is verified, and the founder has chosen to stay on Google sign-in with no domain for now. **(2)** At fewer than ten beta users an automated daily email is the wrong tool — a founder's own message beats a cron job at that scale and tells you far more. **(3)** ⚠️ COVERAGE IS TOO UNEVEN TO PROMISE A DAILY ANYTHING. Measured 2026-09-08 against the live index: an HR candidate matches **15 roles total**, marketing 131, consulting 219, engineering 500 (capped). A daily digest would tell an HR candidate "nothing new matched today" almost every day — honest, and indistinguishable from a dead product. **Not parked because volume is thin overall** — 21,813 roles is plenty, and the digest was deliberately built to send on empty days, which is its stated differentiator. Reversal conditions, all three: a verified domain, more users than can be messaged by hand, and a week of post-scale-up data showing the real per-candidate discovery rate. That last one may say **weekly** rather than daily — the board rotation is ~8 days, so the calendar is the wrong cadence to copy. |
 | **The co-pilot — tailored résumés, cover letters, interview prep** *(parked 2026-09-06; **un-parked by founder direction 2026-09-23 — Stage AD**)* | ~~On hold until the matching itself is trusted.~~ **Built 2026-09-23 on `jobright-parity` (Stage AD); the reasoning below is kept because the order it argues for was overruled, not refuted.** On hold until the matching itself is trusted. The order is deliberate and worth keeping: a co-pilot that writes beautifully about a badly-chosen role makes the wrong application faster, which is the category failure this product exists to avoid. **Nothing to build or design here yet.** The provider is wired and fast enough for it (Groq, ~1.4s on a résumé), so this is a sequencing decision rather than a capability gap. Reconsider once scores are demonstrably right. ⚠️ The landing page's "Review & Approve" card is part of this and carries the same go-live-or-come-off condition. |
@@ -96,7 +99,7 @@ anticipate them, because half-built optionality is the most expensive kind.*
 | **Parse-then-confirm onboarding** | Résumé parsed to pre-fill; candidate confirms every field before the first match runs. Source file **deleted after parsing** (DPDP posture + confidentiality guarantee). |
 | **Fabrication guard blocks, not warns** | Generated documents may only reorder/trim/re-word confirmed profile facts. Blocked output's remedy is "add it to your profile," never "let the model assert it." |
 | **Open-source the gate, keep the registry private** | Gate code is portfolio proof; the registry is the moat. ⚠️ **Weakened 2026-09-25 by founder decision (Stage AF):** public job pages make *which employers we read* derivable, one page at a time. `registry/boards.json` and the `boards` table stay private. |
-| **₹0, no paid tier** | Beta at ₹0. Vercel Hobby is non-commercial only — *advertising* a paid product counts as commercial, so even announcing a tier breaks it. |
+| ~~**₹0, no paid tier**~~ **· REVERSED 2026-10-07 (Stage AK)** | ~~Beta at ₹0.~~ A paid plan is allowed; none is built; free today. **The fact stays:** Vercel Hobby is non-commercial only — *advertising* a paid product counts as commercial, so even announcing a tier needs Pro first. |
 | **⛔ Founder's personal job tracker is NOT publishable** | It informed the design (origin of the precision thesis) but is personal data. Must never appear in a landing page, launch post, case study or any public artifact. Flagged in `1-Product-Offer.md` Evidence Sources. |
 | **Name is Saaf** | Decided 2026-09-02. `jobmatch` was killed: Job Match Pro (`jobmatchpro.in`) is an Indian product in the identical wedge. Also killed — Winnow (Winnow Career Concierge sells an "Interview Probability Score"), Yogya (Yogya.ai, Bengaluru), Sirf (active Indian e-commerce app). ⚠️ Registrar/handle availability for Saaf is **unverified** — search presence only. |
 | **Design system is monochrome, flat, square-cornered** | Anchored on live computed styles from `zerodha.tech`: zero shadows, one radius, `#F0F0F0` paper ground. The named anti-reference is the maximalist résumé-tool look (196 shadows, 8 radii, 4 gradients, 2 banned fonts). Error red is for system errors only — **never** for a gate outcome. |
@@ -2598,7 +2601,7 @@ let the product be rebuilt bottom-up "without losing any function". Files 04–1
 | Employer pricing page: **$499 vs $36,000** headhunter fee for one $180,000 hire (earlier note "no price shown" corrected) | OBSERVED |
 | **Saaf vs register (file 11):** 133 rows → HAS 36 · PARTIAL 52 · MISSING 27 · HELD 9 · N/A 9; 110 claimable rows (Jobright A/B), 23 claim-only. Saaf side MEASURED from the repo; **tests today: 61 files, 932 pass** (Node 22.23.2). Saaf supply: **1,398 boards** (greenhouse 567, workday 324, ashby 200, smartrecruiters 165, workable 96, recruitee 36, lever 10); extension 0.5.0 with 33 host permissions | MEASURED |
 | Saaf's extension **refuses** demographic/EEO questions (`extension/autofill.js` REFUSALS); Jobright's agent filled them on a sampled form | MEASURED / OBSERVED |
-| Phase 17 (ROADMAP TASK-155–166) proposes 12 gap tasks, **not started** — the 2026-10-02 verdict (ship and launch) stands until the founder says otherwise | decision pending |
+| Phase 17 (ROADMAP TASK-155–166) proposes 12 gap tasks, **not started** — ~~the 2026-10-02 verdict (ship and launch) stands until the founder says otherwise~~ **struck: the founder said so the same day (below, and Stage AK)** | decided 2026-10-07 |
 
 **Stage AJ, fourth pass (same day) — "try finding" the four unseen items.** Found: plan prices in cents from the app's own price call (weekly 1799; monthly 4999 list / 3999; quarterly 14997 list / 8999 → 20% and 40% off, MEASURED), Interview passes $19.99/7 days and $39.99/30 days, employer AI recruiter **$499/month per active role**, `/pricing` is a 404, and an official App Store note that Jobright **"currently lists U.S.-based roles only"** (OBSERVED). Reported, not verified: $7.7M raised, $5M ARR with 9 people, free tier ≈ 2 credits/day, countdown-timer checkout, no refunds. **Not found:** checkout screen, onboarding questions, autofill mechanism, signed-in employer product (details and who can unblock: `docs/jobright-map/12-unseen-items-findings.local.md`). Run stopped at the usage limit; files 01–11 not yet updated with fourth-pass facts (credit-weights ambiguity, Jobvite logo, STRONG MATCH band) — file 12 is the source for those.
 
@@ -2610,6 +2613,62 @@ document in the founder's account). It was not retried; library verified unchang
  **Side effects left on the
 founder's Jobright account** are listed in the README of the subproject (one
 Explore history entry, one generated cover letter for one job).
+
+### Stage AK — decisions that pulled back from the rebuild are reversed (2026-10-07)
+
+**The direction, verbatim:** "also any permanent decisions pulling us back from
+this should be reversd." Method: the Locked decisions, the Parked table and
+CLAUDE.md's invariants were read against ROADMAP Phase 17 and against the 18
+HELD / N/A rows of `docs/jobright-map/11-saaf-comparison.local.md` — the rows a
+*decision*, not missing code, keeps out. Each was sorted into taste or business
+(the founder's to reverse) or honesty or law (not a preference, so not reversed).
+
+**Reversed** (struck where they stood: Locked decisions, Parked table, CLAUDE.md
+header + invariant 4, PRODUCT.md and PRD.md §10, REBUILD-KICKOFF §8):
+
+| Was | Now | Unlocks (register rows) | Still owed before it ships |
+|---|---|---|---|
+| ₹0 forever, no ads, no paid tier | A paid plan is **allowed**; none built; free today | F-1101 plans, F-1102 credits, F-1104 promotions, F-1003 interview entitlement | Vercel **Hobby is non-commercial** — Pro before even announcing a price (a fact, unchanged); a payment provider; Indian tax and invoicing; a price (`studio-define-pricing`); refund terms. Landing copy still says free and must until a plan exists |
+| Single-sided; employer side parked, "do not build or design toward it" | Employer side **allowed**, in invariant 4's order: consent model → second RLS policy set → identity table → side-aware routing; no `(employer)` folder before they exist | F-1301–F-1304 | The order is a security property (an employer reading candidate profiles), not a preference — it is kept |
+| Persona and chat parked (TASK-165, 166: mobile variant, streaming chat) | No longer held by a prior decision; still need a design | F-123, F-313, F-407, F-1406 | A design, then a task |
+
+**Held — honesty and law, not taste, so not reversed** (same line as Stage AI):
+
+| Held | Why |
+|---|---|
+| No LinkedIn or Naukri sourcing; no finding strangers' emails (F-308, F-505) | ToS and the *hiQ* judgment; India's DPDP Act |
+| Never past a CAPTCHA; no detection evasion in anything that applies on a user's behalf | Bypassing a human check is the thing the check forbids |
+| Never a guessed answer; demographic / self-ID questions refused by default (F-602) | Several are unlawful to require in India; a guess is a false statement signed by the candidate. **Lawful substitute: TASK-171** — the candidate's own typed answers, optional, "prefer not to say" by default |
+| Fabrication guard blocks; Applied only on the employer's confirmation; no invented counts or estimates | Honesty: the product's own claims have to be checkable |
+| Do not copy the compared product's code, wording, visuals or data | Their Terms bar it (Stage AJ) |
+
+**New proposals, none started:** TASK-169 (consent-model design, docs only),
+TASK-170 (paid-plan groundwork — a decision first), TASK-171 (candidate-supplied
+self-ID answers). The 2026-10-02 verdict and the "decision pending" row above are
+struck; the rebuild is Phase 17.
+
+**TASK-155 built (2026-10-07, `phase-17`) — the first Phase 17 slice: the filter drawer.**
+Measured on the founder's account, local, over the 500 scored roles for a Customer
+Success Manager in Bengaluru with 2 years (MEASURED, one profile):
+
+| Filter | Result | Check |
+|---|---|---|
+| none | 500 | baseline |
+| posted ≤ 3 / 7 / 30 days | 5 / 14 / 123 | monotone; **105** roles have no posting date and are left out, and the page says so |
+| experience asked: entry / mid / senior | 17 / 216 / 212 (+55 that state none, kept) | 17 + 216 + 212 + 55 = 500 |
+| job type: full-time / contract / intern / part-time | 498 / 2 → **1 after the fix** / 0 / 0 | partitions the 500 |
+| pay ≥ ₹1 L / ≥ ₹10 L | 3 / 2 | **497** state no rupee pay (0.6%, vs 0.7% measured 2026-09-25) |
+| leave out "Diligent" (an employer in the feed) | 500 → 499 | positive control: exactly its one role; "Accenture / Deloitte / Oracle" changed nothing because none is in this feed |
+| posted 30 d + full-time + mid | 55 of 500 | three chips, both notes shown |
+
+**Defects found by looking, both fixed before commit:**
+1. ~~`contract` anywhere in a title means a contract job.~~ **"Manager Contract Management" was listed as a contract role** — contract *management* is a function. Unit tests had passed; the live page showed it. `jobTypeOf` now treats "contract" / "temp" as a marker only when delimited ("(Contract)", "- Contract"), last, or leading unless the next word makes it a function. 11 new cases.
+2. With a filter on, the page still said "Showing the 500 closest title matches" above 14 cards (true of the quick pills since 2026-09-23). It now says "Showing 55 of your 500 scored roles after your filters."
+3. A test caught `viewFromStored` turning a stored number into text for every field, not just pay; made strict.
+
+**Corrections to the teardown comparison:** ~~F-115 "Sort control — MISSING"~~ — `/today` already had Best match / Newest (`sort=new`). Row stays HAS (two options). Filters not built, because the data cannot honour them: hybrid / on-site, company stage, a staffing-agency switch (registry carries about 10 agency-like boards; ~100 India roles of ~25k).
+
+**Unverified:** a production build (`next build`); save-then-restore of a drawer filter in the browser (it writes to the founder's profile, so it was left to unit and service tests); the deployed behaviour (nothing here is deployed).
 
 ---
 

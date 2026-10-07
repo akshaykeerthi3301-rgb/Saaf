@@ -10,7 +10,7 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readPostedDates, readShortlist } from '@/lib/services/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readExperienceFloors, readPostedDates, readShortlist, readStatedPays } from '@/lib/services/shortlist'
 import { FeedProvider, SelectableCard } from '@/components/features/feed-selection'
 import { JobPanel, JobSheet } from '@/components/features/job-panel'
 import { isEasyApply } from '@/lib/job-facts'
@@ -20,8 +20,9 @@ import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
-import { applyTextFilter, viewFromParams, viewToQuery } from '@/lib/feed-query'
+import { applyDrawerFilters, applyTextFilter, drawerParams, viewFromParams, viewToQuery } from '@/lib/feed-query'
 import { FeedSearch, HideRole, SavedFilters } from '@/components/features/feed-controls'
+import { FeedFilterDrawer } from '@/components/features/feed-filter-drawer'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -67,6 +68,8 @@ export default async function TodayPage({
     role?: string
     /** Phase 15: words to find in title/company, a city, and the hidden-jobs view. */
     q?: string; city?: string; hidden?: string
+    /** TASK-155: the drawer's filters. */
+    posted?: string; level?: string; type?: string; pay?: string; skip?: string
   }>
 }) {
   const params = await searchParams
@@ -129,12 +132,13 @@ export default async function TodayPage({
     easy: params.easy === '1',
   }
   const [postedAll, applyAll] = await Promise.all([
-    byNewest || pills.fresh ? readPostedDates(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    byNewest || pills.fresh || view.posted ? readPostedDates(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
     pills.easy ? readApplyUrls(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
   ])
-  // Title/company/city are read only when a text filter is on (Phase 15).
-  const roleText = view.q || view.city ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
-  const rows = applyTextFilter(
+  // Title/company/city are read only when a text filter is on (Phase 15). Job
+  // type and "leave out" need the same title and employer.
+  const roleText = view.q || view.city || view.type || view.skip ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
+  const textFiltered = applyTextFilter(
     applyQuickPills(allRows, pills, {
       postedAt: postedAll,
       isEasy: (roleId) => isEasyApply(applyAll?.get(roleId)),
@@ -142,13 +146,41 @@ export default async function TodayPage({
     view,
     roleText,
   )
-  const pillCount = Object.values(pills).filter(Boolean).length + (view.q ? 1 : 0) + (view.city ? 1 : 0)
-  // The text filter and the hidden view ride along on every link, like the pills.
+  // The drawer (TASK-155). Floors and pay are read only for the rows that have
+  // survived everything above, and only when their filter is on — pay reads
+  // descriptions, which the list read deliberately does not.
+  const [floorsAll, paysAll] = await Promise.all([
+    view.level ? readExperienceFloors(textFiltered.map((r) => r.role_id)) : Promise.resolve(undefined),
+    view.pay ? readStatedPays(textFiltered.map((r) => r.role_id)) : Promise.resolve(undefined),
+  ])
+  const { rows, notes: drawerNotes } = applyDrawerFilters(textFiltered, view, {
+    text: roleText, postedAt: postedAll, floors: floorsAll, pays: paysAll,
+  })
+  const drawerPairs = drawerParams(view)
+  const pillCount = Object.values(pills).filter(Boolean).length + (view.q ? 1 : 0) + (view.city ? 1 : 0) + drawerPairs.length
+  // The text filter, the drawer and the hidden view ride along on every link, like the pills.
   const textParams: [string, string][] = [
     ...(view.q ? [['q', view.q] as [string, string]] : []),
     ...(view.city ? [['city', view.city] as [string, string]] : []),
+    ...drawerPairs,
     ...(showHidden ? [['hidden', '1'] as [string, string]] : []),
   ]
+  // What an active drawer filter could not decide, said in words beside the controls.
+  const drawerNoteLines = [
+    view.posted && drawerNotes.undated > 0 ? `${drawerNotes.undated} role${drawerNotes.undated === 1 ? ' has' : 's have'} no posting date and ${drawerNotes.undated === 1 ? 'is' : 'are'} left out.` : '',
+    view.level && drawerNotes.unstatedLevel > 0 ? `${drawerNotes.unstatedLevel} role${drawerNotes.unstatedLevel === 1 ? ' states' : 's state'} no experience requirement and ${drawerNotes.unstatedLevel === 1 ? 'is' : 'are'} kept.` : '',
+    view.pay && drawerNotes.unstatedPay > 0 ? `${drawerNotes.unstatedPay} role${drawerNotes.unstatedPay === 1 ? ' states' : 's state'} no pay in rupees and ${drawerNotes.unstatedPay === 1 ? 'is' : 'are'} left out.` : '',
+  ].filter(Boolean)
+  /** The words on a filter chip. Every drawer filter says what it is, so the chip can be removed knowingly. */
+  const chipLabel = (k: string, v: string): string => {
+    if (k === 'city') return `In ${v}`
+    if (k === 'posted') return `Posted in the past ${v === '30' ? 'month' : v === '7' ? 'week' : `${v} days`}`
+    if (k === 'level') return `${({ entry: 'Entry', mid: 'Mid', senior: 'Senior' } as Record<string, string>)[v] ?? v} level`
+    if (k === 'type') return ({ fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as Record<string, string>)[v] ?? v
+    if (k === 'pay') return `Pay ≥ ₹${v} L`
+    if (k === 'skip') return `Not ${v.split(',').join(', ')}`
+    return `“${v}”`
+  }
 
   // Newest sorts by the board's posting date, which only this view needs.
   const postedAt = byNewest ? postedAll : undefined
@@ -541,6 +573,12 @@ export default async function TodayPage({
             current={view}
             stored={feedPrefs.stored}
           />
+          <FeedFilterDrawer
+            key={JSON.stringify(drawerPairs)}
+            view={view}
+            keep={[...(onlyNew ? [['tab', 'new'] as [string, string]] : []), ...(clearsOnly ? [['fit', 'clears'] as [string, string]] : []), ...(showHidden ? [['hidden', '1'] as [string, string]] : [])]}
+            notes={drawerNoteLines}
+          />
           <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Quick filters">
             {textParams.filter(([k]) => k !== 'hidden').map(([k, v]) => {
               const rest = new URLSearchParams()
@@ -554,7 +592,7 @@ export default async function TodayPage({
                   className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold"
                 >
                   {k === 'city' ? <Globe className="size-3.5" aria-hidden="true" /> : <Target className="size-3.5" aria-hidden="true" />}
-                  {k === 'city' ? `In ${v}` : `“${v}”`}
+                  {chipLabel(k, v)}
                   <X className="size-3" aria-hidden="true" />
                 </Link>
               )
@@ -615,7 +653,15 @@ export default async function TodayPage({
               profiles sat at exactly 500 on 2026-09-23 (QA-06). The remedy
               named is the one that actually moves the number. */}
           <p className="mb-4 text-sm leading-6 text-muted-foreground">
-            {holding.kind === 'complete' || onlyNew ? (
+            {pillCount > 0 && !onlyNew ? (
+              // With a filter on, the count is what the filters left of the scored list — not the
+              // list's own size, which read as "500" above a screen showing 14.
+              <>
+                Showing <span className="font-semibold text-primary">{rows.length}</span> of your{' '}
+                <span className="font-semibold text-primary">{allRows.length}</span> scored{' '}
+                {allRows.length === 1 ? 'role' : 'roles'} after your filters.
+              </>
+            ) : holding.kind === 'complete' || onlyNew ? (
               <>
                 Showing <span className="font-semibold text-primary">{visibleCount}</span>{' '}
                 {visibleCount === 1 ? 'role' : 'roles'} matched to your baseline.

@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 const { readFeedPrefs, setRoleHidden, MAX_HIDDEN } = await import('../feed-prefs')
+const { EMPTY_VIEW } = await import('@/lib/feed-query')
 
 beforeEach(() => { db.row = {}; db.error = null; db.writes = [] })
 
@@ -38,7 +39,22 @@ describe('readFeedPrefs', () => {
     }
     const p = await readFeedPrefs('u')
     expect(p.hidden.has('r1')).toBe(true)
-    expect(p.saved).toEqual([{ name: 'Remote PM', view: { min80: false, fresh: false, remote: true, easy: false, q: 'pm', city: '' } }])
+    expect(p.saved).toEqual([{ name: 'Remote PM', view: { ...EMPTY_VIEW, remote: true, q: 'pm' } }])
+  })
+
+  it('restores a drawer filter exactly as it was saved, and drops a tampered one (TASK-155)', async () => {
+    const drawer = { posted: '7', level: 'mid', type: 'intern', pay: 12, skip: 'Accenture,TCS', sort: 'new' }
+    db.row = {
+      saved_filters: [
+        { name: 'Mid interns', view: { remote: true, ...drawer } },
+        { name: 'Tampered', view: { posted: 'forever', level: 'god', pay: 9e9, skip: 5 } },
+      ],
+    }
+    const p = await readFeedPrefs('u')
+    expect(p.saved).toEqual([
+      { name: 'Mid interns', view: { ...EMPTY_VIEW, remote: true, posted: '7', level: 'mid', type: 'intern', pay: 12, skip: 'Accenture,TCS', sort: 'new' } },
+      { name: 'Tampered', view: EMPTY_VIEW },
+    ])
   })
 })
 

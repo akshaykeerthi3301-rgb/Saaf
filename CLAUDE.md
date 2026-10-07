@@ -2,7 +2,7 @@
 
 ## ⚡ Start here: read `docs/PROJECT-STATE.md` first
 
-This is **Saaf** — a free, ₹0, India-first job-matching product. Portfolio artifact built like a real product. ~~No auto-apply.~~ **Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): "Apply for me" in the extension submits applications — off by default, 25 a day, never past a CAPTCHA, never a guessed answer, marked Applied only on the employer's confirmation. (The repo directory is still `jobmatch`; that's a path, not the brand.)
+This is **Saaf** — an India-first job-matching product, free today (~~₹0, no paid tier~~ **reversed 2026-10-07 by founder direction**, PROJECT-STATE Stage AK: a paid plan is now allowed; none is built, and the public copy stays "free" until one exists). Portfolio artifact built like a real product. ~~No auto-apply.~~ **Reversed 2026-09-25 by founder direction** (PROJECT-STATE Stage AI): "Apply for me" in the extension submits applications — off by default, 25 a day, never past a CAPTCHA, never a guessed answer, marked Applied only on the employer's confirmation. (The repo directory is still `jobmatch`; that's a path, not the brand.)
 
 `docs/PROJECT-STATE.md` carries the locked decisions, the live-probed technical facts, and the current phase. Read it before proposing anything — several decisions in it were made deliberately and against the obvious default (no LinkedIn/Naukri sourcing; never gate users out; gates typed per function rather than years-only; the founder's personal job tracker is never publishable). Re-deriving or reversing them silently is the main failure mode for a fresh session here.
 
@@ -168,9 +168,14 @@ Privileged operations get a **named function** in `src/lib/services/`, never an
 exported admin client: re-exporting one through an unguarded path launders the
 privilege instead of removing it.
 
-### 4. Single-sided. Do not create `app/(employer)/`
+### 4. ~~Single-sided. Do not create `app/(employer)/`~~ → Employer side is allowed, in this order only
 
-Saaf is a candidate copilot. Employers are **scraped data, not users** — the
+**Reversed 2026-10-07 by founder direction** (PROJECT-STATE Stage AK): the ban on
+an employer side is lifted. What is *not* lifted is the order below — it is what
+keeps a candidate's profile from being readable by an employer, which is a
+security property, not a product preference. Nothing employer-side exists yet.
+
+Today Saaf is a candidate copilot. Employers are **scraped data, not users** — the
 `boards` table holds hiring boards, and no employer ever signs in. There is no
 employer identity table and no employer RLS policy anywhere.
 
