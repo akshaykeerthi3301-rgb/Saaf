@@ -2,14 +2,14 @@
 
 ---
 
-## 🔶 2026-10-08 — the rebuild: 48 of 133 rows built, on branch `phase-17`, NOTHING DEPLOYED
+## 🔶 2026-10-08 — the rebuild is LIVE: 48 of 133 rows, `dpl_F98hGDXtJMUeGWvUUL64NAC7gDRo`
 
-Scoreboard: `docs/PARITY.md` (`npm run parity` → HAS 48 · PARTIAL 46 · MISSING 39). Built and committed since the last entry: sentence search v2, role-title suggestions with live counts, the four-section fit analysis, tailor-review polish, the profile in five tabs with a settings hub and "Download my data", the product tour and popup governor. **Only you can:**
+**Deployed 2026-10-08 01:48 IST to https://saaf-ten.vercel.app** — the whole stack since Phase 12 (extension parity, public job pages, feed preferences, the eight "blocked" gaps, and Phase 17 so far). `main` is fast-forwarded to it locally and **not pushed**. Scoreboard: `docs/PARITY.md` (`npm run parity` → HAS 48 · PARTIAL 46 · MISSING 39). Checked live as an anonymous visitor: `/today`, `/applications`, `/profile`, `/resume/tailor`, `/coaching` all redirect to `/signin`; `/api/dev-signin` is 404; the sitemap lists 5,000 public job pages and one returns 200 with `JobPosting` data; the ATS checker, `/audit`, `/api/audit/today` and the extension scoring API respond. **Not checked live:** anything behind sign-in (it needs a magic link to your inbox) — look at it yourself. **Only you can:**
 
-1. **Say whether to deploy.** It is now ~20 tasks behind `main` (the whole `extension-parity` → `public-job-pages` → `phase-17` stack, migrations 0029–0031 still unapplied). Recommendation unchanged: deploy first, then keep building. Follow `docs/RUNBOOK.md`.
-2. **After a deploy, re-score everyone** (the daily recompute does it). On 2026-10-08 a scorer defect was fixed: a skill like "Excel" had been matched inside "Excellent", so live scores are **a few points high** until the next recompute (`npm run bench:match`: skills average award 34% → 24%).
-3. **Look at the tailor review yourself.** It could not be walked in a browser because your account has no saved résumé and a session should not put résumé data in it. Save one from the ATS checker, open `/resume/tailor`, press Tailor, and check the score strip, change list, style picker and Fit to one page.
-4. **Click "Download my data"** (Profile → Account & data) once and read the file: it was tested but not clicked.
+1. **Apply the three database updates** in the Supabase SQL editor, in order, then run `npm run verify:rls`: `supabase/migrations/0029_rejected_stage.sql`, `0030_feed_preferences.sql`, `0031_network_questions_coaching.sql`. Until you do, the live site is **missing** these: the Rejected column on the tracker (0029); hidden jobs and saved filters (0030); the LinkedIn-connections upload, the interview-question bank and the coaching directory (0031). Each screen says plainly that its update is missing; nothing is broken. Read 0031 first — it creates tables that hold other people's names from a candidate's own upload, which makes you the data controller under India's DPDP Act.
+2. **Scores correct themselves tonight.** The nightly recompute (23:00 UTC ≈ 04:30 IST) re-scores everyone with the 2026-10-08 skills fix ("Excel" had been matched inside "Excellent"; skills average award 34% → 24%). Until then live scores are a few points high.
+3. **Look at it signed in.** The tour on `/today`, the five-tab profile, "Download my data", and the fit analysis. And **save a résumé** (ATS checker → Save) so `/resume/tailor` can be seen: it was tested but never walked, because a session should not put résumé data in your account.
+4. **Reload the browser extension (0.5.0)** from the repo's `extension/` folder — Vercel does not ship it — and try "Apply for me" on ONE job you want, watching the tab. A wrong submission cannot be taken back.
 5. Still open from before, unchanged: paid-plan decision (price, provider, Vercel Pro), a verified email domain, an Apple developer account, a funding-data licence, coaches, employer-issued ATS keys, a lawful source for interview questions, and the database-size budget for US roles.
 
 ---
