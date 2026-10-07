@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
-import { saveResume, deleteResume, type SavedResume } from '@/lib/services/resume-documents'
+import { saveResume, deleteResume, setPrimaryResume, type SavedResume } from '@/lib/services/resume-documents'
 import { sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { checkResume } from '@/lib/ats-check'
 
@@ -142,6 +142,25 @@ export async function deleteSavedResume(input: { id: string }): Promise<DeleteRe
   } catch {
     return { ok: false, error: 'We could not delete it just now. Try again in a moment.' }
   }
+}
+
+export type PrimaryResumeResponse = { ok: true } | { ok: false; error: string }
+
+export async function makePrimaryResume(input: { id: string }): Promise<PrimaryResumeResponse> {
+  const parsed = z.object({ id: z.string().uuid() }).safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'That résumé no longer exists.' }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Sign in to manage your saved résumés.' }
+
+  if (!(await setPrimaryResume(user.id, parsed.data.id))) {
+    return { ok: false, error: 'We could not set that just now. If it keeps failing, the primary-résumé update has not been applied yet.' }
+  }
+  revalidatePath('/resume')
+  return { ok: true }
 }
 
 /** "Backend Engineer — 9 Sep", so a list of ten is readable at a glance. */

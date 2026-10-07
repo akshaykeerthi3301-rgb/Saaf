@@ -34,7 +34,7 @@ export default async function TailorPage({
     resolveToolRole(user.id, roleParam),
     listResumes(user.id).catch(() => []),
   ])
-  const chosen = saved.find((r) => r.id === resumeParam) ?? saved[0]
+  const chosen = saved.find((r) => r.id === resumeParam) ?? saved.find((r) => r.isPrimary) ?? saved[0]
   const detail = chosen ? await getResume(user.id, chosen.id).catch(() => null) : null
 
   return (

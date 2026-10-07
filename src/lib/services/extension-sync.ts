@@ -61,7 +61,10 @@ export function pageKey(url: string): string {
 
 export async function readExtensionSync(userId: string, email: string): Promise<ExtensionSync> {
   const supabase = await createClient()
-  const [{ data: p }, { data: doc }, { data: apps }] = await Promise.all([
+  // The candidate's primary résumé if they chose one (0034); otherwise, or when
+  // the column is missing and the query errors, the most recently saved.
+  const primary = await supabase.from('resume_documents').select('body').eq('user_id', userId).eq('is_primary', true).maybeSingle()
+  const [{ data: p }, latest, { data: apps }] = await Promise.all([
     supabase
       .from('profiles')
       .select('full_name, phone, linkedin_url, portfolio_url, notice_period, current_title, employer, years_experience, city, work_authorisation, target_cities')
@@ -93,7 +96,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       linkedin: s(row?.linkedin_url),
       portfolio: s(row?.portfolio_url),
     },
-    resumeText: s((doc as { body: string | null } | null)?.body),
+    resumeText: s(((!primary.error && primary.data ? primary.data : latest.data) as { body: string | null } | null)?.body),
     tracked: ((apps ?? []) as unknown as { apply_url: string; status: Stage }[])
       .map((a) => ({ url: a.apply_url, status: a.status })),
   }

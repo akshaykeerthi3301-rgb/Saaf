@@ -28,6 +28,8 @@ export type SavedResume = {
   targetRole: string | null
   score: number | null
   updatedAt: string
+  /** True for the candidate's main résumé. Undefined when migration 0034 is not applied. */
+  isPrimary?: boolean
 }
 
 export type SavedResumeDetail = SavedResume & {
@@ -42,6 +44,7 @@ type Row = {
   target_role: string | null
   score: number | null
   updated_at: string
+  is_primary?: boolean
   sections?: unknown
   body?: string
 }
@@ -50,15 +53,34 @@ const LIST_COLUMNS = 'id, label, target_role, score, updated_at'
 
 export async function listResumes(userId: string): Promise<SavedResume[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('resume_documents')
-    .select(LIST_COLUMNS)
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(10)
+  const read = (columns: string) =>
+    supabase.from('resume_documents').select(columns).eq('user_id', userId).order('updated_at', { ascending: false }).limit(10)
 
+  // is_primary arrives with migration 0034. An unknown column fails the whole
+  // select, so a database without it falls back to the columns it always had.
+  const withPrimary = await read(`${LIST_COLUMNS}, is_primary`)
+  if (!withPrimary.error) {
+    return ((withPrimary.data ?? []) as unknown as Row[]).map((r) => ({ ...toSaved(r), isPrimary: Boolean(r.is_primary) }))
+  }
+  const { data, error } = await read(LIST_COLUMNS)
   if (error) throw error
-  return ((data ?? []) as Row[]).map(toSaved)
+  return ((data ?? []) as unknown as Row[]).map(toSaved)
+}
+
+/**
+ * Make one saved résumé the primary, clearing any other first (the partial
+ * unique index would refuse two). False when the row is not the caller's or the
+ * update (0034) is missing. Not atomic: a failure between the two writes leaves
+ * no primary, which the screens treat as "none chosen" and is safe.
+ */
+export async function setPrimaryResume(userId: string, id: string): Promise<boolean> {
+  const supabase = await createClient()
+  const { data: mine } = await supabase.from('resume_documents').select('id').eq('user_id', userId).eq('id', id).maybeSingle()
+  if (!mine) return false
+  const cleared = await supabase.from('resume_documents').update({ is_primary: false }).eq('user_id', userId).eq('is_primary', true)
+  if (cleared.error) return false
+  const { error } = await supabase.from('resume_documents').update({ is_primary: true }).eq('user_id', userId).eq('id', id)
+  return !error
 }
 
 export async function getResume(userId: string, id: string): Promise<SavedResumeDetail | null> {
