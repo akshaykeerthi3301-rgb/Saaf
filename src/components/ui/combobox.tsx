@@ -26,6 +26,16 @@ type Props = {
   /** Called when the panel opens, so a caller can fetch its options lazily. */
   onOpen?: () => void
   onChange: (value: string) => void
+  /**
+   * Ranks the options for what was typed, best first. Without it the list is
+   * filtered by substring. The ranked options keep their counts but lose their
+   * groups: the order is the point.
+   */
+  rank?: (query: string) => string[]
+  /** Called with what is typed, so a caller can check it (debounce on its side). */
+  onQuery?: (query: string) => void
+  /** Shown on the "Use “…”" row — what the caller found out about the typed value. */
+  customNote?: React.ReactNode
 }
 
 /**
@@ -51,7 +61,7 @@ type Props = {
  * theirs — what they lose is alias matching, and the caller says so.
  */
 export function Combobox({
-  label, value, groups, placeholder, helper, provenance, note, onOpen, onChange,
+  label, value, groups, placeholder, helper, provenance, note, onOpen, onChange, rank, onQuery, customNote,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -64,10 +74,15 @@ export function Combobox({
   // on what "the next option" means.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
+    if (rank && q) {
+      const byValue = new Map(groups.flatMap((g) => g.options).map((o) => [o.value, o] as const))
+      const options = rank(q).flatMap((v) => (byValue.has(v) ? [byValue.get(v)!] : []))
+      return options.length ? [{ label: 'Closest matches', options }] : []
+    }
     return groups
       .map((g) => ({ ...g, options: g.options.filter((o) => !q || o.value.toLowerCase().includes(q)) }))
       .filter((g) => g.options.length > 0)
-  }, [groups, query])
+  }, [groups, query, rank])
 
   const flat = useMemo(() => filtered.flatMap((g) => g.options.map((o) => o.value)), [filtered])
 
@@ -158,6 +173,7 @@ export function Combobox({
                   // state to be synchronised after the fact.
                   setQuery(e.target.value)
                   setActive(0)
+                  onQuery?.(e.target.value)
                 }}
                 onKeyDown={onKey}
                 placeholder="Search"
@@ -180,8 +196,8 @@ export function Combobox({
                     )}
                   >
                     <span className="truncate">Use &ldquo;{custom}&rdquo;</span>
-                    <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                      not on our list
+                    <span className="shrink-0 text-right text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                      {customNote ?? 'not on our list'}
                     </span>
                   </button>
                 </li>

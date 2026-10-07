@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Combobox, type ComboGroup } from '@/components/ui/combobox'
-import { roleCatalogue, type CatalogueDomain } from '@/app/actions/role-catalogue'
+import { checkRoleTitle, roleCatalogue, type CatalogueDomain, type RoleTitleCheck } from '@/app/actions/role-catalogue'
 import { DOMAINS } from '@/lib/taxonomy/roles'
+import { suggestRoles } from '@/lib/taxonomy/suggest'
 
 type Props = {
   label: string
@@ -39,6 +40,52 @@ type Props = {
 export function RoleInput({ label, value, provenance, helper, onChange }: Props) {
   const [catalogue, setCatalogue] = useState<CatalogueDomain[]>()
   const [loading, setLoading] = useState(false)
+  // What the typed title would return (TASK-173). `for` ties the answer to the
+  // text it was asked about, so a slow reply for "pm" is never shown under "pmo".
+  const [typedCheck, setTypedCheck] = useState<{ for: string; result: RoleTitleCheck | 'checking' }>()
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const loadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(loadTimer.current) }, [])
+
+  const load = useCallback(() => {
+    if (catalogue || loading) return
+    setLoading(true)
+    roleCatalogue()
+      .then((c) => setCatalogue(c))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [catalogue, loading])
+
+  /** Start the count load shortly after the panel opens, unless typing begins first. */
+  const scheduleLoad = useCallback(() => {
+    clearTimeout(loadTimer.current)
+    loadTimer.current = setTimeout(load, 700)
+  }, [load])
+
+  const rank = useCallback((q: string) => suggestRoles(q, DOMAINS.flatMap((d) => d.roles), 8).map((s) => s.role), [])
+
+  const onQuery = useCallback((q: string) => {
+    clearTimeout(timer.current)
+    const typed = q.trim()
+    if (typed.length < 2) { setTypedCheck(undefined); scheduleLoad(); return }
+    // Someone is typing: the full count load can wait. Server actions on a page run one
+    // at a time, and that load is ~90 queries — measured 36 s cold in development — so
+    // started first it would hold the typed check behind it.
+    clearTimeout(loadTimer.current)
+    setTypedCheck({ for: typed, result: 'checking' })
+    timer.current = setTimeout(() => {
+      checkRoleTitle(typed)
+        .then((result) => setTypedCheck((cur) => (cur && cur.for === typed ? { for: typed, result } : cur)))
+        .catch(() => setTypedCheck((cur) => (cur && cur.for === typed ? undefined : cur)))
+    }, 350)
+  }, [scheduleLoad])
+
+  const checked = typedCheck && typedCheck.result !== 'checking' ? typedCheck.result : undefined
+  const customNote =
+    typedCheck?.result === 'checking' ? 'checking…'
+      : checked?.count === null || checked === undefined ? undefined
+        : checked.count === 0 ? 'no live postings'
+          : `${checked.count} live ${checked.count === 1 ? 'posting' : 'postings'}`
 
   const groups: ComboGroup[] = useMemo(() => {
     if (catalogue) {
@@ -53,14 +100,6 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
     return DOMAINS.map((d) => ({ label: d.label, options: d.roles.map((r) => ({ value: r })) }))
   }, [catalogue])
 
-  function load() {
-    if (catalogue || loading) return
-    setLoading(true)
-    roleCatalogue()
-      .then((c) => setCatalogue(c))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }
 
   return (
     <Combobox
@@ -70,14 +109,22 @@ export function RoleInput({ label, value, provenance, helper, onChange }: Props)
       placeholder="Choose the role you want"
       provenance={provenance}
       helper={helper}
-      onOpen={load}
+      onOpen={scheduleLoad}
       onChange={onChange}
+      rank={rank}
+      onQuery={onQuery}
+      customNote={customNote}
       note={
-        loading
-          ? 'Counting what each role returns in the live index…'
-          : catalogue
-            ? 'The number beside each role is how many live postings it returns today.'
-            : undefined
+        checked && checked.count === 0 ? (
+          <>
+            Nothing in the index carries that exact title yet — that is our coverage, not a verdict on the role.
+            {checked.suggestions.length ? ' Closest on our list: ' + checked.suggestions.map((s) => `${s.role}${s.count !== null ? ` (${s.count})` : ''}`).join(', ') + '.' : ''}
+          </>
+        ) : loading ? (
+          'Counting what each role returns in the live index…'
+        ) : catalogue ? (
+          'The number beside each role is how many live postings it returns today.'
+        ) : undefined
       }
     />
   )

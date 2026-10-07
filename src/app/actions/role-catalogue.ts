@@ -1,7 +1,9 @@
 'use server'
 
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { DOMAINS, ALL_ROLES } from '@/lib/taxonomy/roles'
+import { suggestRoles } from '@/lib/taxonomy/suggest'
 
 export type CatalogueDomain = {
   key: string
@@ -83,5 +85,53 @@ export async function roleCatalogue(): Promise<CatalogueDomain[]> {
   }))
 
   cache = { at: Date.now(), value }
+  return value
+}
+
+// ------------------------------------------------------------ typed titles (TASK-173)
+
+export type RoleTitleCheck = {
+  /** Live postings the matcher would return for this title exactly as typed; null = could not check. */
+  count: number | null
+  /** The closest taxonomy roles, each with its own live count. */
+  suggestions: { role: string; count: number | null }[]
+}
+
+const titleSchema = z.string().trim().min(2).max(60)
+const CHECK_TTL_MS = 60 * 60 * 1000
+const CHECK_MAX = 300
+const checks = new Map<string, { at: number; value: RoleTitleCheck }>()
+
+/**
+ * What a typed title would return, and what on the list is closest to it.
+ *
+ * The count is asked of the same websearch query the matcher runs on the raw
+ * title (src/lib/score-candidate.ts), so "0" here means the shortlist would be
+ * empty — said BEFORE the candidate commits. Nothing is refused: a title with no
+ * postings is still accepted, and the answer is attributed to coverage, never to
+ * the candidate. Like roleCatalogue() this reads only `roles`, whose policy is
+ * "authenticated read"; an unauthenticated caller gets zero rows from the database.
+ */
+export async function checkRoleTitle(input: string): Promise<RoleTitleCheck> {
+  const parsed = titleSchema.safeParse(input)
+  if (!parsed.success) return { count: null, suggestions: [] }
+  const title = parsed.data
+  const key = title.toLowerCase()
+
+  const hit = checks.get(key)
+  if (hit && Date.now() - hit.at < CHECK_TTL_MS) return hit.value
+
+  const supabase = await createClient()
+  const near = suggestRoles(title, ALL_ROLES, 3).filter((s) => s.role.toLowerCase() !== key)
+  const [count, ...counts] = await Promise.all([
+    countQuery(supabase, title),
+    ...near.map((s) => countQuery(supabase, s.role)),
+  ])
+  const value: RoleTitleCheck = {
+    count: count < 0 ? null : count,
+    suggestions: near.map((s, i) => ({ role: s.role, count: counts[i] < 0 ? null : counts[i] })),
+  }
+  if (checks.size >= CHECK_MAX) checks.delete(checks.keys().next().value as string)
+  checks.set(key, { at: Date.now(), value })
   return value
 }
