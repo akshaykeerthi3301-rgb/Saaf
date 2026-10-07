@@ -9,6 +9,7 @@ import { scoreBars } from '@/lib/score-bars'
 import type { ReactNode } from 'react'
 import { whyThisMatches } from '@/lib/why-match'
 import type { RepostChip } from '@/lib/repost'
+import type { InterestChip } from '@/lib/interest'
 import type { ScoreBreakdown } from '@/match/score'
 
 type Props = {
@@ -26,6 +27,8 @@ type Props = {
   postedAt?: string
   /** Drawn only where the ingest recorded an earlier listing (src/lib/repost.ts). */
   repost?: RepostChip | null
+  /** How many Saaf candidates track this role — only from 3 up (src/lib/interest.ts). */
+  interest?: InterestChip | null
   /** The candidate's tracker stage for this role, when tracked. */
   trackedStatus?: string
   /** The Hide / Unhide control (Phase 15), passed in so this card stays a server component. */
@@ -63,7 +66,7 @@ const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px
  */
 export function RoleCard({
   roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, postedAt, repost, trackedStatus, hideControl, statedPay, connections,
+  isNew, postedAt, repost, interest, trackedStatus, hideControl, statedPay, connections,
 }: Props) {
   const band = ringBand(score)
   const posted = postedAgo(postedAt)
@@ -93,6 +96,12 @@ export function RoleCard({
             {isEarlyPosting(postedAt) ? (
               <span className={`${chip} bg-score-high/10 text-score-high`} title="Posted in the last 3 days, by the employer's own date. We cannot see how many people have applied.">
                 Early applicant
+              </span>
+            ) : null}
+            {interest ? (
+              <span className={`${chip} bg-secondary text-muted-foreground`} title={interest.title}>
+                <Users className="size-3" aria-hidden="true" />
+                {interest.label}
               </span>
             ) : null}
             {connections ? (

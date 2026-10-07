@@ -352,6 +352,22 @@ async function crossUserIsolation() {
       method: 'POST', body: JSON.stringify({ user_id: a.id, role_id: roleId, outcome: 'cleared', reason: 'forged' }),
     })
     check('gate_results: A cannot INSERT even its own row (ingest-written only)', insGate.status >= 400, `http ${insGate.status}`)
+
+    // role_interest (0033) is SECURITY DEFINER — the one function here that reads
+    // across users — so it is checked for what it must NOT return: who, or a count under 3.
+    const interest = await asA('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })
+    if (interest.status === 404) {
+      console.log('  – role_interest: function not present, skipped (migration 0033 pending)')
+    } else {
+      const rows = await interest.json()
+      check(
+        'role_interest: returns only role_id + trackers, and none under 3',
+        Array.isArray(rows) && rows.every((r: Record<string, unknown>) => Object.keys(r).sort().join() === 'role_id,trackers' && Number(r.trackers) >= 3),
+        `http ${interest.status}, ${Array.isArray(rows) ? rows.length : '?'} row(s)`,
+      )
+      const anonCall = await anon('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })
+      check('role_interest: a signed-out visitor cannot call it', anonCall.status >= 400, `http ${anonCall.status}`)
+    }
   } finally {
     // Deleting the auth user cascades through every table above.
     for (const u of [a, b]) if (u) await admin.auth.admin.deleteUser(u.id).catch(() => {})

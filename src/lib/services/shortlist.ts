@@ -212,6 +212,21 @@ export async function readReposts(roleIds: string[]): Promise<Map<string, Repost
 }
 
 /**
+ * role_id → how many Saaf candidates are tracking it, only where 3 or more
+ * (migration 0033). The function does the privacy work; a missing function, or
+ * any error, reads as "no counts" — the chip simply does not draw.
+ */
+export async function readInterest(roleIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>()
+  if (roleIds.length === 0) return out
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('role_interest', { role_ids: roleIds.slice(0, 200) })
+  if (error) return out
+  for (const r of (data ?? []) as { role_id: string; trackers: number }[]) out.set(r.role_id, r.trackers)
+  return out
+}
+
+/**
  * role_id → apply URL, for the Easy Apply filter. Read only when that filter is
  * on, for the same reason as readPostedDates: the thin read has no roles join.
  */
