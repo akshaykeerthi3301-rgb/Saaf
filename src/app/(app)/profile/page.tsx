@@ -7,6 +7,8 @@ import { readPreferences } from '@/lib/services/workspace'
 import { profileHealth } from '@/lib/profile-health'
 import { countConnections } from '@/lib/services/network'
 import { ConnectionsImport } from '@/components/features/connections-import'
+import { SelfIdAnswers } from '@/components/features/self-id-answers'
+import { readSelfId } from '@/lib/services/self-id'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -35,7 +37,7 @@ export default async function ProfilePage() {
   if (!profile) redirect('/start')
 
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
-  const [prefs, connections] = await Promise.all([readPreferences(user.id), countConnections(user.id)])
+  const [prefs, connections, selfId] = await Promise.all([readPreferences(user.id), countConnections(user.id), readSelfId(user.id)])
   const health = profileHealth({
     currentTitle: profile.current_title, employer: profile.employer,
     yearsExperience: profile.years_experience === null ? null : Number(profile.years_experience),
@@ -72,6 +74,7 @@ export default async function ProfilePage() {
           noticePeriod: profile.notice_period ?? '',
         }}
           email={user.email ?? ''}
+          applyExtras={<SelfIdAnswers initial={selfId.answers} stored={selfId.stored} />}
           accountExtras={<ConnectionsImport count={connections ?? 0} stored={connections !== null} />}
         />
       </div>

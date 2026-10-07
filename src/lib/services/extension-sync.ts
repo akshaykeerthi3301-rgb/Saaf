@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { readSelfId } from '@/lib/services/self-id'
+import type { SelfIdAnswers } from '@/lib/self-id'
 
 /**
  * The web app's half of the extension bridge (2026-09-25, Jobright parity).
@@ -31,6 +33,8 @@ export type ExtensionProfile = {
 
 export type ExtensionSync = {
   profile: ExtensionProfile
+  /** The answers the candidate typed for demographic questions; empty when none. Replaces the extension's copy. */
+  selfId: SelfIdAnswers
   resumeText: string
   tracked: { url: string; status: Stage }[]
 }
@@ -79,6 +83,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       .maybeSingle(),
     supabase.from('applications').select('apply_url, status').not('apply_url', 'is', null).limit(500),
   ])
+  const { answers: selfId } = await readSelfId(userId)
   const row = (p as unknown as ProfileRow | null)
   const s = (v: string | number | null | undefined) => (v == null ? '' : String(v))
   return {
@@ -96,6 +101,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       linkedin: s(row?.linkedin_url),
       portfolio: s(row?.portfolio_url),
     },
+    selfId,
     resumeText: s(((!primary.error && primary.data ? primary.data : latest.data) as { body: string | null } | null)?.body),
     tracked: ((apps ?? []) as unknown as { apply_url: string; status: Stage }[])
       .map((a) => ({ url: a.apply_url, status: a.status })),

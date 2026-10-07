@@ -46,7 +46,7 @@ const WORK_MODE_OPTIONS = [
   ['onsite', 'Onsite'],
 ] as const
 
-export function ProfileForm({ initial, email, accountExtras }: { initial: Initial; email: string; accountExtras?: ReactNode }) {
+export function ProfileForm({ initial, email, accountExtras, applyExtras }: { initial: Initial; email: string; accountExtras?: ReactNode; applyExtras?: ReactNode }) {
   const ids = useId()
   const router = useRouter()
   const [tourNote, setTourNote] = useState<string>()
@@ -237,6 +237,7 @@ export function ProfileForm({ initial, email, accountExtras }: { initial: Initia
             onChange={(e) => setF({ ...f, portfolioUrl: e.target.value })} />
           <Input label="Notice period" value={f.noticePeriod}
             onChange={(e) => setF({ ...f, noticePeriod: e.target.value })} />
+          {applyExtras}
         </div>
 
         {tab !== 'account' ? (

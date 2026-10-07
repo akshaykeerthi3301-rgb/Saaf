@@ -124,6 +124,18 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
         const v = msg.profile?.[f]
         if (typeof v === 'string' && v.trim()) profile[f] = v.trim().slice(0, 500)
       }
+      // The candidate's own typed answers to demographic questions. REPLACED, not
+      // merged: clearing an answer on the web must remove it here, or a question
+      // they took back would still be answered. Whitelisted keys, short strings only.
+      if (msg.selfId && typeof msg.selfId === 'object') {
+        const KEYS = ['gender', 'pronouns', 'ethnicity', 'disability', 'veteran', 'orientation', 'caste', 'religion', 'marital']
+        const next = {}
+        for (const k of KEYS) {
+          const v = msg.selfId[k]
+          if (typeof v === 'string' && v.trim()) next[k] = v.trim().slice(0, 60)
+        }
+        profile.selfId = next
+      }
       const patch = { profile, syncedAt: new Date().toISOString() }
       if (typeof msg.resumeText === 'string' && msg.resumeText.trim().length >= 120) {
         patch.resumeText = msg.resumeText.slice(0, 40000)

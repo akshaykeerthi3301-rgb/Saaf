@@ -27,8 +27,18 @@
  *    option matches. Every pick is listed back on the card, because a wrong
  *    choice in a closed dropdown is the one the candidate is least likely to see.
  *  - The résumé file is attached only to an upload whose label says résumé/CV.
- * Still refused, and not a preference: demographic/EEO questions, free text the
- * employer asked them, consent boxes, credentials and identity numbers.
+ * Still refused, and not a preference: free text the employer asked them,
+ * consent boxes, credentials and identity numbers.
+ *
+ * ⚠️ DEMOGRAPHIC / EEO QUESTIONS ARE REFUSED BY DEFAULT, AND ANSWERED ONLY FROM
+ * WORDS THE CANDIDATE TYPED THEMSELVES (2026-10-08, TASK-171). The default has
+ * not moved: with no answer stored, every one of them is left for the person.
+ * A candidate who wants it can type their own answer once on the web profile
+ * ("Prefer not to say" is the starting state of every question); the extension
+ * then fills ONLY that question, ONLY with those words, and matches an option
+ * by exact text — never "contains", because "Male" is inside "Female". Never
+ * inferred from anything else on the profile. Date of birth, age and pregnancy
+ * are not on that list and stay refused for everyone.
  *
  * Attached to a global rather than exported, because MV3 content scripts are
  * not ES modules. The test imports this file for its side effect and reads the
@@ -51,7 +61,7 @@
     // the boundary requires a non-word character and the word continues. Caught
     // by the test, which is the entire reason a form filler has one.
     { re: /\b(gender|sex|sexual|race|ethnic|ethnicity|veteran|disabilit|disabled|orientation|pronoun|caste|religion|marital|pregnan|date\s*of\s*birth|\bdob\b|age\b)/i,
-      reason: 'a demographic question — yours alone to answer' },
+      reason: 'a demographic question — yours alone to answer', selfId: true },
     { re: /\b(why\s*(do\s*)?you|cover\s*letter|motivation|tell\s*us|describe|essay|what\s*interests|in\s*your\s*own\s*words)\b/i,
       reason: 'free text the employer asked you — not us' },
     { re: /\b(password|passcode|ssn|social\s*security|aadhaar|\bpan\b|bank|account\s*number|ifsc)\b/i,
@@ -59,6 +69,38 @@
     { re: /\b(i\s*agree|agree\s*to|consent|terms\s*(and|&)\s*conditions|privacy\s*(policy|notice)|i\s*(hereby\s*)?(certify|confirm|declare|acknowledge))/i,
       reason: 'a consent box — yours to agree to' },
   ]
+
+  /**
+   * The demographic questions a candidate may answer THEMSELVES, one key each.
+   * A label that matches more than one ("Gender and sexual orientation") is two
+   * questions in one box and is refused — we will not split someone's answer.
+   * Mirrors src/lib/self-id.ts (the web form that stores them).
+   */
+  const SELF_ID = [
+    { key: 'gender', re: /\b(gender|sex)\b/i },
+    { key: 'pronouns', re: /\bpronoun/i },
+    { key: 'ethnicity', re: /\b(race|racial|ethnic)/i },
+    { key: 'disability', re: /\b(disabilit|disabled)/i },
+    { key: 'veteran', re: /\bveteran/i },
+    { key: 'orientation', re: /\b(sexual|orientation)/i },
+    { key: 'caste', re: /\bcaste\b/i },
+    { key: 'religion', re: /\breligio/i },
+    { key: 'marital', re: /\bmarital/i },
+  ]
+  /** Never answered, for anyone, whatever is stored — and a label that mentions one is refused whole. */
+  const NEVER_ANSWERED = /\b(pregnan|date\s*of\s*birth|dob\b|age\b)/i
+  const SELF_ID_YES_NO = new Set(['selfId:disability', 'selfId:veteran'])
+  /** Accepted option texts for a stored gender: forms say Man/Woman as often as Male/Female. */
+  const GENDER_WORDS = { male: ['male', 'man'], female: ['female', 'woman'], 'non binary': ['non binary', 'nonbinary'] }
+
+  /** The self-ID key for this label, only when exactly one question matches AND the candidate typed an answer. */
+  function selfIdKey(signals, selfId) {
+    if (!selfId || NEVER_ANSWERED.test(signals)) return null
+    const hits = SELF_ID.filter((q) => q.re.test(signals))
+    if (hits.length !== 1) return null
+    const v = selfId[hits[0].key]
+    return typeof v === 'string' && v.trim() ? `selfId:${hits[0].key}` : null
+  }
 
   /**
    * Money. Formerly a refusal; now a field filled from the candidate's own
@@ -115,7 +157,7 @@
 
   /** How each key is matched against a choice, and how it is written as text. */
   const NUMERIC = { yearsExperience: 'years', noticePeriod: 'days', currentCtc: 'lakhs', expectedCtc: 'lakhs' }
-  const YES_NO = new Set(ANSWERS.map((a) => a.key))
+  const YES_NO = new Set([...ANSWERS.map((a) => a.key), ...SELF_ID_YES_NO])
 
   /** Why a recognised field went unfilled when the candidate stored nothing. */
   const MISSING = {
@@ -213,9 +255,18 @@
    * Money next, because "Current company salary band" also matches
    * `currentEmployer`, and the employer's name is not a salary.
    */
-  function classify(signals) {
+  function classify(signals, selfId) {
     if (!signals) return null
-    for (const r of REFUSALS) if (r.re.test(signals)) return { refused: true, reason: r.reason }
+    for (const r of REFUSALS) {
+      if (!r.re.test(signals)) continue
+      // A demographic question is the one refusal a candidate's own typed
+      // answer can lift — for exactly that question, never for a neighbour.
+      if (r.selfId) {
+        const key = selfIdKey(signals, selfId)
+        if (key) return { key }
+      }
+      return { refused: true, reason: r.reason }
+    }
     if (MONEY.test(signals)) return { key: EXPECTED.test(signals) ? 'expectedCtc' : 'currentCtc' }
     const answer = ANSWERS.find((a) => a.re.test(signals))
     if (answer) return { key: answer.key }
@@ -233,6 +284,11 @@
 
   /** Values for each key, from the stored profile. Undefined means "no value". */
   function valueFor(key, p) {
+    if (key.startsWith('selfId:')) {
+      const v = p.selfId && p.selfId[key.slice(7)]
+      if (SELF_ID_YES_NO.has(key)) return yesNo(v)
+      return typeof v === 'string' && v.trim() ? v.trim() : undefined
+    }
     const full = (p.fullName || '').trim()
     switch (key) {
       case 'fullName': return full
@@ -366,6 +422,14 @@
     if (YES_NO.has(key)) {
       const want = raw === 'yes' ? /^\s*yes\b/i : /^\s*no\b/i
       return only(options.filter((o) => want.test(o.text)))
+    }
+    // A demographic answer matches an option by its WHOLE text, never by
+    // "contains": "Male" is inside "Female", and a wrong answer here is worse
+    // than an unanswered one. Gender also accepts the form's other word for it.
+    if (key.startsWith('selfId:')) {
+      const want = norm(raw)
+      const accepted = new Set(key === 'selfId:gender' ? (GENDER_WORDS[want] || [want]) : [want])
+      return only(options.filter((o) => accepted.has(norm(o.text)) || accepted.has(norm(o.value))))
     }
     if (NUMERIC[key]) {
       const n = numberFor(key, raw)
@@ -508,7 +572,7 @@
 
       if (!isFillable(el)) continue
       const signals = signalsFor(el, doc)
-      const verdict = classify(signals)
+      const verdict = classify(signals, profile.selfId)
       if (!verdict) { out.skipped++; continue }
       if (verdict.refused) { refuse(verdict.reason); continue }
       const raw = valueFor(verdict.key, profile)
@@ -565,7 +629,7 @@
       if (els.some((e) => e.checked)) { out.skipped++; continue }
       const single = !isRadio && els.length === 1
       const question = single ? signalsFor(first, doc) : questionFor(first, doc)
-      const verdict = classify(question)
+      const verdict = classify(question, profile.selfId)
       if (!verdict) { out.skipped++; continue }
       if (verdict.refused) { refuse(verdict.reason); continue }
       const raw = valueFor(verdict.key, profile)
@@ -610,6 +674,6 @@
 
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

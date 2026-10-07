@@ -47,7 +47,7 @@ export function ExtensionBridge() {
 
         const data = await getExtensionSync()
         if (data.ok) {
-          await ask({ type: 'saaf:sync', profile: data.profile, resumeText: data.resumeText, tracked: data.tracked })
+          await ask({ type: 'saaf:sync', profile: data.profile, selfId: data.selfId, resumeText: data.resumeText, tracked: data.tracked })
         }
       } finally {
         running = false
