@@ -23,7 +23,9 @@ import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
 import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey } from '@/lib/feed-query'
-import { FeedSearch, HideRole } from '@/components/features/feed-controls'
+import { FeedSearch, HideRole, SearchAnswer } from '@/components/features/feed-controls'
+import { currentAnswer } from '@/lib/search-history'
+import { readSearchHistory } from '@/lib/services/search-history'
 import { AllFiltersDrawer } from '@/components/features/feed-filter-drawer'
 import { PillMenu } from '@/components/features/pill-menu'
 import { SavedSearchesMenu } from '@/components/features/saved-searches-menu'
@@ -94,7 +96,7 @@ export default async function TodayPage({
 
   // The profile and the shortlist are independent reads, so they run together:
   // four round trips in sequence used to precede every render (QA-02).
-  const [{ data: profile }, shortlist, feedPrefs, savedSearches] = await Promise.all([
+  const [{ data: profile }, shortlist, feedPrefs, savedSearches, searchHistory] = await Promise.all([
     supabase
       .from('profiles')
       .select('preferred_role, preferred_roles, open_to_adjacent, confirmed_at, city, work_mode_preference, years_experience')
@@ -103,6 +105,7 @@ export default async function TodayPage({
     readShortlist(user.id),
     readFeedPrefs(user.id),
     readSavedSearches(user.id),
+    readSearchHistory(user.id),
   ])
 
   // Scores never run against an unconfirmed profile, so there would be nothing
@@ -546,6 +549,7 @@ export default async function TodayPage({
             <FeedSearch
               initial=""
               current={view}
+              history={searchHistory.entries}
               chips={promptChips({
                 role: profile.preferred_role,
                 city: resolveCity(profile.city)?.name ?? profile.city,
@@ -739,6 +743,7 @@ export default async function TodayPage({
           {/* ONE COUNT LINE, with the sort beside it. The cap disclosure below stays: at 500 the
               list is the top of a larger set, and "Showing 500" once read as the whole market
               (QA-06). It is one muted line now, not a paragraph above the controls. */}
+          {(() => { const a = currentAnswer(searchHistory.entries, view); return a ? <SearchAnswer key={a.id} entry={a} /> : null })()}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-primary">{shownCount.toLocaleString('en-IN')}</span> {shownCount === 1 ? 'job' : 'jobs'}

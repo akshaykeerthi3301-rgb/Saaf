@@ -412,3 +412,19 @@ describe('promptChips — searches built from the candidate\'s own profile', () 
     expect(promptChips({}).length).toBeGreaterThan(0)
   })
 })
+
+describe('an exclusion list ends where the next filter begins (found by the history strip, 2026-10-08)', () => {
+  it('does not read "newest first" as an employer', () => {
+    const v = parseFeedQuery('product manager in Pune, excluding TCS, newest first')
+    expect(v.skip).toBe('TCS')
+    expect(v.sort).toBe('new')
+  })
+  it('still takes several employers, and keeps a company whose name starts like a filter word', () => {
+    expect(parseFeedQuery('analyst excluding TCS, Infosys and Top Glove').skip).toBe('TCS,Infosys,Top Glove')
+  })
+  it('hands a trailing filter back whatever it is', () => {
+    const v = parseFeedQuery('designer excluding Accenture, remote')
+    expect(v.skip).toBe('Accenture')
+    expect(v.remote).toBe(true)
+  })
+})

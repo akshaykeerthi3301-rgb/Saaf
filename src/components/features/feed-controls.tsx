@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bookmark, EyeOff, Eye, Search, X } from 'lucide-react'
+import { Bookmark, Check, Copy, EyeOff, Eye, Mic, Search, ThumbsDown, ThumbsUp, X } from 'lucide-react'
 import { deleteFilter, hideRole, saveFilter } from '@/app/actions/feed-prefs'
+import { clearSearchHistoryAction, rateSearchAction, recordSearchAction } from '@/app/actions/search-history'
+import { describeView, type HistoryEntry } from '@/lib/search-history'
+import { listenOnce, speechSupported } from '@/lib/voice-input'
 import { interpretFeedQuery, isEmptyView, viewToQuery, type FeedView } from '@/lib/feed-query'
 
 /**
@@ -28,19 +31,45 @@ import { interpretFeedQuery, isEmptyView, viewToQuery, type FeedView } from '@/l
  * 2026-10-08). They open when the box takes focus: searches built from the
  * candidate's own profile, which fill the box without searching so they can be edited.
  */
-export function FeedSearch({ initial, current, chips = [] }: { initial: string; current: FeedView; chips?: string[] }) {
+export function FeedSearch({
+  initial, current, chips = [], history = [],
+}: { initial: string; current: FeedView; chips?: string[]; history?: HistoryEntry[] }) {
   const router = useRouter()
   const [text, setText] = useState(initial)
   const [focused, setFocused] = useState(false)
+  const [listening, setListening] = useState(false)
+  const [voiceNote, setVoiceNote] = useState<string>()
+  // Read after hydration: the server has no microphone to ask about.
+  const [canSpeak, setCanSpeak] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a browser capability can only be read once mounted
+    setCanSpeak(speechSupported())
+  }, [])
+  const stopRef = useRef<(() => void) | null>(null)
+
+  function toggleVoice() {
+    if (listening) { stopRef.current?.(); return }
+    setVoiceNote(undefined)
+    const stop = listenOnce({
+      onText: setText, // lands in the box, unsent — the candidate reads and edits it first
+      onEnd: () => { setListening(false); stopRef.current = null },
+      onError: setVoiceNote,
+    })
+    if (stop) { stopRef.current = stop; setListening(true) }
+  }
   return (
     <div className="relative min-w-0 basis-full sm:flex-1 sm:basis-0" data-tour="search" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false) }}>
       <form
         role="search"
         className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 focus-within:border-accent"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          const q = viewToQuery(interpretFeedQuery(text, current))
+          const next = interpretFeedQuery(text, current)
+          const q = viewToQuery(next)
           setFocused(false)
+          // Kept before navigating so the next render can show how it was read; a
+          // failure here (no history table, no connection) never blocks the search.
+          if (text.trim() && !isEmptyView(next)) await recordSearchAction({ text: text.trim(), view: next }).catch(() => null)
           router.push(`/today${q ? `?${q}` : ''}`)
         }}
       >
@@ -59,7 +88,18 @@ export function FeedSearch({ initial, current, chips = [] }: { initial: string; 
             <X className="size-3.5" />
           </button>
         ) : null}
+        {canSpeak ? (
+          <button
+            type="button" onClick={toggleVoice} aria-pressed={listening}
+            aria-label={listening ? 'Stop listening' : 'Search by voice'}
+            title={listening ? 'Listening… tap to stop' : 'Say what you want. Your browser’s speech service hears the audio, not Saaf; the words land here for you to check.'}
+            className={`rounded p-0.5 ${listening ? 'animate-pulse text-accent' : 'text-muted-foreground hover:text-primary'}`}
+          >
+            <Mic className="size-4" />
+          </button>
+        ) : null}
       </form>
+      {voiceNote ? <p role="status" className="absolute inset-x-0 top-full z-30 mt-1.5 rounded-xl border border-border bg-popover px-3 py-2 text-xs text-muted-foreground">{voiceNote}</p> : null}
       {focused ? (
         <div className="absolute inset-x-0 top-full z-30 mt-1.5 rounded-2xl border border-border bg-popover p-3 shadow-lg">
           {chips.length > 0 ? (
@@ -78,6 +118,31 @@ export function FeedSearch({ initial, current, chips = [] }: { initial: string; 
                   </button>
                 ))}
               </div>
+            </>
+          ) : null}
+          {history.length > 0 ? (
+            <>
+              <div className={`${chips.length ? 'mt-3 ' : ''}flex items-center justify-between px-1`}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Recent searches</p>
+                <button
+                  type="button" onMouseDown={(e) => e.preventDefault()}
+                  onClick={async () => { await clearSearchHistoryAction().catch(() => null); router.refresh() }}
+                  className="text-[10px] font-semibold text-muted-foreground hover:text-primary"
+                >Clear</button>
+              </div>
+              <ul className="mt-1">
+                {history.slice(0, 6).map((h) => (
+                  <li key={h.id}>
+                    <Link
+                      href={`/today?${viewToQuery(h.view)}`} onMouseDown={(e) => e.preventDefault()} onClick={() => setFocused(false)}
+                      className="block rounded-lg px-2 py-1.5 hover:bg-secondary"
+                    >
+                      <span className="block truncate text-xs font-medium text-primary">{h.text}</span>
+                      <span className="block truncate text-[11px] text-muted-foreground">{describeView(h.view).join(' · ')}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </>
           ) : null}
           <p className="mt-2.5 border-t border-border px-1 pt-2.5 text-[11px] leading-4 text-muted-foreground">
@@ -179,5 +244,46 @@ export function HideRole({ roleId, hidden = false }: { roleId: string; hidden?: 
       </button>
       {note ? <span role="status" className="basis-full text-[11px] text-muted-foreground">{note}</span> : null}
     </>
+  )
+}
+
+/**
+ * "Read as: …" — how Saaf understood the sentence just typed, with a thumb each way
+ * (F-206). The rating goes to the search's own history row; it is how the parser's
+ * misreadings are found. Copy puts the link that restores this exact view on the
+ * clipboard. Shown only while that search is the view on screen.
+ */
+export function SearchAnswer({ entry }: { entry: HistoryEntry }) {
+  const [rating, setRating] = useState(entry.rating)
+  const [copied, setCopied] = useState(false)
+  const words = describeView(entry.view)
+
+  async function rate(next: 'up' | 'down') {
+    const value = rating === next ? null : next
+    setRating(value)
+    const r = await rateSearchAction({ id: entry.id, rating: value }).catch(() => ({ ok: false }))
+    if (!r.ok) setRating(rating)
+  }
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/today?${viewToQuery(entry.view)}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    } catch { /* no clipboard permission: nothing to report */ }
+  }
+  const btn = 'rounded p-1 text-muted-foreground hover:text-primary'
+
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground" data-testid="search-answer">
+      <span>
+        You said <span className="font-medium text-primary">“{entry.text}”</span> — read as{' '}
+        <span className="font-medium text-primary">{words.join(' · ')}</span>
+      </span>
+      <span className="inline-flex items-center gap-0.5" role="group" aria-label="Was that read right?">
+        <button type="button" onClick={() => rate('up')} aria-pressed={rating === 'up'} title="Read right" aria-label="Read right" className={`${btn} ${rating === 'up' ? 'text-score-high' : ''}`}><ThumbsUp className="size-3.5" /></button>
+        <button type="button" onClick={() => rate('down')} aria-pressed={rating === 'down'} title="Read wrong" aria-label="Read wrong" className={`${btn} ${rating === 'down' ? 'text-score-mid' : ''}`}><ThumbsDown className="size-3.5" /></button>
+        <button type="button" onClick={copy} title="Copy a link to this search" aria-label="Copy a link to this search" className={btn}>{copied ? <Check className="size-3.5 text-score-high" /> : <Copy className="size-3.5" />}</button>
+      </span>
+    </div>
   )
 }

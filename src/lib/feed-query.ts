@@ -228,8 +228,17 @@ export function parseFeedQuery(text: string): FeedView {
   let original = ` ${text} `
   const skipHit = SKIP_RE.exec(original)
   if (skipHit) {
-    v.skip = cleanSkip(skipHit[1].split(/,|\s+and\s+|\s+or\s+|\s+&\s+/i).join(','))
-    original = original.replace(SKIP_RE, ' ')
+    // ⚠️ A COMMA ENDS AN EXCLUSION LIST ONLY IF WHAT FOLLOWS IS ANOTHER FILTER.
+    // "excluding TCS, newest first" read "newest first" as a second employer
+    // (found by the history screen's 'Read as' strip). Items that open with a
+    // filter phrase are handed back to the rest of the parser instead. Phrases
+    // are narrow on purpose: "Top Glove" is an employer, "top" is not a filter.
+    const items = skipHit[1].split(/,|\s+and\s+|\s+or\s+|\s+&\s+/i)
+    const isFilter = (x: string) => /^\s*(newest|latest|most recent|sort(ed)? by|easy apply|quick apply|remote|posted|paying|entry[- ]level|fresher)\b/i.test(x)
+    const names = items.filter((x) => !isFilter(x))
+    const handedBack = items.filter(isFilter)
+    v.skip = cleanSkip(names.join(','))
+    original = original.replace(SKIP_RE, ` ${handedBack.join(' ')} `)
   }
 
   let s = ` ${original.toLowerCase().replace(/[,.;!?()]/g, ' ').replace(/\s+/g, ' ')} `

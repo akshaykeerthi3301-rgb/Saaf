@@ -366,6 +366,19 @@ async function crossUserIsolation() {
       await asA(`job_reports?user_id=eq.${a.id}`, { method: 'DELETE' })
     }
 
+    // search_history (0040): a candidate's typed searches and ratings are theirs alone.
+    const forgeSearch = await asA('search_history', { method: 'POST', body: JSON.stringify({ user_id: b.id, text: '__rls_probe__', view: {} }) })
+    if (forgeSearch.status === 404) {
+      console.log('  – search_history: table not present, skipped (migration 0040 pending)')
+    } else {
+      check('search_history: A cannot INSERT a search as B', forgeSearch.status >= 400, `http ${forgeSearch.status}`)
+      const ownSearch = await asA('search_history', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ user_id: a.id, text: '__rls_probe__', view: {}, rating: 'up' }) })
+      check('search_history: A CAN keep and rate their own', ownSearch.status < 400, `http ${ownSearch.status}`)
+      const seenSearch = await (await asA(`search_history?user_id=eq.${b.id}&select=id`)).json()
+      check("search_history: A cannot read B's searches", Array.isArray(seenSearch) && seenSearch.length === 0)
+      await asA(`search_history?user_id=eq.${a.id}`, { method: 'DELETE' })
+    }
+
     // role_interest (0033) is SECURITY DEFINER — the one function here that reads
     // across users — so it is checked for what it must NOT return: who, or a count under 3.
     const interest = await asA('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })

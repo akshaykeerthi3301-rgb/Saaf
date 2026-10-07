@@ -25,6 +25,10 @@ export type AccountExport = {
   profile: Record<string, unknown> | null
   applications: Record<string, unknown>[] | null
   savedResumes: { label: string; targetRole: string | null; updatedAt: string; sections: unknown }[] | null
+  /** The sentences typed into the feed search, and what each was read as (0040). Null when that update is missing. */
+  searchHistory: Record<string, unknown>[] | null
+  /** Reports about postings the candidate filed (0036). Null when that update is missing. */
+  jobReports: Record<string, unknown>[] | null
   counts: { scoredRoles: number | null; connectionsUploaded: number | null }
   notes: string[]
 }
@@ -33,7 +37,7 @@ export async function readAccountExport(userId: string, email: string | null): P
   const supabase = await createClient()
   const notes: string[] = []
 
-  const [profile, apps, scored, connections, resumes] = await Promise.all([
+  const [profile, apps, scored, connections, resumes, searches, reports] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('applications').select('*').eq('user_id', userId),
     supabase.from('gate_results').select('id', { count: 'exact', head: true }).eq('user_id', userId),
@@ -42,11 +46,15 @@ export async function readAccountExport(userId: string, email: string | null): P
       (list) => Promise.all(list.map((r) => getResume(userId, r.id))),
       () => null,
     ),
+    supabase.from('search_history').select('text, view, rating, created_at').eq('user_id', userId),
+    supabase.from('job_reports').select('title, company, kind, note, created_at').eq('user_id', userId),
   ])
 
   if (apps.error) notes.push('Your applications could not be read for this file.')
   if (resumes === null) notes.push('Your saved résumés could not be read for this file.')
   notes.push('Scores are derived from your profile and rebuilt every time you save, so they are counted here, not listed.')
+  if (searches.error) notes.push('Search history needs a database update that has not been applied yet.')
+  if (reports.error) notes.push('Reports about postings need a database update that has not been applied yet.')
   if (connections === null) notes.push('Connections need a database update that has not been applied yet.')
   else notes.push('The names in your uploaded LinkedIn export are other people’s, so only their number is given here. They are deleted with your account.')
 
@@ -59,6 +67,8 @@ export async function readAccountExport(userId: string, email: string | null): P
       resumes === null
         ? null
         : resumes.flatMap((r) => (r ? [{ label: r.label, targetRole: r.targetRole, updatedAt: r.updatedAt, sections: r.sections }] : [])),
+    searchHistory: searches.error ? null : ((searches.data ?? []) as Record<string, unknown>[]),
+    jobReports: reports.error ? null : ((reports.data ?? []) as Record<string, unknown>[]),
     counts: { scoredRoles: scored.error ? null : scored.count ?? 0, connectionsUploaded: connections },
     notes,
   }
