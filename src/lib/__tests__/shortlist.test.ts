@@ -204,3 +204,26 @@ describe('applyQuickPills', () => {
     expect(applyQuickPills(rows, { ...off, easy: true }, { isEasy: (id) => id === 'rc' }, now).map((r) => r.id)).toEqual(['c'])
   })
 })
+
+describe('Pay stated first and Company A–Z (TASK-210)', () => {
+  const rowOf = (role_id: string, score: number) => ({ id: role_id, role_id, score, score_breakdown: { location: 'exact' as const, experience: 'meets' as const } })
+  const rows = [rowOf('a', 90), rowOf('b', 70), rowOf('c', 80), rowOf('d', 60)]
+  const ids = (sections: { visible: { role_id: string }[] }[]) => sections.flatMap((s) => s.visible.map((r) => r.role_id))
+
+  it('puts roles that state pay first, highest first, then the rest by score', () => {
+    const payOf = new Map([['b', 3_000_000], ['d', 1_200_000]])
+    const { sections } = arrangeShortlist(rows, new Map(), { ...base, byPay: true, payOf })
+    expect(ids(sections)).toEqual(['b', 'd', 'a', 'c'])
+  })
+
+  it('falls back to score alone when nobody states pay — never reordering for a number it does not have', () => {
+    const { sections } = arrangeShortlist(rows, new Map(), { ...base, byPay: true, payOf: new Map() })
+    expect(ids(sections)).toEqual(['a', 'c', 'b', 'd'])
+  })
+
+  it('orders by employer name, ignoring case, with unknown employers last', () => {
+    const companyOf = new Map([['a', 'zeta'], ['b', 'Acme'], ['c', 'acme']])
+    const { sections } = arrangeShortlist(rows, new Map(), { ...base, byCompany: true, companyOf })
+    expect(ids(sections)).toEqual(['c', 'b', 'a', 'd']) // acme, Acme (score 80 then 70), zeta, then d (no name)
+  })
+})

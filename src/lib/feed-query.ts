@@ -28,10 +28,14 @@ import { normaliseCompany } from '@/lib/company-name'
 export const POSTED_WINDOWS = ['3', '7', '30'] as const
 export const LEVELS = ['entry', 'mid', 'senior'] as const
 export const JOB_TYPES = ['fulltime', 'intern', 'contract', 'parttime'] as const
+export const MODES = ['remote', 'hybrid', 'onsite'] as const
+export const SORTS = ['new', 'pay', 'company'] as const
 
 export type PostedWindow = (typeof POSTED_WINDOWS)[number]
 export type Level = (typeof LEVELS)[number]
 export type JobType = (typeof JOB_TYPES)[number]
+export type Mode = (typeof MODES)[number]
+export type Sort = (typeof SORTS)[number]
 
 export type FeedView = {
   min80: boolean
@@ -46,19 +50,21 @@ export type FeedView = {
   posted: PostedWindow | ''
   /** The years the posting asks for, banded. Roles that state none are kept. '' = any. */
   level: Level | ''
-  /** Read from the title. '' = any. */
+  /** The contract type the provider STATES; where it states none, read from the title. '' = any. */
   type: JobType | ''
+  /** Where the work happens, ONLY where the employer's own system says (remote / hybrid / on-site). Roles that state none are left out and counted. '' = any. */
+  mode: Mode | ''
   /** Minimum STATED annual pay in lakh rupees; roles that state no pay are left out. 0 = off. */
   pay: number
   /** Employers to leave out, comma-separated, in the candidate's own spelling. */
   skip: string
-  /** '' = best match first. */
-  sort: 'new' | ''
+  /** '' = best match first; new = newest posted; pay = roles that state pay first, highest first; company = A to Z. */
+  sort: Sort | ''
 }
 
 export const EMPTY_VIEW: FeedView = {
   min80: false, fresh: false, remote: false, easy: false, q: '', city: '',
-  posted: '', level: '', type: '', pay: 0, skip: '', sort: '',
+  posted: '', level: '', type: '', mode: '', pay: 0, skip: '', sort: '',
 }
 
 const MAX_Q = 80
@@ -108,7 +114,8 @@ export function viewFromParams(p: Record<string, string | undefined>): FeedView 
     type: pick(JOB_TYPES, p.type),
     pay: cleanPay(p.pay),
     skip: cleanSkip(p.skip ?? ''),
-    sort: p.sort === 'new' ? 'new' : '',
+    mode: pick(MODES, p.mode),
+    sort: pick(SORTS, p.sort),
   }
 }
 
@@ -118,7 +125,7 @@ export function viewToParams(v: FeedView): Record<string, string | undefined> {
     min80: v.min80 ? '1' : undefined, fresh: v.fresh ? '1' : undefined,
     remote: v.remote ? '1' : undefined, easy: v.easy ? '1' : undefined,
     q: v.q || undefined, city: v.city || undefined,
-    posted: v.posted || undefined, level: v.level || undefined, type: v.type || undefined,
+    posted: v.posted || undefined, level: v.level || undefined, type: v.type || undefined, mode: v.mode || undefined,
     pay: v.pay ? String(v.pay) : undefined, skip: v.skip || undefined, sort: v.sort || undefined,
   }
 }
@@ -135,7 +142,7 @@ export function viewFromStored(raw: unknown): FeedView | null {
   return viewFromParams({
     min80: o.min80 ? '1' : undefined, fresh: o.fresh ? '1' : undefined,
     remote: o.remote ? '1' : undefined, easy: o.easy ? '1' : undefined,
-    q: str('q'), city: str('city'), posted: str('posted'), level: str('level'), type: str('type'),
+    q: str('q'), city: str('city'), posted: str('posted'), level: str('level'), type: str('type'), mode: str('mode'),
     // Pay is the one field stored as a number; every other field must be text.
     pay: typeof o.pay === 'number' ? String(o.pay) : str('pay'),
     skip: str('skip'), sort: str('sort'),
@@ -149,9 +156,10 @@ export const feedViewSchema = z.object({
   posted: z.enum(['', ...POSTED_WINDOWS]),
   level: z.enum(['', ...LEVELS]),
   type: z.enum(['', ...JOB_TYPES]),
+  mode: z.enum(['', ...MODES]),
   pay: z.number().int().min(0).max(MAX_PAY_LAKH),
   skip: z.string().max(MAX_SKIP * (MAX_SKIP_NAME + 1)),
-  sort: z.enum(['', 'new']),
+  sort: z.enum(['', ...SORTS]),
 }).strict()
 
 /** The query string for a view — whitelisted keys only, so a stored filter can never inject a link. */
@@ -167,6 +175,7 @@ export function drawerParams(v: FeedView): [string, string][] {
   if (v.posted) out.push(['posted', v.posted])
   if (v.level) out.push(['level', v.level])
   if (v.type) out.push(['type', v.type])
+  if (v.mode) out.push(['mode', v.mode])
   if (v.pay) out.push(['pay', String(v.pay)])
   if (v.skip) out.push(['skip', v.skip])
   return out
@@ -174,7 +183,7 @@ export function drawerParams(v: FeedView): [string, string][] {
 
 export function isEmptyView(v: FeedView): boolean {
   return !v.min80 && !v.fresh && !v.remote && !v.easy && !v.q && !v.city &&
-    !v.posted && !v.level && !v.type && !v.pay && !v.skip && !v.sort
+    !v.posted && !v.level && !v.type && !v.mode && !v.pay && !v.skip && !v.sort
 }
 
 // ------------------------------------------------------------ sentence search
@@ -257,6 +266,9 @@ export function parseFeedQuery(text: string): FeedView {
   if (take(/\b(remote (ok|okay|fine|also)|or remote|remote or \w+|hybrid or remote)\b/g)) { /* allowed, not required */ }
   if (take(/\b(fully remote|remote only|work from home|wfh|remote)\b/g)) v.remote = true
   if (take(/\b(easy apply|quick apply|one page apply|easy to apply)\b/g)) v.easy = true
+  // Work mode the employer states. "hybrid or remote" was taken above as "remote is fine"; a bare "hybrid" or "on-site" is a request.
+  if (take(/\b(hybrid)\b/g)) v.mode = 'hybrid'
+  else if (take(/\b(on[- ]?site|onsite|in[- ]office|work from office|wfo)\b/g)) v.mode = 'onsite'
 
   // Posted windows, widest last so "this week" is not read as "today".
   if (take(/\b(past 3 days|last 3 days|past few days|last few days|couple of days|last three days|past three days)\b/g)) v.posted = '3'
@@ -274,6 +286,8 @@ export function parseFeedQuery(text: string): FeedView {
   else if (take(/\b(full[- ]time|permanent)\b/g)) v.type = 'fulltime'
 
   if (take(/\b(newest first|latest first|most recent first|sort by newest|sorted by newest|newest|latest|most recent)\b/g)) v.sort = 'new'
+  else if (take(/\b(highest paying|best paying|best paid|pay first|paid first|pay stated first|sort by pay|sorted by pay)\b/g)) v.sort = 'pay'
+  else if (take(/\b(company a to z|a to z by company|alphabetical|alphabetically|sort by company|sorted by company|by company name)\b/g)) v.sort = 'company'
   if (take(/\b(?:(?:strong|high|good|best|top|great) (?:match|fit)|above 80|over 80|80 plus)\b|\b80\+|(?:^|\s)> ?80\b/g)) v.min80 = true
 
   // Longest city name first, so "navi mumbai" is not read as "mumbai".
@@ -312,9 +326,10 @@ const REMOVABLE: [RegExp, (v: FeedView) => void][] = [
   [/\b(week|month|posted|date|days?)\b/, (v) => { v.posted = ''; v.fresh = false }],
   [/\b(entry|mid|senior|level|experience)\b/, (v) => { v.level = '' }],
   [/\b(intern|internship|contract|part|full|type)\b/, (v) => { v.type = '' }],
+  [/\b(hybrid|onsite|on-site|office|mode)\b/, (v) => { v.mode = '' }],
   [/\b(pay|salary|lakh|lpa|ctc)\b/, (v) => { v.pay = 0 }],
   [/\b(employers?|compan(y|ies)|excluded|exclusion)\b/, (v) => { v.skip = '' }],
-  [/\b(sort|newest|latest|order)\b/, (v) => { v.sort = '' }],
+  [/\b(sort|newest|latest|order|alphabetical)\b/, (v) => { v.sort = '' }],
 ]
 
 /**
@@ -339,6 +354,7 @@ export function interpretFeedQuery(text: string, current: FeedView): FeedView {
     if (add.posted) next.posted = add.posted
     if (add.level) next.level = add.level
     if (add.type) next.type = add.type
+    if (add.mode) next.mode = add.mode
     if (add.pay) next.pay = add.pay
     if (add.sort) next.sort = add.sort
     if (add.skip) next.skip = cleanSkip(`${next.skip},${add.skip}`)
@@ -350,8 +366,8 @@ export function interpretFeedQuery(text: string, current: FeedView): FeedView {
 
 // ------------------------------------------------------------ "why so few results"
 
-export type FilterKey = 'min80' | 'fresh' | 'remote' | 'easy' | 'q' | 'city' | 'posted' | 'level' | 'type' | 'pay' | 'skip'
-export const FILTER_KEYS: FilterKey[] = ['min80', 'fresh', 'remote', 'easy', 'q', 'city', 'posted', 'level', 'type', 'pay', 'skip']
+export type FilterKey = 'min80' | 'fresh' | 'remote' | 'easy' | 'q' | 'city' | 'posted' | 'level' | 'type' | 'mode' | 'pay' | 'skip'
+export const FILTER_KEYS: FilterKey[] = ['min80', 'fresh', 'remote', 'easy', 'q', 'city', 'posted', 'level', 'type', 'mode', 'pay', 'skip']
 
 export function activeFilters(v: FeedView): FilterKey[] {
   return FILTER_KEYS.filter((k) => Boolean(v[k]))
@@ -513,10 +529,14 @@ export type DrawerFacts = {
   floors?: Map<string, number>
   /** Stated annual pay in rupees, only where the posting states it in rupees. */
   pays?: Map<string, number>
+  /** Where the work happens, only where the employer's own system says. */
+  modes?: Map<string, Mode>
+  /** The contract type the employer's system states; roles absent fall back to the title. */
+  types?: Map<string, JobType>
 }
 
 /** What a filter could not decide, so the page can say so instead of letting a count look like the market's answer. */
-export type DrawerNotes = { undated: number; unstatedLevel: number; unstatedPay: number }
+export type DrawerNotes = { undated: number; unstatedLevel: number; unstatedPay: number; unstatedMode: number }
 
 /** True when a role's employer is one the candidate named. Compared the way every other company match here is. */
 function isSkipped(company: string, skip: string): boolean {
@@ -537,7 +557,8 @@ function isSkipped(company: string, skip: string): boolean {
  *   posted  — no posting date → left out (we cannot claim it is recent), counted.
  *   level   — states no requirement → KEPT (unknown is not "wrong level"), counted.
  *   pay     — states no pay → left out (that is what "stated pay" means), counted.
- *   type, skip — decided from the title and employer, which every role has.
+ *   mode    — the employer's system states no work mode → left out (we cannot claim it is hybrid), counted.
+ *   type    — the stated contract type, else the title. skip — decided from the employer, which every role has.
  */
 export function applyDrawerFilters<R extends { role_id: string }>(
   rows: R[],
@@ -545,8 +566,8 @@ export function applyDrawerFilters<R extends { role_id: string }>(
   facts: DrawerFacts,
   now: number = Date.now(),
 ): { rows: R[]; notes: DrawerNotes } {
-  const notes: DrawerNotes = { undated: 0, unstatedLevel: 0, unstatedPay: 0 }
-  if (!view.posted && !view.level && !view.type && !view.pay && !view.skip) return { rows, notes }
+  const notes: DrawerNotes = { undated: 0, unstatedLevel: 0, unstatedPay: 0, unstatedMode: 0 }
+  if (!view.posted && !view.level && !view.type && !view.mode && !view.pay && !view.skip) return { rows, notes }
   const since = view.posted ? now - Number(view.posted) * 86_400_000 : 0
 
   const kept = rows.filter((r) => {
@@ -554,7 +575,13 @@ export function applyDrawerFilters<R extends { role_id: string }>(
     const text = facts.text.get(id)
 
     if (view.skip && text && isSkipped(text.company, view.skip)) return false
-    if (view.type && (!text || jobTypeOf(text.title) !== view.type)) return false
+    // The contract type the employer's system states wins; the title is the fallback for the rest.
+    if (view.type && (facts.types?.get(id) ?? (text ? jobTypeOf(text.title) : null)) !== view.type) return false
+    if (view.mode) {
+      const m = facts.modes?.get(id)
+      if (!m) { notes.unstatedMode++; return false }
+      if (m !== view.mode) return false
+    }
 
     if (view.posted) {
       const at = facts.postedAt?.get(id)

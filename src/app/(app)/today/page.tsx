@@ -7,7 +7,7 @@ import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { RoleCard } from '@/components/features/role-card'
 import { repostChip } from '@/lib/repost'
-import { payFromRow } from '@/lib/role-facts'
+import { jobTypeFromStated, payFromRow } from '@/lib/role-facts'
 import { interestChip } from '@/lib/interest'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
@@ -23,7 +23,7 @@ import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
-import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey } from '@/lib/feed-query'
+import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey, type JobType, type Mode } from '@/lib/feed-query'
 import { FeedSearch, HideRole, SearchAnswer } from '@/components/features/feed-controls'
 import { currentAnswer } from '@/lib/search-history'
 import { readSearchHistory } from '@/lib/services/search-history'
@@ -77,12 +77,14 @@ export default async function TodayPage({
     /** Phase 15: words to find in title/company, a city, and the hidden-jobs view. */
     q?: string; city?: string; hidden?: string
     /** TASK-155: the drawer's filters. */
-    posted?: string; level?: string; type?: string; pay?: string; skip?: string
+    posted?: string; level?: string; type?: string; mode?: string; pay?: string; skip?: string
   }>
 }) {
   const params = await searchParams
   const { show, n, tab, sort, fit } = params
   const byNewest = sort === 'new'
+  const byPay = sort === 'pay'
+  const byCompany = sort === 'company'
   const clearsOnly = fit === 'clears'
   // Everything we hold for this candidate is the default view. "New" is the
   // narrower question — what has appeared since they last looked — and it is a
@@ -147,16 +149,25 @@ export default async function TodayPage({
   ])
   // Title/company/city are read only when a text filter is on (Phase 15). Job
   // type and "leave out" need the same title and employer.
-  const roleText = view.q || view.city || view.type || view.skip ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
+  const roleText = view.q || view.city || view.type || view.skip || byCompany ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
   // The drawer (TASK-155). Floors and pay are read for every scored role, and only
   // when their filter is on — pay reads descriptions, which the list read
   // deliberately does not. Every role, not just the survivors of the other
   // filters, so the "why so few results" counts below are exact when one of the
   // other filters is taken off.
-  const [floorsAll, paysAll] = await Promise.all([
+  const [floorsAll, paysAll, factsAll] = await Promise.all([
     view.level ? readExperienceFloors(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
-    view.pay ? readStatedPays(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    view.pay || byPay ? readStatedPays(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
+    // What the employer's own system states (0041): work mode and contract type. Only when a filter needs it.
+    view.mode || view.type ? readRoleFacts(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
   ])
+  const modesAll = new Map<string, Mode>()
+  const typesAll = new Map<string, JobType>()
+  for (const [id, f] of factsAll?.facts ?? []) {
+    if (f.work_mode) modesAll.set(id, f.work_mode)
+    const t = jobTypeFromStated(f.employment_type)
+    if (t) typesAll.set(id, t)
+  }
   /**
    * The whole filter pipeline as a function of a view, over data already read.
    * The page runs it once for what is on screen and once more per active filter
@@ -174,7 +185,7 @@ export default async function TodayPage({
         roleText,
       ),
       v,
-      { text: roleText, postedAt: postedAll, floors: floorsAll, pays: paysAll },
+      { text: roleText, postedAt: postedAll, floors: floorsAll, pays: paysAll, modes: modesAll, types: typesAll },
     )
   const { rows, notes: drawerNotes } = runFilters(view)
   // F-204 "why so few results": with filters on and few roles left, offer each filter's removal with its exact count.
@@ -197,6 +208,8 @@ export default async function TodayPage({
   const drawerNoteLines = [
     view.posted && drawerNotes.undated > 0 ? `${drawerNotes.undated} role${drawerNotes.undated === 1 ? ' has' : 's have'} no posting date and ${drawerNotes.undated === 1 ? 'is' : 'are'} left out.` : '',
     view.level && drawerNotes.unstatedLevel > 0 ? `${drawerNotes.unstatedLevel} role${drawerNotes.unstatedLevel === 1 ? ' states' : 's state'} no experience requirement and ${drawerNotes.unstatedLevel === 1 ? 'is' : 'are'} kept.` : '',
+    view.mode && factsAll && !factsAll.stored ? 'Work mode needs a database update (0041) that has not been applied yet, so no role can pass this filter.' : '',
+    view.mode && factsAll?.stored && drawerNotes.unstatedMode > 0 ? `${drawerNotes.unstatedMode} role${drawerNotes.unstatedMode === 1 ? ' does' : 's do'} not say where the work happens (remote, hybrid or on-site) and ${drawerNotes.unstatedMode === 1 ? 'is' : 'are'} left out.` : '',
     view.pay && drawerNotes.unstatedPay > 0 ? `${drawerNotes.unstatedPay} role${drawerNotes.unstatedPay === 1 ? ' states' : 's state'} no pay in rupees and ${drawerNotes.unstatedPay === 1 ? 'is' : 'are'} left out.` : '',
   ].filter(Boolean)
   /** The words for any one filter, pill or drawer, for the "take one off" links. */
@@ -213,6 +226,7 @@ export default async function TodayPage({
     if (k === 'posted') return `Posted in the past ${v === '30' ? 'month' : v === '7' ? 'week' : `${v} days`}`
     if (k === 'level') return `${({ entry: 'Entry', mid: 'Mid', senior: 'Senior' } as Record<string, string>)[v] ?? v} level`
     if (k === 'type') return ({ fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as Record<string, string>)[v] ?? v
+    if (k === 'mode') return ({ remote: 'Remote (stated)', hybrid: 'Hybrid', onsite: 'On-site' } as Record<string, string>)[v] ?? v
     if (k === 'pay') return `Pay ≥ ₹${v} L`
     if (k === 'skip') return `Not ${v.split(',').join(', ')}`
     return `“${v}”`
@@ -229,7 +243,11 @@ export default async function TodayPage({
   const { isNew, newCount, visibleCount, strong, farCount, sections: arranged } = arrangeShortlist(
     rows,
     shortlist.firstShownAt,
-    { onlyNew, byNewest, clearsOnly, show, shown: n ? Number(n) : undefined, postedAt },
+    {
+      onlyNew, byNewest, clearsOnly, show, shown: n ? Number(n) : undefined, postedAt,
+      byPay, payOf: byPay ? paysAll : undefined,
+      byCompany, companyOf: byCompany ? new Map([...roleText].map(([id, t]) => [id, t.company])) : undefined,
+    },
   )
 
   // A work-mode preference is a filter wearing a score component's clothes. Set
@@ -761,10 +779,12 @@ export default async function TodayPage({
             <SavedSearchesMenu searches={savedSearches.searches} current={savedSearches.current} stored={savedSearches.stored} />
             <PillMenu
               align="right"
-              label={`Sort: ${byNewest ? 'Newest' : 'Best match'}`}
+              label={`Sort: ${byNewest ? 'Newest' : byPay ? 'Pay stated first' : byCompany ? 'Company A–Z' : 'Best match'}`}
               options={[
-                { label: 'Best match', href: hrefFor({ ...view, sort: '' }), selected: !byNewest },
+                { label: 'Best match', href: hrefFor({ ...view, sort: '' }), selected: !view.sort },
                 { label: 'Newest', href: hrefFor({ ...view, sort: 'new' }), selected: byNewest },
+                { label: 'Pay stated first', href: hrefFor({ ...view, sort: 'pay' }), selected: byPay },
+                { label: 'Company A–Z', href: hrefFor({ ...view, sort: 'company' }), selected: byCompany },
               ]}
             />
             </div>
@@ -930,7 +950,7 @@ export default async function TodayPage({
                   {visible.length < inSection.length ? (
                     <p className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
                       <Link
-                        href={`/today?show=${key}&n=${visible.length + SHOW_MORE_STEP}${onlyNew ? '&tab=new' : ''}${byNewest ? '&sort=new' : ''}${clearsOnly ? '&fit=clears' : ''}${pillQuery}#bucket-${key}`}
+                        href={`/today?show=${key}&n=${visible.length + SHOW_MORE_STEP}${onlyNew ? '&tab=new' : ''}${view.sort ? `&sort=${view.sort}` : ''}${clearsOnly ? '&fit=clears' : ''}${pillQuery}#bucket-${key}`}
                         className="inline-flex items-center gap-1 font-semibold text-primary hover:text-accent"
                       >
                         Show {Math.min(SHOW_MORE_STEP, inSection.length - visible.length)} more

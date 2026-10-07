@@ -72,6 +72,12 @@ export type ArrangeOptions = {
   shown?: number
   /** role_id → the board's posting date. Read only for the Newest view. */
   postedAt?: Map<string, string>
+  /** "Pay stated first": roles with a stated annual rupee figure lead, highest first; the rest follow by score. */
+  byPay?: boolean
+  payOf?: Map<string, number>
+  /** "Company A–Z": by the employer's name as shown, then by score. */
+  byCompany?: boolean
+  companyOf?: Map<string, string>
   now?: number
 }
 
@@ -165,9 +171,15 @@ export function arrangeShortlist<T extends ArrangeableRow>(
     }
     return (b.score ?? 0) - (a.score ?? 0)
   }
+  const payOf = (r: T) => opts.payOf?.get(r.role_id) ?? -1
+  const companyOf = (r: T) => (opts.companyOf?.get(r.role_id) ?? '').toLowerCase()
   const order = (list: T[]) =>
     [...list].sort((a, b) =>
-      opts.byNewest
+      opts.byPay
+        ? payOf(b) - payOf(a) || (b.score ?? 0) - (a.score ?? 0)
+        : opts.byCompany
+          ? (companyOf(a) || '\uffff').localeCompare(companyOf(b) || '\uffff') || (b.score ?? 0) - (a.score ?? 0)
+          : opts.byNewest
         ? newest(a, b)
         : (b.score ?? 0) - (a.score ?? 0) ||
           locationRank(a.score_breakdown) - locationRank(b.score_breakdown),

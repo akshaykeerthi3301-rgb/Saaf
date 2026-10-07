@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  activeFilters, applyDrawerFilters, applyTextFilter, cleanSkip, drawerParams, EMPTY_VIEW, feedViewSchema, isEmptyView, jobTypeOf,
+  activeFilters, applyDrawerFilters, applyTextFilter, cleanSkip, drawerParams, EMPTY_VIEW, feedViewSchema, interpretFeedQuery, isEmptyView, jobTypeOf,
   levelOfYears, matchesQuery, onlyFilter, parseFeedQuery, promptChips, relaxations, soloCounts, toggleSkill, viewFromParams,
   viewFromStored, viewToParams, viewToQuery, withoutFilter,
   type FeedView,
@@ -93,7 +93,7 @@ describe('toggleSkill', () => {
 /** Every field set at once — a view that exercises the whole shape. */
 const FULL: FeedView = {
   min80: true, fresh: true, remote: true, easy: true, q: 'product manager', city: 'Pune',
-  posted: '7', level: 'mid', type: 'contract', pay: 12, skip: 'Accenture,TCS', sort: 'new',
+  posted: '7', level: 'mid', type: 'contract', mode: 'hybrid', pay: 12, skip: 'Accenture,TCS', sort: 'new',
 }
 const roundTrip = (v: FeedView) => viewFromParams(Object.fromEntries(new URLSearchParams(viewToQuery(v))))
 
@@ -108,10 +108,15 @@ describe('every drawer field round-trips through the URL', () => {
     ['type', { type: 'intern' as const }],
     ['type', { type: 'parttime' as const }],
     ['type', { type: 'fulltime' as const }],
+    ['mode', { mode: 'remote' as const }],
+    ['mode', { mode: 'hybrid' as const }],
+    ['mode', { mode: 'onsite' as const }],
     ['pay', { pay: 1 }],
     ['pay', { pay: 500 }],
     ['skip', { skip: 'Zeta' }],
     ['sort', { sort: 'new' as const }],
+    ['sort', { sort: 'pay' as const }],
+    ['sort', { sort: 'company' as const }],
   ])('%s alone: %j', (_k, patch) => {
     const v = { ...EMPTY_VIEW, ...patch }
     expect(roundTrip(v)).toEqual(v)
@@ -125,7 +130,7 @@ describe('every drawer field round-trips through the URL', () => {
   })
 
   it('refuses values outside the whitelist instead of passing them on', () => {
-    const v = viewFromParams({ posted: '9999', level: 'god', type: '<script>', pay: '-5', skip: undefined, sort: 'oldest' })
+    const v = viewFromParams({ posted: '9999', level: 'god', type: '<script>', mode: 'underwater', pay: '-5', skip: undefined, sort: 'oldest' })
     expect(v).toEqual(EMPTY_VIEW)
     expect(viewFromParams({ pay: '501' }).pay).toBe(0)
     expect(viewFromParams({ pay: '12.9' }).pay).toBe(12)
@@ -133,13 +138,13 @@ describe('every drawer field round-trips through the URL', () => {
   })
 
   it('keeps the drawer params together for links that carry them', () => {
-    expect(drawerParams(FULL)).toEqual([['posted', '7'], ['level', 'mid'], ['type', 'contract'], ['pay', '12'], ['skip', 'Accenture,TCS']])
+    expect(drawerParams(FULL)).toEqual([['posted', '7'], ['level', 'mid'], ['type', 'contract'], ['mode', 'hybrid'], ['pay', '12'], ['skip', 'Accenture,TCS']])
     expect(drawerParams(EMPTY_VIEW)).toEqual([])
   })
 
   it('counts a drawer field or the sort as a non-empty view', () => {
     expect(isEmptyView(EMPTY_VIEW)).toBe(true)
-    for (const patch of [{ posted: '3' }, { level: 'mid' }, { type: 'intern' }, { pay: 5 }, { skip: 'X' }, { sort: 'new' }] as Partial<FeedView>[]) {
+    for (const patch of [{ posted: '3' }, { level: 'mid' }, { type: 'intern' }, { mode: 'hybrid' }, { pay: 5 }, { skip: 'X' }, { sort: 'new' }, { sort: 'pay' }] as Partial<FeedView>[]) {
       expect(isEmptyView({ ...EMPTY_VIEW, ...patch })).toBe(false)
     }
   })
@@ -189,6 +194,7 @@ describe('the saveFilter boundary (Zod)', () => {
     ['unknown window', { posted: '365' }],
     ['unknown level', { level: 'principal' }],
     ['unknown type', { type: 'volunteer' }],
+    ['unknown work mode', { mode: 'underwater' }],
     ['negative pay', { pay: -1 }],
     ['fractional pay', { pay: 1.5 }],
     ['pay as text', { pay: '12' }],
@@ -264,7 +270,7 @@ describe('applyDrawerFilters — one field moves the count the expected way', ()
   const idsOf = (patch: Partial<FeedView>) => run(patch).rows.map((r) => r.role_id)
 
   it('is a no-op with nothing on — even for rows nothing was read for', () => {
-    expect(applyDrawerFilters(rows, EMPTY_VIEW, { text: new Map() }, NOW)).toEqual({ rows, notes: { undated: 0, unstatedLevel: 0, unstatedPay: 0 } })
+    expect(applyDrawerFilters(rows, EMPTY_VIEW, { text: new Map() }, NOW)).toEqual({ rows, notes: { undated: 0, unstatedLevel: 0, unstatedPay: 0, unstatedMode: 0 } })
   })
 
   it('posted: keeps the window, leaves out the undated, and counts them', () => {
@@ -426,5 +432,59 @@ describe('an exclusion list ends where the next filter begins (found by the hist
     const v = parseFeedQuery('designer excluding Accenture, remote')
     expect(v.skip).toBe('Accenture')
     expect(v.remote).toBe(true)
+  })
+})
+
+// ------------------------------------------------------------ TASK-210: work mode, stated type, more sorts
+
+describe('work mode and sort words in a sentence', () => {
+  it.each([
+    ['hybrid product manager in Pune', { mode: 'hybrid', city: 'Pune' }],
+    ['on-site analyst roles', { mode: 'onsite' }],
+    ['onsite jobs in Chennai', { mode: 'onsite', city: 'Chennai' }],
+    ['designer, work from office', { mode: 'onsite' }],
+    ['highest paying data analyst roles', { sort: 'pay' }],
+    ['analyst roles sorted by company', { sort: 'company' }],
+    ['alphabetical product manager', { sort: 'company' }],
+  ])('%s', (text, want) => {
+    expect(parseFeedQuery(text)).toMatchObject(want)
+  })
+  it('"hybrid or remote" is still "remote is fine", not a hybrid filter', () => {
+    expect(parseFeedQuery('hybrid or remote marketing').mode).toBe('')
+  })
+  it('"remove hybrid" takes the filter off, and "also hybrid" adds it', () => {
+    const cur = { ...EMPTY_VIEW, mode: 'hybrid' as const, city: 'Pune' }
+    expect(interpretFeedQuery('remove hybrid', cur).mode).toBe('')
+    expect(interpretFeedQuery('also onsite', { ...EMPTY_VIEW, city: 'Pune' }).mode).toBe('onsite')
+  })
+})
+
+describe('the drawer: mode and stated type', () => {
+  const rows = ['a', 'b', 'c', 'd'].map((role_id) => ({ role_id }))
+  const text = new Map(rows.map((r) => [r.role_id, { title: r.role_id === 'd' ? 'Software Engineering Intern' : 'Engineer', company: 'Acme', location: '' }]))
+
+  it('a work-mode filter keeps only roles whose employer states it, and counts those it left out', () => {
+    const modes = new Map<string, 'remote' | 'hybrid' | 'onsite'>([['a', 'hybrid'], ['b', 'onsite']])
+    const { rows: kept, notes } = applyDrawerFilters(rows, { ...EMPTY_VIEW, mode: 'hybrid' }, { text, modes })
+    expect(kept.map((r) => r.role_id)).toEqual(['a'])
+    expect(notes.unstatedMode).toBe(2) // c and d state nothing: not "not hybrid", just unknown
+  })
+
+  it('a stated contract type beats the title; the title decides only where nothing is stated', () => {
+    const types = new Map<string, 'fulltime' | 'parttime' | 'intern' | 'contract'>([['a', 'contract']])
+    const intern = applyDrawerFilters(rows, { ...EMPTY_VIEW, type: 'intern' }, { text, types }).rows.map((r) => r.role_id)
+    expect(intern).toEqual(['d'])
+    const contract = applyDrawerFilters(rows, { ...EMPTY_VIEW, type: 'contract' }, { text, types }).rows.map((r) => r.role_id)
+    expect(contract).toEqual(['a'])
+    // 'a' is called Engineer (full-time by title) but its employer's system says contract
+    const fulltime = applyDrawerFilters(rows, { ...EMPTY_VIEW, type: 'fulltime' }, { text, types }).rows.map((r) => r.role_id)
+    expect(fulltime).toEqual(['b', 'c'])
+  })
+
+  it('mode takes part in "why so few results" like every other filter', () => {
+    const v = { ...EMPTY_VIEW, mode: 'hybrid' as const, remote: true }
+    expect(activeFilters(v)).toEqual(['remote', 'mode'])
+    expect(withoutFilter(v, 'mode').mode).toBe('')
+    expect(onlyFilter(v, 'mode')).toMatchObject({ mode: 'hybrid', remote: false })
   })
 })

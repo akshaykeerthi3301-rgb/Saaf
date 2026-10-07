@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { SavedFilters } from '@/components/features/feed-controls'
-import { cleanSkip, viewToQuery, type FeedView, type JobType, type Level, type PostedWindow } from '@/lib/feed-query'
+import { cleanSkip, viewToQuery, type FeedView, type JobType, type Level, type Mode, type PostedWindow } from '@/lib/feed-query'
 
 /**
  * "All filters" — a drawer from the right (redesign 2026-10-08, from the teardown's
@@ -41,6 +41,13 @@ const TYPES: { value: JobType | ''; label: string }[] = [
   { value: 'parttime', label: 'Part-time' },
 ]
 
+const MODE_OPTIONS: { value: Mode | ''; label: string }[] = [
+  { value: '', label: 'Any' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'onsite', label: 'On-site' },
+]
+
 const fieldClass =
   'w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-primary outline-none focus:border-accent'
 const hintClass = 'mt-1 block text-[11px] leading-4 text-muted-foreground'
@@ -67,6 +74,7 @@ export function AllFiltersDrawer({
   const [posted, setPosted] = useState<PostedWindow | ''>(view.posted)
   const [level, setLevel] = useState<Level | ''>(view.level)
   const [type, setType] = useState<JobType | ''>(view.type)
+  const [mode, setMode] = useState<Mode | ''>(view.mode)
   const [pay, setPay] = useState(view.pay ? String(view.pay) : '')
   const [skip, setSkip] = useState(view.skip.split(',').filter(Boolean).join(', '))
   const [reach, setReach] = useState(withinReach)
@@ -111,7 +119,7 @@ export function AllFiltersDrawer({
               className="space-y-7"
               onSubmit={(e) => {
                 e.preventDefault()
-                go({ ...view, posted, level, type, pay: Number(pay) || 0, skip: cleanSkip(skip) }, reach)
+                go({ ...view, posted, level, type, mode, pay: Number(pay) || 0, skip: cleanSkip(skip) }, reach)
               }}
             >
               <section>
@@ -136,7 +144,14 @@ export function AllFiltersDrawer({
                     <select className={`${fieldClass} mt-1`} value={type} onChange={(e) => setType(e.target.value as JobType | '')}>
                       {TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
-                    <span className={hintClass}>Read from the title. A title with no marker counts as full-time.</span>
+                    <span className={hintClass}>As the employer’s own system states it where it does; otherwise read from the title, where no marker counts as full-time.</span>
+                  </label>
+                  <label className="block text-xs font-semibold text-primary">
+                    Work mode
+                    <select className={`${fieldClass} mt-1`} value={mode} onChange={(e) => setMode(e.target.value as Mode | '')}>
+                      {MODE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <span className={hintClass}>Only roles whose employer states it can pass — about 4 in 10 do. The rest are left out, and the count is shown. “Remote only” in the pills reads the location instead.</span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-input p-3 text-xs">
                     <input type="checkbox" checked={reach} onChange={(e) => setReach(e.target.checked)} className="mt-0.5 size-4 accent-accent" />
@@ -198,8 +213,8 @@ export function AllFiltersDrawer({
               type="button"
               className="text-xs font-semibold text-muted-foreground hover:text-primary"
               onClick={() => {
-                setPosted(''); setLevel(''); setType(''); setPay(''); setSkip(''); setReach(false)
-                go({ ...view, posted: '', level: '', type: '', pay: 0, skip: '' }, false)
+                setPosted(''); setLevel(''); setType(''); setMode(''); setPay(''); setSkip(''); setReach(false)
+                go({ ...view, posted: '', level: '', type: '', mode: '', pay: 0, skip: '' }, false)
               }}
             >
               Clear these
