@@ -2,6 +2,18 @@
 
 ---
 
+## 🔶 2026-10-08 — the rebuild: 48 of 133 rows built, on branch `phase-17`, NOTHING DEPLOYED
+
+Scoreboard: `docs/PARITY.md` (`npm run parity` → HAS 48 · PARTIAL 46 · MISSING 39). Built and committed since the last entry: sentence search v2, role-title suggestions with live counts, the four-section fit analysis, tailor-review polish, the profile in five tabs with a settings hub and "Download my data", the product tour and popup governor. **Only you can:**
+
+1. **Say whether to deploy.** It is now ~20 tasks behind `main` (the whole `extension-parity` → `public-job-pages` → `phase-17` stack, migrations 0029–0031 still unapplied). Recommendation unchanged: deploy first, then keep building. Follow `docs/RUNBOOK.md`.
+2. **After a deploy, re-score everyone** (the daily recompute does it). On 2026-10-08 a scorer defect was fixed: a skill like "Excel" had been matched inside "Excellent", so live scores are **a few points high** until the next recompute (`npm run bench:match`: skills average award 34% → 24%).
+3. **Look at the tailor review yourself.** It could not be walked in a browser because your account has no saved résumé and a session should not put résumé data in it. Save one from the ATS checker, open `/resume/tailor`, press Tailor, and check the score strip, change list, style picker and Fit to one page.
+4. **Click "Download my data"** (Profile → Account & data) once and read the file: it was tested but not clicked.
+5. Still open from before, unchanged: paid-plan decision (price, provider, Vercel Pro), a verified email domain, an Apple developer account, a funding-data licence, coaches, employer-issued ATS keys, a lawful source for interview questions, and the database-size budget for US roles.
+
+---
+
 ## 🔶 2026-10-07 — Jobright teardown + build spec done (subproject, nothing deployed, no app code changed)
 
 > ⚠️ **The GitHub repo is PUBLIC.** The 14 teardown files are committed only on the **local** branch `jobright-teardown`, which must **never be pushed** or merged into `main` before counsel reads `docs/jobright-map/10-build-blueprint.local.md` §0 — your own `.gitignore` says competitor research is "not ours to publish". `public-job-pages` carries only the records and `docs/REBUILD-KICKOFF.md` (what to read, preflight, decisions, first task) for the next session.
