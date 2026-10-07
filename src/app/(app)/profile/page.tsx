@@ -49,12 +49,6 @@ export default async function ProfilePage() {
     <AppShell title="Profile & Preferences" eyebrow="Your baseline" initials={initials}>
       <div className="mx-auto max-w-3xl p-5 sm:p-8">
         <PreferencesPanel initial={prefs} health={health} />
-        {/* Header says "Profile & settings"; an eyebrow and a headline saying it
-            again were removed. The one line kept is the one a reader could not
-            work out on their own — that saving re-runs the scoring. */}
-        <p className="mb-8 text-sm text-muted-foreground">
-          Saving re-runs your matches against today&apos;s roles.
-        </p>
         <ProfileForm initial={{
           currentTitle: profile.current_title ?? '',
           employer: profile.employer ?? '',
@@ -76,8 +70,10 @@ export default async function ProfilePage() {
           linkedinUrl: profile.linkedin_url ?? '',
           portfolioUrl: profile.portfolio_url ?? '',
           noticePeriod: profile.notice_period ?? '',
-        }} />
-        <ConnectionsImport count={connections ?? 0} stored={connections !== null} />
+        }}
+          email={user.email ?? ''}
+          accountExtras={<ConnectionsImport count={connections ?? 0} stored={connections !== null} />}
+        />
       </div>
     </AppShell>
   )
