@@ -9,6 +9,7 @@ import {
   trackRole, type ApplicationStatus,
 } from '@/app/actions/applications'
 import { istDay } from '@/lib/day'
+import { closedNote, trackerStats } from '@/lib/tracker-stats'
 import { readJobLink } from '@/app/actions/job-link'
 import { followUpEmail } from '@/lib/copilot-templates'
 import { ScoreRing } from '@/components/ui/score-ring'
@@ -31,6 +32,9 @@ export type Application = {
   salaryNote: string | null
   interviewOn: string | null
   statusChangedAt: string | null
+  // Migration 0035. Null until applied, or until set.
+  appliedVia?: string | null
+  roleClosedAt?: string | null
 }
 
 /**
@@ -236,6 +240,7 @@ export function ApplicationBoard({
 
   const today = istDay()
   const due = rows.filter((r) => r.followUpOn && r.followUpOn <= today && r.status !== 'closed' && r.status !== 'rejected').length
+  const stats = trackerStats(rows, today)
   const open = rows.find((r) => r.id === openId) ?? null
 
   return (
@@ -270,6 +275,33 @@ export function ApplicationBoard({
           </span>
         </div>
       </div>
+
+      {/* The counters: one per stage that has cards, then the three things worth a glance.
+          Counted from the board's own state, so they follow every move and removal. */}
+      {rows.length > 0 ? (
+        <ul aria-label="Tracker counters" className="-mt-2 mb-5 flex flex-wrap gap-2 text-xs">
+          {stats.stages.map((s) => (
+            <li key={s.stage} className="rounded-full bg-secondary px-3 py-1 text-muted-foreground">
+              {s.label} <span className="font-semibold tabular-nums text-primary">{s.count}</span>
+            </li>
+          ))}
+          {stats.appliedThisWeek > 0 ? (
+            <li className="rounded-full bg-secondary px-3 py-1 text-muted-foreground" title="Applications dated in the last 7 days">
+              Applied this week <span className="font-semibold tabular-nums text-primary">{stats.appliedThisWeek}</span>
+            </li>
+          ) : null}
+          {stats.appliedBySaaf > 0 ? (
+            <li className="rounded-full bg-secondary px-3 py-1 text-muted-foreground" title="Submitted by Apply for me; the employer's confirmation was seen">
+              Applied by Saaf <span className="font-semibold tabular-nums text-primary">{stats.appliedBySaaf}</span>
+            </li>
+          ) : null}
+          {stats.postingClosed > 0 ? (
+            <li className="rounded-full bg-secondary px-3 py-1 text-muted-foreground" title="The employer's job board no longer lists these roles">
+              Posting closed <span className="font-semibold tabular-nums text-primary">{stats.postingClosed}</span>
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
 
       {undoable && (
         <p role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-primary">
@@ -364,6 +396,7 @@ function BoardCard({
 }) {
   const overdue = !!r.followUpOn && r.followUpOn < today && r.status !== 'closed' && r.status !== 'rejected'
   const days = daysIn(r)
+  const closed = closedNote(r)
   return (
     <article
       draggable
@@ -384,6 +417,12 @@ function BoardCard({
         <span className="rounded-md bg-secondary px-2 py-0.5 tabular-nums text-muted-foreground" title="Days in this stage">
           {days === 0 ? 'Today' : `${days}d in stage`}
         </span>
+        {r.appliedVia === 'apply-for-me' && r.status !== 'saved' && r.status !== 'applying' ? (
+          <span className="rounded-md bg-brand/15 px-2 py-0.5 text-accent" title="Submitted by Apply for me; the employer's confirmation was seen">Applied by Saaf</span>
+        ) : null}
+        {closed ? (
+          <span className="rounded-md border border-border px-2 py-0.5 text-muted-foreground" title={closed.title}>{closed.label}</span>
+        ) : null}
         {r.interviewOn ? (
           <span className="rounded-md bg-brand/15 px-2 py-0.5 tabular-nums text-accent">Interview {r.interviewOn}</span>
         ) : null}

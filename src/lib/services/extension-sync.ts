@@ -102,7 +102,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
   }
 }
 
-export type QueuedRole = { url: string; title: string; company: string; status: 'saved' | 'applying' | 'applied' }
+export type QueuedRole = { url: string; title: string; company: string; status: 'saved' | 'applying' | 'applied'; via?: 'apply-for-me' | 'manual' }
 
 /** Pipeline order for promotion: a queued stage only ever moves a card forward. */
 const ORDER: Record<string, number> = { saved: 0, applying: 1, applied: 2, interviewing: 3, offer: 4, rejected: 5, closed: 6 }
@@ -124,6 +124,16 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
     existing.set(pageKey(r.apply_url), { id: r.id, status: r.status })
   }
 
+  /**
+   * "Applied by Saaf" (0035): only when the extension's own auto-apply reported
+   * the employer's confirmation. Best-effort and separate from the status write
+   * — before 0035 the column does not exist, and the move is what was asked for.
+   */
+  const stampVia = async (id: string, item: QueuedRole) => {
+    if (!id || item.status !== 'applied' || item.via !== 'apply-for-me') return
+    await supabase.from('applications').update({ applied_via: 'apply-for-me' }).eq('id', id)
+  }
+
   const handled: string[] = []
   let filed = 0
   const now = new Date().toISOString()
@@ -142,11 +152,12 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
           .eq('id', have.id)
         if (error) continue
         have.status = item.status
+        await stampVia(have.id, item)
       }
       handled.push(item.url)
       continue
     }
-    const { error } = await supabase.from('applications').insert({
+    const { data: inserted, error } = await supabase.from('applications').insert({
       user_id: userId,
       role_id: null,
       company: item.company,
@@ -154,9 +165,10 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
       apply_url: item.url,
       status: item.status,
       ...(item.status === 'applied' ? { applied_on: now.slice(0, 10) } : {}),
-    })
+    }).select('id').single()
     if (error) continue
-    existing.set(key, { id: '', status: item.status })
+    if (inserted) await stampVia((inserted as { id: string }).id, item)
+    existing.set(key, { id: (inserted as { id: string } | null)?.id ?? '', status: item.status })
     handled.push(item.url)
     filed++
   }

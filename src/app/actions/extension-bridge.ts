@@ -34,6 +34,7 @@ const queueSchema = z.array(z.object({
   title: z.string().min(1).max(300),
   company: z.string().min(1).max(200),
   status: z.enum(['saved', 'applying', 'applied']),
+  via: z.enum(['apply-for-me', 'manual']).optional(),
 })).max(50)
 
 export async function fileFromExtension(input: z.input<typeof queueSchema>) {

@@ -194,10 +194,12 @@ async function logResult(job, status, reason) {
   await chrome.storage.local.set({ autoApplyLog: autoApplyLog.slice(0, 50) })
 }
 
-async function queueForTracker(job, status) {
+async function queueForTracker(job, status, via) {
   const { pendingTrack = [] } = await chrome.storage.local.get('pendingTrack')
   const i = pendingTrack.findIndex((p) => p.url === job.url)
-  const row = { url: job.url, title: job.title, company: job.company, status, at: new Date().toISOString() }
+  // `via` is set only by "Apply for me", and only the tracker's "Applied" reads it —
+  // so a candidate's own submit is never credited to the extension.
+  const row = { url: job.url, title: job.title, company: job.company, status, via, at: new Date().toISOString() }
   if (i === -1) pendingTrack.push(row)
   else if (RANK[status] > RANK[pendingTrack[i].status]) pendingTrack[i] = row
   await chrome.storage.local.set({ pendingTrack: pendingTrack.slice(-50) })
@@ -245,11 +247,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const { autoApplyDay = {} } = await chrome.storage.local.get('autoApplyDay')
         const count = autoApplyDay.date === today() ? autoApplyDay.count : 0
         await chrome.storage.local.set({ autoApplyDay: { date: today(), count: count + 1 } })
-        await queueForTracker(job, 'applied')
+        await queueForTracker(job, 'applied', 'apply-for-me')
         setTimeout(() => chrome.tabs.remove(sender.tab.id).catch(() => {}), 3000)
       } else {
         // Left open for the candidate, and filed as Applying — never Applied.
-        await queueForTracker(job, 'applying')
+        await queueForTracker(job, 'applying', 'apply-for-me')
       }
       sendResponse({ ok: true })
       setTimeout(() => { processNext() }, 4000)

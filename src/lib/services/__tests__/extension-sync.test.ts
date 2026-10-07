@@ -12,7 +12,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     from: () => ({
       select: () => ({ not: async () => ({ data: db.rows }) }),
-      insert: async (row: Record<string, unknown>) => { db.inserts.push(row); return { error: null } },
+      insert: (row: Record<string, unknown>) => {
+        db.inserts.push(row)
+        return { select: () => ({ single: async () => ({ data: { id: `new-${db.inserts.length}` }, error: null }) }) }
+      },
       update: (patch: Record<string, unknown>) => ({
         eq: async (_col: string, id: string) => { db.updates.push({ id, patch }); return { error: null } },
       }),
@@ -24,7 +27,7 @@ const { fileQueuedRoles, pageKey } = await import('../extension-sync')
 
 beforeEach(() => { db.rows = []; db.inserts = []; db.updates = [] })
 
-const item = (url: string, status: 'saved' | 'applying' = 'saved') => ({ url, title: 'PM', company: 'Acme', status })
+const item = (url: string, status: 'saved' | 'applying' | 'applied' = 'saved', via?: 'apply-for-me' | 'manual') => ({ url, title: 'PM', company: 'Acme', status, ...(via ? { via } : {}) })
 
 describe('fileQueuedRoles', () => {
   it('files a new role in the stage it was queued in', async () => {
@@ -53,6 +56,26 @@ describe('fileQueuedRoles', () => {
     const res = await fileQueuedRoles('u1', [item('https://x.io/j/1'), item('https://x.io/j/1/')])
     expect(res.filed).toBe(1)
     expect(db.inserts).toHaveLength(1)
+  })
+})
+
+describe('fileQueuedRoles — "Applied by Saaf" (0035)', () => {
+  it('credits Apply for me when it filed an Applied role', async () => {
+    await fileQueuedRoles('u1', [item('https://jobs.lever.co/acme/9', 'applied', 'apply-for-me')])
+    expect(db.updates).toEqual([{ id: 'new-1', patch: { applied_via: 'apply-for-me' } }])
+  })
+
+  it('credits it when Apply for me promotes an existing card to Applied', async () => {
+    db.rows = [{ id: 'a', apply_url: 'https://jobs.lever.co/acme/9', status: 'applying' }]
+    await fileQueuedRoles('u1', [item('https://jobs.lever.co/acme/9', 'applied', 'apply-for-me')])
+    expect(db.updates.map((u) => u.patch)).toEqual([expect.objectContaining({ status: 'applied' }), { applied_via: 'apply-for-me' }])
+  })
+
+  it('never credits the extension for a candidate\'s own submit, or for a role it only opened', async () => {
+    await fileQueuedRoles('u1', [
+      item('https://x.io/j/1', 'applied'), item('https://x.io/j/2', 'applied', 'manual'), item('https://x.io/j/3', 'applying', 'apply-for-me'),
+    ])
+    expect(db.updates).toEqual([])
   })
 })
 

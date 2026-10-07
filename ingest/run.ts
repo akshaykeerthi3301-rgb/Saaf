@@ -15,7 +15,7 @@ import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 import { pool } from './pool'
-import { collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
+import { closureChanges, collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
 import { chunk, pageAll } from './paging'
 
 const PRUNE_DAYS = 30
@@ -263,6 +263,14 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
     console.warn('  roles.first_posted_at is missing — run supabase/migrations/0032_role_reposts.sql. Reposts are not being recorded.')
   }
 
+  // And for 0035: roles.closed_at + applications.role_closed_at (a role the board stopped listing).
+  const hasClosed =
+    !(await db.from('roles').select('closed_at').limit(1)).error &&
+    !(await db.from('applications').select('role_closed_at').limit(1)).error
+  if (!hasClosed) {
+    console.warn('  roles.closed_at is missing — run supabase/migrations/0035_tracker_signals.sql. Taken-down postings are not being recorded.')
+  }
+
   // Least-recently-ingested first, so a run that runs out of budget resumes
   // where it stopped instead of re-fetching the same head of the list. Paged,
   // because the unlimited select silently stopped at 1,000 boards — which is
@@ -285,6 +293,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
   let partial = 0
   let undescribed = 0
   let retiredCopies = 0
+  let closedPostings = 0
 
   /**
    * When every board must have stopped fetching.
@@ -363,6 +372,38 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       const noDescription = await fillDescriptions(b.provider, b.token, india, deadline)
       if (noDescription) undescribed += noDescription
 
+      /**
+       * What this board already stores, read BEFORE the upsert.
+       *
+       * Two things need it and both lose it to the upsert: the repost history
+       * (the survivor's own first_posted_at is about to be overwritten) and the
+       * stale copies to retire below (the upsert adds the survivor, so the
+       * orphans are the stored rows it does not name). Read once, here. Only
+       * when one of them will use it — the retirement is for complete fetches
+       * with time left, exactly as before.
+       */
+      const mayRetire = complete && Date.now() < deadline && india.length > 0
+      // ⚠️ NEVER FROM AN EMPTY LISTING. A board that answers 200 with no jobs during an
+      // outage looks "complete" and would stamp every role it holds as taken down — on
+      // every tracked card as well. A board that really closed its last posting waits
+      // for the 30-day prune like before.
+      const mayClose = hasClosed && complete && Date.now() < deadline && roles.length > 0
+      type Stored = { id: string; external_id: string; title: string; location_raw: string | null; posted_at?: string | null; first_posted_at?: string | null; repost_count?: number; closed_at?: string | null }
+      const stored: Stored[] = mayRetire || mayClose || (hasRepost && india.length > 0)
+        ? await pageAll<Stored>((from, to) => db.from('roles')
+            .select<string, Stored>(['id, external_id, title, location_raw', ...(hasRepost ? ['posted_at, first_posted_at, repost_count'] : []), ...(hasClosed ? ['closed_at'] : [])].join(', '))
+            .eq('board_id', b.id).order('id').range(from, to))
+        : []
+      const history = hasRepost && india.length > 0
+        ? repostHistory(byExternalId, stored.map((r) => ({
+            externalId: r.external_id, title: r.title, locationRaw: r.location_raw ?? '',
+            postedAt: r.posted_at ?? null, firstPostedAt: r.first_posted_at ?? null, repostCount: r.repost_count ?? 0,
+          })))
+        : null
+
+      // Stored copies the retirement below deletes — a replaced copy is not a closed posting.
+      const orphanIds = new Set<string>()
+
       if (india.length) {
         // Extracted once and reused for both the role row and its requirements
         // — the flag below needs the extraction result, and running it twice
@@ -370,30 +411,6 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
         const extracted = new Map(
           india.map((r) => [r.externalId, extractAll(r.description, r.locationRaw, r.title)])
         )
-
-        /**
-         * What this board already stores, read BEFORE the upsert.
-         *
-         * Two things need it and both lose it to the upsert: the repost history
-         * (the survivor's own first_posted_at is about to be overwritten) and the
-         * stale copies to retire below (the upsert adds the survivor, so the
-         * orphans are the stored rows it does not name). Read once, here. Only
-         * when one of them will use it — the retirement is for complete fetches
-         * with time left, exactly as before.
-         */
-        const mayRetire = complete && Date.now() < deadline
-        type Stored = { id: string; external_id: string; title: string; location_raw: string | null; posted_at?: string | null; first_posted_at?: string | null; repost_count?: number }
-        const stored: Stored[] = mayRetire || hasRepost
-          ? await pageAll<Stored>((from, to) => db.from('roles')
-              .select<string, Stored>(hasRepost ? 'id, external_id, title, location_raw, posted_at, first_posted_at, repost_count' : 'id, external_id, title, location_raw')
-              .eq('board_id', b.id).order('id').range(from, to))
-          : []
-        const history = hasRepost
-          ? repostHistory(byExternalId, stored.map((r) => ({
-              externalId: r.external_id, title: r.title, locationRaw: r.location_raw ?? '',
-              postedAt: r.posted_at ?? null, firstPostedAt: r.first_posted_at ?? null, repostCount: r.repost_count ?? 0,
-            })))
-          : null
 
         // Chunked. The returned representation is capped at 1,000 rows, so a
         // single upsert of a large Workday board came back short and every role
@@ -421,6 +438,8 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
                 extracted.get(r.externalId) ?? []
               ),
               last_seen_at: new Date().toISOString(),
+              // Listed today, so not closed — clears a posting that reappeared (0035).
+              ...(hasClosed ? { closed_at: null } : {}),
               // Only once 0032 exists — one unknown column fails the whole batch.
               // Both keys on EVERY row: a bulk upsert with differing keys writes
               // NULL for the missing one, and repost_count is NOT NULL.
@@ -494,12 +513,38 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
               !keptIds.has(r.external_id) &&
               keptKeys.has(`${r.title.toLowerCase()}||${(r.location_raw ?? '').toLowerCase()}`))
             .map((r) => r.id)
+          for (const id of orphans) orphanIds.add(id)
           for (const part of chunk(orphans, 100)) {
             const { error: oErr } = await db.from('roles').delete().in('id', part)
             if (oErr) throw oErr
           }
           retiredCopies += orphans.length
         }
+      }
+
+      /**
+       * Postings the employer took down (0035). A COMPLETE fetch is the whole of
+       * what the board lists, so a stored role it does not name has been removed.
+       * Judged against the raw list, before the India and corporate filters — a
+       * role that merely stopped passing a filter is not closed — and never an
+       * orphan copy the retirement above just replaced.
+       *
+       * Stamped on the application too: the 30-day prune deletes the role and
+       * nulls applications.role_id, and a tracked card must still be able to say
+       * its posting is gone. A reappearing role is cleared on both.
+       */
+      if (mayClose) {
+        const listed = new Set(roles.map((r) => r.externalId))
+        const now = new Date().toISOString()
+        const { gone, reopened } = closureChanges(stored, listed, orphanIds)
+        for (const part of chunk(gone, 100)) {
+          await db.from('roles').update({ closed_at: now }).in('id', part)
+          await db.from('applications').update({ role_closed_at: now }).in('role_id', part).is('role_closed_at', null)
+        }
+        for (const part of chunk(reopened, 100)) {
+          await db.from('applications').update({ role_closed_at: null }).in('role_id', part)
+        }
+        closedPostings += gone.length
       }
 
       await db.from('boards').update({
@@ -604,6 +649,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
     `${partial ? ` · ${partial} partial` : ''}` +
     `${undescribed ? ` · ${undescribed} roles left undescribed for time` : ''}` +
     `${retiredCopies ? ` · ${retiredCopies} superseded repeat postings retired` : ''}` +
+    `${closedPostings ? ` · ${closedPostings} postings the employer took down` : ''}` +
     `${skipped ? ` · ${skipped} skipped for time, first up next run` : ''}` +
     ` · ${Math.round((Date.now() - started) / 1000)}s`
   )

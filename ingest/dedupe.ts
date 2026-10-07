@@ -103,3 +103,26 @@ export function repostHistory(
   }
   return out
 }
+
+/**
+ * Which stored roles a COMPLETE fetch says the employer has taken down, and
+ * which previously-closed ones it has put back.
+ *
+ * `listed` is the board's own list of external ids, BEFORE the India and
+ * corporate filters — a role that merely stopped passing a filter is not closed.
+ * `replaced` are stored copies the ingest is deleting in favour of a surviving
+ * duplicate; they are not closed postings, they are the same posting.
+ *
+ * The caller must pass this only for a complete read: a short read proves nothing
+ * about what was removed.
+ */
+export function closureChanges(
+  stored: { id: string; external_id: string; closed_at?: string | null }[],
+  listed: Set<string>,
+  replaced: Set<string>,
+): { gone: string[]; reopened: string[] } {
+  return {
+    gone: stored.filter((r) => !listed.has(r.external_id) && !r.closed_at && !replaced.has(r.id)).map((r) => r.id),
+    reopened: stored.filter((r) => r.closed_at && listed.has(r.external_id)).map((r) => r.id),
+  }
+}

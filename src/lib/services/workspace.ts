@@ -113,6 +113,21 @@ export async function readApplicationRecords(): Promise<{ records: Map<string, A
   return { records, stored: !error }
 }
 
+/** The 0035 signals of an application, keyed by application id. */
+export type TrackerSignal = { appliedVia: string | null; roleClosedAt: string | null }
+
+/** Its own query: an unknown column fails a whole select, and the board must still load without 0035. */
+export async function readTrackerSignals(): Promise<Map<string, TrackerSignal>> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('applications').select('id, applied_via, role_closed_at')
+  const out = new Map<string, TrackerSignal>()
+  if (error) return out
+  for (const r of (data ?? []) as unknown as { id: string; applied_via: string | null; role_closed_at: string | null }[]) {
+    out.set(r.id, { appliedVia: r.applied_via, roleClosedAt: r.role_closed_at })
+  }
+  return out
+}
+
 /**
  * role_id → tracker stage, for every indexed role the candidate has tracked.
  * The feed and the job panel read it so a card says "On tracker · Applied"

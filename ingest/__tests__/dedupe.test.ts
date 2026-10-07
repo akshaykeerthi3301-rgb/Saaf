@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { collapseRepeats, repostHistory, survivorId } from '../dedupe'
+import { closureChanges, collapseRepeats, repostHistory, survivorId } from '../dedupe'
 
 const role = (externalId: string, title: string, locationRaw: string) =>
   ({ externalId, title, locationRaw, description: '', applyUrl: '', postedAt: null })
@@ -107,5 +107,33 @@ describe('repostHistory', () => {
   it('keeps two cities apart', () => {
     const h = repostHistory([r('a1', '2026-08-01', 'Analyst', 'Pune'), r('a2', '2026-09-01', 'Analyst', 'Delhi')])
     expect(h.size).toBe(0)
+  })
+})
+
+describe('closureChanges', () => {
+  const stored = [
+    { id: '1', external_id: 'a' }, { id: '2', external_id: 'b' }, { id: '3', external_id: 'c', closed_at: '2026-10-01' },
+    { id: '4', external_id: 'd', closed_at: '2026-10-01' },
+  ]
+
+  it('closes a stored role the complete board listing no longer names', () => {
+    expect(closureChanges(stored, new Set(['a', 'd']), new Set()).gone).toEqual(['2'])
+  })
+
+  it('does not re-close one that is already closed, so the first date is kept', () => {
+    expect(closureChanges(stored, new Set(['a', 'b']), new Set()).gone).toEqual([])
+  })
+
+  it('reopens one that reappears', () => {
+    expect(closureChanges(stored, new Set(['a', 'b', 'd']), new Set()).reopened).toEqual(['4'])
+  })
+
+  it('does not call a replaced duplicate closed — it is the same posting under a newer id', () => {
+    expect(closureChanges(stored, new Set(['a']), new Set(['2'])).gone).toEqual([])
+  })
+
+  it('closes nothing from an empty listing that is claimed complete only if the caller says so — it is the caller\'s guard', () => {
+    // Documented rather than defended here: the ingest calls this only for a complete fetch.
+    expect(closureChanges(stored, new Set(), new Set()).gone).toEqual(['1', '2'])
   })
 })

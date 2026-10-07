@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationBoard, type Application } from '@/components/features/application-board'
-import { readApplicationRecords } from '@/lib/services/workspace'
+import { readApplicationRecords, readTrackerSignals } from '@/lib/services/workspace'
 import { listResumes } from '@/lib/services/resume-documents'
 
 /**
@@ -47,9 +47,10 @@ export default async function ApplicationsPage() {
 
   // The 0028 record fields and the saved résumé labels, both read through
   // services and both soft: a missing migration or table leaves the board working.
-  const [{ records, stored }, resumes] = await Promise.all([
+  const [{ records, stored }, resumes, signals] = await Promise.all([
     readApplicationRecords(),
     listResumes(user.id).catch(() => []),
+    readTrackerSignals(),
   ])
 
   const rows: Application[] = (data ?? []).map((r) => ({
@@ -67,6 +68,8 @@ export default async function ApplicationsPage() {
     salaryNote: records.get(r.id)?.salaryNote ?? null,
     interviewOn: records.get(r.id)?.interviewOn ?? null,
     statusChangedAt: records.get(r.id)?.statusChangedAt ?? null,
+    appliedVia: signals.get(r.id)?.appliedVia ?? null,
+    roleClosedAt: signals.get(r.id)?.roleClosedAt ?? null,
   }))
 
   // From the signed-in address rather than a second query just for two letters.
