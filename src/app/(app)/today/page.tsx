@@ -26,6 +26,8 @@ import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyF
 import { FeedSearch, HideRole } from '@/components/features/feed-controls'
 import { AllFiltersDrawer } from '@/components/features/feed-filter-drawer'
 import { PillMenu } from '@/components/features/pill-menu'
+import { SavedSearchesMenu } from '@/components/features/saved-searches-menu'
+import { readSavedSearches } from '@/lib/services/saved-searches'
 
 /** The work-mode preference, in the words the chip row uses. */
 const WORK_MODE_LABEL: Record<string, string> = {
@@ -92,7 +94,7 @@ export default async function TodayPage({
 
   // The profile and the shortlist are independent reads, so they run together:
   // four round trips in sequence used to precede every render (QA-02).
-  const [{ data: profile }, shortlist, feedPrefs] = await Promise.all([
+  const [{ data: profile }, shortlist, feedPrefs, savedSearches] = await Promise.all([
     supabase
       .from('profiles')
       .select('preferred_role, preferred_roles, open_to_adjacent, confirmed_at, city, work_mode_preference, years_experience')
@@ -100,6 +102,7 @@ export default async function TodayPage({
       .single(),
     readShortlist(user.id),
     readFeedPrefs(user.id),
+    readSavedSearches(user.id),
   ])
 
   // Scores never run against an unconfirmed profile, so there would be nothing
@@ -747,6 +750,8 @@ export default async function TodayPage({
                 </span>
               ) : null}
             </p>
+            <div className="flex items-center gap-2">
+            <SavedSearchesMenu searches={savedSearches.searches} current={savedSearches.current} stored={savedSearches.stored} />
             <PillMenu
               align="right"
               label={`Sort: ${byNewest ? 'Newest' : 'Best match'}`}
@@ -755,6 +760,7 @@ export default async function TodayPage({
                 { label: 'Newest', href: hrefFor({ ...view, sort: 'new' }), selected: byNewest },
               ]}
             />
+            </div>
           </div>
           {holding.kind !== 'complete' && !onlyNew ? (
             <p className="mb-4 text-xs leading-5 text-muted-foreground">
