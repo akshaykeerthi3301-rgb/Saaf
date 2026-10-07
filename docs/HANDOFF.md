@@ -2,6 +2,15 @@
 
 ---
 
+## 🔶 2026-10-08 (later) — the feed redesign is LIVE: `dpl_9sX4KDQm9YnKcQkMa31eLmiKN6ST`
+
+**Deployed 2026-10-08 03:01 IST** — TASK-211: the compact icon rail, one top row of tabs and search, one row of filter pills, the All-filters drawer, the card inside its four-row budget, and the tabbed detail panel. Checked live as an anonymous visitor (same checks as the earlier deploy, all passing): signed-in routes redirect to `/signin`, `/api/dev-signin` is 404, 5,000 job pages in the sitemap and one returns 200. **Not checked live:** the signed-in screens themselves (they need a magic link) — they were walked on localhost. **Only you can:**
+
+1. **Open it signed in and tell me what still feels wrong.** The structure now follows the teardown's layout; the look is still Saaf's own dark system. If you want the light grey / white-card look, say so — a light theme is already defined in `globals.css`.
+2. Everything in the entry below this one still applies (apply migrations 0029–0031, reload the extension, save a résumé to see the tailor review).
+
+---
+
 ## 🔶 2026-10-08 — the rebuild is LIVE: 48 of 133 rows, `dpl_F98hGDXtJMUeGWvUUL64NAC7gDRo`
 
 **Deployed 2026-10-08 01:48 IST to https://saaf-ten.vercel.app** — the whole stack since Phase 12 (extension parity, public job pages, feed preferences, the eight "blocked" gaps, and Phase 17 so far). `main` is fast-forwarded to it locally and **not pushed**. Scoreboard: `docs/PARITY.md` (`npm run parity` → HAS 48 · PARTIAL 46 · MISSING 39). Checked live as an anonymous visitor: `/today`, `/applications`, `/profile`, `/resume/tailor`, `/coaching` all redirect to `/signin`; `/api/dev-signin` is 404; the sitemap lists 5,000 public job pages and one returns 200 with `JobPosting` data; the ATS checker, `/audit`, `/api/audit/today` and the extension scoring API respond. **Not checked live:** anything behind sign-in (it needs a magic link to your inbox) — look at it yourself. **Only you can:**
