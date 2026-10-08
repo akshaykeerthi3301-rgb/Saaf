@@ -26,7 +26,7 @@ chrome.storage.local.get(['resumeText', 'profile', 'resumeFile', 'syncedAt']).th
     el.value = v
   }
   if (resumeFile) $('fileName').textContent = `Stored: ${resumeFile.name}`
-  if (syncedAt) $('sync').textContent = `Synced from Saaf ${new Date(syncedAt).toLocaleString()}`
+  if (syncedAt) $('sync').textContent = `Synced from Jobinko ${new Date(syncedAt).toLocaleString()}`
 })
 
 /** The file as base64, so it can live in chrome.storage and be rebuilt as a File. */
@@ -68,11 +68,11 @@ async function renderAutoApply() {
     await chrome.storage.local.get(['autoApply', 'autoApplyQueue', 'autoApplyLog', 'autoApplyDay'])
   const todayCount = autoApplyDay.date === new Date().toISOString().slice(0, 10) ? autoApplyDay.count : 0
   $('aaEnabled').checked = !!autoApply.enabled
-  $('aaStatus').textContent = `${autoApplyQueue.length} queued · ${todayCount} of 25 applied today. Queue jobs with "Apply for me" on any job in Saaf.`
-  // Saaf's remote switch: when applications are paused, say so and do not offer Start.
+  $('aaStatus').textContent = `${autoApplyQueue.length} queued · ${todayCount} of 25 applied today. Queue jobs with "Apply for me" on any job in Jobinko.`
+  // Jobinko's remote switch: when applications are paused, say so and do not offer Start.
   const gate = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-gate' }).catch(() => null)
   $('aaPaused').hidden = !gate?.paused
-  $('aaPaused').textContent = gate?.paused ? `Paused by Saaf — ${gate.message}` : ''
+  $('aaPaused').textContent = gate?.paused ? `Paused by Jobinko — ${gate.message}` : ''
   $('aaStart').disabled = !autoApply.enabled || !autoApplyQueue.length || !!gate?.paused
   // The queue itself: what will be opened next, each removable. Order is the order it runs in.
   $('aaQueue').innerHTML = autoApplyQueue.slice(0, 12).map((q, i) =>
@@ -118,12 +118,12 @@ renderAutoApply()
 
 // --------------------------------------------------------------- This site
 /**
- * What Saaf does on the tab you are looking at, and — for a site it does not run on — a button
+ * What Jobinko does on the tab you are looking at, and — for a site it does not run on — a button
  * to ask for it. Only the HOSTNAME is kept (never the URL or anything on the page), and it is
- * filed in Saaf the next time you open it signed in (service-worker.js, saaf:drain).
+ * filed in Jobinko the next time you open it signed in (service-worker.js, saaf:drain).
  * The popup can read the tab's address because opening it grants `activeTab` for that tab.
  */
-const NEVER_ASK = /(^|\.)(linkedin\.com|naukri\.com|saaf-ten\.vercel\.app)$/
+const NEVER_ASK = /(^|\.)(linkedin\.com|naukri\.com|jobinko\.in|saaf-ten\.vercel\.app)$/
 async function renderSite() {
   const msg = $('siteMsg'), btn = $('siteAsk')
   btn.hidden = true
@@ -134,16 +134,16 @@ async function renderSite() {
     if (/^https?:$/.test(u.protocol)) host = u.hostname.toLowerCase().replace(/\.$/, '')
   } catch { /* a page with no address (a new tab) */ }
   if (!host || host === 'localhost' || /^[\d.]+$/.test(host) || !host.includes('.')) {
-    msg.textContent = 'Open a job page and then this popup, to see how Saaf handles that site.'
+    msg.textContent = 'Open a job page and then this popup, to see how Jobinko handles that site.'
     return
   }
   const ats = globalThis.SaafExtract?.detectAts(host)
-  if (ats) { msg.textContent = `${ats} — Saaf runs on this site. How well each site has been checked: saaf-ten.vercel.app/extension`; return }
-  if (NEVER_ASK.test(host)) { msg.textContent = 'Saaf does not run on this site, on purpose.'; return }
+  if (ats) { msg.textContent = `${ats} — Jobinko runs on this site. How well each site has been checked: jobinko.in/extension`; return }
+  if (NEVER_ASK.test(host)) { msg.textContent = 'Jobinko does not run on this site, on purpose.'; return }
   const { requestedSites = [] } = await chrome.storage.local.get('requestedSites')
-  if (requestedSites.includes(host)) { msg.textContent = `You asked Saaf to support ${host}. It is sent the next time you open Saaf signed in.`; return }
-  msg.textContent = `${host} is not a site Saaf runs on yet.`
-  btn.textContent = `Ask Saaf to support ${host}`
+  if (requestedSites.includes(host)) { msg.textContent = `You asked Jobinko to support ${host}. It is sent the next time you open Jobinko signed in.`; return }
+  msg.textContent = `${host} is not a site Jobinko runs on yet.`
+  btn.textContent = `Ask Jobinko to support ${host}`
   btn.hidden = false
   btn.onclick = async () => {
     const { requestedSites: have = [] } = await chrome.storage.local.get('requestedSites')

@@ -1,5 +1,5 @@
 /**
- * Saaf extension — deterministic ATS form autofill.
+ * Jobinko extension — deterministic ATS form autofill.
  *
  * ⚠️ ZERO TOKENS, BY CONSTRUCTION. This is a mapping from stored profile fields
  * to form inputs. No model is involved and none should be: Groq's free tier is
@@ -8,7 +8,7 @@
  * generative autofill would be inoperable at 100 users; this one is free at any
  * number.
  *
- * ⚠️ IT FILLS, IT NEVER SUBMITS. The locked decision is that Saaf never applies
+ * ⚠️ IT FILLS, IT NEVER SUBMITS. The locked decision is that Jobinko never applies
  * on the candidate's behalf. Assisted application is in scope and automatic
  * application never is. The only things this module ever clicks are the radio,
  * tick-box or dropdown OPTION it chose — never a button, a link, or anything
@@ -42,11 +42,11 @@
  *
  * ⚠️ A CUSTOM QUESTION IS ANSWERED ONLY WITH WORDS THE CANDIDATE WROTE FOR THAT
  * EXACT QUESTION (2026-10-08, TASK-194). Employers add their own free-text
- * questions ("Why Razorpay?"). The candidate can write an answer in Saaf once;
+ * questions ("Why Razorpay?"). The candidate can write an answer in Jobinko once;
  * it is filled only when a form asks the same question — compared after
  * lower-casing and dropping punctuation, never "similar", never a model's
  * guess. A required question with no saved answer is not guessed either: it is
- * reported back so the candidate can answer it in Saaf, and filled next time.
+ * reported back so the candidate can answer it in Jobinko, and filled next time.
  * Demographic, credential and consent questions never come from this bank, and
  * Apply for me uses an answer only if the candidate ticked it for that.
  *
@@ -630,7 +630,7 @@
         const entry = q && profile.answerBank ? profile.answerBank[questionKey(q)] : null
         if (el.value && el.value.trim()) { out.skipped++; continue }
         if (entry && entry.a) {
-          if (opts.mode === 'auto' && !entry.auto) { refuse('a question you answered in Saaf, but not for Apply for me — left for you'); continue }
+          if (opts.mode === 'auto' && !entry.auto) { refuse('a question you answered in Jobinko, but not for Apply for me — left for you'); continue }
           setNativeValue(el, entry.a)
           out.filled.push({ key: 'answer', value: entry.a.length > 60 ? entry.a.slice(0, 57) + '…' : entry.a, how: 'typed' })
           continue

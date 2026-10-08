@@ -1,16 +1,16 @@
 /**
- * Saaf extension — the only place that touches the network.
+ * Jobinko extension — the only place that touches the network.
  *
  * ⚠️ THE NETWORK CALL LIVES HERE AND NOT IN THE CONTENT SCRIPT, FOR A REASON
  * THAT IS ARCHITECTURAL RATHER THAN STYLISTIC. A content script's fetch runs in
- * the PAGE's origin, so it is subject to CORS — and the Saaf app has no CORS
+ * the PAGE's origin, so it is subject to CORS — and the Jobinko app has no CORS
  * layer anywhere, by design. An extension background context with
  * `host_permissions` is not subject to CORS, so routing every request through
  * here means the web app never has to open a cross-origin surface to serve the
  * extension. The endpoint still sets permissive headers, but nothing depends on
  * them.
  */
-const ENDPOINT = 'https://saaf-ten.vercel.app/api/extension/score'
+const ENDPOINT = 'https://jobinko.in/api/extension/score'
 
 /**
  * Who may talk to the extension from a web page. manifest.json's
@@ -18,7 +18,7 @@ const ENDPOINT = 'https://saaf-ten.vercel.app/api/extension/score'
  * repeated here because a manifest edit that widens the list should not
  * silently widen who can write the candidate's profile.
  */
-const SAAF_ORIGINS = ['https://saaf-ten.vercel.app']
+const SAAF_ORIGINS = ['https://jobinko.in', 'https://saaf-ten.vercel.app']
 /**
  * localhost is trusted only in the unpacked development copy. A store-installed
  * extension carries `update_url` in its manifest; an unpacked one does not.
@@ -40,7 +40,7 @@ const RANK = { saved: 0, applying: 1, applied: 2 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   // A role the candidate saved or filled on a job site. Held here until the
-  // Saaf web app, open and signed in, collects it (saaf:drain below) — the
+  // Jobinko web app, open and signed in, collects it (saaf:drain below) — the
   // extension holds no session, so it never writes to the tracker itself.
   if (msg?.type === 'saaf:queue') {
     ;(async () => {
@@ -62,8 +62,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   // Required questions a form asked that the candidate has no saved answer for.
-  // Held here until the Saaf web app collects them (saaf:drain); the candidate
-  // answers them in Saaf and the next form that asks the same question is filled.
+  // Held here until the Jobinko web app collects them (saaf:drain); the candidate
+  // answers them in Jobinko and the next form that asks the same question is filled.
   if (msg?.type === 'saaf:questions') {
     ;(async () => {
       const { pendingQuestions = [] } = await chrome.storage.local.get('pendingQuestions')
@@ -80,7 +80,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   // "Tailor my résumé" on a posting. The extension calls no model and holds no session, so it hands
-  // the posting to Saaf's own tailoring tool: the text waits here for ten minutes, one time, and the
+  // the posting to Jobinko's own tailoring tool: the text waits here for ten minutes, one time, and the
   // tool it opens collects it (saaf:take-jd). Nothing leaves the browser in this step.
   if (msg?.type === 'saaf:tailor-open') {
     ;(async () => {
@@ -99,7 +99,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     try {
       const { resumeText } = await chrome.storage.local.get('resumeText')
       if (!resumeText || resumeText.trim().length < 120) {
-        sendResponse({ ok: false, error: 'Add your résumé to Saaf first — click the extension icon.' })
+        sendResponse({ ok: false, error: 'Add your résumé to Jobinko first — click the extension icon.' })
         return
       }
 
@@ -119,7 +119,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       })
       sendResponse(await res.json())
     } catch {
-      sendResponse({ ok: false, error: 'Could not reach Saaf.' })
+      sendResponse({ ok: false, error: 'Could not reach Jobinko.' })
     }
   })()
 
@@ -129,18 +129,18 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 })
 
 /**
- * The web app ↔ extension bridge. Only Saaf's own pages reach this.
+ * The web app ↔ extension bridge. Only Jobinko's own pages reach this.
  *
  *  saaf:hello  → is the extension installed, and which version
  *  saaf:sync   ← profile fields, résumé text and the tracker's url→stage list,
  *                pushed by the signed-in app on load
  *  saaf:drain  → the roles queued on job sites since the last visit, and the
  *                required custom questions forms asked that have no saved answer,
- *                and the hostnames the candidate asked Saaf to support
+ *                and the hostnames the candidate asked Jobinko to support
  *  saaf:ack    ← those the app has filed, so they are not filed twice
  *  saaf:ack-questions ← the questions the app has put on file
  *  saaf:ack-sites     ← the "support this site" requests the app has put on file
- *  saaf:take-jd       → the posting "Tailor my résumé" left for Saaf's tailoring tool (once, ≤10 min)
+ *  saaf:take-jd       → the posting "Tailor my résumé" left for Jobinko's tailoring tool (once, ≤10 min)
  *
  * ⚠️ SYNC FILLS, IT DOES NOT ERASE. A field the web profile leaves blank keeps
  * whatever the candidate typed into the extension, and the fields only the
@@ -265,26 +265,26 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
 const DAILY_CAP = 25
 
 /**
- * Saaf's remote kill switch. If an application goes out wrong for anyone, the
+ * Jobinko's remote kill switch. If an application goes out wrong for anyone, the
  * founder sets one flag (docs/RUNBOOK.md) and every extension stops submitting
  * on its next check — it is asked before each job is opened AND again just
  * before each Submit click, so a run already in progress stops too.
  *
- * ⚠️ FAILS OPEN, ON PURPOSE AND SAID HERE. If Saaf cannot be reached the check
+ * ⚠️ FAILS OPEN, ON PURPOSE AND SAID HERE. If Jobinko cannot be reached the check
  * returns "not paused": the run is the candidate's own, started by their own
  * press of Start, against an employer's site that does not depend on ours. A
- * switch that also stopped everyone whenever Saaf had an outage would be a
+ * switch that also stopped everyone whenever Jobinko had an outage would be a
  * second way to fail, not a safety. The cost: a kill switch cannot reach a
  * browser that is offline — and an offline browser cannot submit anything.
  */
-const STATUS_URL = 'https://saaf-ten.vercel.app/api/extension/status'
+const STATUS_URL = 'https://jobinko.in/api/extension/status'
 async function pausedBySaaf() {
   try {
     const res = await fetch(STATUS_URL, { cache: 'no-store', signal: AbortSignal.timeout(4000) })
     if (!res.ok) return { paused: false }
     const body = await res.json()
     return body && body.applyForMe === 'paused'
-      ? { paused: true, message: String(body.message || 'Apply for me is paused by Saaf').slice(0, 200) }
+      ? { paused: true, message: String(body.message || 'Apply for me is paused by Jobinko').slice(0, 200) }
       : { paused: false }
   } catch {
     return { paused: false }

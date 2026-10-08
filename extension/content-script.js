@@ -1,5 +1,5 @@
 /**
- * Saaf extension — reads the posting on screen and renders the score.
+ * Jobinko extension — reads the posting on screen and renders the score.
  *
  * ⚠️ IT TOUCHES THE NETWORK NEVER, AND THE PAGE'S DATA ONLY. It reads the
  * active document (extractor.js), hands the text to the service worker, and
@@ -15,7 +15,7 @@
  * quote shown under the score is text read out of the host page; written raw,
  * a posting containing markup would render it inside our card, on their page.
  */
-const SITE = 'https://saaf-ten.vercel.app'
+const SITE = 'https://jobinko.in'
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
@@ -83,7 +83,7 @@ function mount() {
   const root = host.attachShadow({ mode: 'open' })
   root.innerHTML = `<style>${STYLE}</style>
     <div class="card">
-      <div class="top"><span class="brand">Saaf</span><span id="ats"></span><button class="x" id="close" aria-label="Close">×</button></div>
+      <div class="top"><span class="brand">Jobinko</span><span id="ats"></span><button class="x" id="close" aria-label="Close">×</button></div>
       <div id="body"><div class="muted" style="margin-top:8px">Scoring this posting…</div></div>
       <div id="status"></div>
       <div id="fill"></div>
@@ -137,7 +137,7 @@ function render(root, job, data) {
 
 /**
  * Tracker state for this page, from what the web app last synced. Re-renders
- * on every storage change, so moving the card in Saaf shows here at once.
+ * on every storage change, so moving the card in Jobinko shows here at once.
  */
 async function renderStatus(root, job) {
   const { tracked = [], pendingTrack = [] } = await chrome.storage.local.get(['tracked', 'pendingTrack'])
@@ -145,8 +145,8 @@ async function renderStatus(root, job) {
   const onBoard = tracked.find((t) => pageKey(t.url) === key)
   const queued = pendingTrack.find((t) => pageKey(t.url) === key)
   const el = root.getElementById('status')
-  if (onBoard) el.innerHTML = `<div class="status">On your Saaf tracker · ${esc(STAGE_LABEL[onBoard.status] ?? onBoard.status)}</div>`
-  else if (queued) el.innerHTML = `<div class="status">Goes on your tracker as ${esc(STAGE_LABEL[queued.status])} next time Saaf is open · <a href="${SITE}/applications" target="_blank" rel="noopener">Open Saaf</a></div>`
+  if (onBoard) el.innerHTML = `<div class="status">On your Jobinko tracker · ${esc(STAGE_LABEL[onBoard.status] ?? onBoard.status)}</div>`
+  else if (queued) el.innerHTML = `<div class="status">Goes on your tracker as ${esc(STAGE_LABEL[queued.status])} next time Jobinko is open · <a href="${SITE}/applications" target="_blank" rel="noopener">Open Jobinko</a></div>`
   else el.innerHTML = ''
 }
 
@@ -179,7 +179,7 @@ function mountActions(root, job) {
    */
   const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form select'
   wrap.innerHTML = `<div class="actions"><button class="ghost" id="save">Save to tracker</button><button class="ghost" id="tailor">Tailor my résumé</button></div>`
-  // Opens Saaf's tailoring tool with this posting (and the résumé stored here) already in its boxes.
+  // Opens Jobinko's tailoring tool with this posting (and the résumé stored here) already in its boxes.
   root.getElementById('tailor').addEventListener('click', async (e) => {
     const b = e.currentTarget
     b.disabled = true
@@ -204,7 +204,7 @@ function mountActions(root, job) {
       btn.textContent = 'Filling…'
       const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
       if (!profile || !profile.fullName) {
-        wrap.insertAdjacentHTML('beforeend', '<div class="report">Add your details in the Saaf extension first — or open Saaf once while signed in and they sync.</div>')
+        wrap.insertAdjacentHTML('beforeend', '<div class="report">Add your details in the Jobinko extension first — or open Jobinko once while signed in and they sync.</div>')
         btn.textContent = '⚡ Fill this application'
         btn.disabled = false
         return
@@ -219,7 +219,7 @@ function mountActions(root, job) {
         <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
         ${picks ? `<ul>${picks}</ul>` : ''}
         ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
-        ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Open Saaf → Profile → Apply details, write it once, and it is filled next time the same question is asked.</div>` : ''}</div>`)
+        ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Open Jobinko → Profile → Apply details, write it once, and it is filled next time the same question is asked.</div>` : ''}</div>`)
       btn.textContent = 'Fill again'
       btn.disabled = false
       // Filling a form is the candidate applying, so the role goes on the
@@ -258,7 +258,7 @@ async function autoApplyIfAssigned() {
   }
 
   const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
-  if (!profile?.fullName) { await report('needs-you', 'Add your details in the Saaf extension first'); return true }
+  if (!profile?.fullName) { await report('needs-you', 'Add your details in the Jobinko extension first'); return true }
   const beforeSubmit = () => chrome.runtime.sendMessage({ type: 'saaf:autoapply-phase', phase: 'await-confirm' })
   let r = await A.run(document, profile, { resumeFile, beforeSubmit })
   if (r.status === 'open-form') {

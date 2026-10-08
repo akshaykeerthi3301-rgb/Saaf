@@ -1,4 +1,4 @@
-# Saaf browser extension
+# Jobinko browser extension
 
 Scores the job posting you are looking at against your résumé, and shows the
 same arithmetic `/today` shows — every component, and the line from the posting
@@ -32,7 +32,7 @@ API. Reading one in the user's own browser adds no access we do not already have
 | Reads | The active tab's DOM, on listed hosts only — the page's schema.org `JobPosting` first, the visible text second (`extractor.js`) |
 | Sends | Posting text and title, to `/api/extension/score` |
 | Stores | Your résumé text and file, form details, salary figures and yes/no answers, in `chrome.storage.local`, on your machine |
-| Receives | From the signed-in Saaf website only: your profile, latest saved résumé, and the stage of each tracked job |
+| Receives | From the signed-in Jobinko website only: your profile, latest saved résumé, and the stage of each tracked job |
 | Never sends | Browsing history, page URLs from unlisted hosts, anything from an unlisted host, your salary figures or yes/no answers |
 | Never does | ~~Submit, apply, or navigate on your behalf.~~ Get past a CAPTCHA, answer a question it has no stored answer for, or submit anything outside **Apply for me** — which is off until you switch it on (reversed 2026-09-25) |
 
@@ -67,13 +67,13 @@ PROJECT-STATE Stage AE)** — but only from answers *you* stored:
 | Passwords, Aadhaar, PAN, bank details | Never entered by us |
 
 It never overwrites an answer you already typed or chose. The Fill button
-**never presses Submit**; filling a form puts the role on your Saaf tracker as
+**never presses Submit**; filling a form puts the role on your Jobinko tracker as
 **Applying** — never Applied, because we cannot see whether you pressed Submit.
 
 ## Apply for me (0.5.0, 2026-09-25)
 
-~~Saaf never applies on your behalf.~~ **Reversed 2026-09-25 by founder direction.**
-Queue jobs with **Apply for me** on the Saaf website, switch the mode on in the
+~~Jobinko never applies on your behalf.~~ **Reversed 2026-09-25 by founder direction.**
+Queue jobs with **Apply for me** on the Jobinko website, switch the mode on in the
 extension, and press **Start**. The extension opens each job in a background tab,
 one at a time, fills it, and presses the form's own Submit button — only when:
 
@@ -88,37 +88,37 @@ Off by default, runs only when you press Start, at most **25 a day**, only on th
 ATS hosts in `manifest.json`. Free-text essays and consent boxes are still never
 answered — if the employer made one required, the job waits for you. **Demographic
 questions** are left for you unless you typed your own answer to that exact
-question on your Saaf profile (0.6.0, TASK-171); date of birth, age and pregnancy
+question on your Jobinko profile (0.6.0, TASK-171); date of birth, age and pregnancy
 are never answered.
 
-**0.7.0 (2026-10-08, TASK-192):** **Tailor my résumé** on a posting opens Saaf's tailoring tool with the posting and your résumé already filled in (nothing is sent until you press its button); the popup's **This site** section says how Saaf handles the tab you are on and, for a site it does not run on, offers **Ask Saaf to support this site** — only the hostname is kept and filed the next time you open Saaf signed in.
+**0.7.0 (2026-10-08, TASK-192):** **Tailor my résumé** on a posting opens Jobinko's tailoring tool with the posting and your résumé already filled in (nothing is sent until you press its button); the popup's **This site** section says how Jobinko handles the tab you are on and, for a site it does not run on, offers **Ask Jobinko to support this site** — only the hostname is kept and filed the next time you open Jobinko signed in.
 
 **0.7.0 (2026-10-08, TASK-194):** **custom questions.** Employers add their own free-text
-questions. Write your answer once on your Saaf profile (Apply details → *Questions
+questions. Write your answer once on your Jobinko profile (Apply details → *Questions
 employers asked*) and the extension fills it only when a form asks **exactly that
 question** (compared after lower-casing and dropping punctuation — never "similar").
-A *required* question with no answer is not guessed: it is sent to your Saaf profile,
+A *required* question with no answer is not guessed: it is sent to your Jobinko profile,
 blank, for you to answer. Apply for me uses an answer only if you ticked it for that.
 Gender, religion, caste, passwords, ID numbers and consent boxes never come from this.
 
 **0.6.0 (2026-10-08):** the popup shows the **queue** (remove a job, or clear it),
 and each finished application shows **how much of what the employer required was
-answered** and which fields were missing. Saaf can **pause every extension at
+answered** and which fields were missing. Jobinko can **pause every extension at
 once**: before each job is opened, and again just before each Submit click, the
 extension asks `/api/extension/status`; if it says paused, nothing is submitted
-and the tab is handed back (docs/RUNBOOK.md). If Saaf cannot be reached it carries
+and the tab is handed back (docs/RUNBOOK.md). If Jobinko cannot be reached it carries
 on — the run is yours, and a switch that also failed during an outage would be a
 second failure.
 
-## Syncing with the Saaf website
+## Syncing with the Jobinko website
 
-The extension holds no account. When you open Saaf signed in, the website:
+The extension holds no account. When you open Jobinko signed in, the website:
 
 1. files the roles you saved or filled on job sites onto your tracker (once each);
 2. sends your profile, latest saved résumé and each tracked job's stage to the
-   extension, so the card on a job site says “On your Saaf tracker · Interviewing”.
+   extension, so the card on a job site says “On your Jobinko tracker · Interviewing”.
 
-Only `saaf-ten.vercel.app` (and `localhost` in development) can reach it —
+Only `jobinko.in` (and the older `saaf-ten.vercel.app`, plus `localhost` in development) can reach it —
 `externally_connectable` in the manifest, re-checked in `service-worker.js`. A
 sync fills blanks and updates; it never erases what you typed, and never touches
 salary, yes/no answers or the résumé file, which the website does not hold.
@@ -130,7 +130,7 @@ and writes no row — it scores the text in the request and forgets it.
 
 1. `chrome://extensions` → enable Developer mode
 2. "Load unpacked" → select this directory
-3. Open Saaf signed in once (profile syncs), or fill the extension's popup by hand
+3. Open Jobinko signed in once (profile syncs), or fill the extension's popup by hand
 4. Visit any listed ATS posting
 
 ## Not yet done
@@ -144,15 +144,15 @@ Measured against their Chrome Web Store listing on 2026-09-15 (200,000+ users
 and 4.9★ — both CLAIMED on their listing). Their extension fills; their web
 **Agent** submits (OBSERVED inside their app, 2026-09-25: "Awaiting Application
 Start → Start"). ~~…so the locked "never applies on your behalf" decision costs
-us nothing here.~~ Saaf's "Apply for me" is the parity answer (2026-09-25).
+us nothing here.~~ Jobinko's "Apply for me" is the parity answer (2026-09-25).
 
-| Jobright | Saaf |
+| Jobright | Jobinko |
 |---|---|
 | One-click autofill, "thousands of ATS sites" | ✅ ~~32 host patterns across 22 ATS platforms~~ 23 ATS platforms (counted from `extractor.js`, 2026-10-08) — text, dropdowns, radios, pickers, résumé upload, CTC. **Per-site list, including what has NOT been checked on a live form: `src/lib/taxonomy/ats-capabilities.json`, published at /extension** |
 | Match score on the posting | ✅ and every component opens into the posting's own sentence |
 | Missing keywords / ATS gaps | ✅ from a vocabulary mined out of our index, not a generic word list |
-| Track the application | ✅ filed on the Saaf tracker when you next open Saaf; stage shown back on the card (2026-09-25). ~~via a link into the Saaf tracker~~ — the link's `?add=` was read by nothing |
-| AI tailored résumé in the extension | ✅ in its lawful form (0.7.0): **Tailor my résumé** opens Saaf's own tailoring tool with this posting and your résumé already in the boxes; the rewrite runs there, on the same limits. ~~❌ budget~~ — the extension itself still calls no model |
+| Track the application | ✅ filed on the Jobinko tracker when you next open Jobinko; stage shown back on the card (2026-09-25). ~~via a link into the Jobinko tracker~~ — the link's `?add=` was read by nothing |
+| AI tailored résumé in the extension | ✅ in its lawful form (0.7.0): **Tailor my résumé** opens Jobinko's own tailoring tool with this posting and your résumé already in the boxes; the rewrite runs there, on the same limits. ~~❌ budget~~ — the extension itself still calls no model |
 | Insider connections / referrals | ❌ **structurally impossible** — see below |
 
 **~~Tailored résumé is a budget limit, not a design one.~~ Still true of generating one INSIDE the extension** (the extension holds no session and calls no model). It exists on the web
@@ -165,4 +165,4 @@ graph of who works where — which means LinkedIn, whose User Agreement §8.2
 prohibits exactly the overlay this extension performs, and whose enforcement
 falls on the candidate's own account. Jobright can offer it because they operate
 a people database we have deliberately not built. This is the one place where
-Saaf is behind for a reason it should keep.
+Jobinko is behind for a reason it should keep.

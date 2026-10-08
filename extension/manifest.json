@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Saaf \u2014 score any job posting",
+  "name": "Jobinko \u2014 score any job posting",
   "version": "0.7.0",
-  "description": "Score any job posting against your resume, see the missing keywords, fill the application form, apply for you when you turn it on, and track it in Saaf. Reads only the page you are on.",
+  "description": "Score any job posting against your resume, see the missing keywords, fill the application form, apply for you when you turn it on, and track it in Jobinko. Reads only the page you are on.",
   "permissions": [
     "storage",
     "activeTab"
@@ -40,7 +40,8 @@
     "https://*.keka.com/*",
     "https://*.darwinbox.in/*",
     "https://*.freshteam.com/*",
-    "https://saaf-ten.vercel.app/*"
+    "https://saaf-ten.vercel.app/*",
+    "https://jobinko.in/*"
   ],
   "background": {
     "service_worker": "service-worker.js",
@@ -92,13 +93,14 @@
     }
   ],
   "action": {
-    "default_title": "Saaf",
+    "default_title": "Jobinko",
     "default_popup": "popup.html"
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuURGSzvQrj5FuWAQCwE1Mj5oFgpHabHU2uoquodzrB8hByBtIhhHn+7ThDv3rm8TemKjqNejzBdTmEx0A6UjbFCvjfhEmsnds9laxhdLpTG6QnwgKJ1xxVYiKGb2o5sDnobRx8Ib/le7tvVqgkvZOowGL2DnVaBaDU7A0S0W0E+d8WVn69Lbjn1cOflfbZqEFfLxAcrvrLWFRx+N7hsqwgYb4PgzjYMUpedRU4NZc084Fol9Ilwd9psJYd9W6fOtWhnVXkOdCGwxejIj9Nrn4lJ9NKU8O/hk15+Ldq1eFFzdGDiElq2d2lZnd7xa53r5L3NnEbPc7PuNdEFcZd0qyQIDAQAB",
   "externally_connectable": {
     "matches": [
       "https://saaf-ten.vercel.app/*",
+      "https://jobinko.in/*",
       "http://localhost/*"
     ]
   }

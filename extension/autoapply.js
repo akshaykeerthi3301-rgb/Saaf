@@ -1,8 +1,8 @@
 /**
- * Saaf extension — "Apply for me" (2026-09-25).
+ * Jobinko extension — "Apply for me" (2026-09-25).
  *
  * ⚠️ THIS REVERSES A DECISION THAT WAS CALLED PERMANENT, BY FOUNDER DIRECTION.
- * Until 2026-09-25 Saaf never submitted an application on anyone's behalf
+ * Until 2026-09-25 Jobinko never submitted an application on anyone's behalf
  * (PROJECT-STATE, Locked decisions — now struck). Jobright's Agent does
  * (OBSERVED), and the founder chose parity. What stays fixed, because these are
  * about honesty and the law rather than product taste:
@@ -162,14 +162,14 @@
     // confirmation (content-script.js, phase 'await-confirm').
     //
     // ⚠️ THE SAME CALL IS THE KILL SWITCH'S LAST CHANCE. The service worker
-    // checks Saaf's remote switch here and answers { allow: false, reason } when
+    // checks Jobinko's remote switch here and answers { allow: false, reason } when
     // applications are paused; nothing is clicked, and the tab is handed back.
     // Anything other than an explicit `allow: false` goes ahead (a worker that
     // cannot answer must not strand the candidate's own run).
     if (opts.beforeSubmit) {
       const verdict = await opts.beforeSubmit()
       if (verdict && verdict.allow === false) {
-        return { status: 'needs-you', reason: verdict.reason || 'Apply for me is paused by Saaf', filled: res.filled, coverage: cov }
+        return { status: 'needs-you', reason: verdict.reason || 'Apply for me is paused by Jobinko', filled: res.filled, coverage: cov }
       }
     }
     submit.click()

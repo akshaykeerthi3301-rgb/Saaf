@@ -1,5 +1,5 @@
 /**
- * Saaf extension — reads the posting on the page into one plain object.
+ * Jobinko extension — reads the posting on the page into one plain object.
  *
  * ⚠️ STRUCTURED DATA FIRST, THE DOM SECOND. Most ATS job pages carry a
  * schema.org `JobPosting` in a `<script type="application/ld+json">` block,
