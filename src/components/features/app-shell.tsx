@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions/sign-out'
 import { setSearchStatus } from '@/app/actions/workspace'
 import { useAccount } from '@/components/features/account-context'
+import { FeedbackButton, InboxBell } from '@/components/features/feedback-and-inbox'
 import type { SearchStatus } from '@/lib/services/workspace'
 import {
   BriefcaseBusiness, ChevronsUpDown, FileText, Gauge, KanbanSquare, LogOut, Menu, MessageCircle,
@@ -160,13 +161,16 @@ export function AppShell({
                 <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-primary">{title}</h1>
               </div>
             </div>
-            <Link
-              href="/profile"
-              className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-              aria-label="Your profile"
-            >
-              {account?.initials ?? initials}
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              {account ? <><FeedbackButton /><InboxBell /></> : null}
+              <Link
+                href="/profile"
+                className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                aria-label="Your profile"
+              >
+                {account?.initials ?? initials}
+              </Link>
+            </div>
           </header>
 
           {context ? (

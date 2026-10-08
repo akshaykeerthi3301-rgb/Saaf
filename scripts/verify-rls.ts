@@ -379,6 +379,23 @@ async function crossUserIsolation() {
       await asA(`search_history?user_id=eq.${a.id}`, { method: 'DELETE' })
     }
 
+    // feedback / inbox / survey answers (0044): owner-only, and the inbox is founder-written.
+    const forgeFeedback = await asA('feedback', { method: 'POST', body: JSON.stringify({ user_id: b.id, kind: 'idea', message: '__rls_probe__' }) })
+    if (forgeFeedback.status === 404) {
+      console.log('  – feedback / inbox / survey_answers: tables not present, skipped (migration 0044 pending)')
+    } else {
+      check('feedback: A cannot INSERT feedback as B', forgeFeedback.status >= 400, `http ${forgeFeedback.status}`)
+      const ownFeedback = await asA('feedback', { method: 'POST', body: JSON.stringify({ user_id: a.id, kind: 'idea', message: '__rls_probe__' }) })
+      check('feedback: A CAN send their own', ownFeedback.status < 400, `http ${ownFeedback.status}`)
+      const seenFeedback = await (await asA(`feedback?user_id=eq.${b.id}&select=id`)).json()
+      check("feedback: A cannot read B's", Array.isArray(seenFeedback) && seenFeedback.length === 0)
+      await asA(`feedback?user_id=eq.${a.id}`, { method: 'DELETE' })
+      const writeInbox = await asA('inbox_messages', { method: 'POST', body: JSON.stringify({ title: '__rls_probe__', body: 'x' }) })
+      check('inbox_messages: a candidate cannot write a message (founder-written only)', writeInbox.status >= 400, `http ${writeInbox.status}`)
+      const forgeAnswer = await asA('survey_answers', { method: 'POST', body: JSON.stringify({ user_id: b.id, survey_id: '__rls_probe__', answer: 'Very' }) })
+      check('survey_answers: A cannot answer as B', forgeAnswer.status >= 400, `http ${forgeAnswer.status}`)
+    }
+
     // role_interest (0033) is SECURITY DEFINER — the one function here that reads
     // across users — so it is checked for what it must NOT return: who, or a count under 3.
     const interest = await asA('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })
