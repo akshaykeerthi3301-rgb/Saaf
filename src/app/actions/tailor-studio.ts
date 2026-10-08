@@ -214,3 +214,59 @@ export async function rewriteStudioLine(input: z.input<typeof lineSchema>): Prom
     return { ok: false, error: 'We could not rewrite that line just now. Yours is unchanged.' }
   }
 }
+
+const instructionSchema = z.object({
+  roleId: z.string().uuid(),
+  instruction: z.string().trim().min(3).max(160),
+  lines: z.array(z.object({ key: z.string().max(20), text: z.string().trim().min(8).max(900), summary: z.boolean().optional() })).min(1).max(8),
+})
+
+/** Six instruction-driven passes per ten minutes: each runs up to eight lines through the model. */
+const INSTRUCTION_LIMIT = { scope: 'studio-instruction', limit: 6, windowMs: 10 * 60_000 }
+
+export type StudioInstructionResult =
+  | { ok: true; results: { key: string; line?: string; reason?: string }[]; providerLabel: string }
+  | { ok: false; error: string }
+
+/**
+ * "AI Rewrite" in the tailor result: the candidate says what they want ("use stronger action verbs", "shorten my
+ * summary") and up to eight of THEIR OWN lines are rewritten that way for this posting.
+ *
+ * ⚠️ THE FABRICATION GUARD IS THE SAME ONE, PER LINE. Each line goes through rewriteOneBullet, which refuses any
+ * rewrite that adds a number, a name or a word the original did not have; a refused line comes back with its reason
+ * and is left as written. The instruction is the candidate's words — it can steer the style, never the facts.
+ * Lines arrive from the browser (it is their own text going back to them, as in scoreDraft); the POSTING is read
+ * server-side from the role id.
+ */
+export async function rewriteStudioLines(input: z.input<typeof instructionSchema>): Promise<StudioInstructionResult> {
+  const parsed = instructionSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'Tell the AI what to change, in a few words.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+
+  const limit = checkRateLimit(user.id, INSTRUCTION_LIMIT)
+  if (!limit.ok) return { ok: false, error: 'You have asked for a lot of rewrites in a short while. Try again in a few minutes.' }
+
+  const ctx = await getCookieContext(user.id, parsed.data.roleId)
+  if (!ctx.ok) return { ok: false, error: ctx.error }
+
+  const facts = { currentTitle: null, employer: null, yearsExperience: null, skills: [], domain: null, credential: null }
+  let providerLabel = ''
+  try {
+    const results = await Promise.all(
+      parsed.data.lines.map(async (l) => {
+        const out = await rewriteOneBullet(l.text, facts, ctx.context.role, { instruction: parsed.data.instruction, summary: l.summary })
+        if (!out) return { key: l.key, reason: 'The writing model did not answer for this line — it is unchanged.' }
+        if ('refused' in out) return { key: l.key, reason: `Left as written: the rewrite ${out.refused}.` }
+        providerLabel = PROVIDER_LABEL[out.provider]
+        return { key: l.key, line: out.text }
+      }),
+    )
+    return { ok: true, results, providerLabel }
+  } catch (e) {
+    if (e instanceof ModelBusyError) return { ok: false, error: 'The writing model is busy right now. Try again in about a minute.' }
+    return { ok: false, error: 'We could not rewrite those lines just now. Yours are unchanged.' }
+  }
+}

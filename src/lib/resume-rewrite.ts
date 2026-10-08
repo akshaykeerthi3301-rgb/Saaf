@@ -524,20 +524,30 @@ export async function rewriteOneBullet(
   original: string,
   me: CandidateFacts,
   role: RoleFacts,
+  opts: {
+    /** What the candidate asked for in their own words ("Shorten this"). The rules below still win over it. */
+    instruction?: string
+    /** The line is the professional summary, not a bullet: no opening-verb rule, room for two or three sentences. */
+    summary?: boolean
+  } = {},
 ): Promise<{ text: string; provider: Provider } | { refused: string } | null> {
+  const asked = opts.instruction?.trim().slice(0, 160)
   const answer = await callJsonModel({
     prompt: [
       `TARGET ROLE: ${role.title}`,
       role.description ? `THE ROLE ASKS FOR:\n${role.description.slice(0, 2000)}` : '',
       '',
-      'REWRITE THIS ONE RÉSUMÉ LINE:',
+      opts.summary ? 'REWRITE THIS PROFESSIONAL SUMMARY:' : 'REWRITE THIS ONE RÉSUMÉ LINE:',
       original,
+      asked ? `\nTHE CANDIDATE ASKED FOR: "${asked}" — do that, inside the rules below. If the two conflict, the rules win.` : '',
       '',
       'RULES — absolute:',
       '1. Use ONLY facts already in that line. Add no number, employer, product or qualification.',
-      '2. Open with a past-tense action verb. Never "Responsible for", "Worked on", "Involved in".',
-      '3. Put the outcome first where the line has one.',
-      '4. Under 240 characters. One line.',
+      opts.summary
+        ? '2. Keep it a summary: no "I", no "Responsible for". Name the strongest facts it already holds.'
+        : '2. Open with a past-tense action verb. Never "Responsible for", "Worked on", "Involved in".',
+      opts.summary ? '3. Cut filler words and repetition; keep every figure.' : '3. Put the outcome first where the line has one.',
+      opts.summary ? '4. Under 420 characters.' : '4. Under 240 characters. One line.',
       '',
       'Return JSON: { "line": string }',
     ].join('\n'),

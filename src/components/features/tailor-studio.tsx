@@ -1,56 +1,46 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
-import {
-  Check, CheckCheck, Download, FileDown, Loader2, Pencil, Save, ShieldCheck, Sparkles, Undo2, X,
-} from 'lucide-react'
-import { rewriteStudioLine, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
+import { ArrowUp, FileDown, Loader2, Pencil, Save, ShieldCheck, Sparkles, Undo2, X } from 'lucide-react'
+import { rewriteStudioLine, rewriteStudioLines, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
-import { DEFAULT_STYLE, PRESETS, withPreset, type ResumeStyle } from '@/lib/resume-style'
+import { DEFAULT_STYLE, type ResumeStyle } from '@/lib/resume-style'
+import { buildDoc } from '@/lib/resume-doc'
 import { estimatePagesForStyle, fitStyleToOnePage } from '@/lib/resume-fit'
 import { diffSections, tailoredFilename } from '@/lib/resume-review'
 import { ExportDrawer } from '@/components/features/export-drawer'
+import { ResumePaper } from '@/components/features/resume-paper'
+import { ResumeStyleControls } from '@/components/features/resume-style-controls'
+import { Gauge } from '@/components/features/score-gauge'
 
 /**
- * The Resume Tailoring Studio — current résumé beside an AI-tailored one.
+ * The result of "Customize your résumé" — the reference product's step 3, "Review your new résumé".
  *
- * Visual diff, one meaning per colour:
- *   purple  a bullet (or the summary) the model rewrote
- *   green   a skill term the POSTING names that the rewrite put in and the
- *           original line did not have — an inserted ATS keyword
+ *   left   the score (before → now), what changed, and three tabs: AI Rewrite · Editor · Style
+ *   right  the new résumé as a page, the changed lines marked on it, with the file name, Fit to one page, Download
  *
- * ⚠️ NOTHING IS APPLIED UNTIL THE CANDIDATE ACCEPTS IT. The right column starts
- * as their own résumé with suggestions beside it; "Accept all" is a choice, not
- * the default. What the grounding guard refused is listed, not hidden — the
- * same rule as the review drawer: a badge over a black box is worth nothing.
+ * Rebuilt 2026-10-09 from a two-column "current beside suggested" review, which asked the person to accept every
+ * line before they had a résumé. The reference applies the rewrite at once and lets the person undo and edit; so
+ * does this. What did not change is the part that matters: every rewrite passed the same grounding guard (nothing is
+ * kept that adds a figure, name or claim the saved résumé does not hold), what the guard refused is listed rather
+ * than hidden, and the score is the same ATS check the free checker runs, re-run on each edit.
+ *
+ * Purple on the page = a line the rewrite changed. Green = a keyword from the posting the rewrite put in.
  */
 
 type Ok = Extract<TailorStudioResult, { ok: true }>
-type Suggestion = { key: string; entry: number; idx: number; original: string; rewritten: string }
-type Decision = 'pending' | 'accepted' | 'dismissed'
+type Tab = 'rewrite' | 'editor' | 'style'
 
-function suggestionsFrom(original: ResumeSections, res: Ok): Suggestion[] {
-  const out: Suggestion[] = []
-  const used = new Set<string>()
-  for (const c of res.changes) {
-    if (!c.kept || c.rewritten.trim() === c.original.trim()) continue
-    if (c.entry === -1) {
-      out.push({ key: 'summary', entry: -1, idx: 0, original: c.original, rewritten: c.rewritten })
-      continue
-    }
-    const bullets = original.experience[c.entry]?.bullets ?? []
-    const idx = bullets.findIndex((b, i) => b === c.original && !used.has(`${c.entry}:${i}`))
-    if (idx < 0) continue
-    used.add(`${c.entry}:${idx}`)
-    out.push({ key: `${c.entry}:${idx}`, entry: c.entry, idx, original: c.original, rewritten: c.rewritten })
-  }
-  return out
-}
+const CHIPS = [
+  { key: 'verbs', label: 'Use stronger action verbs for my latest experience' },
+  { key: 'summary', label: 'Shorten my summary to remove filler words' },
+  { key: 'skills', label: 'Remove skills not related to this job' },
+] as const
 
 export function TailorStudio({
-  roleId, resumeId, resumeLabel, original, roleTitle, company, autoRun = false, scope, embedded = false,
+  roleId, resumeId, resumeLabel, original, roleTitle, company, applyUrl, autoRun = false, scope, embedded = false,
 }: {
   roleId: string
   resumeId: string
@@ -58,23 +48,24 @@ export function TailorStudio({
   original: ResumeSections
   roleTitle: string
   company: string
+  /** The employer's own application page, for "Apply now". */
+  applyUrl?: string
   /** Start tailoring on mount — the drawer's step 3 follows the candidate pressing Generate in step 2. */
   autoRun?: boolean
   /** Which parts to change (the drawer's step 2). Absent means the whole document. */
   scope?: { summary: boolean; experience: boolean; skills: boolean }
-  /** Inside the job drawer: the control bar sticks to the top of the drawer, not under the app header. */
+  /** Inside the job drawer: the page column sticks to the top of the drawer, not under the app header. */
   embedded?: boolean
 }) {
   const [res, setRes] = useState<Ok | null>(null)
   const [error, setError] = useState<string>()
   const [working, setWorking] = useState<ResumeSections>(original)
-  const [decisions, setDecisions] = useState<Record<string, Decision>>({})
-  const [skillsDecision, setSkillsDecision] = useState<Decision>('pending')
-  const [editing, setEditing] = useState<string | null>(null)
-  const [draft, setDraft] = useState('')
+  const [tab, setTab] = useState<Tab>('rewrite')
   const [note, setNote] = useState<string>()
-  const [lineNote, setLineNote] = useState<string>()
-  const [lineBusy, setLineBusy] = useState(false)
+  const [aiNote, setAiNote] = useState<string>()
+  const [aiBusy, setAiBusy] = useState(false)
+  const [instruction, setInstruction] = useState('')
+  const [lineBusy, setLineBusy] = useState<string | null>(null)
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
   const [style, setStyle] = useState<ResumeStyle>(DEFAULT_STYLE)
@@ -89,11 +80,14 @@ export function TailorStudio({
   const fitRes = useMemo(() => (fit ? fitStyleToOnePage(working, style) : null), [fit, working, style])
   // What the page looks like right now: the person's style, tightened only while "Fit to one page" is on.
   const effective: ResumeStyle = fitRes?.style ?? style
-  const pages = useMemo(() => estimatePagesForStyle(working, effective), [working, effective])
-  const fileName = tailoredFilename({ name: working.contact.name, role: roleTitle, company })
+  const generated = useMemo(() => tailoredFilename({ name: working.contact.name, role: roleTitle, company }), [working.contact.name, roleTitle, company])
+  const [fileBase, setFileBase] = useState<string | null>(null)
+  const fileName = (fileBase ?? generated.replace(/\.docx$/, '')).trim() || 'resume'
+  const blocks = useMemo(() => buildDoc(working, roleTitle, effective), [working, roleTitle, effective])
+  const [pages, setPages] = useState(1)
 
-  // The score of the draft as it stands, after each accept, dismiss or hand edit. No change yet = the
-  // saved résumé's own score, no call. `scoreSeq` drops a slow answer that a newer edit has overtaken.
+  // The score of the page as it stands, after each undo, edit or rewrite. No change yet = the saved résumé's own
+  // score, no call. `scoreSeq` drops a slow answer that a newer edit has overtaken.
   useEffect(() => {
     if (!res || changes.length === 0) return
     const mine = ++scoreSeq.current
@@ -106,10 +100,10 @@ export function TailorStudio({
     }, 700)
     return () => clearTimeout(t)
   }, [res, working, roleId, changes.length])
-  const nowScore = res ? (changes.length === 0 ? res.scores.before : liveScore) : null
+  const before = res?.scores.before ?? null
+  const now = res ? (changes.length === 0 ? before : liveScore) : null
+  const tenth = (n: number | null) => (n === null ? null : Math.round(n) / 10)
 
-  const suggestions = useMemo(() => (res ? suggestionsFrom(original, res) : []), [res, original])
-  const pending = suggestions.filter((s) => (decisions[s.key] ?? 'pending') === 'pending')
   const keywords = res?.keywords ?? []
 
   function run() {
@@ -118,9 +112,9 @@ export function TailorStudio({
       const r = await tailorSavedResume({ roleId, resumeId, scope }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setError(r.error); return }
       setRes(r)
-      setWorking(original)
-      setDecisions({})
-      setSkillsDecision(r.skillsReordered ? 'pending' : 'dismissed')
+      // Applied at once, as the reference does: the person undoes and edits from here. The guard has already run.
+      setWorking(r.sections)
+      setNote(undefined); setAiNote(undefined)
     })
   }
 
@@ -133,24 +127,10 @@ export function TailorStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRun])
 
-  const setText = (s: Pick<Suggestion, 'entry' | 'idx'>, text: string) =>
-    setWorking((w) =>
-      s.entry === -1
-        ? { ...w, summary: text }
-        : {
-            ...w,
-            experience: w.experience.map((e, i) =>
-              i === s.entry ? { ...e, bullets: e.bullets.map((b, j) => (j === s.idx ? text : b)) } : e,
-            ),
-          },
-    )
-
-  const accept = (s: Suggestion) => { setText(s, s.rewritten); setDecisions((d) => ({ ...d, [s.key]: 'accepted' })) }
-  const dismiss = (s: Suggestion) => { setText(s, s.original); setDecisions((d) => ({ ...d, [s.key]: 'dismissed' })) }
-  const acceptAll = () => {
-    pending.forEach(accept)
-    if (skillsDecision === 'pending' && res) { setWorking((w) => ({ ...w, skills: res.sections.skills })); setSkillsDecision('accepted') }
-  }
+  // ---- edits ---------------------------------------------------------------------------------------------------------
+  const setBullet = (i: number, j: number, text: string) =>
+    setWorking((w) => ({ ...w, experience: w.experience.map((e, k) => (k === i ? { ...e, bullets: e.bullets.map((b, m) => (m === j ? text : b)) } : e)) }))
+  const setSummary = (text: string) => setWorking((w) => ({ ...w, summary: text }))
 
   function saveVersion() {
     setNote(undefined)
@@ -160,7 +140,7 @@ export function TailorStudio({
         targetRole: roleTitle,
         label: `Tailored — ${roleTitle}${company ? ` at ${company}` : ''}`.slice(0, 120),
       }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
-      setNote(r.ok ? `Saved as “${r.saved.label}”. Pick it as the résumé version on your tracker.` : r.error)
+      setNote(r.ok ? `Saved as “${r.saved.label}”. It is on your Résumé page.` : r.error)
     })
   }
 
@@ -171,312 +151,316 @@ export function TailorStudio({
         .catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setNote(r.error); return }
       const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0))
-      const url = URL.createObjectURL(
-        new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }),
-      )
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }))
       const a = document.createElement('a')
       a.href = url
-      a.download = r.filename
+      a.download = fileBase ? `${fileName}.docx` : r.filename
       a.click()
       URL.revokeObjectURL(url)
     })
   }
 
-  /** Marks posting keywords the rewrite added. Text nodes only. */
-  const markInserted = (text: string, before: string): ReactNode => {
-    const added = keywords.filter(
-      (k) => k.length > 1 && new RegExp(`\\b${esc(k)}\\b`, 'i').test(text) && !new RegExp(`\\b${esc(k)}\\b`, 'i').test(before),
-    )
-    if (!added.length) return text
-    const re = new RegExp(`\\b(${added.map(esc).join('|')})\\b`, 'gi')
-    return text.split(re).map((part, i) =>
-      added.some((k) => k.toLowerCase() === part.toLowerCase()) ? (
-        <mark key={i} className="rounded bg-score-high/20 px-0.5 font-semibold text-score-high">{part}</mark>
-      ) : (
-        <span key={i}>{part}</span>
-      ),
-    )
-  }
-
-  /** "Edit with AI" on the line being edited: the suggestion lands in the box for the candidate to keep, change or drop. */
-  function editWithAi(text: string) {
+  /** "Rewrite with AI" on the one line the person is editing: the suggestion lands in the box for them to keep or change. */
+  function rewriteLine(key: string, text: string, apply: (t: string) => void) {
     if (lineBusy) return
-    setLineBusy(true); setLineNote(undefined)
+    setLineBusy(key); setAiNote(undefined)
     rewriteStudioLine({ roleId, line: text })
-      .then((r) => {
-        if (r.ok) { setDraft(r.line); setLineNote('Suggested by AI — read it, change it if you like, then press Done. Cancel keeps your line.') }
-        else setLineNote(r.error)
-      })
-      .catch(() => setLineNote('Check your connection and try again.'))
-      .finally(() => setLineBusy(false))
+      .then((r) => { if (r.ok) { apply(r.line); setAiNote('Rewritten — read it, change it if you like, or press Undo.') } else setAiNote(r.error) })
+      .catch(() => setAiNote('Check your connection and try again.'))
+      .finally(() => setLineBusy(null))
   }
 
-  const line = (s: Suggestion | undefined, key: string, entry: number, idx: number, current: string, originalText: string) => {
-    const d = s ? decisions[s.key] ?? 'pending' : undefined
-    const changed = current !== originalText
-    if (editing === key) {
-      return (
-        <div className="space-y-2">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            aria-label="Edit this line"
-            className="w-full rounded-lg border border-input bg-background p-2.5 text-sm leading-6 text-primary outline-none focus:border-accent"
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <SmallButton onClick={() => { setText({ entry, idx }, draft.trim() || originalText); setEditing(null); setLineNote(undefined) }} icon={Check}>Done</SmallButton>
-            <SmallButton onClick={() => { setEditing(null); setLineNote(undefined) }} icon={X}>Cancel</SmallButton>
-            {res ? <SmallButton onClick={() => editWithAi(draft)} icon={lineBusy ? Loader2 : Sparkles}>{lineBusy ? 'Rewriting…' : 'Rewrite with AI'}</SmallButton> : null}
-          </div>
-          {lineNote ? <p role="status" className="text-xs leading-5 text-muted-foreground">{lineNote}</p> : null}
-        </div>
-      )
+  /** The AI Rewrite tab: what the person asked for, applied to their own lines, each one through the same guard. */
+  async function askAi(ask: string, which: 'summary' | 'latest' | 'both') {
+    if (aiBusy) return
+    const lines: { key: string; text: string; summary?: boolean }[] = []
+    if ((which === 'summary' || which === 'both') && working.summary && working.summary.trim().length >= 8) lines.push({ key: 'summary', text: working.summary, summary: true })
+    if (which === 'latest' || which === 'both') {
+      const i = working.experience.findIndex((e) => !e.isProject && e.bullets.length > 0)
+      if (i >= 0) working.experience[i].bullets.slice(0, 6).forEach((b, j) => { if (b.trim().length >= 8) lines.push({ key: `${i}:${j}`, text: b }) })
     }
+    if (!lines.length) { setAiNote('There is nothing to rewrite there yet.'); return }
+    setAiBusy(true); setAiNote(undefined)
+    try {
+      const r = await rewriteStudioLines({ roleId, instruction: ask, lines })
+      if (!r.ok) { setAiNote(r.error); return }
+      let applied = 0
+      for (const out of r.results) {
+        if (!out.line) continue
+        applied++
+        if (out.key === 'summary') setSummary(out.line)
+        else { const [i, j] = out.key.split(':').map(Number); setBullet(i, j, out.line) }
+      }
+      const left = r.results.filter((x) => x.reason).map((x) => x.reason)
+      setAiNote(
+        `${applied} of ${lines.length} line${lines.length === 1 ? '' : 's'} rewritten${r.providerLabel ? ` by ${r.providerLabel}` : ''}.` +
+        (left.length ? ` ${left.length} left as written: ${left[0]}` : ' Undo any of them in the Editor tab.'),
+      )
+      if (applied) setInstruction('')
+    } catch {
+      setAiNote('Check your connection and try again.')
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
+  /** Deterministic, no model: keep the skills the posting names (or that contain one), drop the rest — never down to nothing. */
+  function pruneSkills() {
+    const kw = keywords.map((k) => k.toLowerCase())
+    const related = (s: string) => { const x = s.toLowerCase(); return kw.some((k) => x === k || x.includes(k) || k.includes(x)) }
+    const keep = working.skills.filter(related)
+    if (keep.length === working.skills.length) { setAiNote('Every skill on your résumé already relates to this job.'); return }
+    if (keep.length < 3) { setAiNote('Fewer than three of your skills appear in this posting, so nothing was removed — a thin skills list reads worse than a long one.'); return }
+    setWorking((w) => ({ ...w, skills: keep }))
+    setAiNote(`Removed ${working.skills.length - keep.length} skill${working.skills.length - keep.length === 1 ? '' : 's'} the posting never mentions. Restore them in the Editor tab.`)
+  }
+
+  function onChip(key: (typeof CHIPS)[number]['key']) {
+    if (key === 'verbs') void askAi('Open each line with a stronger past-tense action verb.', 'latest')
+    else if (key === 'summary') void askAi('Shorten this and remove filler words.', 'summary')
+    else pruneSkills()
+  }
+
+  // ---- the page's highlights -------------------------------------------------------------------------------------------
+  const beforeOf = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const c of changes) if (c.after && c.before !== null && c.kind !== 'skills') m.set(c.after, c.before)
+    return m
+  }, [changes])
+  const decorate = (text: string): ReactNode => {
+    if (!beforeOf.has(text)) return text
+    return <mark className="rounded-sm bg-brand-2/15 px-0.5 text-inherit">{markInserted(text, beforeOf.get(text) ?? '', keywords)}</mark>
+  }
+
+  // ---- the summary of what changed -------------------------------------------------------------------------------------
+  const nBullets = changes.filter((c) => c.kind === 'bullet').length
+  const summaryChanged = changes.some((c) => c.kind === 'summary')
+  const skillsChange = changes.find((c) => c.kind === 'skills')
+  const lead =
+    now === null || before === null ? 'Your new résumé is ready.'
+    : changes.length === 0 ? `Your score is ${tenth(before)} — nothing has changed yet.`
+    : now > before ? `Great! Your score jumped from ${tenth(before)} to ${tenth(now)}.`
+    : now === before ? `Your score holds at ${tenth(now)}.`
+    : `Your score is ${tenth(now)} (it was ${tenth(before)}) — undo a change to bring it back.`
+
+  if (!res) {
     return (
-      <div>
-        <div
-          className={`group flex gap-2 rounded-lg px-2 py-1.5 text-sm leading-6 ${
-            changed ? 'border-l-2 border-brand-2 bg-brand-2/10 text-primary' : 'text-primary'
-          }`}
+      <div className="mx-auto max-w-xl py-10 text-center print:hidden">
+        {error ? <p className="mb-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">{error}</p> : null}
+        <button
+          type="button"
+          onClick={run}
+          disabled={running}
+          className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold disabled:opacity-60"
         >
-          <span className="flex-1">{changed ? markInserted(current, originalText) : current}</span>
-          <button
-            type="button"
-            onClick={() => { setEditing(key); setDraft(current) }}
-            aria-label="Edit this line"
-            className="h-fit shrink-0 rounded p-1 text-muted-foreground opacity-60 hover:bg-secondary hover:text-primary group-hover:opacity-100"
-          >
-            <Pencil className="size-3.5" />
-          </button>
-          {s && d === 'accepted' ? (
-            <button
-              type="button"
-              onClick={() => dismiss(s)}
-              aria-label="Undo this rewrite"
-              className="h-fit shrink-0 rounded p-1 text-muted-foreground hover:bg-secondary hover:text-primary"
-            >
-              <Undo2 className="size-3.5" />
-            </button>
-          ) : null}
-        </div>
-        {s && d === 'pending' ? (
-          <div className="mt-1.5 rounded-lg border border-dashed border-brand-2/60 bg-brand-2/5 p-2.5">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-2">
-              <Sparkles className="size-3" /> Suggested rewrite
-            </p>
-            <p className="mt-1 text-sm leading-6 text-primary">{markInserted(s.rewritten, s.original)}</p>
-            <div className="mt-2 flex gap-2">
-              <SmallButton onClick={() => accept(s)} icon={Check} strong>Accept</SmallButton>
-              <SmallButton onClick={() => dismiss(s)} icon={X}>Keep mine</SmallButton>
-            </div>
-          </div>
-        ) : null}
+          {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+          {running ? 'Tailoring to this posting…' : 'Tailor my résumé for this role'}
+        </button>
+        {running ? <p className="mt-3 text-xs text-muted-foreground">Usually 10–30 seconds. Your saved résumé is not changed.</p> : null}
       </div>
     )
   }
-
-  const byKey = new Map(suggestions.map((s) => [s.key, s]))
 
   return (
-    <div>
-      {/* Phone (TASK-165): a note, never a gate — the studio works at this width, it is just roomier on a computer. */}
-      <p className="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-xs leading-5 text-muted-foreground sm:hidden print:hidden">
-        Editing a résumé is roomier on a computer. Everything here still works on your phone — you read each change and accept it one at a time.
-      </p>
-      {/* The control bar. */}
-      <div className={`glass sticky z-10 mb-5 flex flex-wrap items-center gap-2 border-b border-border py-3 print:hidden ${embedded ? 'top-0 -mx-6 px-6' : 'top-16 -mx-5 px-5 sm:-mx-8 sm:px-8'}`}>
-        {!res ? (
-          <button
-            type="button"
-            onClick={run}
-            disabled={running}
-            className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
-          >
-            {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {running ? 'Tailoring to this posting…' : 'Tailor my résumé for this role'}
-          </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={acceptAll}
-              disabled={!pending.length && skillsDecision !== 'pending'}
-              className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-            >
-              <CheckCheck className="size-4" />
-              Accept all AI suggestions{pending.length ? ` (${pending.length + (skillsDecision === 'pending' ? 1 : 0)})` : ''}
-            </button>
-            <ToolbarButton onClick={saveVersion} disabled={busy} icon={Save}>Save as version</ToolbarButton>
-            <ToolbarButton onClick={() => setExportOpen(true)} icon={FileDown}>Export résumé</ToolbarButton>
-            <ToolbarButton onClick={run} disabled={running} icon={running ? Loader2 : Sparkles}>Re-run</ToolbarButton>
-          </>
-        )}
-        <span className="ml-auto hidden items-center gap-3 text-[11px] text-muted-foreground md:flex">
-          <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-sm bg-brand-2" /> rewritten</span>
-          <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-sm bg-score-high" /> inserted keyword</span>
-          <span className="inline-flex items-center gap-1.5"><Pencil className="size-3" /> edit any line</span>
-        </span>
-      </div>
+    <div className="print:hidden">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
+        {/* ---- left: the score, what changed, the three tabs ---- */}
+        <aside className="space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-5" aria-label="Score for this posting">
+            <div className="flex items-center gap-4">
+              <Gauge value={tenth(now)} small />
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold leading-snug tracking-[-0.03em] text-primary">{lead}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {scoring ? <Loader2 className="mr-1 inline size-3 animate-spin align-[-1px]" aria-label="Scoring" /> : null}
+                  ATS score against this posting — the same check as the free ATS checker, re-run on every change.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="text-xs font-semibold text-primary">See what&rsquo;s changed</p>
+              {changes.length === 0 ? (
+                <p className="mt-1.5 text-xs text-muted-foreground">Nothing — this is your saved résumé.</p>
+              ) : (
+                <ul className="mt-1.5 space-y-1 text-xs leading-5 text-muted-foreground">
+                  {summaryChanged ? <li>Summary updated to speak to this role</li> : null}
+                  {nBullets ? <li>Enhanced {nBullets} work-experience bullet{nBullets === 1 ? '' : 's'}</li> : null}
+                  {skillsChange ? <li>Skills {skillsChange.note ? `— ${skillsChange.note}` : 'changed'}</li> : null}
+                </ul>
+              )}
+              <div className="mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-accent" aria-hidden="true" />
+                <div>
+                  <p>Every rewrite was checked against your own lines{res.providerLabel ? `, after ${res.providerLabel} drafted it` : ''}.</p>
+                  {res.reverted.length ? (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer font-semibold text-primary">{res.reverted.length} refused — see why</summary>
+                      <ul className="mt-1.5 space-y-1.5">
+                        {res.reverted.map((r, i) => (
+                          <li key={i} className="rounded-lg bg-secondary/60 p-2">
+                            <span className="line-through">{r.rewritten}</span>
+                            <span className="mt-0.5 block text-primary">Refused: {r.reason}.</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </section>
 
-      {error ? <p className="mb-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground print:hidden">{error}</p> : null}
-      {note ? <p role="status" className="mb-4 rounded-xl border border-border bg-card p-4 text-sm text-primary print:hidden">{note}</p> : null}
+          <section className="rounded-2xl border border-border bg-card" aria-label="Edit your new résumé">
+            <div role="tablist" aria-label="Edit your new résumé" className="grid grid-cols-3 border-b border-border">
+              {([['rewrite', 'AI Rewrite'], ['editor', 'Editor'], ['style', 'Style']] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  role="tab"
+                  type="button"
+                  aria-selected={tab === k}
+                  onClick={() => setTab(k)}
+                  className={`relative py-3 text-sm font-semibold transition-colors ${tab === k ? 'text-primary after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:bg-accent' : 'text-muted-foreground hover:text-primary'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-      {res ? (
-        <div className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 print:hidden" aria-label="Score for this posting">
-          <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-            <ScoreFig label="Saved résumé" value={res.scores.before} />
-            <span className="pb-1 text-muted-foreground" aria-hidden="true">→</span>
-            <ScoreFig label="Your draft now" value={nowScore} pending={scoring} strong />
-            <ScoreFig label="If you accept everything" value={res.scores.after} muted />
-          </div>
-          <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-            ATS readability score against this posting — the same check as the free ATS checker, run on your text each time you accept, dismiss or edit a line.
-            {nowScore !== null && res.scores.before !== null && changes.length > 0
-              ? ` Your draft is ${nowScore === res.scores.before ? 'level with' : nowScore > res.scores.before ? `${nowScore - res.scores.before} point${nowScore - res.scores.before === 1 ? '' : 's'} above` : `${res.scores.before - nowScore} point${res.scores.before - nowScore === 1 ? '' : 's'} below`} the saved résumé.`
-              : ''}
-          </p>
-        </div>
-      ) : null}
-
-      {res ? (
-        <div className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 print:hidden" aria-label="Style and page length">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-primary">Style</span>
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                aria-pressed={style.preset === p.id}
-                onClick={() => { setFit(false); setStyle((cur) => withPreset(cur, p.id)) }}
-                title={p.note}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
-                  style.preset === p.id ? 'bg-brand-gradient border-transparent' : 'border-border text-muted-foreground hover:border-accent/60 hover:text-primary'
-                }`}
-              >
-                {p.name}
-              </button>
-            ))}
-            <label className="ml-2 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-primary">
-              <input type="checkbox" checked={fit} onChange={(e) => setFit(e.target.checked)} className="size-3.5 accent-[var(--color-accent)]" />
-              Fit to one page
-            </label>
-            <span role="status" className="text-[11px] text-muted-foreground">
-              {fit && fitRes
-                ? fitRes.fits
-                  ? `Fits one page (estimated, about ${pages.toFixed(1)}).`
-                  : `Still about ${pages.toFixed(1)} pages with the tightest spacing — shorten older roles or long bullets.`
-                : `About ${pages.toFixed(1)} ${pages.toFixed(1) === '1.0' ? 'page' : 'pages'} (estimated).`}
-            </span>
-            <button type="button" onClick={() => setExportOpen(true)} className="ml-auto text-xs font-semibold text-primary underline underline-offset-4">
-              Fonts, colours, spacing &amp; export
-            </button>
-          </div>
-          <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
-            Every style is one column of real text, so each passes the ATS checker. The file is named <span className="font-mono text-primary">{fileName}</span>.
-          </p>
-        </div>
-      ) : null}
-
-      <div className="grid gap-5 lg:grid-cols-2 print:hidden">
-        <DocColumn title="Current résumé" subtitle={resumeLabel}>
-          <DocBody sections={original} />
-        </DocColumn>
-
-        <DocColumn title="AI-tailored résumé" subtitle={`For ${roleTitle}${company ? ` at ${company}` : ''}`} accent>
-          <Head name={working.contact.name} />
-          {working.summary !== null ? (
-            <Block title="Summary">{line(byKey.get('summary'), 'summary', -1, 0, working.summary ?? '', original.summary ?? '')}</Block>
-          ) : null}
-          {working.experience.length ? (
-            <Block title="Experience">
-              <div className="space-y-4">
-                {working.experience.map((e, i) => (
-                  <div key={i}>
-                    <Role e={e} />
-                    <div className="mt-1 space-y-1">
-                      {e.bullets.map((b, j) => (
-                        <div key={j}>{line(byKey.get(`${i}:${j}`), `${i}:${j}`, i, j, b, original.experience[i]?.bullets[j] ?? b)}</div>
-                      ))}
-                    </div>
+            <div className="p-4">
+              {tab === 'rewrite' ? (
+                <div className="space-y-3">
+                  <p className="text-xs leading-5 text-muted-foreground">Tell the AI what you want. It only rewrites lines you already wrote — it cannot add a number, employer or skill you do not have.</p>
+                  <div className="flex flex-col gap-2">
+                    {CHIPS.map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => onChip(c.key)}
+                        disabled={aiBusy}
+                        className="rounded-xl border border-border bg-background px-3 py-2.5 text-left text-sm text-primary transition hover:border-accent/60 disabled:opacity-60"
+                      >
+                        {c.label}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Block>
-          ) : null}
-          {working.skills.length ? (
-            <Block title="Skills">
-              <div className="flex flex-wrap gap-1.5">
-                {working.skills.map((s) => (
-                  <span key={s} className={`rounded-md px-2 py-0.5 text-xs ${keywords.some((k) => k.toLowerCase() === s.toLowerCase()) ? 'bg-score-high/15 text-score-high' : 'bg-secondary text-primary'}`}>{s}</span>
-                ))}
-              </div>
-              {res && skillsDecision === 'pending' ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-brand-2/60 bg-brand-2/5 p-2.5 text-xs text-primary">
-                  <Sparkles className="size-3 text-brand-2" />
-                  Lead with the skills this posting names.
-                  <SmallButton onClick={() => { setWorking((w) => ({ ...w, skills: res.sections.skills })); setSkillsDecision('accepted') }} icon={Check} strong>Reorder</SmallButton>
-                  <SmallButton onClick={() => setSkillsDecision('dismissed')} icon={X}>Keep order</SmallButton>
+                  <form
+                    className="flex items-center gap-2 rounded-2xl border border-border bg-background py-1.5 pl-4 pr-1.5 focus-within:border-accent"
+                    onSubmit={(e) => { e.preventDefault(); if (instruction.trim().length >= 3) void askAi(instruction.trim(), 'both') }}
+                  >
+                    <input
+                      value={instruction}
+                      onChange={(e) => setInstruction(e.target.value)}
+                      placeholder="Ask the AI to change your summary or latest role…"
+                      aria-label="Tell the AI what to change"
+                      maxLength={160}
+                      className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none placeholder:text-muted-foreground"
+                    />
+                    <button type="submit" disabled={aiBusy || instruction.trim().length < 3} aria-label="Send" className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full disabled:opacity-40">
+                      {aiBusy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
+                    </button>
+                  </form>
+                  {aiNote ? <p role="status" className="rounded-xl bg-secondary px-3 py-2 text-xs leading-5 text-primary">{aiNote}</p> : null}
                 </div>
               ) : null}
-            </Block>
-          ) : null}
-          {working.education.length ? (
-            <Block title="Education">
-              {working.education.map((ed, i) => (
-                <p key={i} className="text-sm text-primary">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>
-              ))}
-            </Block>
-          ) : null}
-        </DocColumn>
-      </div>
 
-      {res ? (
-        <details className="mt-5 rounded-2xl border border-border bg-card p-4 print:hidden" open={changes.length > 0 && changes.length <= 6}>
-          <summary className="cursor-pointer list-none text-xs font-semibold text-primary">
-            {changes.length === 0 ? 'No changes yet — this is your saved résumé.' : `${changes.length} change${changes.length === 1 ? '' : 's'} from your saved résumé`}
-            <span className="ml-2 font-normal text-muted-foreground">Read from the two documents, so it is always exactly what differs.</span>
-          </summary>
-          {changes.length ? (
-            <ul className="mt-3 space-y-2.5">
-              {changes.map((c, i) => (
-                <li key={i} className="rounded-lg bg-secondary/60 p-3 text-xs leading-5">
-                  <p className="font-semibold text-primary">{c.where}{c.note ? <span className="ml-2 font-normal text-muted-foreground">({c.note})</span> : null}</p>
-                  {c.before !== null ? <p className="mt-1 text-muted-foreground line-through">{c.before}</p> : <p className="mt-1 text-muted-foreground">New line</p>}
-                  {c.after !== null ? <p className="mt-0.5 text-primary">{c.after}</p> : <p className="mt-0.5 text-muted-foreground">Line removed</p>}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </details>
-      ) : null}
+              {tab === 'editor' ? (
+                <div className="space-y-5">
+                  <p className="text-xs leading-5 text-muted-foreground">Change any line. The page on the right and the score update as you type. Purple lines are the ones the AI changed — Undo puts yours back.</p>
+                  {aiNote ? <p role="status" className="rounded-xl bg-secondary px-3 py-2 text-xs leading-5 text-primary">{aiNote}</p> : null}
 
-      {res ? (
-        <div className="mt-5 rounded-2xl border border-border bg-card p-4 print:hidden">
-          <p className="flex items-center gap-2 text-xs font-semibold text-primary">
-            <ShieldCheck className="size-3.5 text-accent" />
-            Every suggestion was checked against your own lines{res.providerLabel ? `, after being drafted by ${res.providerLabel}` : ''}.
+                  {working.summary !== null ? (
+                    <EditorBlock title="Summary">
+                      <LineEditor
+                        value={working.summary ?? ''}
+                        original={original.summary ?? ''}
+                        rows={4}
+                        busy={lineBusy === 'summary'}
+                        onChange={setSummary}
+                        onAi={() => rewriteLine('summary', working.summary ?? '', setSummary)}
+                      />
+                    </EditorBlock>
+                  ) : null}
+
+                  {working.experience.map((e, i) =>
+                    e.bullets.length ? (
+                      <EditorBlock key={i} title={[e.title, e.employer].filter(Boolean).join(' · ') || `Role ${i + 1}`}>
+                        <div className="space-y-2">
+                          {e.bullets.map((b, j) => (
+                            <LineEditor
+                              key={j}
+                              value={b}
+                              original={original.experience[i]?.bullets[j] ?? b}
+                              rows={3}
+                              busy={lineBusy === `${i}:${j}`}
+                              onChange={(t) => setBullet(i, j, t)}
+                              onAi={() => rewriteLine(`${i}:${j}`, b, (t) => setBullet(i, j, t))}
+                            />
+                          ))}
+                        </div>
+                      </EditorBlock>
+                    ) : null,
+                  )}
+
+                  <EditorBlock title="Skills">
+                    <div className="flex flex-wrap gap-1.5">
+                      {working.skills.map((s) => (
+                        <span key={s} className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ${keywords.some((k) => k.toLowerCase() === s.toLowerCase()) ? 'bg-score-high/15 text-score-high' : 'bg-secondary text-primary'}`}>
+                          {s}
+                          <button type="button" aria-label={`Remove ${s}`} onClick={() => setWorking((w) => ({ ...w, skills: w.skills.filter((x) => x !== s) }))} className="text-muted-foreground hover:text-primary"><X className="size-3" /></button>
+                        </span>
+                      ))}
+                    </div>
+                    {skillsChange ? (
+                      <button type="button" onClick={() => setWorking((w) => ({ ...w, skills: original.skills }))} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary underline underline-offset-4">
+                        <Undo2 className="size-3" /> Restore my original skills
+                      </button>
+                    ) : null}
+                  </EditorBlock>
+                </div>
+              ) : null}
+
+              {tab === 'style' ? <ResumeStyleControls style={effective} onChange={(next) => { setFit(false); setStyle(next) }} /> : null}
+            </div>
+          </section>
+        </aside>
+
+        {/* ---- right: the page ---- */}
+        <section className={`min-w-0 lg:sticky ${embedded ? 'lg:top-2' : 'lg:top-20'} lg:self-start`} aria-label="Your new résumé">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+              <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <input
+                value={fileName}
+                onChange={(e) => setFileBase(e.target.value.replace(/[\\/:*?"<>|]/g, ''))}
+                aria-label="File name"
+                className="min-w-0 flex-1 bg-transparent font-mono text-xs text-primary outline-none"
+              />
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-primary">
+              <input type="checkbox" role="switch" checked={fit} onChange={(e) => setFit(e.target.checked)} className="size-3.5 accent-[var(--color-accent)]" />
+              Fit to one page
+            </label>
+            <button type="button" onClick={saveVersion} disabled={busy} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-primary hover:border-accent/60 disabled:opacity-60">
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save
+            </button>
+            <button type="button" onClick={() => setExportOpen(true)} className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold">
+              <FileDown className="size-3.5" /> Download résumé
+            </button>
+            {applyUrl ? (
+              <a href={applyUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-primary hover:border-accent/60">
+                Apply now
+              </a>
+            ) : null}
+          </div>
+          <p role="status" className="mb-2 min-h-4 text-[11px] text-muted-foreground">
+            {fit && fitRes
+              ? fitRes.fits ? `Fits one page (estimated, about ${estimatePagesForStyle(working, effective).toFixed(1)}).` : 'Still more than a page with the tightest spacing — shorten older roles or long bullets.'
+              : null}
+            {note ? ` ${note}` : null}
           </p>
-          {res.reverted.length ? (
-            <details className="mt-2">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-muted-foreground hover:text-primary">
-                {res.reverted.length} rewrite{res.reverted.length === 1 ? ' was' : 's were'} refused — see what and why
-              </summary>
-              <ul className="mt-2 space-y-2">
-                {res.reverted.map((r, i) => (
-                  <li key={i} className="rounded-lg bg-secondary/60 p-3 text-xs leading-5 text-muted-foreground">
-                    <span className="line-through">{r.rewritten}</span>
-                    <span className="mt-1 block text-primary">Refused: {r.reason}.</span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
-          {!suggestions.length ? (
-            <p className="mt-2 text-xs text-muted-foreground">No line needed rewriting for this posting — your résumé already speaks to it.</p>
-          ) : null}
-        </div>
-      ) : null}
+          <PaperBox blocks={blocks} style={effective} decorate={decorate} onPages={setPages} pages={pages} />
+        </section>
+      </div>
 
       <ExportDrawer
         open={exportOpen}
@@ -485,7 +469,7 @@ export function TailorStudio({
         targetRole={roleTitle}
         style={effective}
         onStyle={(next) => { setFit(false); setStyle(next) }}
-        fileName={fileName.replace(/\.docx$/, '')}
+        fileName={fileName}
         onWord={exportWord}
         busy={busy}
         note={note}
@@ -494,14 +478,66 @@ export function TailorStudio({
   )
 }
 
-function ScoreFig({ label, value, strong, muted, pending }: { label: string; value: number | null | undefined; strong?: boolean; muted?: boolean; pending?: boolean }) {
+/** The page, scaled to the column it sits in and never larger than life, with its page count underneath. */
+function PaperBox({ blocks, style, decorate, onPages, pages }: { blocks: ReturnType<typeof buildDoc>; style: ResumeStyle; decorate: (t: string) => ReactNode; onPages: (n: number) => void; pages: number }) {
+  const box = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0.7)
+  const paperW = (style.page === 'letter' ? 8.5 : 8.27) * 96
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const fit = () => setScale(Math.min(1, el.clientWidth / paperW))
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [paperW])
   return (
-    <div className={muted ? 'opacity-70' : ''}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-      <p className={`font-mono tabular-nums ${strong ? 'text-3xl font-bold text-primary' : 'text-2xl text-primary'}`}>
-        {value === null || value === undefined ? '—' : value}
-        {pending ? <Loader2 className="ml-2 inline size-3.5 animate-spin align-middle text-muted-foreground" aria-label="Scoring" /> : null}
+    <div ref={box} className="max-h-[calc(100vh-11rem)] min-h-[24rem] overflow-y-auto rounded-2xl border border-border bg-secondary/40 p-2">
+      <div style={{ zoom: scale, width: paperW }} className="mx-auto">
+        <ResumePaper blocks={blocks} style={style} onPages={onPages} decorate={decorate} />
+      </div>
+      <p className="pointer-events-none sticky bottom-1 mx-auto mt-2 w-fit rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground" aria-live="polite">
+        {pages} {pages === 1 ? 'page' : 'pages'}
       </p>
+    </div>
+  )
+}
+
+function EditorBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <h4 className="mb-2 border-b border-border pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{title}</h4>
+      {children}
+    </div>
+  )
+}
+
+/** One editable line. Marked when it differs from the saved résumé, with Undo and a one-line AI rewrite. */
+function LineEditor({ value, original, rows, busy, onChange, onAi }: { value: string; original: string; rows: number; busy: boolean; onChange: (t: string) => void; onAi: () => void }) {
+  const changed = value !== original
+  return (
+    <div className={`rounded-xl border p-2 ${changed ? 'border-brand-2/60 bg-brand-2/5' : 'border-border bg-background'}`}>
+      <textarea
+        value={value}
+        rows={rows}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Edit this line"
+        className="w-full resize-y bg-transparent text-sm leading-6 text-primary outline-none"
+      />
+      <div className="flex items-center gap-2 text-[11px]">
+        {changed ? <span className="font-semibold text-brand-2">Changed</span> : <span className="text-muted-foreground">As you wrote it</span>}
+        <span className="ml-auto flex items-center gap-1">
+          {changed ? (
+            <button type="button" onClick={() => onChange(original)} aria-label="Undo this change" className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-semibold text-muted-foreground hover:bg-secondary hover:text-primary">
+              <Undo2 className="size-3" /> Undo
+            </button>
+          ) : null}
+          <button type="button" onClick={onAi} disabled={busy} aria-label="Rewrite this line with AI" className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-semibold text-muted-foreground hover:bg-secondary hover:text-primary disabled:opacity-60">
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />} Rewrite
+          </button>
+        </span>
+      </div>
     </div>
   )
 }
@@ -510,93 +546,18 @@ function esc(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function DocColumn({ title, subtitle, accent, children }: { title: string; subtitle: string; accent?: boolean; children: ReactNode }) {
-  return (
-    <section className={`rounded-2xl border bg-card p-5 ${accent ? 'glow-selected border-transparent' : 'border-border'}`}>
-      <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${accent ? 'text-accent' : 'text-muted-foreground'}`}>{title}</p>
-      <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
-      <div className="mt-4 space-y-5">{children}</div>
-    </section>
+/** Marks posting keywords the rewrite added. Text nodes only. */
+function markInserted(text: string, before: string, keywords: string[]): ReactNode {
+  const added = keywords.filter(
+    (k) => k.length > 1 && new RegExp(`\\b${esc(k)}\\b`, 'i').test(text) && !new RegExp(`\\b${esc(k)}\\b`, 'i').test(before),
   )
-}
-
-function DocBody({ sections }: { sections: ResumeSections }) {
-  return (
-    <>
-      <Head name={sections.contact.name} />
-      {sections.summary ? <Block title="Summary"><p className="px-2 text-sm leading-6 text-muted-foreground">{sections.summary}</p></Block> : null}
-      {sections.experience.length ? (
-        <Block title="Experience">
-          <div className="space-y-4">
-            {sections.experience.map((e, i) => (
-              <div key={i}>
-                <Role e={e} />
-                <ul className="mt-1 space-y-1">
-                  {e.bullets.map((b, j) => <li key={j} className="px-2 py-1.5 text-sm leading-6 text-muted-foreground">{b}</li>)}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </Block>
-      ) : null}
-      {sections.skills.length ? (
-        <Block title="Skills">
-          <div className="flex flex-wrap gap-1.5">
-            {sections.skills.map((s) => <span key={s} className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{s}</span>)}
-          </div>
-        </Block>
-      ) : null}
-    </>
-  )
-}
-
-function Head({ name }: { name: string | null }) {
-  return name ? <p className="text-lg font-semibold tracking-[-0.03em] text-primary">{name}</p> : null
-}
-
-function Block({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div>
-      <h3 className="mb-2 border-b border-border pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-function Role({ e }: { e: ResumeSections['experience'][number] }) {
-  return (
-    <p className="px-2 text-sm font-semibold text-primary">
-      {[e.title, e.employer].filter(Boolean).join(' — ') || 'Role'}
-      {e.dates ? <span className="ml-2 text-xs font-normal text-muted-foreground">{e.dates}</span> : null}
-    </p>
-  )
-}
-
-function ToolbarButton({ onClick, disabled, icon: Icon, children }: { onClick: () => void; disabled?: boolean; icon: typeof Download; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold text-primary hover:border-accent/60 disabled:opacity-50"
-    >
-      <Icon className={`size-3.5 ${Icon === Loader2 ? 'animate-spin' : ''}`} />
-      {children}
-    </button>
-  )
-}
-
-function SmallButton({ onClick, icon: Icon, strong, children }: { onClick: () => void; icon: typeof Check; strong?: boolean; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold ${
-        strong ? 'bg-brand-gradient' : 'border border-border bg-background text-primary hover:border-accent/60'
-      }`}
-    >
-      <Icon className="size-3" />
-      {children}
-    </button>
+  if (!added.length) return text
+  const re = new RegExp(`\\b(${added.map(esc).join('|')})\\b`, 'gi')
+  return text.split(re).map((part, i) =>
+    added.some((k) => k.toLowerCase() === part.toLowerCase()) ? (
+      <mark key={i} className="rounded bg-score-high/20 px-0.5 font-semibold text-score-high">{part}</mark>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   )
 }

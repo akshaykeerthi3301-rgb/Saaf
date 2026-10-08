@@ -5,21 +5,22 @@ import { createRoot, type Root } from 'react-dom/client'
 import type { ResumeSections } from '@/lib/parse/sections'
 
 /**
- * The tailor review (TASK-159), driven the way a candidate drives it: tailor,
- * accept, edit, switch style, fit to a page, export. The server actions are
- * mocked at their boundary; everything on screen is the real component.
- *
- * Added because the founder's account has no saved résumé, so the screen could
- * not be walked in a browser — a component test is the next best proof, and is
- * labelled as that in ROADMAP rather than as a browser walk.
+ * The result of "Customize your résumé" (the reference's step 3), driven the way a candidate drives it: the rewrite
+ * is applied at once, the page shows what changed, they undo and edit lines, ask the AI for a change, restyle, fit to
+ * a page and download. The server actions are mocked at their boundary; everything on screen is the real component.
  */
 const mocks = vi.hoisted(() => ({
   tailorSavedResume: vi.fn(),
   scoreDraft: vi.fn(),
+  rewriteStudioLine: vi.fn(),
+  rewriteStudioLines: vi.fn(),
   downloadOptimisedResume: vi.fn(),
   saveResumeToAccount: vi.fn(),
 }))
-vi.mock('@/app/actions/tailor-studio', () => ({ tailorSavedResume: mocks.tailorSavedResume, scoreDraft: mocks.scoreDraft }))
+vi.mock('@/app/actions/tailor-studio', () => ({
+  tailorSavedResume: mocks.tailorSavedResume, scoreDraft: mocks.scoreDraft,
+  rewriteStudioLine: mocks.rewriteStudioLine, rewriteStudioLines: mocks.rewriteStudioLines,
+}))
 vi.mock('@/app/actions/resume-download', () => ({ downloadOptimisedResume: mocks.downloadOptimisedResume }))
 vi.mock('@/app/actions/resume-documents', () => ({ saveResumeToAccount: mocks.saveResumeToAccount }))
 
@@ -27,12 +28,12 @@ const { TailorStudio } = await import('../tailor-studio')
 
 const original: ResumeSections = {
   contact: { name: 'Asha Rao', email: 'a@b.co', phone: null, links: [] },
-  summary: 'Customer success lead with six years in SaaS.',
+  summary: 'Customer success lead with six years in SaaS, working across onboarding and renewals.',
   experience: [
     { title: 'CSM', employer: 'Acme', dates: '2021–2024', location: null, bullets: ['Owned 40 accounts.', 'Cut churn by 12%.'] },
   ],
   education: [{ qualification: 'B.Com', institution: 'Pune University', dates: '2019' }],
-  skills: ['Excel', 'SQL'],
+  skills: ['Excel', 'SQL', 'Salesforce', 'Zendesk', 'Jira'],
   other: [], unplaced: 0, order: [],
 }
 const rewrittenDoc: ResumeSections = {
@@ -46,7 +47,7 @@ const okResult = {
   reverted: [],
   skillsReordered: false,
   providerLabel: 'Groq',
-  keywords: [],
+  keywords: ['Excel', 'SQL'],
   scores: { before: 60, after: 72 },
 }
 
@@ -55,16 +56,31 @@ let root: Root
 
 const flush = async () => { await act(async () => { await Promise.resolve() }) }
 const text = () => host.textContent ?? ''
-const button = (label: RegExp) => [...host.querySelectorAll('button')].find((b) => label.test(b.textContent ?? ''))!
+const everything = () => document.body
+const button = (label: RegExp, scope: ParentNode = host) => [...scope.querySelectorAll('button')].find((b) => label.test(b.textContent ?? ''))!
 const click = async (el: Element) => { await act(async () => { (el as HTMLElement).click() }); await flush() }
+const type = async (el: Element, value: string) => {
+  await act(async () => {
+    const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+    Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value)
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+  await flush()
+}
+const tab = (name: RegExp) => [...host.querySelectorAll('[role="tab"]')].find((t) => name.test(t.textContent ?? ''))!
+const paper = () => host.querySelector('[data-resume-paper]')!
 
-async function mount() {
+async function mount(props: Record<string, unknown> = {}) {
   await act(async () => {
     root.render(createElement(TailorStudio, {
       roleId: '00000000-0000-4000-8000-000000000001', resumeId: '00000000-0000-4000-8000-000000000002',
-      resumeLabel: 'My résumé', original, roleTitle: 'Customer Success Manager', company: 'Diligent',
+      resumeLabel: 'My résumé', original, roleTitle: 'Customer Success Manager', company: 'Diligent', ...props,
     }))
   })
+}
+async function tailored(props: Record<string, unknown> = {}) {
+  await mount(props)
+  await click(button(/Tailor my résumé/))
 }
 
 beforeEach(() => {
@@ -85,133 +101,171 @@ afterEach(async () => {
 })
 
 describe('before the model runs', () => {
-  it('shows no score strip, change list or style bar until there is a tailored draft', async () => {
+  it('offers only the button — no score, page or tabs until there is a tailored résumé', async () => {
     await mount()
     expect(text()).toContain('Tailor my résumé for this role')
-    expect(text()).not.toContain('Your draft now')
-    expect(text()).not.toContain('Fit to one page')
+    expect(host.querySelector('[role="tablist"]')).toBeNull()
+    expect(host.querySelector('[data-resume-paper]')).toBeNull()
   })
 })
 
 describe('after tailoring', () => {
-  async function tailored() {
-    await mount()
-    await click(button(/Tailor my résumé/))
-  }
-
-  it('shows the saved résumé\'s score, the draft\'s score (equal while nothing is changed) and what accepting everything would give', async () => {
+  it('applies the rewrite at once and marks the changed line on the page', async () => {
     await tailored()
     expect(mocks.tailorSavedResume).toHaveBeenCalledTimes(1)
-    const strip = host.querySelector('[aria-label="Score for this posting"]')!.textContent!
-    expect(strip).toContain('Saved résumé60')
-    expect(strip).toContain('Your draft now60')
-    expect(strip).toContain('If you accept everything72')
-    expect(mocks.scoreDraft).not.toHaveBeenCalled() // identical to the saved résumé: no call
-    expect(text()).toContain('No changes yet')
+    expect(paper().textContent).toContain('Owned 40 accounts worth ₹6 Cr.')
+    expect(paper().querySelector('mark')!.textContent).toContain('Owned 40 accounts worth ₹6 Cr.')
+    expect(text()).toContain('Enhanced 1 work-experience bullet')
   })
 
-  it('accepting a suggestion changes the draft, asks for its score after a pause, and says how far it moved', async () => {
+  it('scores the page after a pause and says how far it moved, on a ten-point scale', async () => {
     await tailored()
-    await click(button(/Accept all AI suggestions/))
     expect(mocks.scoreDraft).not.toHaveBeenCalled() // debounced
     await act(async () => { await vi.advanceTimersByTimeAsync(800) })
     await flush()
     expect(mocks.scoreDraft).toHaveBeenCalledTimes(1)
-    const sent = mocks.scoreDraft.mock.calls[0][0]
-    expect(sent.roleId).toBe('00000000-0000-4000-8000-000000000001')
-    expect(sent.sections.experience[0].bullets[0]).toBe('Owned 40 accounts worth ₹6 Cr.')
-    const strip = host.querySelector('[aria-label="Score for this posting"]')!.textContent!
-    expect(strip).toContain('Your draft now70')
-    expect(strip).toContain('10 points above the saved résumé')
+    expect(mocks.scoreDraft.mock.calls[0][0].sections.experience[0].bullets[0]).toBe('Owned 40 accounts worth ₹6 Cr.')
+    const head = host.querySelector('[aria-label="Score for this posting"]')!.textContent!
+    expect(head).toContain('Great! Your score jumped from 6 to 7')
   })
 
-  it('the change list is the diff: one change after accepting, none after undoing it', async () => {
+  it('says so, instead of celebrating, when the score does not rise', async () => {
+    mocks.scoreDraft.mockResolvedValue({ ok: true, score: 55 })
     await tailored()
-    await click(button(/Accept all AI suggestions/))
-    expect(text()).toContain('1 change from your saved résumé')
-    const listed = host.querySelector('details ul')!.textContent!
-    expect(listed).toContain('CSM — Acme')
-    expect(listed).toContain('Owned 40 accounts.')
-    expect(listed).toContain('Owned 40 accounts worth ₹6 Cr.')
-    await click(host.querySelector('button[aria-label="Undo this rewrite"]')!)
-    expect(text()).toContain('No changes yet')
-  })
-
-  it('a hand edit appears in the list too — it reads the document, not the AI log', async () => {
-    await tailored()
-    // Dismiss the suggestion, then edit the first line by hand.
-    await click(button(/Keep mine/))
-    await click(host.querySelector('button[aria-label="Edit this line"]')!)
-    const area = host.querySelector('textarea')!
-    await act(async () => {
-      const set = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!
-      set.call(area, 'Owned 45 accounts.')
-      area.dispatchEvent(new Event('input', { bubbles: true }))
-    })
-    await click(button(/^Done$/))
-    expect(text()).toContain('1 change from your saved résumé')
-    expect(host.querySelector('details ul')!.textContent).toContain('Owned 45 accounts.')
-  })
-
-  it('a slow score for an older draft never overwrites the newer one', async () => {
-    await tailored()
-    let release!: (v: unknown) => void
-    mocks.scoreDraft.mockReturnValueOnce(new Promise((r) => { release = r }))
-    await click(button(/Accept all AI suggestions/))
-    await act(async () => { await vi.advanceTimersByTimeAsync(800) }) // first request in flight, held
-    await click(host.querySelector('button[aria-label="Undo this rewrite"]')!) // back to the saved résumé
-    await act(async () => { release({ ok: true, score: 99 }) })
+    await act(async () => { await vi.advanceTimersByTimeAsync(800) })
     await flush()
-    const strip = host.querySelector('[aria-label="Score for this posting"]')!.textContent!
-    expect(strip).toContain('Your draft now60') // not 99
+    const head = host.querySelector('[aria-label="Score for this posting"]')!.textContent!
+    expect(head).toContain('Your score is 5.5 (it was 6) — undo a change to bring it back.')
+    expect(head).not.toContain('Great!')
   })
 
-  it('offers the three templates, says how many pages, and names the file for the person, role and company', async () => {
+  it('lists what the guard refused rather than hiding it', async () => {
+    mocks.tailorSavedResume.mockResolvedValue({ ...okResult, reverted: [{ entry: 0, original: 'a', rewritten: 'Owned 90 accounts.', kept: false, reason: 'added a number your résumé does not have' }] })
     await tailored()
-    const bar = host.querySelector('[aria-label="Style and page length"]')!
-    const names = [...bar.querySelectorAll('button')].map((b) => b.textContent).filter((t) => t && !/Fonts, colours/.test(t))
-    expect(names).toEqual(['Standard', 'Compact', 'Centered'])
-    expect(bar.textContent).toMatch(/About 0\.\d pages? \(estimated\)/)
-    expect(bar.textContent).toContain('Asha_Rao_Customer_Success_Manager_Diligent.docx')
-    await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Compact')!)
-    expect([...host.querySelectorAll('[aria-label="Style and page length"] button')].find((b) => b.textContent === 'Compact')!.getAttribute('aria-pressed')).toBe('true')
+    expect(text()).toContain('1 refused')
+    expect(text()).toContain('Owned 90 accounts.')
+  })
+})
+
+describe('the Editor tab', () => {
+  it('edits a line on the page, and Undo puts the saved résumé’s line back', async () => {
+    await tailored()
+    await click(tab(/Editor/))
+    const area = [...host.querySelectorAll('textarea')].find((t) => t.value === 'Owned 40 accounts worth ₹6 Cr.')!
+    expect(text()).toContain('Changed')
+    await type(area, 'Owned 45 accounts.')
+    expect(paper().textContent).toContain('Owned 45 accounts.')
+    await click(host.querySelector('button[aria-label="Undo this change"]')!)
+    expect(paper().textContent).toContain('Owned 40 accounts.')
+    expect(paper().textContent).not.toContain('worth ₹6 Cr.')
+    expect(text()).toContain('Nothing — this is your saved résumé.')
+  })
+
+  it('rewrites one line with AI into the box', async () => {
+    mocks.rewriteStudioLine.mockResolvedValue({ ok: true, line: 'Cut churn 12%.', providerLabel: 'Groq' })
+    await tailored()
+    await click(tab(/Editor/))
+    await click(host.querySelectorAll('button[aria-label="Rewrite this line with AI"]')[2]) // second bullet; the summary is first
+    expect(mocks.rewriteStudioLine).toHaveBeenCalledWith({ roleId: '00000000-0000-4000-8000-000000000001', line: 'Cut churn by 12%.' })
+    expect(paper().textContent).toContain('Cut churn 12%.')
+  })
+})
+
+describe('the AI Rewrite tab', () => {
+  it('"Shorten my summary" sends the summary with the instruction and applies what comes back', async () => {
+    mocks.rewriteStudioLines.mockResolvedValue({ ok: true, results: [{ key: 'summary', line: 'Customer success lead, six years in SaaS.' }], providerLabel: 'Groq' })
+    await tailored()
+    await click(button(/Shorten my summary/))
+    expect(mocks.rewriteStudioLines).toHaveBeenCalledTimes(1)
+    const sent = mocks.rewriteStudioLines.mock.calls[0][0]
+    expect(sent.lines).toEqual([{ key: 'summary', text: original.summary, summary: true }])
+    expect(sent.instruction).toMatch(/Shorten/)
+    expect(paper().textContent).toContain('Customer success lead, six years in SaaS.')
+    expect(text()).toContain('1 of 1 line rewritten by Groq')
+  })
+
+  it('a free-text request goes to the summary and the latest role, and a refused line is reported, not applied', async () => {
+    mocks.rewriteStudioLines.mockResolvedValue({
+      ok: true,
+      results: [{ key: 'summary', reason: 'Left as written: the rewrite added a figure.' }, { key: '0:0', line: 'Won 40 accounts.' }, { key: '0:1', line: 'Cut churn by 12%.' }],
+      providerLabel: 'Groq',
+    })
+    await tailored()
+    await type(host.querySelector('input[aria-label="Tell the AI what to change"]')!, 'make it punchier')
+    await click(host.querySelector('button[aria-label="Send"]')!)
+    expect(mocks.rewriteStudioLines.mock.calls[0][0].lines.map((l: { key: string }) => l.key)).toEqual(['summary', '0:0', '0:1'])
+    expect(paper().textContent).toContain('Won 40 accounts.')
+    expect(paper().textContent).toContain(original.summary!) // the refused line stayed
+    expect(text()).toContain('2 of 3 lines rewritten')
+    expect(text()).toContain('1 left as written')
+  })
+
+  it('"Remove skills not related" keeps what the posting names, with no model call', async () => {
+    mocks.tailorSavedResume.mockResolvedValue({ ...okResult, keywords: ['Excel', 'SQL', 'Salesforce'] })
+    await tailored()
+    await click(button(/Remove skills not related/))
+    expect(mocks.rewriteStudioLines).not.toHaveBeenCalled()
+    expect(paper().textContent).not.toContain('Zendesk')
+    expect(paper().textContent).toContain('Salesforce')
+    expect(text()).toContain('Removed 2 skills')
+  })
+
+  it('will not strip the skills down to almost nothing', async () => {
+    await tailored() // keywords: Excel, SQL → only two skills match
+    await click(button(/Remove skills not related/))
+    expect(paper().textContent).toContain('Zendesk')
+    expect(text()).toContain('nothing was removed')
+  })
+})
+
+describe('style, fit and download', () => {
+  it('the Style tab holds the same controls as the export drawer, and a template card restyles the page', async () => {
+    await tailored()
+    await click(tab(/Style/))
+    expect(host.querySelector('[role="group"][aria-label="Template"]')).not.toBeNull()
+    const centered = [...host.querySelectorAll('[aria-label="Template"] button')].find((b) => /Centered/.test(b.textContent ?? ''))!
+    await click(centered)
+    expect(centered.getAttribute('aria-pressed')).toBe('true')
+    expect((paper().querySelector('h1') as HTMLElement).style.textAlign).toBe('center')
   })
 
   it('"Fit to one page" says it fits when it does', async () => {
     await tailored()
-    await click(host.querySelector('[aria-label="Style and page length"] input[type="checkbox"]')!)
-    expect(host.querySelector('[aria-label="Style and page length"]')!.textContent).toMatch(/Fits one page \(estimated, about 0\.\d\)\./)
+    await click(host.querySelector('input[role="switch"]')!)
+    expect(text()).toMatch(/Fits one page \(estimated, about 0\.\d\)\./)
   })
 
-  it('"Fit to one page" says it does NOT fit rather than claiming success, when even the tightest spacing runs over', async () => {
+  it('"Fit to one page" says it does NOT fit rather than claiming success', async () => {
     const long: ResumeSections = {
       ...original,
       experience: Array.from({ length: 6 }, (_, i) => ({ title: `Role ${i}`, employer: `Employer ${i}`, dates: 'd', location: null, bullets: Array.from({ length: 12 }, (_, j) => `${'achieved a measurable result '.repeat(5)}${i}${j}`) })),
     }
     mocks.tailorSavedResume.mockResolvedValue({ ...okResult, sections: long, changes: [] })
-    await act(async () => {
-      root.render(createElement(TailorStudio, {
-        roleId: 'r', resumeId: 's', resumeLabel: 'L', original: long, roleTitle: 'CSM', company: 'Diligent',
-      }))
-    })
-    await click(button(/Tailor my résumé/))
-    await click(host.querySelector('[aria-label="Style and page length"] input[type="checkbox"]')!)
-    const note = host.querySelector('[aria-label="Style and page length"]')!.textContent!
-    expect(note).toMatch(/Still about \d\.\d pages with the tightest spacing/)
-    expect(note).not.toContain('Fits one page')
+    await tailored({ original: long })
+    await click(host.querySelector('input[role="switch"]')!)
+    expect(text()).toContain('Still more than a page with the tightest spacing')
+    expect(text()).not.toContain('Fits one page')
   })
 
-  it('opens the export drawer, and Download Word sends the chosen style and the company', async () => {
+  it('names the file for the person, role and company, and lets them rename it', async () => {
+    await tailored()
+    const name = host.querySelector('input[aria-label="File name"]') as HTMLInputElement
+    expect(name.value).toBe('Asha_Rao_Customer_Success_Manager_Diligent')
+    await type(name, 'Asha_for_Diligent')
+    expect(name.value).toBe('Asha_for_Diligent')
+  })
+
+  it('Download résumé opens the drawer; Download Word sends the chosen style and the company', async () => {
     await tailored()
     URL.createObjectURL = vi.fn(() => 'blob:x')
     URL.revokeObjectURL = vi.fn()
-    const bar = host.querySelector('[aria-label="Style and page length"]')!
-    await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Centered')!)
-    await click(button(/Export résumé/))
-    await click([...document.body.querySelectorAll('button')].find((b) => /Download Word/.test(b.textContent ?? ''))!)
+    await click(tab(/Style/))
+    await click([...host.querySelectorAll('[aria-label="Template"] button')].find((b) => /Compact/.test(b.textContent ?? ''))!)
+    await click(button(/Download résumé/))
+    await click(button(/Download Word/, everything()))
     expect(mocks.downloadOptimisedResume).toHaveBeenCalledTimes(1)
     expect(mocks.downloadOptimisedResume.mock.calls[0][0]).toMatchObject({
-      company: 'Diligent', targetRole: 'Customer Success Manager', style: { preset: 'centered', headerAlign: 'center' },
+      company: 'Diligent', targetRole: 'Customer Success Manager', style: { preset: 'compact' },
     })
   })
 
@@ -220,10 +274,17 @@ describe('after tailoring', () => {
     document.title = 'Resume Tailoring Studio — Jobinko'
     let titleWhilePrinting = ''
     window.print = vi.fn(() => { titleWhilePrinting = document.title })
-    await click(button(/Export résumé/))
-    await click([...document.body.querySelectorAll('button')].find((b) => /Download PDF/.test(b.textContent ?? ''))!)
+    await click(button(/Download résumé/))
+    await click(button(/Download PDF/, everything()))
     expect(titleWhilePrinting).toBe('Asha_Rao_Customer_Success_Manager_Diligent')
     window.dispatchEvent(new Event('afterprint'))
     expect(document.title).toBe('Resume Tailoring Studio — Jobinko')
+  })
+
+  it('offers Apply now when the job has an application page', async () => {
+    await tailored({ applyUrl: 'https://careers.example.com/apply/1' })
+    const a = [...host.querySelectorAll('a')].find((x) => /Apply now/.test(x.textContent ?? ''))!
+    expect(a.getAttribute('href')).toBe('https://careers.example.com/apply/1')
+    expect(a.getAttribute('rel')).toContain('noopener')
   })
 })

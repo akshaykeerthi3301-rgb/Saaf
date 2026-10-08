@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import type { DocBlock } from '@/lib/resume-doc'
 import { PAGE, entryGapPt, fontFamily, lineMultiple, marginXIn, marginYIn, sectionGapPt, type ResumeStyle } from '@/lib/resume-style'
 
@@ -16,7 +16,13 @@ import { PAGE, entryGapPt, fontFamily, lineMultiple, marginXIn, marginYIn, secti
  * Colours come from tokens (`bg-paper`, `text-paper-ink`); only the person's own accent colour is inline, because it
  * is data, not design.
  */
-export function ResumePaper({ blocks, style, onPages }: { blocks: DocBlock[]; style: ResumeStyle; onPages?: (pages: number) => void }) {
+export function ResumePaper({ blocks, style, onPages, decorate }: {
+  blocks: DocBlock[]
+  style: ResumeStyle
+  onPages?: (pages: number) => void
+  /** Marks a line on screen — the tailor result highlights what the rewrite changed. Never used when printing or exporting. */
+  decorate?: (text: string) => ReactNode
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const page = PAGE[style.page]
   const my = marginYIn(style.spacing.marginY)
@@ -84,7 +90,7 @@ export function ResumePaper({ blocks, style, onPages }: { blocks: DocBlock[]; st
                 </h2>
               )
             case 'para':
-              return <p key={i} className="m-0 mb-0.5" style={{ textAlign: al }}>{b.text}</p>
+              return <p key={i} className="m-0 mb-0.5" style={{ textAlign: al }}>{decorate ? decorate(b.text) : b.text}</p>
             case 'entry':
               return (
                 <div key={i} className="break-inside-avoid break-after-avoid" style={{ marginTop: `${entryGapPt(style.spacing.entry)}pt` }}>
@@ -99,7 +105,7 @@ export function ResumePaper({ blocks, style, onPages }: { blocks: DocBlock[]; st
               return (
                 <div key={i} className="flex break-inside-avoid gap-[0.6em]" style={{ textAlign: al, marginBottom: '1pt', paddingLeft: '0.7em' }}>
                   <span aria-hidden="true">{style.bullet}</span>
-                  <span className="min-w-0 flex-1">{b.text}</span>
+                  <span className="min-w-0 flex-1">{decorate ? decorate(b.text) : b.text}</span>
                 </div>
               )
           }

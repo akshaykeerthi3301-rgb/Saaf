@@ -7,6 +7,7 @@ import { useFeed } from '@/components/features/feed-selection'
 import { OverviewTab } from '@/components/features/job-panel'
 import { TailorStudio } from '@/components/features/tailor-studio'
 import { CoverLetterStudio } from '@/components/features/cover-letter-studio'
+import { Gauge, GAUGE_LABEL } from '@/components/features/score-gauge'
 import { keepResumeFromFile } from '@/lib/keep-resume'
 import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { loadCoverLetterContext, loadTailorContext, type CoverLetterContext, type GapRow, type TailorContext } from '@/app/actions/job-tools'
@@ -93,27 +94,6 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
         )
       })}
     </ol>
-  )
-}
-
-const GAUGE_LABEL = (v: number) => (v >= 8.5 ? 'Strong' : v >= 7 ? 'Good' : v >= 5 ? 'Fair' : 'Low')
-const GAUGE_COLOR = (v: number) => (v >= 7 ? 'var(--score-high)' : v >= 5 ? 'var(--score-mid)' : 'var(--score-low)')
-
-/** A half-circle gauge, 0 to 10. Drawn from tokens; the number and its word sit under the arc. */
-function Gauge({ value }: { value: number | null }) {
-  const v = value ?? 0
-  const R = 52, C = Math.PI * R
-  return (
-    <div className="flex w-40 shrink-0 flex-col items-center" role="img" aria-label={value === null ? 'Not enough text to score' : `${value.toFixed(1)} out of 10, ${GAUGE_LABEL(v)}`}>
-      <svg viewBox="0 0 120 70" className="w-full">
-        <path d="M 8 62 A 52 52 0 0 1 112 62" fill="none" stroke="var(--secondary)" strokeWidth="10" strokeLinecap="round" />
-        {value !== null ? (
-          <path d="M 8 62 A 52 52 0 0 1 112 62" fill="none" stroke={GAUGE_COLOR(v)} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(v / 10) * C} ${C}`} />
-        ) : null}
-      </svg>
-      <p className="-mt-9 font-mono text-3xl font-bold tabular-nums text-primary">{value === null ? '—' : value.toFixed(1)}</p>
-      <p className="mt-1 text-xs font-semibold text-muted-foreground">{value === null ? 'Too short to score' : GAUGE_LABEL(v)}</p>
-    </div>
   )
 }
 
@@ -216,6 +196,8 @@ export function ResumeIntake({ onSaved }: { onSaved: (resumeId: string) => void 
 }
 
 export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { current } = useFeed()
+  const applyUrl = current.status === 'done' && current.result.ok ? current.result.insight.applyUrl : undefined
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [ctx, setCtx] = useState<TailorContext | null>(null)
   const [mode, setMode] = useState<'quick' | 'full'>('full')
@@ -317,6 +299,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
           original={ctx.resume.sections}
           roleTitle={ctx.role.title}
           company={ctx.role.company}
+          applyUrl={applyUrl}
           scope={scope}
           autoRun
           embedded
