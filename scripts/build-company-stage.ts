@@ -17,6 +17,12 @@ import { normaliseCompany, readCompanyFacts } from '../src/lib/services/company-
 import { displayEmployer } from '../src/lib/display-names'
 
 const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
+/**
+ * Employers whose name matched a DIFFERENT, listed company on Wikidata. Found by reading the
+ * result: "Pico" (Pico Quantitative Trading, private) matched a listed Pico. A name match is
+ * exact but not proof of identity, so a wrong one found later goes here and survives a re-run.
+ */
+const NOT_THE_SAME = new Set(['pico'])
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 async function main() {
@@ -43,7 +49,7 @@ async function main() {
         if (facts.publiclyListed) row.p = 1
         if (facts.founded) row.f = facts.founded
         if (facts.employees) row.e = facts.employees
-        if (key && (row.p || row.f || row.e)) out[key] = row
+        if (key && !NOT_THE_SAME.has(key) && (row.p || row.f || row.e)) out[key] = row
       }
       if (++done % 100 === 0) console.log(`  ${done}/${names.length} · matched ${matched}`)
       await sleep(120)
