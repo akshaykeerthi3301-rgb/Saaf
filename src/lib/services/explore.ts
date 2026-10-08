@@ -4,6 +4,7 @@ import { candidateFromProfile, type ProfileScoringRow } from '@/lib/candidate-pr
 import { afterScoring, EXPLORE_SCAN, EXPLORE_SHOW, isOpenEnded, planExplore, type ExplorePlan } from '@/lib/explore'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 import { REMOTE_LOCATION } from '@/lib/services/public-jobs'
+import { jobGist } from '@/lib/job-gist'
 import type { FeedView } from '@/lib/feed-query'
 
 /**
@@ -21,7 +22,7 @@ const PROFILE_COLUMNS = 'confirmed_at, years_experience, current_title, city, cr
 const ROLE_COLUMNS =
   `id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention, posted_at, first_seen_at, ${ROLE_FACT_COLUMNS}, role_requirements(*)`
 
-export type ExploredRole = ScoredRole & { postedAt: string | null; statedPay: string | null }
+export type ExploredRole = ScoredRole & { postedAt: string | null; statedPay: string | null; gist: string | null }
 
 export type ExploreResult =
   | { kind: 'unconfirmed' }
@@ -73,7 +74,7 @@ export async function exploreIndex(userId: string, view: FeedView): Promise<Expl
   const candidate = candidateFromProfile(profile as unknown as ProfileScoringRow)
   const scored = scoreRows(rows, candidate).map((s): ExploredRole => {
     const r = byId.get(s.roleId)!
-    return { ...s, postedAt: r.posted_at, statedPay: payFromRow(r)?.text ?? null }
+    return { ...s, postedAt: r.posted_at, statedPay: payFromRow(r)?.text ?? null, gist: jobGist(r.description, r.title) }
   })
   const kept = afterScoring(scored.map((s) => ({ ...s, company: s.company, applyUrl: s.applyUrl })), plan)
   return {

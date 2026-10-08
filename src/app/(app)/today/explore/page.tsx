@@ -111,6 +111,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                       applyUrl={r.applyUrl ?? undefined}
                       postedAt={r.postedAt ?? undefined}
                       statedPay={r.statedPay}
+                      gist={r.gist}
                     />
                     <p className="mt-1.5 px-1 text-xs text-muted-foreground">
                       Outside your saved roles ·{' '}

@@ -40,6 +40,8 @@ type Props = {
   statedPay?: string | null
   /** How many of the candidate's own LinkedIn connections work at this company. */
   connections?: number
+  /** One or two sentences about the job, verbatim from the posting (src/lib/job-gist.ts). */
+  gist?: string | null
 }
 
 const TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-muted-foreground' } as const
@@ -69,7 +71,7 @@ const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px
  */
 export function RoleCard({
   roleId, title, company, city, score, breakdown, reason, applyUrl,
-  isNew, postedAt, repost, interest, stage, trackedStatus, hideControl, statedPay, connections,
+  isNew, postedAt, repost, interest, stage, trackedStatus, hideControl, statedPay, connections, gist,
 }: Props) {
   const band = ringBand(score)
   const posted = postedAgo(postedAt)
@@ -134,10 +136,18 @@ export function RoleCard({
             ))}
           </p>
 
+          {/* What the job IS, in the posting's own words (TASK-218). Two lines at most; the full text is in the panel. */}
+          {gist ? (
+            <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground" title={gist}>
+              <span className="font-semibold text-primary">The job: </span>
+              {gist}
+            </p>
+          ) : null}
+
           {/* The one paragraph. The reason line first, in full; then the best part of the
               score and, if there is one, the thing to check — all from the score's own
               notes (src/lib/why-match.ts), never written by a model. */}
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          <p className={`${gist ? 'mt-2' : 'mt-3'} text-sm leading-6 text-muted-foreground`}>
             <span className="font-semibold text-primary">Why this matches: </span>
             {reason}
             {why.strength ? ` ${why.strength}` : ''}

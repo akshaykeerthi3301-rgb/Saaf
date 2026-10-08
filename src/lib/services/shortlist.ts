@@ -1,3 +1,4 @@
+import { jobGist } from '@/lib/job-gist'
 import { findStatedPay } from '@/lib/stated-pay'
 import { createClient } from '@/lib/supabase/server'
 import { experienceFloor } from '@/gates/evaluate'
@@ -42,6 +43,8 @@ export type ShortlistCard = {
   } | null
   /** Pay exactly as the posting states it, or null (0.7% of Indian postings, measured 2026-09-25). */
   stated_pay: string | null
+  /** One or two sentences about the job, taken verbatim from the posting (src/lib/job-gist.ts), or null. */
+  gist: string | null
 }
 
 export type RequirementRow = {
@@ -148,15 +151,16 @@ export async function readCards(
         ),
   ])
 
-  // The description is read only to find stated pay, then dropped — it is
-  // untrusted text of several KB and nothing on the card renders it.
+  // The description is read only to find stated pay and the job's gist (a verbatim span of it), then dropped —
+  // it is untrusted text of several KB and the card renders only that span.
   for (const { data } of cardResults) {
-    for (const raw of (data ?? []) as unknown as (Omit<ShortlistCard, 'stated_pay' | 'roles'> & { roles: (NonNullable<ShortlistCard['roles']> & { description?: string }) | null })[]) {
+    for (const raw of (data ?? []) as unknown as (Omit<ShortlistCard, 'stated_pay' | 'gist' | 'roles'> & { roles: (NonNullable<ShortlistCard['roles']> & { description?: string }) | null })[]) {
       const { description, ...role } = raw.roles ?? ({} as { description?: string })
       cards.set(raw.id, {
         ...raw,
         roles: raw.roles ? (role as NonNullable<ShortlistCard['roles']>) : null,
         stated_pay: description ? findStatedPay(description)?.text ?? null : null,
+        gist: description ? jobGist(description, raw.roles?.title) : null,
       })
     }
   }

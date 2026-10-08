@@ -956,6 +956,7 @@ export default async function TodayPage({
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
                           statedPay={(providerFacts.facts.get(card.role_id) ? payFromRow(providerFacts.facts.get(card.role_id)!)?.text : null) ?? card.stated_pay}
+                          gist={card.gist}
                           connections={knownAt.get(normaliseCompany(displayEmployer(card.roles?.company_name)))}
                         />
                         </SelectableCard>
