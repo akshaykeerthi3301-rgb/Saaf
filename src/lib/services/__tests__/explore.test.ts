@@ -22,6 +22,12 @@ vi.mock('@/lib/supabase/server', () => ({
         c.maybeSingle = async () => ({ data: h.profile, error: h.profileError })
         return c
       }
+      if (t === 'role_requirements') {
+        const c: Record<string, unknown> = {}
+        c.select = () => c; c.in = () => c
+        c.then = (res: (v: unknown) => unknown) => res({ data: [], error: null })
+        return c
+      }
       h.rolesQueried = true
       const c: Record<string, unknown> = {}
       for (const m of ['select', 'eq', 'is', 'or', 'gte', 'in', 'not', 'order', 'limit']) c[m] = (...a: unknown[]) => { h.calls.push([m, a]); return c }

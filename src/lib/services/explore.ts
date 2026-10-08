@@ -6,6 +6,7 @@ import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-fac
 import { REMOTE_LOCATION } from '@/lib/services/public-jobs'
 import { jobGist } from '@/lib/job-gist'
 import type { FeedView } from '@/lib/feed-query'
+import { chunk, mapLimit } from '@/lib/paging'
 
 /**
  * "Search all roles" (TASK-217): the whole index, read as the signed-in candidate (RLS: candidates read
@@ -20,7 +21,9 @@ import type { FeedView } from '@/lib/feed-query'
 const PROFILE_COLUMNS = 'confirmed_at, years_experience, current_title, city, credential, preferred_role, preferred_roles, keywords, work_mode_preference, skills'
 
 const ROLE_COLUMNS =
-  `id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention, posted_at, first_seen_at, ${ROLE_FACT_COLUMNS}, role_requirements(*)`
+  // No `role_requirements(*)` embed: with up to 1,000 roles the join exceeded the database's 8 s limit for a signed-in
+  // caller (MEASURED 2026-10-09: 'The search could not be read'). The requirements are read separately below.
+  `id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention, posted_at, first_seen_at, ${ROLE_FACT_COLUMNS}`
 
 export type ExploredRole = ScoredRole & { postedAt: string | null; statedPay: string | null; gist: string | null }
 
@@ -71,6 +74,18 @@ export async function exploreIndex(userId: string, view: FeedView): Promise<Expl
   if (error) return { kind: 'failed' }
 
   const rows = (data ?? []) as unknown as Row[]
+  // The requirements, in small batches and a small window (see score-candidate.ts for why).
+  const reqs = new Map<string, NonNullable<RoleRow['role_requirements']>>()
+  const got = await mapLimit(chunk(rows.map((r) => r.id), 150), 3, (part) => supabase.from('role_requirements').select('*').in('role_id', part))
+  for (const g of got) {
+    if (g.error) return { kind: 'failed' }
+    for (const q of (g.data ?? []) as unknown as (NonNullable<RoleRow['role_requirements']>[number] & { role_id: string })[]) {
+      const list = reqs.get(q.role_id) ?? []
+      list.push(q)
+      reqs.set(q.role_id, list)
+    }
+  }
+  for (const r of rows) r.role_requirements = reqs.get(r.id) ?? []
   const byId = new Map(rows.map((r) => [r.id, r]))
   const candidate = candidateFromProfile(profile as unknown as ProfileScoringRow)
   const scored = scoreRows(rows, candidate).map((s): ExploredRole => {
