@@ -21,7 +21,7 @@ export const metadata = { title: 'Search all roles — Jobinko' }
  *
  * The box on /today answers inside the ~395 roles already scored for your saved roles, so a role outside
  * them — "data analyst" for a customer-success candidate — found nothing while thousands sat in the index.
- * Here the same sentence goes through the same parser, the whole index is searched, and the first 200 roles
+ * Here the same sentence goes through the same parser, the whole index is searched, and the first 1,000 roles
  * that fit are scored on the spot with the scorer the nightly run uses. The page says plainly that these are
  * OUTSIDE the saved preferences, how many fit, how many were scored, and which filters it could not apply.
  * Nothing is saved: a role joins your matches only when you track it.

@@ -22,8 +22,14 @@ import type { CandidateProfile, Credential, RequirementKind, TypedRequirement } 
 /**
  * The most roles scored per candidate, best title match first.
  *
- * 500 until 2026-10-08, then 3,000 (founder direction: 'we don't need to limit ourselves to a small number of
- * jobs'). MEASURED before the change on the three profiles that have matches: jobs scoring 50+ went 38 -> 80,
+ * 500 until 2026-10-08, 3,000 that night, then 5,000 on 2026-10-09 (founder direction: 'we don't need to limit ourselves
+ * to a small number of jobs … raise the job volume to maximum, expect 20 people').
+ *
+ * WHY 5,000 IS THE MAXIMUM ON THE FREE DATABASE, MEASURED 2026-10-09: the database is 205 MB of 500 MB; a stored match
+ * costs ~2.05 KB (gate_results 1.9 KB incl. indexes + role_first_shown 0.13 KB); 20 people each holding 5,000 =
+ * 100,000 rows ≈ 205 MB, leaving the database near 380 MB (76%). Above that, or with the four held SmartRecruiters
+ * boards (+~80 MB), the free tier runs out and Supabase turns the database read-only — raise it only with the paid plan.
+ * MEASURED before the change on the three profiles that have matches: jobs scoring 50+ went 38 -> 80,
  * 224 -> 431 and 107 -> 207 when the ceiling doubled, so there are many good matches past the 500th by title
  * relevance. Cost: scoring 1,000 roles took 1-2 s; stored matches are ~2.9 KB a row, so 3,000 is ~8.7 MB a person.
  *
@@ -31,7 +37,7 @@ import type { CandidateProfile, Credential, RequirementKind, TypedRequirement } 
  * of 2,000 or 5,000 still scored 1,000. The ranked ids are therefore read in pages (src/lib/paging.ts) and the
  * roles — with their descriptions, the heavy part — are fetched in small batches by id.
  */
-export const MAX_ROLES_PER_CANDIDATE = 3000
+export const MAX_ROLES_PER_CANDIDATE = 5000
 
 /** Roles fetched per request when reading descriptions by id, and how many of those requests run at once. */
 const ROLE_FETCH_CHUNK = 150

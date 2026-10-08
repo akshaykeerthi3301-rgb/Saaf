@@ -17,10 +17,10 @@ import { SKIP_AGENCIES, modesOf, typesOf, roleTypeOf, type FeedView, type Mode }
  * database query, so here they are listed in `notApplied` and shown on the page. Pure: no database, no model.
  */
 
-/** How many roles one search reads and scores. Scoring is pure and fast; the cost is reading descriptions. */
-export const EXPLORE_SCAN = 200
+/** How many roles one search reads and scores — 1,000 is PostgREST's ceiling for one request (raised from 200 on 2026-10-09). Scoring is pure and fast; the cost is reading descriptions. */
+export const EXPLORE_SCAN = 1000
 /** How many of the scored roles are shown (best first). */
-export const EXPLORE_SHOW = 60
+export const EXPLORE_SHOW = 100
 
 export type ExplorePlan = {
   tokens: string[]

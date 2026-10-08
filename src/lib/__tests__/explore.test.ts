@@ -42,7 +42,7 @@ describe('planExplore — the same parsed sentence, turned into what the databas
     expect(isOpenEnded(planExplore(view({ remote: true })))).toBe(false)
   })
   it('keeps the scan and the display sizes the audit asked for', () => {
-    expect(EXPLORE_SCAN).toBe(200)
+    expect(EXPLORE_SCAN).toBe(1000)
     expect(EXPLORE_SHOW).toBeLessThanOrEqual(EXPLORE_SCAN)
   })
 })

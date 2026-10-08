@@ -66,7 +66,7 @@ describe('exploreIndex', () => {
     expect(called('gte')[0][0]).toBe('posted_at')
     expect(called('in')).toContainEqual(['employment_type', ['fulltime']])
     expect(called('not')).toContainEqual(['company_name', 'ilike', '%TCS%'])
-    expect(called('limit')).toEqual([[200]])
+    expect(called('limit')).toEqual([[1000]])
   })
   it('sends several work modes and "only these employers" to the query too (TASK-219)', async () => {
     await exploreIndex('u1', view({ q: 'manager', mode: 'remote,hybrid', only: 'Zoho' }))
