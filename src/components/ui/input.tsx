@@ -7,13 +7,15 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   provenance?: string
   error?: string
   helper?: string
+  /** Keep the label for screen readers and drop it from the screen (the placeholder carries the meaning, as on a sign-in form). */
+  hideLabel?: boolean
 }
 
-export function Input({ label, provenance, error, helper, id, className, ...rest }: Props) {
+export function Input({ label, provenance, error, helper, hideLabel, id, className, ...rest }: Props) {
   const inputId = id ?? `f-${label.toLowerCase().replace(/\s+/g, '-')}`
   return (
     <div className="mb-6">
-      <label className="mb-2 block text-sm font-semibold text-primary" htmlFor={inputId}>
+      <label className={cn('mb-2 block text-sm font-semibold text-primary', hideLabel && 'sr-only')} htmlFor={inputId}>
         {label}
         {provenance ? (
           <span className="ml-2 text-xs font-normal text-muted-foreground">{provenance}</span>
