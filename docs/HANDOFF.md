@@ -2,6 +2,19 @@
 
 ---
 
+## 🔶 2026-10-08 (night) — 16 more tasks BUILT on `phase-18`, NOT LIVE, eleven database updates waiting
+
+**Written, not shipped.** Branch `phase-18` (16 commits off `main`); nothing deployed, nothing pushed. HAS rows on the scoreboard: 48 → 76 of 133 (`npm run parity`; **that file exists only on this machine — see PROJECT-STATE Stage AN**). **Only you can:**
+
+1. **Apply the database updates, in order, in the Supabase SQL editor, then `npm run verify:rls`:** `0029` `0030` `0031` (still pending from before) then **`0032_role_reposts`, `0033_role_interest`, `0034_resume_primary`, `0035_tracker_signals`, `0036_job_reports`, `0037_saved_searches`, `0038_self_id`, `0039_service_flags`, `0040_search_history`, `0041_role_provider_fields`, `0042_alert_settings`**. Each screen says plainly when its update is missing, so deploying first is safe — but none of the new chips, history, saved searches, primary résumé, work-mode filter, reports or alert settings can be seen working until you do. Read `0033` (a function that reads across users, counts only, never ids), `0038` (special-category answers a candidate types themselves) and `0039` (the kill-switch table) before applying.
+2. **Reload the extension (now 0.6.0)** — queue view, coverage report, the kill switch and typed self-ID answers are all in it. Try one real application you want, watching the tab.
+3. **Know where the kill switch is:** Supabase → Table editor → `service_flags` → `apply_for_me_paused` → `true` stops every extension at its next job and its next Submit (docs/RUNBOOK.md). It fails open if Saaf is unreachable.
+4. **Alert emails will not arrive** even with settings saved: the sender is Resend's shared test address. Verify a domain, then flip `ALERT_EMAIL_LIVE` in `src/lib/alert-settings.ts`.
+5. **Decide:** (a) should `docs/PARITY.md` be tracked? It is ignored by `*parity*`; I left it local because it describes the compared product. (b) The role/city public pages (TASK-158) need your threshold for "enough roles to index a page". (c) TASK-164/165/166/170 are decisions, not code — see ROADMAP.
+6. **Nothing here needs a deploy decision from you yet** — say go and I will follow `docs/RUNBOOK.md`. Recommended order: apply 0029–0042, then deploy, then run one ingest so reposts, closed postings, work modes and contract types start to fill.
+
+---
+
 ## 🔶 2026-10-08 (later) — the feed redesign is LIVE: `dpl_9sX4KDQm9YnKcQkMa31eLmiKN6ST`
 
 **Deployed 2026-10-08 03:01 IST** — TASK-211: the compact icon rail, one top row of tabs and search, one row of filter pills, the All-filters drawer, the card inside its four-row budget, and the tabbed detail panel. Checked live as an anonymous visitor (same checks as the earlier deploy, all passing): signed-in routes redirect to `/signin`, `/api/dev-signin` is 404, 5,000 job pages in the sitemap and one returns 200. **Not checked live:** the signed-in screens themselves (they need a magic link) — they were walked on localhost. **Only you can:**

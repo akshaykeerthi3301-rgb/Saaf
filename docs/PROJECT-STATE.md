@@ -2738,6 +2738,35 @@ and TASK-182 (a funding-data licence), TASK-180 (verified domain), TASK-196
 (coaches, webinars), TASK-204 (Apple developer account), TASK-193 (employer keys),
 TASK-164 (a lawful interview-content source), TASK-209 (database storage budget).
 
+### Stage AN — the rest of the 133, session 1 (2026-10-08, branch `phase-18`, NOT deployed)
+
+Sixteen tasks, one commit each, on `phase-18` off `main` (`370edfa`). **Eleven database updates (0032–0042) are written and NONE applied** — every new screen reads its data in a query of its own and says plainly when its update is missing, so deploying before applying is safe. Numbers below are tagged **MEASURED** (this session, with the script that produced them) or **OBSERVED**; hand checks were done by the same session that wrote the code and are marked as not independent.
+
+| Task | What it is | Update needed | Decisions and measurements worth keeping |
+|---|---|---|---|
+| 174 | "Reposted" chip | 0032 | The ingest used to throw away the other copies of a posting; it now keeps the earliest date and a tally that survives the survivor being replaced (A, B, C → two earlier copies). A chip needs the earliest copy ≥7 days older: **a second copy is not a repost** (H&M's 61 identical rows can be 61 vacancies). The 7 days is a guess (ponytail comment) to tune from live data |
+| 177 | "N tracking" chip | 0033 | The lawful form of applicant counts. A SECURITY DEFINER function returns only `role_id, trackers` and only where ≥3 distinct candidates hold the role in an open stage; `verify:rls` checks it leaks no ids. At today's user count it will rarely show |
+| 163 | One primary résumé | 0034 | Partial unique index; the ten-slot cap trigger no longer evicts the primary and counts it as one of the ten. The tailoring studio and the extension use it |
+| 162 | Tracker counters, "Applied by Saaf", "Posting closed" | 0035 | The ingest sees a COMPLETE board listing; a stored role it no longer names is taken down. Stamped on the role AND the application (the prune deletes the role and nulls `role_id`). Never from an empty listing (a 200 with no jobs looks complete), never for a replaced duplicate. "Applied by Saaf" only when Apply for me saw the employer's confirmation |
+| 181 | Share, report a problem, original posting; deep link opens the panel | 0036 | `?role=<id>` now opens the sheet on a phone too |
+| 157 | Saved searches (named role sets) | 0037 | Not a feed filter: it is `preferred_role(s)`/`keywords` under a name; switching re-scores (12 switches / 10 min / user) |
+| 171 | Candidate-typed self-ID answers | 0038 | REFUSALS stay the default. Only a question the candidate answered is filled, with their words, by WHOLE option text ("Male" is inside "Female"); a label naming two questions is refused; DOB, age and pregnancy never. Answers REPLACE the extension's copy on every sync |
+| 161 | Queue view, per-application coverage, remote kill switch | 0039 | Extension **0.6.0**. `GET /api/extension/status` is read before each job AND before each Submit click; flip `service_flags.apply_for_me_paused` (one cell) or `APPLY_FOR_ME_PAUSED=1`. **Fails open** (a switch that also stopped everyone during a Saaf outage would be a second failure). Procedure in RUNBOOK |
+| 172 | Search history, "read as" rating, voice | 0040 | Found and fixed a parser defect while testing: "excluding TCS, newest first" read "newest first" as a second employer |
+| 179 | Job sections | — | Stored descriptions are ONE LINE (the ingest flattens HTML), so headings are found by what they say. **MEASURED, two board-blind samples of 100 (`scripts/sample-postings.ts`):** 82 and 79 structured; held-out hand check of 266 sections: labels ≈98–99% right, boundary purity ≈89% (one posting in five has no readable headings). Four fixes came from reading the held-out sample, so its figure is slightly flattered. The `\b`-after-a-stem bug was made a third time in this repo (`keyFor('Responsibilities')` returned "about") |
+| 176 | Provider-stated pay | 0041 | **MEASURED:** structured pay is **1.0%** of Indian postings (Greenhouse 0.0% of 817 — its US postings carry ranges, its Indian ones do not). **No real gain** over the 2.6% already parsed from text; the stored columns matter for the Abroad mode |
+| 210 | Work mode, stated contract type, more sorts | 0041 | **MEASURED, 2,630 Indian postings, 8 boards/provider:** work mode stated on **41%**, contract type **60%**; Lever 100% / Ashby 91% / Recruitee 100% for work mode; Greenhouse and Workday publish neither. No provider publishes company size, so none is offered |
+| 178 | Freshness | — | The smallest honest version: freshness is the LAST tie-break among equal scores, never above a higher score. Scorer untouched; `bench` 0 misses, `bench:match` 0 components at 90%+ |
+| 180 | Alert settings | 0042 | Weekday read in IST (the cron fires at 21:30 UTC = already tomorrow in Mumbai). **Saving does not make mail arrive** — the sender is Resend's shared test address until a domain is verified; `ALERT_EMAIL_LIVE` is the one flag to flip |
+| 182 | Company tab v2 | — | Wikidata founders, chair, parent, exchange, latest revenue; our own "first seen in the last 30 days" and function mix. Funding, investors, ratings: not built (licence / no lawful free source) |
+| 175 | Staffing-agency switch; Public / Startup chips | — | **MEASURED:** 24 hand-curated agency names match 10 employers = **1.2%** of 27,882 Indian roles. Wikidata snapshot of 1,355 employers: 175 matched, 91 listed → **Public chip covers 28.0% of roles; Startup covers 10 roles** (open data rarely states founding year and headcount together). One false match found by reading ("Pico", a private trading firm, matched a listed Pico) is on a deny-list |
+
+**Corrections to earlier claims, struck rather than deleted:**
+- ~~`docs/PARITY.md` is the tracked scoreboard~~ — **it is not tracked.** `.gitignore` line 79 (`*parity*`, there to keep competitor research out of a public repo) swallows it, so the 133-row scoreboard exists only on this machine and `npm run parity` reads a local file. I did NOT un-ignore it: it lists features of the compared product, which the founder's own rule says is not ours to publish. Founder: say whether you want it tracked.
+- ~~"Saaf's Company tab: no source for leadership"~~ — partly wrong: Wikidata carries founders and chair (now shown); what stays unavailable is funding and investors.
+
+**Not done in this session, and why (open):** TASK-158 (public role/city pages — the founder sets the thin-content threshold N), 164/165/166/170 (decisions, not code), 169 (design doc), 183–184, 186–209.
+
 ---
 
 ## Index coverage by function — probed live 2026-09-08
