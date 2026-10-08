@@ -1,5 +1,5 @@
 import { DocPage } from '@/components/features/doc-page'
-import caps from '../../../../extension/ats-capabilities.json'
+import caps from '@/lib/taxonomy/ats-capabilities.json'
 
 export const metadata = {
   title: 'The Saaf browser extension — what it does on each site',
@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 /**
- * F-711 (TASK-192). The list is DATA — extension/ats-capabilities.json — and a test fails if it
+ * F-711 (TASK-192). The list is DATA — src/lib/taxonomy/ats-capabilities.json — and a test fails if it
  * drifts from the extension's own site list. It says what has been checked and what has not;
  * a row is "verified" only with its evidence next to it.
  */

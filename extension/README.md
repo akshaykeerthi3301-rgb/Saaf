@@ -148,7 +148,7 @@ us nothing here.~~ Saaf's "Apply for me" is the parity answer (2026-09-25).
 
 | Jobright | Saaf |
 |---|---|
-| One-click autofill, "thousands of ATS sites" | ✅ ~~32 host patterns across 22 ATS platforms~~ 23 ATS platforms (counted from `extractor.js`, 2026-10-08) — text, dropdowns, radios, pickers, résumé upload, CTC. **Per-site list, including what has NOT been checked on a live form: `ats-capabilities.json`, published at /extension** |
+| One-click autofill, "thousands of ATS sites" | ✅ ~~32 host patterns across 22 ATS platforms~~ 23 ATS platforms (counted from `extractor.js`, 2026-10-08) — text, dropdowns, radios, pickers, résumé upload, CTC. **Per-site list, including what has NOT been checked on a live form: `src/lib/taxonomy/ats-capabilities.json`, published at /extension** |
 | Match score on the posting | ✅ and every component opens into the posting's own sentence |
 | Missing keywords / ATS gaps | ✅ from a vocabulary mined out of our index, not a generic word list |
 | Track the application | ✅ filed on the Saaf tracker when you next open Saaf; stage shown back on the card (2026-09-25). ~~via a link into the Saaf tracker~~ — the link's `?add=` was read by nothing |

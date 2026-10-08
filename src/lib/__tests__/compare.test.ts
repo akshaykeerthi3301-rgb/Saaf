@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { COMPARISONS, FACTS } from '../compare'
-import caps from '../../../extension/ats-capabilities.json'
+import caps from '../taxonomy/ats-capabilities.json'
 import { KEYWORD_ROLES } from '../role-keywords'
 
 /**

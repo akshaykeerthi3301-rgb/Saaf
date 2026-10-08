@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest'
 import '../extension/extractor.js'
-import caps from './ats-capabilities.json'
+import caps from '../src/lib/taxonomy/ats-capabilities.json'
 import manifest from './manifest.json'
 
 /**
