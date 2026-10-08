@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { buildFullResumeDocx, fullResumeFilename } from '@/lib/resume-docx'
 import { sectionsSchema } from '@/lib/resume-schema'
 import { tailoredFilename } from '@/lib/resume-review'
+import { styleSchema } from '@/lib/resume-style'
 
 /**
  * The optimised résumé as a .docx. Sign-in required — this is the conversion
@@ -39,6 +40,8 @@ const schema = z.object({
   template: z.enum(['classic', 'compact', 'headline']).optional(),
   font: z.enum(['calibri', 'arial', 'georgia', 'times']).optional(),
   accent: z.enum(['ink', 'navy', 'teal', 'maroon']).optional(),
+  /** The export drawer's full set of choices. When present it wins over template / font / accent. */
+  style: styleSchema.optional(),
   /** Present for a résumé tailored to one posting: the file is then named for the person, the role AND the company. */
   company: z.string().trim().max(120).optional(),
 })
@@ -68,7 +71,7 @@ export async function downloadOptimisedResume(
   }
 
   try {
-    const { sections, targetRole, template, font, accent, company } = parsed.data
+    const { sections, targetRole, template, font, accent, style, company } = parsed.data
     const buffer = await buildFullResumeDocx({
       // `order` is typed as strings by the schema above because it is display
       // metadata the document never reads; casting it back keeps the builder's
@@ -78,6 +81,7 @@ export async function downloadOptimisedResume(
       template,
       font,
       accent,
+      style,
     })
     return {
       ok: true,

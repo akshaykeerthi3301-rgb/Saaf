@@ -375,3 +375,16 @@
     height: auto !important; overflow: visible !important; border: 0 !important; box-shadow: none !important;
   }
 }
+
+/* Printing the résumé from the export drawer: the page alone, at its own size, with the margins from @page (ResumePaper). */
+@media print {
+  body.printing-resume > *:not(:has([data-resume-paper])) { display: none !important; }
+  body.printing-resume [data-sheet-print] {
+    position: static !important; inset: auto !important; width: auto !important; max-width: none !important;
+    height: auto !important; overflow: visible !important; border: 0 !important; box-shadow: none !important; display: block !important;
+  }
+  body.printing-resume [data-resume-print-root] { position: static !important; overflow: visible !important; height: auto !important; padding: 0 !important; background: none !important; }
+  body.printing-resume [data-resume-scale] { zoom: 1 !important; width: auto !important; margin: 0 !important; }
+  body.printing-resume [data-resume-paper] { padding: 0 !important; width: auto !important; min-height: 0 !important; box-shadow: none !important; }
+  body.printing-resume [data-sheet-print] > div { display: block !important; }
+}

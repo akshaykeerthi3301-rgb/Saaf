@@ -467,6 +467,9 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
  * where the résumé claims one — which then fed the age-bias check a graduation
  * year belonging to a qualification that did not exist.
  */
+/** A word that makes a part of an education line a school rather than a subject. */
+const INSTITUTION = /\b(universit\w*|college|institute|school|academy|polytechnic|iit|nit|iiit|iim|bits|vit|vidya\w*)\b/i
+
 const DEGREE =
   /\b(b\.?\s?tech|b\.?\s?e\.?|b\.?sc|b\.?a\.?|b\.?com|bca|m\.?\s?tech|m\.?sc|m\.?a\.?|m\.?com|mca|mba|ph\.?\s?d|diploma|bachelors?|masters?|doctorate|pgdm|hsc|ssc|intermediate)\b/i
 
@@ -520,6 +523,13 @@ function parseEducation(lines: string[]): EducationEntry[] {
       .map((p) => p.replace(/^[\s|·•—–,-]+/, '').replace(/[\s|·•—–,-]+$/, '').trim())
       .filter(Boolean)
     if (parts.length === 0) continue
+    // "B.Tech, Computer Science, VIT Vellore, 2019": the comma split puts the field of study where the school goes.
+    // When the first part is a degree, the second names no institution and the third does, the first two are one
+    // qualification.
+    if (parts.length >= 3 && DEGREE.test(parts[0]) && !INSTITUTION.test(parts[1]) && INSTITUTION.test(parts[2])) {
+      out.push({ qualification: `${parts[0]}, ${parts[1]}`, institution: parts[2], dates })
+      continue
+    }
     out.push({
       qualification: parts[0],
       institution: parts[1] ?? null,

@@ -1,6 +1,8 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx'
-import { roleLine, type ResumeSections } from '@/lib/parse/sections'
-import { templateSpec, fontSpec, accentSpec, DOCX_SIZES, type AccentId, type FontId, type TemplateId } from '@/lib/resume-templates'
+import { Document, LevelFormat, Packer, Paragraph, Tab, TabStopType, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx'
+import type { ResumeSections } from '@/lib/parse/sections'
+import type { AccentId, FontId, TemplateId } from '@/lib/resume-templates'
+import { buildDoc } from '@/lib/resume-doc'
+import { PAGE, entryGapPt, fontFamily, lineMultiple, marginXIn, marginYIn, sectionGapPt, styleFromLegacy, type ResumeStyle } from '@/lib/resume-style'
 import type { Draft } from '@/lib/tailor'
 
 /**
@@ -147,138 +149,95 @@ export type FullResumeInput = {
   sections: ResumeSections
   /** Printed under the name, so the document announces what it is aimed at. */
   targetRole: string
-  /** One of the three ATS-safe templates. See src/lib/resume-templates.ts. */
+  /** The export drawer's full set of choices (src/lib/resume-style.ts). Wins over the three legacy fields below. */
+  style?: ResumeStyle
+  /** The public ATS flow still sends one of three templates, a font and a colour; they are mapped onto a style. */
   template?: TemplateId
-  /** Typeface and accent colour for the name and headings (src/lib/resume-templates.ts). Typographic only. */
   font?: FontId
   accent?: AccentId
 }
 
-export async function buildFullResumeDocx({ sections, targetRole, template, font, accent }: FullResumeInput): Promise<Buffer> {
-  const s = sections
-  const spec = templateSpec(template)
-  const face = fontSpec(font).docx
-  const ink = accentSpec(accent).hex ?? undefined
-  const size = DOCX_SIZES[spec.density]
-  const align = spec.align === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT
-  const children: Paragraph[] = []
+export async function buildFullResumeDocx({ sections, targetRole, template, font, accent, style }: FullResumeInput): Promise<Buffer> {
+  const st = style ?? styleFromLegacy(template, font, accent)
+  const blocks = buildDoc(sections, targetRole, st)
+
+  const half = (pt: number) => Math.round(pt * 2)
+  const align = (a: 'left' | 'center' | 'right') =>
+    a === 'center' ? AlignmentType.CENTER : a === 'right' ? AlignmentType.RIGHT : AlignmentType.LEFT
+  const page = PAGE[st.page]
+  const mx = Math.round(marginXIn(st.spacing.marginX) * 1440)
+  const my = Math.round(marginYIn(st.spacing.marginY) * 1440)
+  const textWidth = page.twips.w - 2 * mx
+  const line = Math.round(240 * lineMultiple(st.spacing.line))
+  const bodyAlign = st.justify ? AlignmentType.JUSTIFIED : AlignmentType.LEFT
+  const accent6 = st.accent || undefined
+  const nameColor = st.accentScope === 'headings' ? undefined : accent6
+  const headColor = st.accentScope === 'name' ? undefined : accent6
 
   /**
-   * ⚠️ ALL THREE HEADING STYLES ARE A REAL PARAGRAPH OF REAL TEXT. The variation
-   * is a border, letter-spacing or a weight — never a table row, never a shaded
-   * cell, never an image. Those three are the constructs the checker on the
-   * previous screen flags, and a template that used one would produce a
-   * document our own tool marks down.
+   * ⚠️ EVERY PARAGRAPH IS REAL TEXT. The variation is a border, a tab stop, a size, a colour or an alignment — never a
+   * table row, a shaded cell, a text box or an image. Those are the constructs the checker on the previous screen
+   * flags, and a style that used one would produce a document our own tool marks down. The right-hand date is a
+   * right TAB STOP inside the same paragraph as the role, which any ATS reads as "role, date".
    */
-  const heading = (text: string) =>
-    new Paragraph({
-      spacing: { before: size.gapBefore, after: 90 },
-      border:
-        spec.heading === 'ruled'
-          ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: ink ?? '888888', space: 2 } }
-          : undefined,
-      children: [
-        new TextRun({
-          text: spec.heading === 'bold' ? text : text.toUpperCase(),
-          bold: true,
-          size: size.heading,
-          characterSpacing: spec.heading === 'caps' ? 50 : spec.heading === 'ruled' ? 30 : 0,
-          color: ink ?? (spec.heading === 'caps' ? '555555' : undefined),
-        }),
-      ],
-    })
-
-  children.push(
-    new Paragraph({
-      alignment: align,
-      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: size.name, color: ink })],
-    }),
-  )
-
-  const contactLine = [s.contact.email, s.contact.phone, ...s.contact.links].filter(Boolean).join('  |  ')
-  if (contactLine) {
-    children.push(
-      new Paragraph({
-        alignment: align,
-        spacing: { after: 40 },
-        children: [new TextRun({ text: contactLine, size: size.body - 1 })],
-      }),
-    )
-  }
-  if (targetRole) {
-    children.push(
-      new Paragraph({
-        alignment: align,
-        spacing: { after: 120 },
-        children: [new TextRun({ text: targetRole, size: size.body, color: '444444' })],
-      }),
-    )
-  }
-
-  if (s.summary) {
-    children.push(heading('Professional summary'))
-    children.push(new Paragraph({ children: [new TextRun({ text: s.summary, size: size.body })] }))
-  }
-
-  if (s.experience.length) {
-    children.push(heading('Experience'))
-    for (const e of s.experience) {
-      children.push(
-        new Paragraph({
-          spacing: { before: 140 },
-          // Shared with the scorer and the preview — see roleLine()'s note.
-          children: [new TextRun({ text: roleLine(e), bold: true, size: size.body + 1 })],
-        }),
-      )
-      const meta = [e.dates, e.location].filter(Boolean).join('  |  ')
-      if (meta) {
-        children.push(
-          new Paragraph({ children: [new TextRun({ text: meta, size: 19, color: '444444' })] }),
-        )
-      }
-      for (const b of e.bullets) {
-        children.push(
-          new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: size.body })] }),
-        )
-      }
-    }
-  }
-
-  if (s.skills.length) {
-    children.push(heading('Skills'))
-    children.push(new Paragraph({ children: [new TextRun({ text: s.skills.join('  ·  '), size: size.body })] }))
-  }
-
-  if (s.education.length) {
-    children.push(heading('Education'))
-    for (const e of s.education) {
-      children.push(
-        new Paragraph({
+  const children: Paragraph[] = []
+  for (const b of blocks) {
+    switch (b.kind) {
+      case 'name':
+        children.push(new Paragraph({ alignment: align(st.headerAlign), spacing: { line }, children: [new TextRun({ text: b.text, bold: true, size: half(st.sizes.name), color: nameColor })] }))
+        break
+      case 'contact':
+        children.push(new Paragraph({ alignment: align(st.headerAlign), spacing: { line, after: 40 }, children: [new TextRun({ text: b.text, size: half(st.sizes.body) })] }))
+        break
+      case 'target':
+        children.push(new Paragraph({ alignment: align(st.headerAlign), spacing: { line, after: 80 }, children: [new TextRun({ text: b.text, size: half(st.sizes.body), color: '444444' })] }))
+        break
+      case 'heading':
+        children.push(new Paragraph({
+          alignment: align(st.headingAlign),
+          keepNext: true,
+          spacing: { before: Math.round(sectionGapPt(st.spacing.section) * 20), after: 80, line },
+          border: st.hideDivider ? undefined : { bottom: { style: BorderStyle.SINGLE, size: 6, color: headColor ?? '888888', space: 2 } },
+          children: [new TextRun({ text: b.text.toUpperCase(), bold: true, size: half(st.sizes.section), characterSpacing: 20, color: headColor })],
+        }))
+        break
+      case 'para':
+        children.push(new Paragraph({ alignment: bodyAlign, spacing: { line, after: 40 }, children: [new TextRun({ text: b.text, size: half(st.sizes.body) })] }))
+        break
+      case 'entry':
+        children.push(new Paragraph({
+          keepNext: true,
+          spacing: { before: Math.round(entryGapPt(st.spacing.entry) * 20), line },
+          tabStops: b.right ? [{ type: TabStopType.RIGHT, position: textWidth }] : undefined,
           children: [
-            new TextRun({ text: e.qualification, bold: true, size: size.body }),
-            new TextRun({
-              text: [e.institution, e.dates].filter(Boolean).length
-                ? `  ·  ${[e.institution, e.dates].filter(Boolean).join('  ·  ')}`
-                : '',
-              size: size.body,
-            }),
+            new TextRun({ text: b.main, bold: true, size: half(st.sizes.sub) }),
+            ...(b.right ? [new TextRun({ children: [new Tab(), b.right], size: half(st.sizes.body) })] : []),
           ],
-        }),
-      )
+        }))
+        if (b.sub) children.push(new Paragraph({ keepNext: true, spacing: { line }, children: [new TextRun({ text: b.sub, italics: b.subItalic, size: half(st.sizes.body) })] }))
+        break
+      case 'bullet':
+        children.push(new Paragraph({
+          numbering: { reference: st.bullet === '–' ? 'dash' : 'dot', level: 0 },
+          alignment: bodyAlign,
+          spacing: { line, after: 20 },
+          children: [new TextRun({ text: b.text, size: half(st.sizes.body) })],
+        }))
+        break
     }
   }
 
-  for (const o of s.other) {
-    children.push(heading(o.heading))
-    for (const line of o.lines) {
-      children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: line, size: size.body })] }))
-    }
-  }
+  // A real list in both cases — a parser reads a numbered paragraph as a list item and a typed "•" as a stray character.
+  const level = (text: string) => [{ level: 0, format: LevelFormat.BULLET, text, alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 360, hanging: 240 } } } }]
 
   return Packer.toBuffer(
     new Document({
-      styles: { default: { document: { run: { font: face } } } },
-      sections: [{ properties: {}, children }],
+      styles: { default: { document: { run: { font: fontFamily(st.font).docx, size: half(st.sizes.body) } } } },
+      numbering: { config: [{ reference: 'dot', levels: level('•') }, { reference: 'dash', levels: level('–') }] },
+      sections: [{
+        properties: { page: { size: { width: page.twips.w, height: page.twips.h }, margin: { top: my, bottom: my, left: mx, right: mx } } },
+        children,
+      }],
     }),
   )
 }

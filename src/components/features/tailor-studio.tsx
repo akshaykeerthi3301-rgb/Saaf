@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
 import {
-  Check, CheckCheck, Download, FileDown, Loader2, Pencil, Printer, Save, ShieldCheck, Sparkles, Undo2, X,
+  Check, CheckCheck, Download, FileDown, Loader2, Pencil, Save, ShieldCheck, Sparkles, Undo2, X,
 } from 'lucide-react'
 import { rewriteStudioLine, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
-import { ACCENTS, DEFAULT_ACCENT, DEFAULT_FONT, DEFAULT_TEMPLATE, FONTS, TEMPLATES, accentSpec, fontSpec, templateSpec, type AccentId, type FontId, type TemplateId } from '@/lib/resume-templates'
-import { diffSections, estimatePages, fitToOnePage, tailoredFilename } from '@/lib/resume-review'
+import { DEFAULT_STYLE, PRESETS, withPreset, type ResumeStyle } from '@/lib/resume-style'
+import { estimatePagesForStyle, fitStyleToOnePage } from '@/lib/resume-fit'
+import { diffSections, tailoredFilename } from '@/lib/resume-review'
+import { ExportDrawer } from '@/components/features/export-drawer'
 
 /**
  * The Resume Tailoring Studio — current résumé beside an AI-tailored one.
@@ -75,23 +77,20 @@ export function TailorStudio({
   const [lineBusy, setLineBusy] = useState(false)
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
-  const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
-  const [font, setFont] = useState<FontId>(DEFAULT_FONT)
-  const [accent, setAccent] = useState<AccentId>(DEFAULT_ACCENT)
+  const [style, setStyle] = useState<ResumeStyle>(DEFAULT_STYLE)
   const [fit, setFit] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [liveScore, setLiveScore] = useState<number | null>(null)
   const [scoring, setScoring] = useState(false)
   const scoreSeq = useRef(0)
 
   // The change list is read from the two documents, so it cannot disagree with the page.
   const changes = useMemo(() => diffSections(original, working), [original, working])
-  const fitRes = useMemo(() => (fit ? fitToOnePage(working, template) : null), [fit, working, template])
-  const effective: TemplateId = fitRes?.template ?? template
-  const pages = useMemo(() => estimatePages(working, effective), [working, effective])
+  const fitRes = useMemo(() => (fit ? fitStyleToOnePage(working, style) : null), [fit, working, style])
+  // What the page looks like right now: the person's style, tightened only while "Fit to one page" is on.
+  const effective: ResumeStyle = fitRes?.style ?? style
+  const pages = useMemo(() => estimatePagesForStyle(working, effective), [working, effective])
   const fileName = tailoredFilename({ name: working.contact.name, role: roleTitle, company })
-  const spec = templateSpec(effective)
-  const accentHex = accentSpec(accent).hex
-  const ink = accentHex ? { color: `#${accentHex}`, borderColor: `#${accentHex}` } : undefined
 
   // The score of the draft as it stands, after each accept, dismiss or hand edit. No change yet = the
   // saved résumé's own score, no call. `scoreSeq` drops a slow answer that a newer edit has overtaken.
@@ -168,7 +167,7 @@ export function TailorStudio({
   function exportWord() {
     setNote(undefined)
     startBusy(async () => {
-      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, template: effective, font, accent, company: company || undefined })
+      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, style: effective, company: company || undefined })
         .catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setNote(r.error); return }
       const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0))
@@ -181,16 +180,6 @@ export function TailorStudio({
       a.click()
       URL.revokeObjectURL(url)
     })
-  }
-
-  /** The browser names a printed PDF after the page title, so the title carries the file's name while it prints. */
-  function exportPdf() {
-    const previous = document.title
-    document.title = fileName.replace(/\.docx$/, '')
-    // In the drawer the rest of the app is behind it: mark the body so the print stylesheet (globals.css) shows only the drawer.
-    if (embedded) document.body.classList.add('printing-sheet')
-    window.addEventListener('afterprint', () => { document.title = previous; document.body.classList.remove('printing-sheet') }, { once: true })
-    window.print()
   }
 
   /** Marks posting keywords the rewrite added. Text nodes only. */
@@ -319,8 +308,7 @@ export function TailorStudio({
               Accept all AI suggestions{pending.length ? ` (${pending.length + (skillsDecision === 'pending' ? 1 : 0)})` : ''}
             </button>
             <ToolbarButton onClick={saveVersion} disabled={busy} icon={Save}>Save as version</ToolbarButton>
-            <ToolbarButton onClick={exportWord} disabled={busy} icon={FileDown}>Export Word</ToolbarButton>
-            <ToolbarButton onClick={exportPdf} icon={Printer}>Export PDF</ToolbarButton>
+            <ToolbarButton onClick={() => setExportOpen(true)} icon={FileDown}>Export résumé</ToolbarButton>
             <ToolbarButton onClick={run} disabled={running} icon={running ? Loader2 : Sparkles}>Re-run</ToolbarButton>
           </>
         )}
@@ -355,19 +343,18 @@ export function TailorStudio({
         <div className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 print:hidden" aria-label="Style and page length">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-primary">Style</span>
-            {TEMPLATES.map((t) => (
+            {PRESETS.map((p) => (
               <button
-                key={t.id}
+                key={p.id}
                 type="button"
-                aria-pressed={effective === t.id}
-                disabled={fit && effective !== t.id}
-                onClick={() => setTemplate(t.id)}
-                title={t.note}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-40 ${
-                  effective === t.id ? 'bg-brand-gradient border-transparent' : 'border-border text-muted-foreground hover:border-accent/60 hover:text-primary'
+                aria-pressed={style.preset === p.id}
+                onClick={() => { setFit(false); setStyle((cur) => withPreset(cur, p.id)) }}
+                title={p.note}
+                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                  style.preset === p.id ? 'bg-brand-gradient border-transparent' : 'border-border text-muted-foreground hover:border-accent/60 hover:text-primary'
                 }`}
               >
-                {t.name}
+                {p.name}
               </button>
             ))}
             <label className="ml-2 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-primary">
@@ -377,32 +364,16 @@ export function TailorStudio({
             <span role="status" className="text-[11px] text-muted-foreground">
               {fit && fitRes
                 ? fitRes.fits
-                  ? `Fits one page in ${templateSpec(effective).name} (estimated, about ${pages.toFixed(1)}).`
-                  : `Still about ${pages.toFixed(1)} pages in Compact, the tightest style — shorten older roles or long bullets.`
-                : `About ${pages.toFixed(1)} ${pages.toFixed(1) === '1.0' ? 'page' : 'pages'} in ${templateSpec(effective).name} (estimated).`}
+                  ? `Fits one page (estimated, about ${pages.toFixed(1)}).`
+                  : `Still about ${pages.toFixed(1)} pages with the tightest spacing — shorten older roles or long bullets.`
+                : `About ${pages.toFixed(1)} ${pages.toFixed(1) === '1.0' ? 'page' : 'pages'} (estimated).`}
             </span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-primary">Font</span>
-            <select value={font} onChange={(e) => setFont(e.target.value as FontId)} aria-label="Font" className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-primary">
-              {FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-            <span className="ml-2 text-xs font-semibold text-primary">Colour</span>
-            {ACCENTS.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                aria-pressed={accent === a.id}
-                aria-label={a.name}
-                title={a.name}
-                onClick={() => setAccent(a.id)}
-                style={{ backgroundColor: a.hex ? `#${a.hex}` : 'var(--color-paper-ink)' }}
-                className={`size-5 rounded-full border-2 transition ${accent === a.id ? 'border-accent ring-2 ring-accent/40' : 'border-border'}`}
-              />
-            ))}
+            <button type="button" onClick={() => setExportOpen(true)} className="ml-auto text-xs font-semibold text-primary underline underline-offset-4">
+              Fonts, colours, spacing &amp; export
+            </button>
           </div>
           <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
-            {templateSpec(effective).note} Every style is one column of real text, so each passes the ATS checker. Word and PDF both use the style you pick; the file is named <span className="font-mono text-primary">{fileName}</span>.
+            Every style is one column of real text, so each passes the ATS checker. The file is named <span className="font-mono text-primary">{fileName}</span>.
           </p>
         </div>
       ) : null}
@@ -507,36 +478,21 @@ export function TailorStudio({
         </div>
       ) : null}
 
-      {/* What Export PDF prints: the tailored document alone, on paper, in the chosen style. */}
-      <div style={{ fontFamily: fontSpec(font).css }} className={`hidden bg-paper p-8 text-paper-ink print:block ${PRINT[spec.density].body}`}>
-        <h1 style={ink} className={`${PRINT[spec.density].name} font-bold ${spec.align === 'center' ? 'text-center' : ''}`}>{working.contact.name}</h1>
-        <p className={`text-paper-muted ${spec.align === 'center' ? 'text-center' : ''}`}>{[working.contact.email, working.contact.phone, ...working.contact.links].filter(Boolean).join(' · ')}</p>
-        {working.summary ? <p className={PRINT[spec.density].gap}>{working.summary}</p> : null}
-        {working.experience.length ? <h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Experience</h2> : null}
-        {working.experience.map((e, i) => (
-          <div key={i} className={PRINT[spec.density].role}>
-            <p className="font-bold">{[e.title, e.employer].filter(Boolean).join(' — ')}<span className="font-normal text-paper-muted">{e.dates ? `  ${e.dates}` : ''}</span></p>
-            <ul className="ml-5 list-disc">{e.bullets.map((b, j) => <li key={j}>{b}</li>)}</ul>
-          </div>
-        ))}
-        {working.skills.length ? <><h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Skills</h2><p className="mt-2">{working.skills.join(', ')}</p></> : null}
-        {working.education.length ? <><h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Education</h2>{working.education.map((ed, i) => <p key={i} className="mt-1">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>)}</> : null}
-      </div>
+      <ExportDrawer
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        sections={working}
+        targetRole={roleTitle}
+        style={effective}
+        onStyle={(next) => { setFit(false); setStyle(next) }}
+        fileName={fileName.replace(/\.docx$/, '')}
+        onWord={exportWord}
+        busy={busy}
+        note={note}
+      />
     </div>
   )
 }
-
-/** Print sizes per template density — the same three the Word builder uses (src/lib/resume-templates.ts). */
-const PRINT = {
-  tight: { body: 'text-xs leading-5', name: 'text-xl', gap: 'mt-3', role: 'mt-2' },
-  regular: { body: 'text-sm leading-6', name: 'text-2xl', gap: 'mt-5', role: 'mt-3' },
-  airy: { body: 'text-[15px] leading-7', name: 'text-3xl', gap: 'mt-7', role: 'mt-4' },
-} as const
-const HEADING = {
-  ruled: 'border-b border-paper-rule pb-1 font-bold uppercase',
-  caps: 'pb-0.5 font-bold uppercase tracking-wider',
-  bold: 'pb-0.5 font-bold',
-} as const
 
 function ScoreFig({ label, value, strong, muted, pending }: { label: string; value: number | null | undefined; strong?: boolean; muted?: boolean; pending?: boolean }) {
   return (

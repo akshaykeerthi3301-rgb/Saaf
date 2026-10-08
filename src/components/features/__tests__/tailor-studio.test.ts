@@ -166,26 +166,24 @@ describe('after tailoring', () => {
     expect(strip).toContain('Your draft now60') // not 99
   })
 
-  it('offers the three styles, says how many pages, and names the file for the person, role and company', async () => {
+  it('offers the three templates, says how many pages, and names the file for the person, role and company', async () => {
     await tailored()
     const bar = host.querySelector('[aria-label="Style and page length"]')!
-    // The colour swatches are buttons too, but carry a label and no text.
-    const names = [...bar.querySelectorAll('button')].map((b) => b.textContent).filter(Boolean)
-    expect(names).toEqual(['Classic', 'Compact', 'Headline'])
-    expect([...bar.querySelectorAll('button[aria-label]')].map((b) => b.getAttribute('aria-label'))).toEqual(['Black', 'Navy', 'Teal', 'Maroon'])
-    expect(bar.textContent).toMatch(/About 0\.\d pages? in Classic \(estimated\)/)
+    const names = [...bar.querySelectorAll('button')].map((b) => b.textContent).filter((t) => t && !/Fonts, colours/.test(t))
+    expect(names).toEqual(['Standard', 'Compact', 'Centered'])
+    expect(bar.textContent).toMatch(/About 0\.\d pages? \(estimated\)/)
     expect(bar.textContent).toContain('Asha_Rao_Customer_Success_Manager_Diligent.docx')
     await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Compact')!)
-    expect(host.querySelector('[aria-label="Style and page length"]')!.textContent).toMatch(/in Compact \(estimated\)/)
+    expect([...host.querySelectorAll('[aria-label="Style and page length"] button')].find((b) => b.textContent === 'Compact')!.getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('"Fit to one page" says it fits when it does, and keeps the style it was given', async () => {
+  it('"Fit to one page" says it fits when it does', async () => {
     await tailored()
     await click(host.querySelector('[aria-label="Style and page length"] input[type="checkbox"]')!)
-    expect(host.querySelector('[aria-label="Style and page length"]')!.textContent).toMatch(/Fits one page in Classic \(estimated, about 0\.\d\)\./)
+    expect(host.querySelector('[aria-label="Style and page length"]')!.textContent).toMatch(/Fits one page \(estimated, about 0\.\d\)\./)
   })
 
-  it('"Fit to one page" says it does NOT fit rather than claiming success, when even Compact runs over', async () => {
+  it('"Fit to one page" says it does NOT fit rather than claiming success, when even the tightest spacing runs over', async () => {
     const long: ResumeSections = {
       ...original,
       experience: Array.from({ length: 6 }, (_, i) => ({ title: `Role ${i}`, employer: `Employer ${i}`, dates: 'd', location: null, bullets: Array.from({ length: 12 }, (_, j) => `${'achieved a measurable result '.repeat(5)}${i}${j}`) })),
@@ -199,27 +197,31 @@ describe('after tailoring', () => {
     await click(button(/Tailor my résumé/))
     await click(host.querySelector('[aria-label="Style and page length"] input[type="checkbox"]')!)
     const note = host.querySelector('[aria-label="Style and page length"]')!.textContent!
-    expect(note).toMatch(/Still about \d\.\d pages in Compact/)
+    expect(note).toMatch(/Still about \d\.\d pages with the tightest spacing/)
     expect(note).not.toContain('Fits one page')
   })
 
-  it('Export Word sends the chosen style and the company, so the file is named for all three', async () => {
+  it('opens the export drawer, and Download Word sends the chosen style and the company', async () => {
     await tailored()
     URL.createObjectURL = vi.fn(() => 'blob:x')
     URL.revokeObjectURL = vi.fn()
     const bar = host.querySelector('[aria-label="Style and page length"]')!
-    await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Headline')!)
-    await click(button(/Export Word/))
+    await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Centered')!)
+    await click(button(/Export résumé/))
+    await click([...document.body.querySelectorAll('button')].find((b) => /Download Word/.test(b.textContent ?? ''))!)
     expect(mocks.downloadOptimisedResume).toHaveBeenCalledTimes(1)
-    expect(mocks.downloadOptimisedResume.mock.calls[0][0]).toMatchObject({ template: 'headline', company: 'Diligent', targetRole: 'Customer Success Manager' })
+    expect(mocks.downloadOptimisedResume.mock.calls[0][0]).toMatchObject({
+      company: 'Diligent', targetRole: 'Customer Success Manager', style: { preset: 'centered', headerAlign: 'center' },
+    })
   })
 
-  it('Export PDF names the print by the same file name, then restores the page title', async () => {
+  it('Download PDF prints the page under the same file name, then restores the page title', async () => {
     await tailored()
     document.title = 'Resume Tailoring Studio — Jobinko'
     let titleWhilePrinting = ''
     window.print = vi.fn(() => { titleWhilePrinting = document.title })
-    await click(button(/Export PDF/))
+    await click(button(/Export résumé/))
+    await click([...document.body.querySelectorAll('button')].find((b) => /Download PDF/.test(b.textContent ?? ''))!)
     expect(titleWhilePrinting).toBe('Asha_Rao_Customer_Success_Manager_Diligent')
     window.dispatchEvent(new Event('afterprint'))
     expect(document.title).toBe('Resume Tailoring Studio — Jobinko')
