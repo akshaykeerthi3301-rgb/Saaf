@@ -3,7 +3,7 @@ import { PublicShell } from '@/components/features/public-shell'
 import { POSTS } from '@/lib/blog'
 
 export const metadata = {
-  title: 'Saaf data blog — numbers counted from real job postings | Saaf',
+  title: 'Jobinko data blog — numbers counted from real job postings | Jobinko',
   description: 'What the job postings on Indian company career pages actually say: how many state a salary, where the jobs are, how much experience they ask for — counted, with the method and the date.',
   alternates: { canonical: '/blog' },
 }
@@ -11,8 +11,8 @@ export const metadata = {
 export default function BlogIndex() {
   return (
     <PublicShell>
-      <h1 className="text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">Saaf data blog</h1>
-      <p className="mt-3 max-w-[62ch] text-sm leading-6 text-muted-foreground">Numbers Saaf counted itself from real job postings — each with the day it was counted, how, and what it does not show.</p>
+      <h1 className="text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">Jobinko data blog</h1>
+      <p className="mt-3 max-w-[62ch] text-sm leading-6 text-muted-foreground">Numbers Jobinko counted itself from real job postings — each with the day it was counted, how, and what it does not show.</p>
       <ul className="mt-8 space-y-4">
         {POSTS.map((p) => (
           <li key={p.slug}>

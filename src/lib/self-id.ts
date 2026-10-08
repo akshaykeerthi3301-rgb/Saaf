@@ -1,7 +1,7 @@
 /**
  * The demographic questions a candidate can answer for themselves (F-602, TASK-171).
  *
- * Saaf's rule is unchanged: it never answers these for anyone, and never infers
+ * Jobinko's rule is unchanged: it never answers these for anyone, and never infers
  * one. This is the lawful substitute — the candidate types their own words, once,
  * and the extension fills ONLY those questions with ONLY those words. "Prefer not
  * to say" is not a stored value; it is the absence of a key, so there is nothing

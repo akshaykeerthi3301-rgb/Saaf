@@ -107,11 +107,11 @@ export function AppShell({
           }`}
         >
           <div className="flex items-center justify-between px-2 lg:justify-center lg:px-0">
-            <Link href="/today" title="Saaf" className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.05em] text-primary">
+            <Link href="/today" title="Jobinko" className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.05em] text-primary">
               <span className="bg-brand-gradient glow-selected flex size-9 items-center justify-center rounded-xl">
                 <Sparkles className="size-4" />
               </span>
-              <span className="lg:sr-only">Saaf</span>
+              <span className="lg:sr-only">Jobinko</span>
             </Link>
             <button
               className="rounded-lg p-2 text-muted-foreground lg:hidden"

@@ -7,9 +7,9 @@ import { roleSlug as rolePageSlug, roleFromSlug } from '@/lib/seo-pages'
 import { slugify } from '@/lib/seo-pages'
 
 /**
- * "Resume keywords for <role>" (F-1207, TASK-203) — a tool landing page made of Saaf's own measurement:
+ * "Resume keywords for <role>" (F-1207, TASK-203) — a tool landing page made of Jobinko's own measurement:
  * the terms postings for that role use most and the share of them that contain each, with the posting
- * count they were measured across. The slug must be one of the roles Saaf measured or the page is a 404.
+ * count they were measured across. The slug must be one of the roles Jobinko measured or the page is a 404.
  */
 export const revalidate = 86400
 export const dynamicParams = true
@@ -21,9 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = (await params).role
   const role = keywordRoleFromSlug(slug)
   const facts = role ? roleKeywordFacts(role) : null
-  if (!role || !facts) return { title: 'Not found | Saaf', robots: { index: false } }
+  if (!role || !facts) return { title: 'Not found | Jobinko', robots: { index: false } }
   return {
-    title: `${role} resume keywords — measured across ${facts.postings.toLocaleString('en-IN')} postings | Saaf`,
+    title: `${role} resume keywords — measured across ${facts.postings.toLocaleString('en-IN')} postings | Jobinko`,
     description: `The words ${facts.postings.toLocaleString('en-IN')} ${role} job postings use most, and the share of postings containing each — then check your résumé for them, free, no sign-up.`,
     alternates: { canonical: `/tools/resume-keywords/${slug}` },
   }
@@ -40,7 +40,7 @@ export default async function RoleKeywordsPage({ params }: Props) {
       <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground"><Link href="/tools" className="hover:text-primary">Free tools</Link> / <Link href="/tools/resume-keywords" className="hover:text-primary">Résumé keywords</Link> / {role}</nav>
       <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">{role} résumé keywords</h1>
       <p className="mt-3 max-w-[62ch] text-sm leading-6 text-muted-foreground">
-        Saaf read {facts.postings.toLocaleString('en-IN')} {role} postings from company career pages and counted the words they use. These are the most common, and the share of
+        Jobinko read {facts.postings.toLocaleString('en-IN')} {role} postings from company career pages and counted the words they use. These are the most common, and the share of
         those postings that contain each one.{' '}
         {facts.medianYears !== null ? <>Among the postings that state an experience requirement, the middle value is <strong className="text-primary">{facts.medianYears} years</strong>. </> : null}
         It is a count, not advice: a word is worth putting on your résumé only if it is true of you.

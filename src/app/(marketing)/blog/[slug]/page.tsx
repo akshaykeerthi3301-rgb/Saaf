@@ -12,14 +12,14 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = postBySlug((await params).slug)
-  if (!p) return { title: 'Not found | Saaf', robots: { index: false } }
-  return { title: `${p.title} | Saaf`, description: p.description, alternates: { canonical: `/blog/${p.slug}` }, openGraph: { title: p.title, description: p.description, type: 'article', url: `/blog/${p.slug}` } }
+  if (!p) return { title: 'Not found | Jobinko', robots: { index: false } }
+  return { title: `${p.title} | Jobinko`, description: p.description, alternates: { canonical: `/blog/${p.slug}` }, openGraph: { title: p.title, description: p.description, type: 'article', url: `/blog/${p.slug}` } }
 }
 
 export default async function BlogPost({ params }: Props) {
   const p = postBySlug((await params).slug)
   if (!p) notFound()
-  const structured = { '@context': 'https://schema.org', '@type': 'Article', headline: p.title, description: p.description, datePublished: p.date, dateModified: p.date, author: { '@type': 'Organization', name: 'Saaf' }, mainEntityOfPage: `${siteUrl()}/blog/${p.slug}` }
+  const structured = { '@context': 'https://schema.org', '@type': 'Article', headline: p.title, description: p.description, datePublished: p.date, dateModified: p.date, author: { '@type': 'Organization', name: 'Jobinko' }, mainEntityOfPage: `${siteUrl()}/blog/${p.slug}` }
   return (
     <PublicShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }} />

@@ -15,7 +15,7 @@ import { readMissionFacts, readProactiveFacts } from '@/lib/services/assistant'
  * ⚠️ THE "COOKIE" PERSONA WAS REMOVED FROM THIS SCREEN, 2026-09-14. It spoke in
  * the first person ("I scored 42 roles against your profile") and was the only
  * place in the product using that name, which made it the fourth name for one
- * product — the locked decision is that the name is Saaf. Keeping it would have
+ * product — the locked decision is that the name is Jobinko. Keeping it would have
  * meant introducing a character somewhere; the diagnostic does not need one to
  * report an average. The MODULE names are deliberately untouched:
  * `lib/services/cookie.ts` and the interview-prep engine keep theirs, because
@@ -170,7 +170,7 @@ export default async function CopilotPage() {
             <p className="text-sm font-semibold text-primary">Your shortlist, averaged</p>
             {scored.length ? (
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Saaf scored{' '}
+                Jobinko scored{' '}
                 <span className="font-mono tabular-nums text-primary">{scored.length}</span> roles
                 against your profile.{' '}
                 <span className="font-mono tabular-nums text-primary">{strong}</span>{' '}
@@ -243,7 +243,7 @@ export default async function CopilotPage() {
         <div className="mt-8 flex gap-3 rounded-2xl border border-border bg-secondary/50 p-5">
           <TrendingUp className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <p className="text-xs leading-5 text-muted-foreground">
-            Saaf does not score your career trajectory, your industry context or your profile
+            Jobinko does not score your career trajectory, your industry context or your profile
             strength. Those appear on comparable products as single numbers; none of them is measured
             here, and inventing one would make every other figure on this page worth less. What is
             above is the scorer&apos;s own arithmetic, and you can check any of it against the working

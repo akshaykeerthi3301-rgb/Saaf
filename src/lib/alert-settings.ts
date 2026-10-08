@@ -23,7 +23,7 @@ export const MIN_SCORES = [0, 60, 70, 75, 80, 85] as const
 export const MAX_JOBS = [3, 5, 8, 10] as const
 
 /**
- * ⚠️ SAVING THESE DOES NOT MAKE MAIL ARRIVE. Saaf's sending address is Resend's
+ * ⚠️ SAVING THESE DOES NOT MAKE MAIL ARRIVE. Jobinko's sending address is Resend's
  * shared test sender, which delivers only to the account owner, until a domain is
  * verified (docs/HANDOFF.md). The screen says so for as long as this is false.
  */

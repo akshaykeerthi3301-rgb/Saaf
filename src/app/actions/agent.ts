@@ -36,7 +36,7 @@ export async function saveAgentSettings(input: z.input<typeof settingsSchema>) {
 export type QueueJob = { roleId: string; url: string; title: string; company: string }
 
 /**
- * What Saaf would auto-queue now. Only in 'queue' mode — in any other mode the answer is nothing, whatever the
+ * What Jobinko would auto-queue now. Only in 'queue' mode — in any other mode the answer is nothing, whatever the
  * browser asks. Nothing is remembered yet: the browser queues the jobs and then confirms them below.
  */
 export async function proposeAutoQueue(): Promise<{ ok: true; jobs: QueueJob[] } | { ok: false }> {

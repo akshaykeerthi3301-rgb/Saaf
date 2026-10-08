@@ -19,7 +19,7 @@ describe('what the question is asking', () => {
     for (const q of ['', ' ', 'x', 'tell me a joke', 'what is the weather in Pune', 'asdf qwer', 'write my cover letter']) expect(classify(q)).toBe('help')
   })
 
-  it('every prompt Saaf offers is a question it can place', () => {
+  it('every prompt Jobinko offers is a question it can place', () => {
     for (const p of PROMPTS) expect(classify(p.q)).not.toBe('help')
   })
 

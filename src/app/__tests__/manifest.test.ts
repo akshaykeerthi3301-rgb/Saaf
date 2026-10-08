@@ -4,7 +4,7 @@ import manifest from '../manifest'
 describe('the web app manifest', () => {
   const m = manifest()
   it('makes the site installable: name, a start page inside its scope, standalone display', () => {
-    expect(m.name).toBe('Saaf')
+    expect(m.name).toBe('Jobinko')
     expect(m.display).toBe('standalone')
     expect(m.start_url?.startsWith(m.scope ?? '/')).toBe(true)
   })

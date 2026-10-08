@@ -13,7 +13,7 @@ describe('agent settings', () => {
     expect(sanitizeAgentSettings({ mode: 'queue', weeklyTarget: 10, minScore: 80, queued: [{ id: U(1), at: '2026-10-07T00:00:00Z' }, { id: 'nope', at: 'x' }, null] }))
       .toEqual({ mode: 'queue', weeklyTarget: 10, minScore: 80, queued: [{ id: U(1), at: '2026-10-07T00:00:00Z' }] })
   })
-  it('the safe mode is the default: Saaf suggests, it does not queue on its own', () => {
+  it('the safe mode is the default: Jobinko suggests, it does not queue on its own', () => {
     expect(DEFAULT_AGENT.mode).toBe('suggest')
   })
 })
@@ -23,7 +23,7 @@ describe('proposing a queue', () => {
     const out = proposeQueue([cand(1, { score: 78 }), cand(2, { score: 92 }), cand(3, { easy: false }), cand(4, { tracked: true }), cand(5, { hidden: true }), cand(6, { score: 60 }), cand(7, { applyUrl: 'javascript:alert(1)' })], settings({ weeklyTarget: 10 }), { appliedThisWeek: 0, now: NOW })
     expect(out.map((r) => r.roleId)).toEqual([U(2), U(1)])
   })
-  it('never proposes a role Saaf already queued', () => {
+  it('never proposes a role Jobinko already queued', () => {
     const s = settings({ weeklyTarget: 10, queued: [{ id: U(2), at: '2026-09-01T00:00:00Z' }] })
     expect(proposeQueue([cand(2), cand(1)], s, { appliedThisWeek: 0, now: NOW }).map((r) => r.roleId)).toEqual([U(1)])
   })

@@ -3,12 +3,12 @@ import { PublicShell } from '@/components/features/public-shell'
 import { keywordRoleSlug, KEYWORD_ROLES } from '@/lib/role-keywords'
 
 export const metadata = {
-  title: 'Résumé keywords by role — measured from real postings | Saaf',
+  title: 'Résumé keywords by role — measured from real postings | Jobinko',
   description: 'For each role, the words its job postings use most and the share of postings containing each — counted from company career pages, not guessed.',
   alternates: { canonical: '/tools/resume-keywords' },
 }
 
-/** The front door for the per-role keyword pages (F-1207): every role Saaf has a measurement for. */
+/** The front door for the per-role keyword pages (F-1207): every role Jobinko has a measurement for. */
 export default function ResumeKeywordsIndex() {
   return (
     <PublicShell>

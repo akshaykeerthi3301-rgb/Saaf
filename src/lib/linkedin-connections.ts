@@ -4,7 +4,7 @@ import { normaliseCompany } from '@/lib/company-name'
  * Reads the Connections.csv that LinkedIn gives a member under Settings → Data
  * privacy → "Get a copy of your data" → Connections (2026-09-25; the lawful
  * version of Jobright's "5 former colleagues" and insider connections, which
- * need a people database Saaf will not scrape).
+ * need a people database Jobinko will not scrape).
  *
  * The file is the candidate's own data. Only what the feature needs is kept:
  * name, company, position, profile link, date. The export's Email Address

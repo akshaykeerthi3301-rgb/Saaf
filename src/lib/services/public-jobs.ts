@@ -211,7 +211,7 @@ export async function searchPublicJobs(input: { q?: string; city?: string; page?
   }
 }
 
-/** For the landing page's ticker: the count of roles Saaf first saw in the last 24 hours, and the six most recently POSTED roles (by the employer's date). Nothing estimated. Null on any failure. */
+/** For the landing page's ticker: the count of roles Jobinko first saw in the last 24 hours, and the six most recently POSTED roles (by the employer's date). Nothing estimated. Null on any failure. */
 export async function readTicker(): Promise<{ last24h: number; latest: { id: string; title: string; company: string; city: string | null }[] } | null> {
   try {
     const db = createServiceClient()
@@ -243,7 +243,7 @@ export type RolePageData = {
 
 /**
  * One programmatic role page, or role-in-city page (F-1203). ⚠️ SERVICE CLIENT, CONTAINED BY SHAPE like
- * the rest of this file: `roles` only, a fixed set of display fields, and the filter comes from Saaf's
+ * the rest of this file: `roles` only, a fixed set of display fields, and the filter comes from Jobinko's
  * own taxonomy (role words and city spellings) — never from the visitor. The total is exact; the
  * employer and city breakdowns are of the newest 300 roles and are labelled that way.
  */
@@ -256,7 +256,7 @@ export const REMOTE_LOCATION = 'location_raw.ilike.%remote%,location_raw.ilike.%
 
 /**
  * The remote hub (F-1205): roles whose location says remote, with the role mix of the newest 300 (counted by
- * Saaf's own role phrases). Same containment as the role pages.
+ * Jobinko's own role phrases). Same containment as the role pages.
  */
 export async function readRemoteHub(): Promise<RolePageData & { roles: { role: string; n: number }[] }> {
   const d = await readListing({ remote: true, titles: true })

@@ -19,7 +19,7 @@ import { ScoreRing } from '@/components/ui/score-ring'
  * Speech API — ₹0, no key, no server of ours. Where it is missing (Firefox,
  * most in-app browsers) the controls are not rendered and typing still works.
  *
- * ⚠️ IN CHROME THE AUDIO GOES TO GOOGLE'S SPEECH SERVICE, not to Saaf. The box
+ * ⚠️ IN CHROME THE AUDIO GOES TO GOOGLE'S SPEECH SERVICE, not to Jobinko. The box
  * says so under the mic, because "nothing about your search is shared" is a
  * product guarantee and a silent third party would break it.
  */
@@ -148,7 +148,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
                 </button>
               ) : null}
               {canSpeak ? (
-                <span className="text-[10px] text-muted-foreground">Your browser turns speech into text — in Chrome that is Google&apos;s speech service, not Saaf.</span>
+                <span className="text-[10px] text-muted-foreground">Your browser turns speech into text — in Chrome that is Google&apos;s speech service, not Jobinko.</span>
               ) : null}
             </div>
           ) : null}

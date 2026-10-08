@@ -9,7 +9,7 @@ import { useTrackedStage } from '@/components/features/feed-selection'
 /**
  * Quick Apply — open the employer's form and move the role to Applying.
  *
- * ⚠️ SAAF DOES NOT SUBMIT ANYTHING. Permanent decision (PROJECT-STATE, "Never
+ * ⚠️ JOBINKO DOES NOT SUBMIT ANYTHING. Permanent decision (PROJECT-STATE, "Never
  * applies on the candidate's behalf"). "Quick" is the two steps it removes:
  * finding the form, and filing the role on the tracker. On an Easy Apply host
  * the browser extension fills the form; the candidate reads it and presses send.
@@ -50,7 +50,7 @@ export function QuickApply({
       onClick={go}
       title={
         easy
-          ? 'Opens the one-page application form. Saaf’s extension can fill it; you review and press submit.'
+          ? 'Opens the one-page application form. Jobinko’s extension can fill it; you review and press submit.'
           : 'Opens the employer’s application site. It may ask you to create an account first.'
       }
       className={`bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl font-semibold shadow-sm transition hover:opacity-90 ${

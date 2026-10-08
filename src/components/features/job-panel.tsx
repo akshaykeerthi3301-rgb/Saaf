@@ -502,7 +502,7 @@ function OverviewTab({ j }: { j: JobInsight }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[11px] leading-4 text-muted-foreground">Written by the employer in the posting itself. Saaf never looks up or guesses an address.</p>
+          <p className="mt-3 text-[11px] leading-4 text-muted-foreground">Written by the employer in the posting itself. Jobinko never looks up or guesses an address.</p>
         </section>
       ) : null}
 

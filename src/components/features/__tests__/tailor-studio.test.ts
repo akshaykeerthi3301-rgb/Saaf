@@ -214,12 +214,12 @@ describe('after tailoring', () => {
 
   it('Export PDF names the print by the same file name, then restores the page title', async () => {
     await tailored()
-    document.title = 'Resume Tailoring Studio — Saaf'
+    document.title = 'Resume Tailoring Studio — Jobinko'
     let titleWhilePrinting = ''
     window.print = vi.fn(() => { titleWhilePrinting = document.title })
     await click(button(/Export PDF/))
     expect(titleWhilePrinting).toBe('Asha_Rao_Customer_Success_Manager_Diligent')
     window.dispatchEvent(new Event('afterprint'))
-    expect(document.title).toBe('Resume Tailoring Studio — Saaf')
+    expect(document.title).toBe('Resume Tailoring Studio — Jobinko')
   })
 })

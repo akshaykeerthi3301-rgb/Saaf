@@ -1,5 +1,5 @@
 /**
- * Talking to the Saaf browser extension from a Saaf page (browser only).
+ * Talking to the Jobinko browser extension from a Jobinko page (browser only).
  *
  * ⚠️ THE EXTENSION ID IS PUBLIC, NOT A SECRET. It is derived from the `key` in
  * extension/manifest.json, which pins the same ID for the unpacked build and

@@ -3,7 +3,7 @@ import { upcoming, type OfficeHour } from '@/lib/office-hours'
 
 /**
  * Career coaches (migration 0031). Jobright runs a marketplace of rated human
- * coaches (OBSERVED 2026-09-25). Saaf lists coaches the founder has vetted and
+ * coaches (OBSERVED 2026-09-25). Jobinko lists coaches the founder has vetted and
  * links to each coach's own booking page: no payment, no calendar, no ratings
  * until there are real sessions to rate. Coaches are added in the Supabase
  * dashboard; people can apply to be listed.

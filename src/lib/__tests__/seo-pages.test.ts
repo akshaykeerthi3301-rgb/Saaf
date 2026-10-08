@@ -32,9 +32,9 @@ describe('role and city pages', () => {
     expect(isIndexable(MIN_ROLES_TO_INDEX)).toBe(true)
   })
   it('titles say the real number and the right noun', () => {
-    expect(pageTitle('Product Manager', null, 36)).toBe('Product Manager jobs in India — 36 open roles | Saaf')
-    expect(pageTitle('Product Manager', cityFromSlug('pune'), 1)).toBe('Product Manager jobs in Pune — 1 open role | Saaf')
-    expect(pageTitle('Product Manager', null, 0)).toBe('Product Manager jobs in India | Saaf')
+    expect(pageTitle('Product Manager', null, 36)).toBe('Product Manager jobs in India — 36 open roles | Jobinko')
+    expect(pageTitle('Product Manager', cityFromSlug('pune'), 1)).toBe('Product Manager jobs in Pune — 1 open role | Jobinko')
+    expect(pageTitle('Product Manager', null, 0)).toBe('Product Manager jobs in India | Jobinko')
   })
 })
 

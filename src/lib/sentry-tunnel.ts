@@ -3,11 +3,11 @@
  *
  * Why a tunnel at all (Sentry docs, "Troubleshooting → ad blockers": endpoint blocking "can only be
  * resolved by using a tunnel", config key `tunnel`): browsers' content blockers drop requests to
- * *.ingest.sentry.io, so the errors a candidate hits most are the ones Saaf never hears about. The
- * report goes to Saaf's own origin instead and this route passes it on.
+ * *.ingest.sentry.io, so the errors a candidate hits most are the ones Jobinko never hears about. The
+ * report goes to Jobinko's own origin instead and this route passes it on.
  *
- * Why it is picky: an open forwarder would let anyone push traffic through Saaf at any host. The
- * envelope's first line names the DSN it was written for; it is forwarded only if that DSN is Saaf's
+ * Why it is picky: an open forwarder would let anyone push traffic through Jobinko at any host. The
+ * envelope's first line names the DSN it was written for; it is forwarded only if that DSN is Jobinko's
  * own project (same host, same project id) and the URL is rebuilt from OUR configured DSN, never from
  * the caller's text.
  */

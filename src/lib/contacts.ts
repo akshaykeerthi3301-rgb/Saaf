@@ -5,7 +5,7 @@ import { parseCsv, readConnectionsExport, type Connection } from '@/lib/linkedin
  * The candidate's OWN contacts, from the files and forms they control (TASK-183,
  * TASK-184; F-307, F-308). Pure.
  *
- * ⚠️ NEVER A STRANGER'S ADDRESS, NEVER A GUESS. Saaf does not find, infer or
+ * ⚠️ NEVER A STRANGER'S ADDRESS, NEVER A GUESS. Jobinko does not find, infer or
  * pattern-guess anyone's email (first.last@company.com is a guess about a person who
  * never gave it to us — India's DPDP Act, and the reason F-308 "find any email" is
  * closed by this lawful form instead). The two honest sources of an address are:

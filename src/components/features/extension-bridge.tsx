@@ -8,7 +8,7 @@ import { confirmAutoQueued, proposeAutoQueue } from '@/app/actions/agent'
 import { askExtension } from '@/lib/extension-client'
 
 /**
- * Keeps the Saaf browser extension in step with the signed-in app.
+ * Keeps the Jobinko browser extension in step with the signed-in app.
  *
  * On load, and each time the tab comes back into view:
  *  1. asks whether the extension is installed (nothing happens if not);
@@ -43,7 +43,7 @@ export function ExtensionBridge() {
           if (res.ok && res.handled.length) {
             await ask({ type: 'saaf:ack', urls: res.handled })
             if (res.filed) {
-              setNote(`${res.filed} role${res.filed === 1 ? '' : 's'} from the Saaf extension added to your tracker.`)
+              setNote(`${res.filed} role${res.filed === 1 ? '' : 's'} from the Jobinko extension added to your tracker.`)
               router.refresh()
             }
           }
@@ -58,7 +58,7 @@ export function ExtensionBridge() {
           }
         }
 
-        // Sites the candidate asked Saaf to support: hostnames only.
+        // Sites the candidate asked Jobinko to support: hostnames only.
         if (queued?.ok && queued.sites?.length) {
           const res = await fileSiteRequestsFromExtension(queued.sites)
           if (res.ok && res.handled.length) await ask({ type: 'saaf:ack-sites', hosts: res.handled })
@@ -71,7 +71,7 @@ export function ExtensionBridge() {
           const added = await ask<{ ok: boolean }>({ type: 'saaf:autoapply-add', jobs: picks.jobs.map((j) => ({ url: j.url, title: j.title, company: j.company })) })
           if (added?.ok) {
             await confirmAutoQueued(picks.jobs.map((j) => j.roleId))
-            setNote(`Saaf queued ${picks.jobs.length} Easy-apply role${picks.jobs.length === 1 ? '' : 's'} for you. Nothing is sent until you press Start in the extension.`)
+            setNote(`Jobinko queued ${picks.jobs.length} Easy-apply role${picks.jobs.length === 1 ? '' : 's'} for you. Nothing is sent until you press Start in the extension.`)
           }
         }
 

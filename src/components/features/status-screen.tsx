@@ -5,7 +5,7 @@ import { Sparkles } from 'lucide-react'
 /**
  * The frame for a page that is not the page the visitor asked for: an error,
  * a missing route. The same centred card as /signin, so a failure still looks
- * like Saaf rather than like the framework (docs/QA-AUDIT.md QA-12 — a 413
+ * like Jobinko rather than like the framework (docs/QA-AUDIT.md QA-12 — a 413
  * used to render Next's unbranded "This page couldn't load").
  *
  * Server-safe: no hooks, so error.tsx (client) and not-found.tsx (server) can
@@ -25,12 +25,12 @@ export function StatusScreen({
       <Link
         href="/"
         className="mb-8 flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary"
-        aria-label="Saaf home"
+        aria-label="Jobinko home"
       >
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <Sparkles className="size-4" />
         </span>
-        Saaf
+        Jobinko
       </Link>
 
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">

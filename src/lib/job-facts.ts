@@ -15,7 +15,7 @@
  * must create an account and click through several steps before a form
  * exists — calling that easy would be the badge lying. These five serve the
  * whole application on one page with no sign-up, which is the claim the pill
- * makes. Saaf never submits it: the extension fills, the candidate presses send.
+ * makes. Jobinko never submits it: the extension fills, the candidate presses send.
  */
 const EASY_HOSTS = [
   /(^|\.)greenhouse\.io$/,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-/** A role page reads `roles` only, filters by Saaf's own taxonomy (never by the visitor), and counts what it shows. */
+/** A role page reads `roles` only, filters by Jobinko's own taxonomy (never by the visitor), and counts what it shows. */
 const h = vi.hoisted(() => ({ calls: [] as [string, unknown[]][], rows: [] as unknown[], count: 0 }))
 vi.mock('@/lib/supabase/service', () => ({
   createServiceClient: () => {
@@ -60,7 +60,7 @@ describe('readRemoteHub', () => {
     expect(called('or')[0][0]).toBe('location_raw.ilike.%remote%,location_raw.ilike.%anywhere%,location_raw.ilike.%work from home%')
     expect(called('ilike')).toEqual([]) // no role or city narrowing
   })
-  it('counts the role mix of the sample with Saaf\'s own role phrases', async () => {
+  it('counts the role mix of the sample with Jobinko\'s own role phrases', async () => {
     h.count = 9
     h.rows = [row(1, 'A', 'India', 'Product Manager'), row(2, 'B', 'India', 'Senior Product Manager'), row(3, 'C', 'India', 'Data Analyst'), row(4, 'C', 'India', 'Chef')]
     const d = await readRemoteHub()

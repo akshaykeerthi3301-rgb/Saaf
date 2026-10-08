@@ -6,7 +6,7 @@ import { MAX_ANSWER, MAX_ENTRIES, MAX_QUESTION, type BankEntry } from '@/lib/ans
 
 /**
  * "Questions employers asked" — your own answers to the custom questions on application
- * forms (F-705). Saaf never writes one for you: the extension fills a box only with
+ * forms (F-705). Jobinko never writes one for you: the extension fills a box only with
  * words you wrote here for that exact question, and a required question it has no answer
  * for is listed here, blank, instead of being guessed. Apply for me uses an answer only if
  * you tick it for that. Own Save: nothing here moves a score.
@@ -28,7 +28,7 @@ export function AnswerBank({ initial, stored }: { initial: BankEntry[]; stored: 
     setBusy(true); setNote(undefined)
     const r = await saveAnswerBank(rows).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
     setBusy(false)
-    setNote(r.ok ? 'Saved. The extension picks these up the next time you open Saaf.' : r.error)
+    setNote(r.ok ? 'Saved. The extension picks these up the next time you open Jobinko.' : r.error)
   }
 
   const waiting = rows.map((r, i) => ({ r, i })).filter(({ r }) => !r.a)
@@ -51,7 +51,7 @@ export function AnswerBank({ initial, stored }: { initial: BankEntry[]; stored: 
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Questions employers asked</p>
       <p className="mb-4 mt-1 text-sm leading-6 text-muted-foreground">
         Employers add their own questions, like “Why do you want to work here?”. Write your answer once and the extension fills it
-        the next time a form asks <em>exactly</em> that question — a different company’s question is a different question. Saaf never
+        the next time a form asks <em>exactly</em> that question — a different company’s question is a different question. Jobinko never
         writes an answer for you. When a required question has no answer here, it appears below, blank, for you to fill in.
         Questions about gender, religion, caste, passwords, ID numbers and consent boxes are never filled from here.
       </p>

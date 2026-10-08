@@ -4,7 +4,7 @@ import { sentryTunnelTarget } from '../sentry-tunnel'
 const OWN = 'https://abc123@o999.ingest.us.sentry.io/4512345'
 const env = (dsn: string) => `${JSON.stringify({ event_id: 'x', dsn })}\n${JSON.stringify({ type: 'event' })}\n{}`
 
-describe('sentryTunnelTarget — forwards only to Saaf\'s own Sentry project', () => {
+describe('sentryTunnelTarget — forwards only to Jobinko\'s own Sentry project', () => {
   it('rebuilds the URL from OUR dsn when the envelope names it', () => {
     expect(sentryTunnelTarget(env(OWN), OWN)).toBe('https://o999.ingest.us.sentry.io/api/4512345/envelope/')
   })
@@ -24,7 +24,7 @@ describe('sentryTunnelTarget — forwards only to Saaf\'s own Sentry project', (
     expect(sentryTunnelTarget('{"no":"dsn"}\n{}', OWN)).toBeNull()
     expect(sentryTunnelTarget('{"dsn":42}\n{}', OWN)).toBeNull()
   })
-  it('refuses everything when Saaf has no Sentry configured', () => {
+  it('refuses everything when Jobinko has no Sentry configured', () => {
     expect(sentryTunnelTarget(env(OWN), undefined)).toBeNull()
     expect(sentryTunnelTarget(env(OWN), 'garbage')).toBeNull()
   })

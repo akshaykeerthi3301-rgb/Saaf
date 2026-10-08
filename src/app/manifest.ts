@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 /**
- * The web app manifest — what makes Saaf installable to a phone's home screen or a
+ * The web app manifest — what makes Jobinko installable to a phone's home screen or a
  * desktop app window (F-1111, TASK-201). It only describes the site; it adds no
  * offline mode and no background work. `start_url` is the feed, which sends a signed-out
  * visitor to sign in like any other visit.
@@ -11,8 +11,8 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Saaf',
-    short_name: 'Saaf',
+    name: 'Jobinko',
+    short_name: 'Jobinko',
     description: 'Job matches with the arithmetic shown.',
     start_url: '/today',
     scope: '/',

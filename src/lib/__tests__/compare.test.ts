@@ -5,7 +5,7 @@ import caps from '../taxonomy/ats-capabilities.json'
 import { KEYWORD_ROLES } from '../role-keywords'
 
 /**
- * The comparison pages make claims about Saaf only, so each claim that quotes a number or a rule is pinned
+ * The comparison pages make claims about Jobinko only, so each claim that quotes a number or a rule is pinned
  * to the place that holds it. If the product stops doing something, this fails before the page keeps saying so.
  */
 const read = (p: string) => readFileSync(new URL(`../../../${p}`, import.meta.url), 'utf8')
@@ -27,10 +27,10 @@ describe('comparison pages stay true to the code', () => {
     expect(a).toMatch(/NEVER CLAIMS WHAT IT DID NOT SEE/)
     expect(a).toMatch(/OFF UNTIL THE CANDIDATE TURNS IT ON/)
   })
-  it('no page names a product or company other than Saaf and the neutral vendors it reads feeds from', () => {
+  it('no page names a product or company other than Jobinko and the neutral vendors it reads feeds from', () => {
     const text = JSON.stringify(COMPARISONS)
     for (const rival of ['Jobright', 'Naukri', 'Indeed', 'Glassdoor', 'Resume Worded', 'Jobscan', 'Teal', 'Simplify']) {
-      // Naukri and LinkedIn appear once, as sites Saaf does NOT scrape — never as a claim about what they do.
+      // Naukri and LinkedIn appear once, as sites Jobinko does NOT scrape — never as a claim about what they do.
       if (rival === 'Naukri') continue
       expect(text, rival).not.toContain(rival)
     }

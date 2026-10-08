@@ -44,7 +44,7 @@ export const titleIsRole = (title: string, role: string): boolean => title.toLow
 export const isIndexable = (total: number) => total >= MIN_ROLES_TO_INDEX
 
 export function pageTitle(role: string, city: City | null, total: number): string {
-  return `${role} jobs in ${city ? city.name : 'India'}${total > 0 ? ` — ${total.toLocaleString('en-IN')} open role${total === 1 ? '' : 's'}` : ''} | Saaf`
+  return `${role} jobs in ${city ? city.name : 'India'}${total > 0 ? ` — ${total.toLocaleString('en-IN')} open role${total === 1 ? '' : 's'}` : ''} | Jobinko`
 }
 
 /** Roles grouped by domain, for the /roles index. */

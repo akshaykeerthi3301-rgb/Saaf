@@ -10,7 +10,7 @@ import type { InboxItem } from '@/lib/services/engagement'
 /**
  * "Send feedback" and the inbox bell, both in the app's header (F-1112, F-1110). Feedback
  * is a small dialog: what kind, and what you want to say; the page you were on goes with
- * it so a problem can be found. The inbox holds messages FROM Saaf — a note to everyone, or
+ * it so a problem can be found. The inbox holds messages FROM Jobinko — a note to everyone, or
  * to you — and is read when opened, not on every page, so it costs nothing to the feed.
  */
 const KINDS = [['idea', 'An idea'], ['problem', 'Something is wrong'], ['praise', 'Something is good'], ['other', 'Something else']] as const
@@ -96,14 +96,14 @@ export function InboxBell() {
 
   return (
     <div className="relative">
-      <button type="button" onClick={toggle} aria-expanded={open} aria-label={unread ? `Inbox, ${unread} unread` : 'Inbox'} title="Messages from Saaf" className="relative flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-accent/60 hover:text-primary">
+      <button type="button" onClick={toggle} aria-expanded={open} aria-label={unread ? `Inbox, ${unread} unread` : 'Inbox'} title="Messages from Jobinko" className="relative flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-accent/60 hover:text-primary">
         <Bell className="size-4" />
         {unread > 0 ? <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-primary-foreground">{unread}</span> : null}
       </button>
       {open ? (
         <div role="region" aria-label="Inbox" className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-popover p-2 shadow-lg">
           {!stored ? <p className="p-3 text-xs leading-5 text-muted-foreground">Messages need a database update (0044) that has not been applied yet.</p> : null}
-          {stored && (items ?? []).length === 0 ? <p className="p-3 text-xs leading-5 text-muted-foreground">Nothing yet. When Saaf has something to tell you — a change that affects you, a thing worth a look — it appears here.</p> : null}
+          {stored && (items ?? []).length === 0 ? <p className="p-3 text-xs leading-5 text-muted-foreground">Nothing yet. When Jobinko has something to tell you — a change that affects you, a thing worth a look — it appears here.</p> : null}
           <ul className="max-h-96 divide-y divide-border overflow-y-auto">
             {(items ?? []).map((m) => (
               <li key={m.id} className="p-3">

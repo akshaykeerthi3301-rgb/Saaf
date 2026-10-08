@@ -61,12 +61,12 @@ export function OnboardingShell({
         <Link
           href="/"
           className="relative flex w-fit items-center gap-2 text-sm font-semibold tracking-[-0.03em] text-primary"
-          aria-label="Saaf home"
+          aria-label="Jobinko home"
         >
           <span className="bg-brand-gradient glow-selected flex size-8 items-center justify-center rounded-lg">
             <Sparkles className="size-4" />
           </span>
-          Saaf
+          Jobinko
         </Link>
 
         {/* Was a badge, a headline and two promises. The badge said what the

@@ -196,7 +196,7 @@ export function AllFiltersDrawer({
                       maxLength={80}
                       placeholder="Pune, Mumbai — up to three, separate with commas"
                     />
-                    <span className={hintClass}>Any of them can match, with the other spellings (Bangalore and Bengaluru are one city). Distance from a city isn’t offered: Saaf holds no coordinates, so it cannot say what is “within 25 km” without guessing.</span>
+                    <span className={hintClass}>Any of them can match, with the other spellings (Bangalore and Bengaluru are one city). Distance from a city isn’t offered: Jobinko holds no coordinates, so it cannot say what is “within 25 km” without guessing.</span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-input p-3 text-xs">
                     <input type="checkbox" checked={reach} onChange={(e) => setReach(e.target.checked)} className="mt-0.5 size-4 accent-accent" />

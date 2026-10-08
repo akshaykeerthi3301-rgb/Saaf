@@ -4,11 +4,11 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { sentryTunnelTarget } from '@/lib/sentry-tunnel'
 
 /**
- * The Sentry tunnel (TASK-216): browser error reports come here, on Saaf's own origin, so content
+ * The Sentry tunnel (TASK-216): browser error reports come here, on Jobinko's own origin, so content
  * blockers that drop requests to sentry.io do not hide the errors candidates actually hit.
  *
  * Arrives without a session (a visitor's browser reporting a crash), so it lives under api/ with the
- * other session-less routes. It forwards ONLY envelopes addressed to Saaf's own Sentry project
+ * other session-less routes. It forwards ONLY envelopes addressed to Jobinko's own Sentry project
  * (src/lib/sentry-tunnel.ts), caps the size, and brakes a loop. The caller is hashed at once — this
  * route never holds an address, same as the public tools.
  */

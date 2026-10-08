@@ -1,7 +1,7 @@
 import { isEmptyView, viewFromStored, viewToQuery, type FeedView } from '@/lib/feed-query'
 
 /**
- * Search history and "how Saaf read it" (F-205, F-206). Pure: the shape of a
+ * Search history and "how Jobinko read it" (F-205, F-206). Pure: the shape of a
  * stored search, the words that describe a view, and whether two views are the
  * same one — tested apart from the box that uses them.
  */

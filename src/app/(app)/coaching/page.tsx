@@ -22,10 +22,10 @@ export default async function CoachingPage() {
     <AppShell title="Coaching" eyebrow="People who hire, on your side" initials={initials}>
       <div className="mx-auto max-w-3xl p-5 sm:p-8">
         <p className="text-sm leading-6 text-muted-foreground">
-          One-to-one help with your résumé, interviews and negotiation, from people who have hired. You book and pay the coach directly on their own page — Saaf takes nothing and sees nothing of the session.
+          One-to-one help with your résumé, interviews and negotiation, from people who have hired. You book and pay the coach directly on their own page — Jobinko takes nothing and sees nothing of the session.
         </p>
 
-        {/* FREE LIVE SESSIONS (F-1006, TASK-196): written by the founder, hosted on the host's own link. Saaf
+        {/* FREE LIVE SESSIONS (F-1006, TASK-196): written by the founder, hosted on the host's own link. Jobinko
             offers a calendar file and nothing else — no booking, no recording, no payment. */}
         <section aria-label="Office hours" className="mt-6">
           <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Office hours</h2>

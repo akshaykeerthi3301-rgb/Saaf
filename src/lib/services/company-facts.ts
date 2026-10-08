@@ -1,7 +1,7 @@
 /**
  * Company facts from open data (Phase 16, 2026-09-25). Jobright's company tab
  * (OBSERVED) carries founded, HQ, size, funding, leadership and news from a
- * licensed Crunchbase feed. Saaf has no licence, so this reads two free, open
+ * licensed Crunchbase feed. Jobinko has no licence, so this reads two free, open
  * sources instead:
  *
  *  - Wikidata (CC0): founded, headquarters, employees, industry, website, CEO,
@@ -25,7 +25,7 @@ import { normaliseCompany } from '@/lib/company-name'
 
 export { normaliseCompany }
 
-const UA = 'SaafBot/1.0 (https://jobinko.in; job-seeker tool)'
+const UA = 'JobinkoBot/1.0 (https://jobinko.in; job-seeker tool)'
 const WEEK = 7 * 24 * 3600
 const TIMEOUT_MS = 4000
 

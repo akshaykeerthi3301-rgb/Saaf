@@ -2,7 +2,7 @@ import { plain, structureJob } from '@/lib/job-sections'
 
 /**
  * A one-or-two sentence gist of the JOB for the feed card (TASK-218, F-105): what the role is, in the
- * posting's own words. Jobright writes this with a model; Saaf takes it from the posting — deterministic,
+ * posting's own words. Jobright writes this with a model; Jobinko takes it from the posting — deterministic,
  * and by construction a VERBATIM SPAN of the posting text, so the card can never say something the employer
  * did not (the same rule as the fit analysis's quotes and the product's fabrication guard).
  *

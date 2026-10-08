@@ -15,7 +15,7 @@ const P = ({ children }: { children: React.ReactNode }) => (
   </p>
 )
 
-export const metadata = { title: 'Terms — Saaf' }
+export const metadata = { title: 'Terms — Jobinko' }
 
 /**
  * A plain description of how the product works and what's expected of you —
@@ -27,7 +27,7 @@ export default function TermsPage() {
   return (
     <DocPage eyebrow="What to expect" title="Terms">
       <P>
-        This is a plain description of how Saaf works and what to expect from it —
+        This is a plain description of how Jobinko works and what to expect from it —
         not a lawyer-drafted contract. See <Link href="/privacy">Privacy</Link> for
         how your data is handled.
       </P>
@@ -37,7 +37,7 @@ export default function TermsPage() {
         <P>
           A free tool that scores every role it finds against your profile, shows
           the working behind each score, and ranks them — nothing is hidden from
-          you. Saaf applies on your behalf only if you switch on &ldquo;Apply for
+          you. Jobinko applies on your behalf only if you switch on &ldquo;Apply for
           me&rdquo; in its browser extension and press Start: it never goes past a
           CAPTCHA, never guesses an answer, and counts an application as made only
           when the employer&apos;s own page confirms it. It never claims to
@@ -51,9 +51,9 @@ export default function TermsPage() {
         <P>
           Pulled directly from Indian companies&apos; own public hiring-board APIs.
           Every apply link takes you to that employer&apos;s own application page —
-          Saaf is not the employer and doesn&apos;t control whether a posting stays
+          Jobinko is not the employer and doesn&apos;t control whether a posting stays
           accurate or open. A role can close between being shown to you and you
-          clicking apply; that&apos;s the source posting changing, not Saaf.
+          clicking apply; that&apos;s the source posting changing, not Jobinko.
         </P>
       </Section>
 
@@ -69,7 +69,7 @@ export default function TermsPage() {
       <Section>
         <H2>Fair use</H2>
         <P>
-          Saaf is for your own job search. Please don&apos;t scrape, resell, or
+          Jobinko is for your own job search. Please don&apos;t scrape, resell, or
           bulk-extract the matched results or the underlying role registry —
           that registry is maintained by hand and is the thing that makes the
           product possible at ₹0.
@@ -80,7 +80,7 @@ export default function TermsPage() {
         <H2>No guarantees</H2>
         <P>
           Matching, résumé parsing, and every gate are done in good faith and the
-          reasoning is shown to you — but Saaf can&apos;t guarantee every posting is
+          reasoning is shown to you — but Jobinko can&apos;t guarantee every posting is
           accurate, can&apos;t guarantee a role stays open, and isn&apos;t liable for
           outcomes from decisions made using it.
         </P>
@@ -90,7 +90,7 @@ export default function TermsPage() {
         <H2>Changes</H2>
         <P>
           The product may change, and this page will change with it rather than
-          silently drift out of date. Saaf remains free and remains a
+          silently drift out of date. Jobinko remains free and remains a
           pre-application tool — that much doesn&apos;t change.
         </P>
       </Section>

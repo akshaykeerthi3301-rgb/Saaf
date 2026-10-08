@@ -14,7 +14,7 @@ import { describeView } from '@/lib/search-history'
 import { EXPLORE_SCAN } from '@/lib/explore'
 import { displayCity, displayEmployer } from '@/lib/display-names'
 
-export const metadata = { title: 'Search all roles — Saaf' }
+export const metadata = { title: 'Search all roles — Jobinko' }
 
 /**
  * Search the WHOLE index, not just your matches (TASK-217, F-201).

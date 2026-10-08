@@ -59,7 +59,7 @@ describe('fileQueuedRoles', () => {
   })
 })
 
-describe('fileQueuedRoles — "Applied by Saaf" (0035)', () => {
+describe('fileQueuedRoles — "Applied by Jobinko" (0035)', () => {
   it('credits Apply for me when it filed an Applied role', async () => {
     await fileQueuedRoles('u1', [item('https://jobs.lever.co/acme/9', 'applied', 'apply-for-me')])
     expect(db.updates).toEqual([{ id: 'new-1', patch: { applied_via: 'apply-for-me' } }])

@@ -15,7 +15,7 @@ const P = ({ children }: { children: React.ReactNode }) => (
   </p>
 )
 
-export const metadata = { title: 'Privacy — Saaf' }
+export const metadata = { title: 'Privacy — Jobinko' }
 
 /**
  * This page states what the code above it already does — nothing on it is
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
   return (
     <DocPage eyebrow="How we handle your data" title="Privacy">
       <P>
-        Saaf exists because a job search a candidate is hiding from their employer
+        Jobinko exists because a job search a candidate is hiding from their employer
         deserves to actually be hidden. Everything below is enforced in code, not
         promised in copy — the file references point at where.
       </P>

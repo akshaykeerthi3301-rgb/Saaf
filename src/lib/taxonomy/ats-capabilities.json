@@ -1,6 +1,6 @@
 {
   "asOf": "2026-10-08",
-  "basis": "The reading, filling and Apply-for-me code is the same on every site, so what differs is how well it was checked and what shape the employer's form usually has. 'tier' is MEASURED (a captured real form is a test in this repo, or it is not). 'flow' is INFERRED from how each vendor's application usually works and is NOT verified per site — a correction is welcome (the extension's 'Ask Saaf to support this site' button, or write to us).",
+  "basis": "The reading, filling and Apply-for-me code is the same on every site, so what differs is how well it was checked and what shape the employer's form usually has. 'tier' is MEASURED (a captured real form is a test in this repo, or it is not). 'flow' is INFERRED from how each vendor's application usually works and is NOT verified per site — a correction is welcome (the extension's 'Ask Jobinko to support this site' button, or write to us).",
   "tiers": {
     "verified": "Filled a real application form that was captured as a test.",
     "recognised": "The extension runs here and reads the posting; the form filler has not been checked on a live form from this vendor."
@@ -8,7 +8,7 @@
   "flows": {
     "one-page": "Usually one page with a Submit button. Fill and Apply for me both work as designed.",
     "multi-step": "Usually several pages. Fill works on each page you open; Apply for me stops at the first page with no Submit button and hands the tab to you.",
-    "account-first": "Usually asks you to create an account first. Saaf never types a password, so Apply for me stops there and hands the tab to you; Fill works once you are in."
+    "account-first": "Usually asks you to create an account first. Jobinko never types a password, so Apply for me stops there and hands the tab to you; Fill works once you are in."
   },
   "platforms": [
     {

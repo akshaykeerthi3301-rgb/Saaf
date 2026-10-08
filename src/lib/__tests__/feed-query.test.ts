@@ -519,7 +519,7 @@ describe('staffing agencies (TASK-175)', () => {
   })
 })
 
-// ------------------------------------------------------------ TASK-219: the filters Jobright has and Saaf's data can honour
+// ------------------------------------------------------------ TASK-219: the filters Jobright has and Jobinko's data can honour
 
 describe('Past 24 hours in the drawer', () => {
   it('is a date window of its own, kept through the URL', () => {

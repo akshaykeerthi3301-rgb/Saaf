@@ -7,7 +7,7 @@ import { addContact, importConnections, removeConnections } from '@/app/actions/
 
 /**
  * "Who do I know here?" — from people the candidate already knows, never from a people
- * database Saaf would have to scrape. Three lawful sources, each its own list so that
+ * database Jobinko would have to scrape. Three lawful sources, each its own list so that
  * uploading one never wipes another:
  *   LinkedIn's Connections.csv   name, company, position, profile link — NEVER their email
  *   a Google / Outlook contacts export   the candidate's own address book, email kept
@@ -54,7 +54,7 @@ export function ConnectionsImport({ counts, stored }: { counts: Counts; stored: 
         <b> Google or Outlook:</b> export your contacts as CSV and upload that. Both work, and neither replaces the other.
       </p>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        From LinkedIn we keep each person&apos;s name, company, position and profile link — <b>never their email address</b>. From your own contacts file or a person you type in, we keep the email too, so it can sit next to the company. Only you can see any of it. Saaf never looks up or guesses anyone&apos;s address.
+        From LinkedIn we keep each person&apos;s name, company, position and profile link — <b>never their email address</b>. From your own contacts file or a person you type in, we keep the email too, so it can sit next to the company. Only you can see any of it. Jobinko never looks up or guesses anyone&apos;s address.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">

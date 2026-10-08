@@ -55,12 +55,12 @@ export default function SignInPage() {
       <Link
         href="/"
         className="mb-8 flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary"
-        aria-label="Saaf home"
+        aria-label="Jobinko home"
       >
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <Sparkles className="size-4" />
         </span>
-        Saaf
+        Jobinko
       </Link>
 
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">

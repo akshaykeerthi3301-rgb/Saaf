@@ -13,7 +13,7 @@ describe('WalletAndInvites', () => {
   it('shows the balance and history, and says plainly that nothing costs a credit yet', () => {
     const h = html()
     expect(h).toContain('>15<')
-    expect(h).toContain('Nothing in Saaf costs a credit today')
+    expect(h).toContain('Nothing in Jobinko costs a credit today')
     expect(h).toContain('A friend joined')
     expect(h).toContain('+10')
   })

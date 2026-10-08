@@ -87,7 +87,7 @@ export default function UploadPage() {
       </h1>
 
       {/* Three ways in. The LinkedIn option takes the PDF LinkedIn itself
-          exports — Saaf never signs in to LinkedIn or fetches a profile URL:
+          exports — Jobinko never signs in to LinkedIn or fetches a profile URL:
           scraping it breaches their terms (PROJECT-STATE, "No LinkedIn"). */}
       <div className="mt-6 grid grid-cols-3 gap-2" role="tablist" aria-label="How to bring in your profile">
         {([

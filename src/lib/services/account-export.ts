@@ -3,7 +3,7 @@ import { getResume, listResumes } from '@/lib/services/resume-documents'
 import { countConnections } from '@/lib/services/network'
 
 /**
- * "Download my data" (TASK-189) — everything Saaf holds about one candidate, as
+ * "Download my data" (TASK-189) — everything Jobinko holds about one candidate, as
  * one file they can keep. The right of access under India's DPDP Act, and the
  * honest answer to "what do you actually store?".
  *

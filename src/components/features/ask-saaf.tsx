@@ -10,7 +10,7 @@ import { confirmAutoQueued } from '@/app/actions/agent'
 import { listenOnce, speechSupported } from '@/lib/voice-input'
 
 /**
- * "Ask Saaf" — questions about your own shortlist and tracker, answered from your own
+ * "Ask Jobinko" — questions about your own shortlist and tracker, answered from your own
  * rows (src/lib/assistant.ts says why there is no model and no character). Answers are
  * typed cards, not prose: a stat, a few roles with their scores, a link. The mic fills
  * the box and sends nothing — you read what was heard first.
@@ -51,8 +51,8 @@ export function AskSaaf() {
   }
 
   return (
-    <section aria-label="Ask Saaf" className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" data-testid="ask-saaf">
-      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Ask Saaf</h2>
+    <section aria-label="Ask Jobinko" className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" data-testid="ask-saaf">
+      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Ask Jobinko</h2>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
         Questions about your own shortlist and tracker, answered from your own data. It does not guess at anything else.
       </p>
@@ -91,7 +91,7 @@ export function AskSaaf() {
         {canSpeak ? (
           <button
             type="button" onClick={toggleVoice} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Ask by voice'}
-            title={listening ? 'Listening… tap to stop' : 'Say it. Your browser’s speech service hears the audio, not Saaf; the words land here for you to check.'}
+            title={listening ? 'Listening… tap to stop' : 'Say it. Your browser’s speech service hears the audio, not Jobinko; the words land here for you to check.'}
             className={`rounded-full border border-border p-2.5 ${listening ? 'animate-pulse text-accent' : 'text-muted-foreground hover:text-primary'}`}
           >
             <Mic className="size-4" />
@@ -174,10 +174,10 @@ export function QueueCard({ card }: { card: Extract<Card, { type: 'queue' }> }) 
     setState('busy'); setNote(undefined)
     const jobs = card.items.map((i: QueueItem) => ({ url: i.url, title: i.title, company: i.company }))
     const r = await askExtension<{ ok: boolean; queued: number; enabled: boolean }>({ type: 'saaf:autoapply-add', jobs })
-    if (!r?.ok) { setState('idle'); setNote('Queueing needs the Saaf browser extension (version 0.5 or later) in this browser.'); return }
+    if (!r?.ok) { setState('idle'); setNote('Queueing needs the Jobinko browser extension (version 0.5 or later) in this browser.'); return }
     await confirmAutoQueued(card.items.map((i) => i.roleId)).catch(() => null)
     setState('done')
-    setNote(r.enabled ? `Queued (${r.queued} waiting). Press Start in the Saaf extension to apply.` : `Queued (${r.queued} waiting). Switch on “Apply for me” in the Saaf extension, then press Start.`)
+    setNote(r.enabled ? `Queued (${r.queued} waiting). Press Start in the Jobinko extension to apply.` : `Queued (${r.queued} waiting). Switch on “Apply for me” in the Jobinko extension, then press Start.`)
   }
   return (
     <div className="max-w-[95%] rounded-2xl border border-border px-3.5 py-3" data-testid="queue-card">

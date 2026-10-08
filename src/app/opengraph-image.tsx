@@ -1,6 +1,6 @@
 import { ogCard, OG_SIZE, OG_CONTENT_TYPE } from '@/lib/og-card'
 
-export const alt = 'Saaf — precision job matching for India, with the arithmetic shown'
+export const alt = 'Jobinko — precision job matching for India, with the arithmetic shown'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 

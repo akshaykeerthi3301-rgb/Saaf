@@ -218,7 +218,7 @@ const quickSchema = z.object({
  * so. A role already past Saved is left where it is — Quick Apply must never
  * drag an Interviewing card backwards.
  *
- * ⚠️ Saaf does not submit the application (locked decision). This only files
+ * ⚠️ Jobinko does not submit the application (locked decision). This only files
  * it; the candidate submits on the employer's form.
  */
 export async function quickApplyRole(input: z.input<typeof quickSchema>) {

@@ -24,7 +24,7 @@ import { buildResumeDocx, docxFilename } from '@/lib/resume-docx'
  * possible here: this writes the text into a Word file and hands it straight
  * back to the same person, with no badge, no storage and no third party. They
  * could type the same words into Word themselves. What must never happen is
- * this path acquiring a claim of verification — if a "checked by Saaf" mark is
+ * this path acquiring a claim of verification — if a "checked by Jobinko" mark is
  * ever added to the document, the draft has to be regenerated server-side first.
  *
  * NOTHING IS STORED. The file is built in memory and returned. /resume is built

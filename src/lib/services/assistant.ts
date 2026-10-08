@@ -13,7 +13,7 @@ import { weeklyLine } from '@/lib/agent'
 import { proposeForCandidate, readAgentSettings, readAppliedThisWeek } from '@/lib/services/agent'
 
 /**
- * What "Ask Saaf" reads to answer. Every query runs as the signed-in candidate, so RLS
+ * What "Ask Jobinko" reads to answer. Every query runs as the signed-in candidate, so RLS
  * is the security and nothing here can see another person's rows; the user_id filters
  * are for correctness. Each read is bounded (a handful of rows, or a count) — a question
  * must never cost what the feed costs.
@@ -142,7 +142,7 @@ export async function answerFor(userId: string, intent: Intent): Promise<Answer>
   const ids = rows.map((r) => r.role_id)
   const [paid, facts] = await Promise.all([readStatedPays(ids), readRoleFacts(ids)])
   const withPay = rows.filter((r) => paid.has(r.role_id)).sort((a, b) => (paid.get(b.role_id) ?? 0) - (paid.get(a.role_id) ?? 0))
-  if (!withPay.length) return { intent, cards: [{ type: 'text', text: 'None of your 60 highest-scoring roles states pay in rupees. Few Indian postings do — about 1 in 40 — and Saaf never estimates one.' }] }
+  if (!withPay.length) return { intent, cards: [{ type: 'text', text: 'None of your 60 highest-scoring roles states pay in rupees. Few Indian postings do — about 1 in 40 — and Jobinko never estimates one.' }] }
   const items = withPay.slice(0, 5).map((r) => {
     const row = facts.facts.get(r.role_id)
     return { ...toItem(r), note: (row ? payFromRow(row)?.text : null) ?? `₹${((paid.get(r.role_id) ?? 0) / 100_000).toFixed(1).replace(/\.0$/, '')} LPA` }

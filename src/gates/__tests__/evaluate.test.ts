@@ -8,7 +8,7 @@ import { CONFIDENCE_THRESHOLD, type CandidateProfile, type TypedRequirement } fr
  * The most important tests in this codebase.
  *
  * src/gates decides what a candidate is allowed to see. A silent regression here
- * causes the exact harm Saaf exists to prevent — so these cover the boundaries,
+ * causes the exact harm Jobinko exists to prevent — so these cover the boundaries,
  * not just the happy path.
  */
 

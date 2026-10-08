@@ -292,7 +292,7 @@ export function ApplicationBoard({
           ) : null}
           {stats.appliedBySaaf > 0 ? (
             <li className="rounded-full bg-secondary px-3 py-1 text-muted-foreground" title="Submitted by Apply for me; the employer's confirmation was seen">
-              Applied by Saaf <span className="font-semibold tabular-nums text-primary">{stats.appliedBySaaf}</span>
+              Applied by Jobinko <span className="font-semibold tabular-nums text-primary">{stats.appliedBySaaf}</span>
             </li>
           ) : null}
           {stats.postingClosed > 0 ? (
@@ -418,7 +418,7 @@ function BoardCard({
           {days === 0 ? 'Today' : `${days}d in stage`}
         </span>
         {r.appliedVia === 'apply-for-me' && r.status !== 'saved' && r.status !== 'applying' ? (
-          <span className="rounded-md bg-brand/15 px-2 py-0.5 text-accent" title="Submitted by Apply for me; the employer's confirmation was seen">Applied by Saaf</span>
+          <span className="rounded-md bg-brand/15 px-2 py-0.5 text-accent" title="Submitted by Apply for me; the employer's confirmation was seen">Applied by Jobinko</span>
         ) : null}
         {closed ? (
           <span className="rounded-md border border-border px-2 py-0.5 text-muted-foreground" title={closed.title}>{closed.label}</span>

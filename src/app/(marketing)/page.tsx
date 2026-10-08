@@ -95,11 +95,11 @@ export default async function Landing() {
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-6 sm:px-8 lg:px-10">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Saaf home">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Jobinko home">
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" strokeWidth={2.2} />
           </span>
-          <span className="text-base font-semibold tracking-[-0.03em]">Saaf</span>
+          <span className="text-base font-semibold tracking-[-0.03em]">Jobinko</span>
         </Link>
         <div className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
           {/* ⚠️ THE TOOLS WERE ORPHANS UNTIL 2026-09-08 — zero inbound links from
@@ -245,7 +245,7 @@ export default async function Landing() {
 
           <article className="rounded-2xl border border-accent/40 bg-card p-6 shadow-sm">
             <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-              Saaf
+              Jobinko
             </span>
             <p className="mt-3 text-lg font-medium tracking-[-0.02em] text-primary">
               Staff Engineer · <span className="font-bold tabular-nums">35</span>
@@ -355,7 +355,7 @@ export default async function Landing() {
       <footer className="border-t border-border bg-secondary/40">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Saaf</span>
+            <span className="font-semibold text-foreground">Jobinko</span>
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
             <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">Free ATS checker</Link>
             <Link href="/tools/paste-jd" className="transition-colors hover:text-foreground">Should I apply?</Link>
@@ -363,7 +363,7 @@ export default async function Landing() {
             <Link href="/roles" className="transition-colors hover:text-foreground">Jobs by role</Link>
             <Link href="/remote" className="transition-colors hover:text-foreground">Remote jobs</Link>
             <Link href="/blog" className="transition-colors hover:text-foreground">Data blog</Link>
-            <Link href="/compare" className="transition-colors hover:text-foreground">How Saaf compares</Link>
+            <Link href="/compare" className="transition-colors hover:text-foreground">How Jobinko compares</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/profile" className="transition-colors hover:text-foreground">Delete your account</Link>

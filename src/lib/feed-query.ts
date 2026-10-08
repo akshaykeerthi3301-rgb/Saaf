@@ -596,7 +596,7 @@ function inCompanyList(company: string, list: string): boolean {
 }
 
 /**
- * Individual contributor or people manager, READ FROM THE TITLE ONLY — Saaf has no field for "manages people", so
+ * Individual contributor or people manager, READ FROM THE TITLE ONLY — Jobinko has no field for "manages people", so
  * the words are the whole evidence and the drawer says so. A title is a manager's when it says head / director /
  * VP / chief / general manager / team lead / supervisor, or names a function's manager that is a people-leader in
  * practice (engineering, sales, operations, branch, regional, area, store, office, delivery). Everything else —

@@ -4,7 +4,7 @@ import { AppShell } from '@/components/features/app-shell'
  * What /today shows while its query runs.
  *
  * Measured 2026-09-23: 9.95 s cold for the shortlist query alone, and a
- * candidate who opens Saaf once a day always arrives cold. Before this file the
+ * candidate who opens Jobinko once a day always arrives cold. Before this file the
  * navigation showed nothing at all for that long (docs/QA-AUDIT.md QA-02,
  * QA-12). TASK-093 attacks the wait itself; this makes the wait legible.
  *

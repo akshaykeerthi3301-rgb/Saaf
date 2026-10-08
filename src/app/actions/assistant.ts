@@ -7,7 +7,7 @@ import { classify, helpCard, type Answer } from '@/lib/assistant'
 import { answerFor } from '@/lib/services/assistant'
 
 /**
- * "Ask Saaf". Re-authenticates (an exported action is its own entry point); the user
+ * "Ask Jobinko". Re-authenticates (an exported action is its own entry point); the user
  * comes from the session. Limited per user — each question is a handful of reads, but
  * "reads" is still what a loop would spend.
  */

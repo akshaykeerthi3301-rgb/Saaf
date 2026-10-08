@@ -5,17 +5,17 @@
  * candidate has switched "Apply for me" on in the extension AND pressed Start there, and then only by the
  * rules in extension/autoapply.js — never past a CAPTCHA, never a guessed answer, applied only on the
  * employer's confirmation. The modes differ in who puts a role on the queue, nothing else:
- *   off      Saaf proposes nothing.
- *   suggest  (default) Saaf proposes roles — in "Ask Saaf" — and the candidate confirms each batch.
- *   queue    Saaf adds roles to the queue itself, when the candidate has Saaf open, up to the weekly target.
+ *   off      Jobinko proposes nothing.
+ *   suggest  (default) Jobinko proposes roles — in "Ask Jobinko" — and the candidate confirms each batch.
+ *   queue    Jobinko adds roles to the queue itself, when the candidate has Jobinko open, up to the weekly target.
  * Only roles that are Easy apply (a one-page form, no account) and at or above the candidate's own minimum
  * score are ever proposed, and never one already tracked, hidden, or queued before.
  */
 export type AgentMode = 'off' | 'suggest' | 'queue'
 export const MODES: { value: AgentMode; label: string; help: string }[] = [
-  { value: 'off', label: 'Off', help: 'Saaf proposes nothing.' },
-  { value: 'suggest', label: 'Suggest', help: 'Ask Saaf proposes roles to queue; you confirm each batch.' },
-  { value: 'queue', label: 'Auto-queue', help: 'Saaf adds roles to your Apply-for-me queue when you have Saaf open. Nothing is submitted until you press Start in the extension, and you can remove any from its queue.' },
+  { value: 'off', label: 'Off', help: 'Jobinko proposes nothing.' },
+  { value: 'suggest', label: 'Suggest', help: 'Ask Jobinko proposes roles to queue; you confirm each batch.' },
+  { value: 'queue', label: 'Auto-queue', help: 'Jobinko adds roles to your Apply-for-me queue when you have Jobinko open. Nothing is submitted until you press Start in the extension, and you can remove any from its queue.' },
 ]
 export const TARGETS = [0, 3, 5, 10, 15, 20] as const
 export const MIN_SCORES = [60, 70, 75, 80, 85] as const
@@ -52,7 +52,7 @@ export type Candidate = { roleId: string; title: string; company: string; score:
 
 /**
  * Which roles to propose or queue now. `appliedThisWeek` is the tracker's own count; roles queued since Monday
- * also use up the week's room, so opening Saaf ten times does not queue ten batches.
+ * also use up the week's room, so opening Jobinko ten times does not queue ten batches.
  */
 export function proposeQueue(c: Candidate[], s: AgentSettings, o: { appliedThisWeek: number; now?: Date; max?: number }): Candidate[] {
   if (s.mode === 'off') return []

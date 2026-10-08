@@ -54,7 +54,7 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
             S
           </div>
           <div style={{ fontSize: '30px', fontWeight: 600, color: '#28304A', letterSpacing: '-0.02em' }}>
-            Saaf
+            Jobinko
           </div>
         </div>
 

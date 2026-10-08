@@ -16,7 +16,7 @@ import {
  * people search in the candidate's browser — they choose the person — and a
  * connection note plus an email written for that type.
  *
- * Saaf sends nothing. Copy, or open the draft in the candidate's own mail app.
+ * Jobinko sends nothing. Copy, or open the draft in the candidate's own mail app.
  */
 
 const ICON: Record<ContactKey, typeof UserRound> = { recruiter: Users, manager: Briefcase, peer: UserRound }
@@ -159,7 +159,7 @@ export function OutreachStudio({
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="size-3.5 text-accent" />
-        Written about {roleTitle} at {company}. AI drafts are checked against your profile; nothing is ever sent by Saaf.
+        Written about {roleTitle} at {company}. AI drafts are checked against your profile; nothing is ever sent by Jobinko.
       </p>
     </div>
   )

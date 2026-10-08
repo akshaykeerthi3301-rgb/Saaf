@@ -4,7 +4,7 @@ import { istDay } from '@/lib/day'
 /**
  * Above-the-fold proof, first-party.
  *
- * This replaces the canonical logo bar. Saaf has no customers to show, and the
+ * This replaces the canonical logo bar. Jobinko has no customers to show, and the
  * reference playbook's own rule is "either show the logos or remove the
  * section" — so instead of borrowing credibility it publishes its own figures.
  *

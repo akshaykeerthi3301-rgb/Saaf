@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   // Tracks the <h1> on the landing page. They drifted apart once already —
   // the hero changed and this did not — and the title is what a share card and
   // a search result show, so it is the half more people see.
-  title: 'Saaf — AI career copilot for India',
+  title: 'Jobinko — AI career copilot for India',
   description:
     'Roles ranked against your résumé, with the arithmetic behind every score shown. Free ATS résumé checker, no account needed.',
   // Real icons from the saaf-ai design export, replacing the Next.js scaffold

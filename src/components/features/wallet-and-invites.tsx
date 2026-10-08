@@ -51,7 +51,7 @@ export function WalletAndInvites({ stored, balance, rows, code, joined, invitesS
         <>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             You have <strong className="text-primary" data-testid="credit-balance">{bal.toLocaleString('en-IN')}</strong> credits.{' '}
-            {CREDITS_SPENDABLE ? 'Some actions use them.' : 'Nothing in Saaf costs a credit today — everything is still free. Yours are kept for when something does.'}
+            {CREDITS_SPENDABLE ? 'Some actions use them.' : 'Nothing in Jobinko costs a credit today — everything is still free. Yours are kept for when something does.'}
           </p>
           <form onSubmit={redeem} className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block flex-1 text-xs font-semibold text-primary" htmlFor={`${id}-p`}>

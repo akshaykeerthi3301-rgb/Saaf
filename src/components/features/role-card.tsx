@@ -28,7 +28,7 @@ type Props = {
   postedAt?: string
   /** Drawn only where the ingest recorded an earlier listing (src/lib/repost.ts). */
   repost?: RepostChip | null
-  /** How many Saaf candidates track this role — only from 3 up (src/lib/interest.ts). */
+  /** How many Jobinko candidates track this role — only from 3 up (src/lib/interest.ts). */
   interest?: InterestChip | null
   /** "Public" or "Startup", from open company data (src/lib/company-stage.ts). */
   stage?: StageChip | null

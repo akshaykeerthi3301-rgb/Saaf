@@ -5,7 +5,7 @@ import { readRolePage } from '@/lib/services/public-jobs'
 import { isIndexable, pageTitle, roleFromSlug } from '@/lib/seo-pages'
 
 /**
- * /roles/<role> — "Product Manager jobs in India" (F-1203, TASK-158). The slug must be one of Saaf's own
+ * /roles/<role> — "Product Manager jobs in India" (F-1203, TASK-158). The slug must be one of Jobinko's own
  * roles (src/lib/taxonomy/roles.ts) or the page is a 404, so no URL can invent a page. Built on first
  * request and refreshed hourly. A page under the thin-content threshold is `noindex`.
  */
@@ -17,7 +17,7 @@ type Props = { params: Promise<{ role: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const role = roleFromSlug((await params).role)
-  if (!role) return { title: 'Not found | Saaf', robots: { index: false } }
+  if (!role) return { title: 'Not found | Jobinko', robots: { index: false } }
   const data = await readRolePage(role, null)
   return {
     title: pageTitle(role, null, data.total),

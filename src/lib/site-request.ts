@@ -1,11 +1,11 @@
 /**
- * "Ask Saaf to support this site" (F-714, TASK-192): which hostnames may be filed.
+ * "Ask Jobinko to support this site" (F-714, TASK-192): which hostnames may be filed.
  * Only a hostname ever travels — never a URL, path or page content. Mirrors the CHECK in
  * migration 0047; the extension's popup applies the same shape before it stores anything.
  */
 const HOST = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/
 
-/** Sites that are excluded on purpose (extension/README.md), and Saaf itself. A request for one would be noise. */
+/** Sites that are excluded on purpose (extension/README.md), and Jobinko itself. A request for one would be noise. */
 const NEVER = [/(^|\.)linkedin\.com$/, /(^|\.)naukri\.com$/, /(^|\.)saaf-ten\.vercel\.app$/, /(^|\.)jobinko\.in$/]
 
 /** The hostname to file, or null when it is not one worth filing. */

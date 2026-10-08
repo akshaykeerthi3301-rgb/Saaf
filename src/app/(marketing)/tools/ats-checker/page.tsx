@@ -8,7 +8,7 @@ import { AtsFlow } from '@/components/features/ats-flow'
  *
  * ⚠️ THIS PAGE IS THE TOP OF THE FUNNEL, NOT A UTILITY. People arrive here from
  * a search for "ATS score checker", "resume score" or "ATS score" — they have
- * not heard of Saaf and did not come looking for a job board. Everything below
+ * not heard of Jobinko and did not come looking for a job board. Everything below
  * is arranged for that visitor: the tool above the fold, the trust answers
  * beside it rather than in front of it, and one way further in at the moment
  * they have just been told what is wrong with their résumé.
@@ -40,13 +40,13 @@ import { AtsFlow } from '@/components/features/ats-flow'
 
 /**
  * ⚠️ THE TITLE CARRIES THE PHRASE PEOPLE ACTUALLY TYPE, not the phrase we would
- * choose. It read "ATS résumé checker — Saaf" while the queries this page has to
+ * choose. It read "ATS résumé checker — Jobinko" while the queries this page has to
  * win are "ATS score checker", "resume score checker" and "ATS score". A title
  * that does not contain the search phrase does not get the click even when it
  * ranks. The é is deliberately absent from the title string — nobody types it.
  */
 export const metadata: Metadata = {
-  title: 'ATS Resume Score Checker — Free, Instant, No Sign-up | Saaf',
+  title: 'ATS Resume Score Checker — Free, Instant, No Sign-up | Jobinko',
   description:
     'Check your ATS score free. Upload your resume as a PDF or Word file and see exactly what an applicant tracking system reads out of it, every place it will fail to parse, and the fix for each — then get it rewritten for the role you want. No sign-up, nothing stored.',
   keywords: [
@@ -160,7 +160,7 @@ export default function AtsCheckerPage() {
               </Link>{' '}
               To get scored roles daily without hunting for them,{' '}
               <Link href="/" className="font-semibold text-primary underline underline-offset-4">
-                see what Saaf does
+                see what Jobinko does
               </Link>
               .
             </p>

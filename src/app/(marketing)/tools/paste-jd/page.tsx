@@ -6,7 +6,7 @@ import { JdMatchForm } from '@/components/features/jd-match-form'
 /**
  * TASK-060 — "Should I apply?" for a posting we do not have.
  *
- * Saaf's shortlist can only score what the daily pipeline indexed. This scores
+ * Jobinko's shortlist can only score what the daily pipeline indexed. This scores
  * a role found anywhere — a WhatsApp forward, a referral, a board we do not
  * crawl — through the SAME scorer, so the two numbers are comparable by
  * construction rather than by coincidence.
@@ -28,7 +28,7 @@ import { JdMatchForm } from '@/components/features/jd-match-form'
  * Moved off DocPage on 2026-09-08 — see src/components/features/tool-page.tsx.
  */
 export const metadata: Metadata = {
-  title: 'Should I Apply? — Free Job Match Score for Any Posting | Saaf',
+  title: 'Should I Apply? — Free Job Match Score for Any Posting | Jobinko',
   description:
     'Paste any job description and your resume. Get a match score broken into its parts, with the sentences we read it out of — so you can check the number rather than take it. Free, no sign-up, nothing stored.',
   keywords: [
@@ -75,7 +75,7 @@ export default function PasteJdPage() {
           </Link>
           . To get scored roles daily without hunting for them,{' '}
           <Link href="/" className="font-semibold text-primary underline underline-offset-4">
-            see what Saaf does
+            see what Jobinko does
           </Link>
           . How we read postings is published on the{' '}
           <Link href="/audit" className="font-semibold text-primary underline underline-offset-4">

@@ -1,5 +1,5 @@
 /**
- * Saaf gate engine — types.
+ * Jobinko gate engine — types.
  *
  * This module is the open-source half of the moat. It must stay a pure,
  * extractable unit: no imports from `registry/`, `ingest/`, or the database.
@@ -91,7 +91,7 @@ export type GateResult = {
  * Below this, an extracted requirement is ignored rather than gated on.
  *
  * This threshold is the single most important number in the product. A wrong
- * refusal reproduces the exact injury Saaf exists to fix, with more authority
+ * refusal reproduces the exact injury Jobinko exists to fix, with more authority
  * than a job portal ever had — so when extraction is uncertain, the role passes
  * through and the candidate decides for themselves.
  */

@@ -2,8 +2,8 @@ import { DocPage } from '@/components/features/doc-page'
 import caps from '@/lib/taxonomy/ats-capabilities.json'
 
 export const metadata = {
-  title: 'The Saaf browser extension — what it does on each site',
-  description: 'Which application sites the Saaf extension reads, fills and applies on, and how well each has been checked — written down, including what is not verified.',
+  title: 'The Jobinko browser extension — what it does on each site',
+  description: 'Which application sites the Jobinko extension reads, fills and applies on, and how well each has been checked — written down, including what is not verified.',
   alternates: { canonical: '/extension' },
 }
 
@@ -67,8 +67,8 @@ export default function ExtensionPage() {
 
       <h2 className="mb-3 mt-10 text-lg font-semibold tracking-[-0.03em] text-primary">A site that is not here</h2>
       <p className="max-w-[65ch] text-sm leading-6 text-muted-foreground">
-        Open the extension on that site and press “Ask Saaf to support this site”. Only the site’s address is sent — never the page —
-        and only when you next open Saaf signed in. Nothing is promised; the requests tell us which sites to check next.
+        Open the extension on that site and press “Ask Jobinko to support this site”. Only the site’s address is sent — never the page —
+        and only when you next open Jobinko signed in. Nothing is promised; the requests tell us which sites to check next.
       </p>
     </DocPage>
   )

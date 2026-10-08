@@ -25,8 +25,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const p = await searchParams
   const plain = !p.q && !p.city && !p.page
   return {
-    title: 'Jobs in India — newest roles, scored against your résumé | Saaf',
-    description: 'Search the newest jobs from company career pages across India. Sign in free and Saaf scores every one against your résumé, with the reason for each number.',
+    title: 'Jobs in India — newest roles, scored against your résumé | Jobinko',
+    description: 'Search the newest jobs from company career pages across India. Sign in free and Jobinko scores every one against your résumé, with the reason for each number.',
     alternates: { canonical: '/jobs' },
     robots: plain ? undefined : { index: false, follow: true },
   }
@@ -54,9 +54,9 @@ export default async function PublicJobsPage({ searchParams }: Props) {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Saaf home">
+          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
             <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
-            Saaf
+            Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
             <Link href="/tools" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Free tools</Link>
@@ -68,7 +68,7 @@ export default async function PublicJobsPage({ searchParams }: Props) {
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-10 sm:px-8">
         <h1 className="text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">Jobs in India</h1>
         <p className="mt-3 max-w-[60ch] text-sm leading-6 text-muted-foreground">
-          The newest roles from company career pages. Anyone can search. Sign in free and Saaf scores every one of them against your résumé —
+          The newest roles from company career pages. Anyone can search. Sign in free and Jobinko scores every one of them against your résumé —
           with the line from the posting behind each number.
         </p>
 

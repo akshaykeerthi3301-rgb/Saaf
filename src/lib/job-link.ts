@@ -12,7 +12,7 @@ export type JobFromPage = { title: string; company: string }
 /**
  * Boards whose pages we will not fetch, even at a candidate's request. Their
  * terms prohibit automated reading, and the same line is held everywhere else
- * in Saaf (the extension's host list, the ingest). The candidate types these in.
+ * in Jobinko (the extension's host list, the ingest). The candidate types these in.
  */
 const REFUSED_HOSTS = /(^|\.)(linkedin\.com|naukri\.com|indeed\.[a-z.]+|glassdoor\.[a-z.]+|foundit\.in|instahyre\.com|monsterindia\.com|shine\.com|iimjobs\.com|hirist\.tech|wellfound\.com)$/i
 

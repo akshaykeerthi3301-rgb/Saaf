@@ -27,7 +27,7 @@ export default function GlobalError({
     <html lang="en">
       <body>
         <StatusScreen
-          title="Saaf could not load"
+          title="Jobinko could not load"
           actions={<Button type="button" onClick={reset}>Try again</Button>}
         >
           Something failed before the page could start. Trying again usually works; if it keeps

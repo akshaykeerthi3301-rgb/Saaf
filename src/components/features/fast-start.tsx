@@ -6,7 +6,7 @@ import { EMPTY_FAST, resumeFromAnswers, type FastAnswers } from '@/lib/fast-resu
 
 /**
  * "Build one in a minute" (F-507): a few boxes, then a plain résumé in the paste box for you to
- * read and edit before anything is scored. Every word in it is one you typed — Saaf adds only a
+ * read and edit before anything is scored. Every word in it is one you typed — Jobinko adds only a
  * one-line summary of your own title, years and skills, and a [bracketed prompt] where an
  * achievement is missing (src/lib/fast-resume.ts). Nothing leaves your device in this step.
  */
@@ -37,7 +37,7 @@ export function FastStart({ onText }: { onText: (text: string) => void }) {
       </summary>
       {/* Not a <form>: this sits inside the checker's own form, and nesting one is invalid HTML. Enter must not run the check either. */}
       <div className="mt-3" onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') e.preventDefault() }}>
-        <p className="text-xs leading-5 text-muted-foreground">Answer what you can. Every word in the result is yours — Saaf writes nothing for you and leaves a [prompt] wherever something is missing.</p>
+        <p className="text-xs leading-5 text-muted-foreground">Answer what you can. Every word in the result is yours — Jobinko writes nothing for you and leaves a [prompt] wherever something is missing.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {field('name', 'Your name')}
           {field('targetRole', 'Role you want', 'Product Manager')}

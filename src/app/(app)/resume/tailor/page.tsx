@@ -9,7 +9,7 @@ import { TailorStudio } from '@/components/features/tailor-studio'
 import { displayEmployer } from '@/lib/display-names'
 import { ToolEmpty } from '@/components/features/tool-empty'
 
-export const metadata = { title: 'Resume Tailoring Studio — Saaf' }
+export const metadata = { title: 'Resume Tailoring Studio — Jobinko' }
 
 /**
  * Resume Tailoring Studio: a SAVED résumé beside a version rewritten for one
@@ -52,7 +52,7 @@ export default async function TailorPage({
           <ToolEmpty
             icon={FileText}
             title="Save a résumé first"
-            body="The studio rewrites a résumé you have built and saved in Saaf — we never keep the file you upload. Upload yours to the checker, press Save, and come back."
+            body="The studio rewrites a résumé you have built and saved in Jobinko — we never keep the file you upload. Upload yours to the checker, press Save, and come back."
             href="/tools/ats-checker"
             cta="Build and save a résumé"
           />

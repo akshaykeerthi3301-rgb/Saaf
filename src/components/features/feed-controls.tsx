@@ -92,7 +92,7 @@ export function FeedSearch({
           <button
             type="button" onClick={toggleVoice} aria-pressed={listening}
             aria-label={listening ? 'Stop listening' : 'Search by voice'}
-            title={listening ? 'Listening… tap to stop' : 'Say what you want. Your browser’s speech service hears the audio, not Saaf; the words land here for you to check.'}
+            title={listening ? 'Listening… tap to stop' : 'Say what you want. Your browser’s speech service hears the audio, not Jobinko; the words land here for you to check.'}
             className={`rounded p-0.5 ${listening ? 'animate-pulse text-accent' : 'text-muted-foreground hover:text-primary'}`}
           >
             <Mic className="size-4" />
@@ -248,7 +248,7 @@ export function HideRole({ roleId, hidden = false }: { roleId: string; hidden?: 
 }
 
 /**
- * "Read as: …" — how Saaf understood the sentence just typed, with a thumb each way
+ * "Read as: …" — how Jobinko understood the sentence just typed, with a thumb each way
  * (F-206). The rating goes to the search's own history row; it is how the parser's
  * misreadings are found. Copy puts the link that restores this exact view on the
  * clipboard. Shown only while that search is the view on screen.

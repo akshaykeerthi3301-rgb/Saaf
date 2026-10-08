@@ -10,7 +10,7 @@ import { ToolEmpty } from '@/components/features/tool-empty'
 import { matchedSkills } from '@/lib/tailor'
 import { displayEmployer } from '@/lib/display-names'
 
-export const metadata = { title: 'Cover Letter Studio — Saaf' }
+export const metadata = { title: 'Cover Letter Studio — Jobinko' }
 
 /**
  * AI Cover Letter Studio for one scored role. The profile facts passed to the

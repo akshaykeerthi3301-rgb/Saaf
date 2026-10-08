@@ -2,7 +2,7 @@
  * A starting résumé from a few typed answers (F-507, TASK-188 — "fast mode").
  *
  * ⚠️ NOTHING IS WRITTEN FOR THE CANDIDATE. Every word in the result is one they typed,
- * placed under the headings a parser reads; the only sentences Saaf adds are the plain
+ * placed under the headings a parser reads; the only sentences Jobinko adds are the plain
  * summary built from their own title, years and skills ("Product Manager with 4 years of
  * experience in SQL, Roadmapping."), and a visible [bracketed prompt] wherever a number
  * or an achievement is missing — never a made-up one. The text lands in the paste box

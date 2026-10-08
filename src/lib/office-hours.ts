@@ -1,7 +1,7 @@
 /**
  * Office-hour sessions (F-1006, TASK-196) — what the page shows and the calendar file it offers. Pure.
  *
- * ⚠️ SAAF HOSTS NOTHING HERE. A session is a time and a link the host supplied; Saaf lists it, offers
+ * ⚠️ JOBINKO HOSTS NOTHING HERE. A session is a time and a link the host supplied; Jobinko lists it, offers
  * an "add to calendar" file, and takes no booking, no payment and no recording. The link is shown only
  * if it is `https` (the table enforces it too).
  */
@@ -21,7 +21,7 @@ export function icsFor(o: OfficeHour, now: Date = new Date()): string | null {
   if (Number.isNaN(start.getTime()) || !/^https:\/\//i.test(o.joinUrl)) return null
   const end = new Date(start.getTime() + o.durationMin * 60_000)
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Saaf//Office hours//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Jobinko//Office hours//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
     'BEGIN:VEVENT',
     `UID:${o.id}@saaf`,
     `DTSTAMP:${utc(now)}`, `DTSTART:${utc(start)}`, `DTEND:${utc(end)}`,

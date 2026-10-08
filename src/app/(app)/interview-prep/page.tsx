@@ -29,7 +29,7 @@ import { listCompanyQuestions } from '@/lib/services/question-bank'
  *
  * ⚠️ THE ROLE COMES FROM `gate_results`, NEVER THE WHOLE INDEX — see listScoredRoles().
  */
-export const metadata = { title: 'Interview prep — Saaf' }
+export const metadata = { title: 'Interview prep — Jobinko' }
 
 /**
  * Behavioural questions asked in almost every interview, added to the

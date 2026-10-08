@@ -15,7 +15,7 @@ import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-fac
  * ⚠️ THE WHOLE LIST IS READ THIN; ONLY THE CARDS ON SCREEN ARE READ WHOLE.
  * The page used to select every scored role (~500) with its full breakdown,
  * its role and `role_requirements(*)` embedded: 1,045 KB of JSON, 9,954 ms on
- * a cold database against 492 ms warm. A candidate who opens Saaf once a day
+ * a cold database against 492 ms warm. A candidate who opens Jobinko once a day
  * always arrives cold. But every count and every section on the page needs
  * only the score and two standings out of the breakdown — measured, that is
  * 74 KB for the same 500 rows, and no join to `roles` at all. The reason, the
@@ -217,7 +217,7 @@ export async function readReposts(roleIds: string[]): Promise<Map<string, Repost
 }
 
 /**
- * role_id → how many Saaf candidates are tracking it, only where 3 or more
+ * role_id → how many Jobinko candidates are tracking it, only where 3 or more
  * (migration 0033). The function does the privacy work; a missing function, or
  * any error, reads as "no counts" — the chip simply does not draw.
  */

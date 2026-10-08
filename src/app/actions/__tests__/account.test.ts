@@ -26,7 +26,7 @@ describe('exportMyData', () => {
     const r = await exportMyData()
     expect(r.ok).toBe(true)
     if (!r.ok) return
-    expect(r.filename).toBe('saaf-my-data-2026-10-08.json')
+    expect(r.filename).toBe('jobinko-my-data-2026-10-08.json')
     const parsed = JSON.parse(r.json)
     expect(parsed.account.email).toBe('asha@example.com')
     expect(parsed.profile.current_title).toBe('CSM')

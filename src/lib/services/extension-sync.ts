@@ -137,7 +137,7 @@ export async function fileQueuedRoles(userId: string, items: QueuedRole[]): Prom
   }
 
   /**
-   * "Applied by Saaf" (0035): only when the extension's own auto-apply reported
+   * "Applied by Jobinko" (0035): only when the extension's own auto-apply reported
    * the employer's confirmation. Best-effort and separate from the status write
    * — before 0035 the column does not exist, and the move is what was asked for.
    */

@@ -26,14 +26,14 @@ function Card({ icon: Icon, title, body, cta, onCta, onLater, onNever }: {
 }
 
 export function InstallAppCard({ onInstall, onLater, onNever }: { onInstall: () => void; onLater: () => void; onNever: () => void }) {
-  return <Card icon={Download} title="Add Saaf to your home screen" body="Open your feed in its own window, one tap away. It is the same site — nothing extra is installed or stored." cta="Install" onCta={onInstall} onLater={onLater} onNever={onNever} />
+  return <Card icon={Download} title="Add Jobinko to your home screen" body="Open your feed in its own window, one tap away. It is the same site — nothing extra is installed or stored." cta="Install" onCta={onInstall} onLater={onLater} onNever={onNever} />
 }
 
 export function InstallExtensionCard({ href, onLater, onNever }: { href: string; onLater: () => void; onNever: () => void }) {
   return (
     <Card
-      icon={Puzzle} title="Fill applications from Saaf"
-      body="The Saaf browser extension fills the application form from your profile, shows your match on any job page, and puts what you apply to on your tracker. It reads only the page you are on."
+      icon={Puzzle} title="Fill applications from Jobinko"
+      body="The Jobinko browser extension fills the application form from your profile, shows your match on any job page, and puts what you apply to on your tracker. It reads only the page you are on."
       cta="Get the extension" onCta={() => { window.open(href, '_blank', 'noopener,noreferrer'); onNever() }} onLater={onLater} onNever={onNever}
     />
   )

@@ -23,7 +23,7 @@ import { tailoredFilename } from '@/lib/resume-review'
  * reason src/app/actions/tailor-docx.ts documents: this writes text into a Word
  * file and hands it back to the same person, with no badge, no storage and no
  * third party. They could type it themselves. What must never happen is this
- * path acquiring a claim of verification — if a "checked by Saaf" mark is ever
+ * path acquiring a claim of verification — if a "checked by Jobinko" mark is ever
  * printed in the document, the rewrite has to be regenerated server-side first,
  * because a client could otherwise push any claim through and out the other
  * side wearing our name.

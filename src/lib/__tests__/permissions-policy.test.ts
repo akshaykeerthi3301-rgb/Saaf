@@ -11,7 +11,7 @@ describe('vercel.json Permissions-Policy', () => {
   const cfg = JSON.parse(readFileSync('vercel.json', 'utf8')) as { headers: { headers: { key: string; value: string }[] }[] }
   const policy = cfg.headers.flatMap((h) => h.headers).find((h) => h.key === 'Permissions-Policy')?.value ?? ''
 
-  it('lets Saaf\'s own pages use the microphone (voice input needs it) and nobody else', () => {
+  it('lets Jobinko\'s own pages use the microphone (voice input needs it) and nobody else', () => {
     expect(policy).toContain('microphone=(self)')
   })
   it('still keeps the camera and location off for everyone', () => {

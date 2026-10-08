@@ -1,5 +1,5 @@
 /**
- * "Ask Saaf" — a plain assistant over the candidate's OWN data (TASK-166 decision,
+ * "Ask Jobinko" — a plain assistant over the candidate's OWN data (TASK-166 decision,
  * TASK-186, TASK-187; F-407, F-408, F-409, F-411). Pure: what a question is asking,
  * the typed cards an answer is made of, the missions checklist and the proactive notes.
  *
@@ -65,7 +65,7 @@ export function classify(question: string): Intent {
   return 'help'
 }
 
-/** The card an unplaced question gets: what Saaf CAN answer, as questions to tap. */
+/** The card an unplaced question gets: what Jobinko CAN answer, as questions to tap. */
 export const helpCard = (): Card => ({ type: 'help', prompts: PROMPTS.map((p) => p.label) })
 
 // ---------------------------------------------------------------------- missions

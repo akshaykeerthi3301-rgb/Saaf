@@ -4,7 +4,7 @@
  * A survey lives in CODE, so asking is a reviewed change; its answers live in
  * `survey_answers` with one row per candidate per survey, so nobody is ever asked twice.
  * It is shown through the popup governor (src/lib/nudges.ts) — one prompt at a time, not
- * on top of a tour — and only to someone who has used Saaf enough to have an opinion.
+ * on top of a tour — and only to someone who has used Jobinko enough to have an opinion.
  *
  * There is no payment survey: nothing is for sale, and a "why didn't you upgrade?" card
  * for a plan that does not exist would be a question with no honest answer.

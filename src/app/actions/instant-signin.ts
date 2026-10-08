@@ -44,7 +44,7 @@ export async function instantSignIn(email: string): Promise<InstantSignInRespons
     return {
       ok: false,
       error:
-        'That email already has a Saaf account. To keep it yours, sign in with Google — ' +
+        'That email already has a Jobinko account. To keep it yours, sign in with Google — ' +
         'anyone can type an email address, so we do not open an existing account on one alone.',
     }
   }

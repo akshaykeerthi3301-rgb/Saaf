@@ -116,7 +116,7 @@ export function JdMatchForm() {
       <form onSubmit={onSubmit}>
         {fromExtension ? (
           <p role="status" className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-sm leading-6 text-primary">
-            The posting{jdTitle ? ` (${jdTitle})` : ''} came from the Saaf extension{resumeText ? ', with the résumé stored in it' : ''}. Nothing has been sent yet — check the boxes, then press the button.
+            The posting{jdTitle ? ` (${jdTitle})` : ''} came from the Jobinko extension{resumeText ? ', with the résumé stored in it' : ''}. Nothing has been sent yet — check the boxes, then press the button.
           </p>
         ) : null}
         <div className="mb-6">

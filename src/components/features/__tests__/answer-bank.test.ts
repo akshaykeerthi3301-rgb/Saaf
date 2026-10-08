@@ -16,7 +16,7 @@ describe('AnswerBank', () => {
   })
   it('states that nothing is written for you and what is never filled', () => {
     const h = html([])
-    expect(h).toContain('Saaf never')
+    expect(h).toContain('Jobinko never')
     expect(h).toContain('never filled from here')
     expect(h).toContain('Nothing yet')
   })

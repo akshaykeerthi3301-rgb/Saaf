@@ -30,7 +30,7 @@ export function SelfIdAnswers({ initial, stored }: { initial: SelfIdAnswers; sto
     <div className="mt-8 border-t border-border pt-6" data-testid="self-id">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Questions only you can answer</p>
       <p className="mb-4 mt-1 text-sm leading-6 text-muted-foreground">
-        Some forms ask about gender, disability, caste or religion. Saaf never answers these for you and never guesses.
+        Some forms ask about gender, disability, caste or religion. Jobinko never answers these for you and never guesses.
         If you want the extension to answer one, type your own answer here. Anything left on
         {' '}<span className="font-semibold text-primary">Prefer not to say</span>{' '}is left blank on the form for you. Stored
         privately, never scored, never shown to an employer by us, and filled only when you press Fill.

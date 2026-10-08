@@ -7,7 +7,7 @@ import { ALERT_EMAIL_LIVE, describeAlerts, FREQUENCIES, MAX_JOBS, MIN_SCORES, WE
 /**
  * Email alerts — how often, how good, how many (F-122). It has its own Save: these
  * settings move no score, so they must not re-run the matches the profile Save does.
- * It says plainly that saving them does not make email arrive until Saaf's sending
+ * It says plainly that saving them does not make email arrive until Jobinko's sending
  * address is verified (ALERT_EMAIL_LIVE) — a setting that looks live and is not
  * would be the product claiming something it cannot do.
  */
@@ -31,7 +31,7 @@ export function AlertSettingsPanel({ initial, stored }: { initial: AlertSettings
       <p className="mt-1 text-sm leading-6 text-muted-foreground">{describeAlerts(s)}</p>
       {!ALERT_EMAIL_LIVE ? (
         <p role="note" className="mt-2 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-xs leading-5 text-muted-foreground">
-          Alert emails are not being delivered yet — Saaf’s sending address is not verified, so nothing can reach your inbox today.
+          Alert emails are not being delivered yet — Jobinko’s sending address is not verified, so nothing can reach your inbox today.
           Your choices are saved and will apply the day sending is switched on.
         </p>
       ) : null}

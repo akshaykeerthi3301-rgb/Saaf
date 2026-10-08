@@ -4,7 +4,7 @@
  * one; Firefox does not, and there the microphone button is simply not drawn.
  *
  * ⚠️ THE AUDIO LEAVES THE DEVICE — to the browser vendor's speech service, not to
- * Saaf. The button's tooltip says so; Saaf never receives or stores audio, only
+ * Jobinko. The button's tooltip says so; Jobinko never receives or stores audio, only
  * the text the browser returns, which lands in the box for the candidate to edit
  * before anything is searched.
  */

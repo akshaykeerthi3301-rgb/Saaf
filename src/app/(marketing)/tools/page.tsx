@@ -17,7 +17,7 @@ import { ToolPage } from '@/components/features/tool-page'
  * visitor and the box they came to type in.
  */
 export const metadata: Metadata = {
-  title: 'Free Resume & Job Search Tools — No Sign-up | Saaf',
+  title: 'Free Resume & Job Search Tools — No Sign-up | Jobinko',
   description:
     'Free tools for Indian job seekers: check your resume ATS score, and score any job posting against your resume. No sign-up, nothing stored, ₹0.',
   alternates: { canonical: '/tools' },
@@ -50,7 +50,7 @@ const TOOLS = [
     icon: ListChecks,
     name: 'Résumé keywords by role',
     what: 'For each role, the words its real job postings use most and the share of postings that contain each — counted, not guessed.',
-    note: 'Measured across the postings Saaf reads.',
+    note: 'Measured across the postings Jobinko reads.',
   },
 ]
 
@@ -72,7 +72,7 @@ export default function ToolsHubPage() {
           These answer one question each. To get roles scored for you daily, without
           hunting for them,{' '}
           <Link href="/" className="font-semibold text-primary underline underline-offset-4">
-            see what Saaf does
+            see what Jobinko does
           </Link>
           .
         </p>

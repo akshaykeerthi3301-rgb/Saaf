@@ -10,7 +10,7 @@ import { ToolEmpty } from '@/components/features/tool-empty'
 import { outreachTemplates } from '@/lib/copilot-templates'
 import { displayEmployer } from '@/lib/display-names'
 
-export const metadata = { title: 'Networking & Outreach — Saaf' }
+export const metadata = { title: 'Networking & Outreach — Jobinko' }
 
 export default async function OutreachPage({
   searchParams,

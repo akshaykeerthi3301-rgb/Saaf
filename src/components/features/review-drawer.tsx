@@ -19,7 +19,7 @@ type Props = {
  *
  * The point of this screen is that nobody fires off an application they have
  * not read. So the drawer is a review surface, not a send button: the material
- * is editable, the apply link goes to the employer's own site, and Saaf never
+ * is editable, the apply link goes to the employer's own site, and Jobinko never
  * submits anything. "Approve & Stage" files it on the candidate's board.
  *
  * ⚠️ THE TRUST BADGE IS EARNED IN src/lib/tailor.ts, NOT WRITTEN HERE. Every
@@ -194,7 +194,7 @@ export function ReviewDrawer({ roleId, title, company, applyUrl }: Props) {
               <SheetClose className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-primary">
                 Cancel
               </SheetClose>
-              {/* Staging files it on the board. Saaf never submits an
+              {/* Staging files it on the board. Jobinko never submits an
                   application — the apply link goes to the employer's own site,
                   which is a locked decision, not a gap. */}
               <button

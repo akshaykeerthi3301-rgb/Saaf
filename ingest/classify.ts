@@ -1,5 +1,5 @@
 /**
- * Which roles belong on a Saaf shortlist, and which function they sit in.
+ * Which roles belong on a Jobinko shortlist, and which function they sit in.
  *
  * `docs/PRODUCT.md` names the customer precisely: Indian professionals in their
  * first five years across *corporate* functions — engineering, finance,

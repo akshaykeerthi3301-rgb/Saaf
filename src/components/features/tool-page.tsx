@@ -57,12 +57,12 @@ export function ToolPage({
         <Link
           href="/"
           className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary"
-          aria-label="Saaf home"
+          aria-label="Jobinko home"
         >
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" />
           </span>
-          Saaf
+          Jobinko
         </Link>
         <div className="flex items-center gap-5 text-sm">
           <Link

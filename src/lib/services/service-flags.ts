@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/service'
  */
 export type ApplyForMeStatus = { paused: boolean; message: string }
 
-const DEFAULT_MESSAGE = 'Apply for me is paused by Saaf. Nothing was submitted; your queue is kept.'
+const DEFAULT_MESSAGE = 'Apply for me is paused by Jobinko. Nothing was submitted; your queue is kept.'
 
 /**
  * Is "Apply for me" paused? True if the environment variable APPLY_FOR_ME_PAUSED

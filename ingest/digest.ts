@@ -107,7 +107,7 @@ export async function sendDigests(): Promise<void> {
     // nothing. A send that cannot be confirmed must not be reported as one.
     try {
       const { error } = await resend.emails.send({
-        from: 'Saaf <onboarding@resend.dev>',
+        from: 'Jobinko <onboarding@resend.dev>',
         to: email,
         subject: ranked.length
           ? `${ranked.length} new role${ranked.length === 1 ? '' : 's'} matched today`

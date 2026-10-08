@@ -10,7 +10,7 @@ import { readCompanyFacts, readCompanyNews } from '@/lib/services/company-facts'
 import { CompanyFactsView } from '@/components/features/company-facts'
 
 /**
- * A public page for one indexed role — Jobright's job page, Saaf's data
+ * A public page for one indexed role — Jobright's job page, Jobinko's data
  * (founder decision 2026-09-25, PROJECT-STATE Stage AF).
  *
  * PUBLIC ON PURPOSE: src/proxy.ts's matcher does not cover /jobs. A signed-out
@@ -31,11 +31,11 @@ type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const job = await readPublicJob(id)
-  if (!job) return { title: 'Role closed | Saaf', robots: { index: false } }
+  if (!job) return { title: 'Role closed | Jobinko', robots: { index: false } }
   const where = job.city ? ` in ${job.city}` : ''
   const summary = job.plainDescription.replace(/\s+/g, ' ').slice(0, 155)
   return {
-    title: `${job.title} at ${job.company}${where} | Saaf`,
+    title: `${job.title} at ${job.company}${where} | Jobinko`,
     description: summary,
     alternates: { canonical: `/jobs/${job.id}` },
     // The site-wide card, not one drawn from the posting: a job title is text an employer controls, and
@@ -66,11 +66,11 @@ export default async function PublicJobPage({ params }: Props) {
       />
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Saaf home">
+          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
             <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm">
               <Sparkles className="size-4" />
             </span>
-            Saaf
+            Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
             <Link href="/tools" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Free tools</Link>
@@ -186,7 +186,7 @@ export default async function PublicJobPage({ params }: Props) {
 
           <div className="rounded-3xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-primary"><Tag className="size-3.5 text-accent" /> Apply</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Applications go to {job.company} directly. Saaf applies for you only if you switch on “Apply for me” in its browser extension.</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Applications go to {job.company} directly. Jobinko applies for you only if you switch on “Apply for me” in its browser extension.</p>
             <a href={job.applyUrl} target="_blank" rel="nofollow noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
               Apply on {job.company}&apos;s site <ArrowUpRight className="size-3.5" />
             </a>

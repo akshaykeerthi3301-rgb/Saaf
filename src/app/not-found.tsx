@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { StatusScreen, STATUS_LINK } from '@/components/features/status-screen'
 
-export const metadata: Metadata = { title: 'Page not found — Saaf' }
+export const metadata: Metadata = { title: 'Page not found — Jobinko' }
 
 export default function NotFound() {
   return (

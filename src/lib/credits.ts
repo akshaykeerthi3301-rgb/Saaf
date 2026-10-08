@@ -2,7 +2,7 @@
  * Credits, their price table, and the shape of the codes around them (F-1102 .. F-1106,
  * TASK-197/198). Pure.
  *
- * ⚠️ NOTHING COSTS A CREDIT TODAY. Saaf is free (PROJECT-STATE Stage AK allows a paid plan
+ * ⚠️ NOTHING COSTS A CREDIT TODAY. Jobinko is free (PROJECT-STATE Stage AK allows a paid plan
  * but none exists, and the public copy says "free" until one does). `CREDIT_PRICES` is the
  * table the first paid action will be added to; every price in it is 0 on purpose, the
  * wallet says plainly that credits cannot be spent, and a test fails if a price is ever
@@ -35,7 +35,7 @@ export const isRefShape = (raw: string) => REF_SHAPE.test(cleanRef(raw))
 export type LedgerRow = { id: string; delta: number; reason: string; note: string | null; created_at: string }
 
 const REASON: Record<string, string> = {
-  promo: 'Promo code', referral: 'A friend joined', 'referral-welcome': 'Joined through an invite', grant: 'Credit from Saaf', spend: 'Spent', refund: 'Refund',
+  promo: 'Promo code', referral: 'A friend joined', 'referral-welcome': 'Joined through an invite', grant: 'Credit from Jobinko', spend: 'Spent', refund: 'Refund',
 }
 export const reasonLabel = (r: string) => REASON[r] ?? 'Credit'
 

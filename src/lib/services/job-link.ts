@@ -49,7 +49,7 @@ async function fetchPage(raw: string): Promise<string | { error: string }> {
     const res = await fetch(checked, {
       redirect: 'manual',
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { 'user-agent': 'SaafBot/1.0 (+job tracker link preview)', accept: 'text/html' },
+      headers: { 'user-agent': 'JobinkoBot/1.0 (+job tracker link preview)', accept: 'text/html' },
     }).catch(() => null)
     if (!res) return { error: 'That page did not answer in time.' }
     if (res.status >= 300 && res.status < 400) {

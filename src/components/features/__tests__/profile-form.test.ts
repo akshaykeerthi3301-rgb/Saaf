@@ -133,13 +133,13 @@ describe('Account & data', () => {
     const clicked: string[] = []
     const orig = HTMLAnchorElement.prototype.click
     HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) { clicked.push(this.download) }
-    m.exportMyData.mockResolvedValue({ ok: true, filename: 'saaf-my-data-2026-10-08.json', json: '{"a":1}' })
+    m.exportMyData.mockResolvedValue({ ok: true, filename: 'jobinko-my-data-2026-10-08.json', json: '{"a":1}' })
     await click([...host.querySelectorAll('button')].find((b) => b.textContent === 'Download my data')!)
     HTMLAnchorElement.prototype.click = orig
     expect(m.exportMyData).toHaveBeenCalledTimes(1)
     expect(m.exportMyData.mock.calls[0]).toEqual([]) // no argument: the account is the session's
-    expect(clicked).toEqual(['saaf-my-data-2026-10-08.json'])
-    expect(host.textContent).toContain('Downloaded saaf-my-data-2026-10-08.json.')
+    expect(clicked).toEqual(['jobinko-my-data-2026-10-08.json'])
+    expect(host.textContent).toContain('Downloaded jobinko-my-data-2026-10-08.json.')
   })
 
   it('"Show the tour again" resets the tour and takes you to the feed', async () => {

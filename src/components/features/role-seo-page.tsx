@@ -10,11 +10,11 @@ import { siteUrl } from '@/lib/site'
 
 /**
  * One role page ("Product Manager jobs in India") or role-in-city page ("…in Pune") — F-1203, TASK-158.
- * Everything on it is Saaf's own count of its own index, in Saaf's words: the exact total, the newest
+ * Everything on it is Jobinko's own count of its own index, in Jobinko's words: the exact total, the newest
  * twenty postings (each a link to its public page, with the match score shown locked), the employers
  * and cities among the newest 300, and the terms postings for this role use most (measured across
  * the postings counted in src/lib/taxonomy/role-keywords.json). No pay figure, no demand claim, no
- * number Saaf did not count. A page under the thin-content threshold still says what exists.
+ * number Jobinko did not count. A page under the thin-content threshold still says what exists.
  */
 export function RoleSeoPage({ role, city, data }: { role: string; city: City | null; data: RolePageData }) {
   const where = city ? city.name : 'India'
@@ -33,9 +33,9 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }} />
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Saaf home">
+          <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
             <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
-            Saaf
+            Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
             <Link href="/jobs" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Search jobs</Link>
@@ -51,8 +51,8 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">{role} jobs in {where}</h1>
         <p className="mt-3 max-w-[62ch] text-sm leading-6 text-muted-foreground">
           {data.total > 0
-            ? <>Saaf is tracking <strong className="text-primary">{data.total.toLocaleString('en-IN')}</strong> open {role} role{data.total === 1 ? '' : 's'} in {where}, read from company career pages{data.latest[0] && (data.latest[0].postedAt ?? data.latest[0].firstSeenAt) ? <> — the newest was {postedAgo(data.latest[0].postedAt ?? data.latest[0].firstSeenAt)?.toLowerCase() ?? 'posted recently'}</> : null}.</>
-            : <>Saaf has no open {role} roles in {where} right now. It checks company career pages every day, so this fills in as employers post.</>}
+            ? <>Jobinko is tracking <strong className="text-primary">{data.total.toLocaleString('en-IN')}</strong> open {role} role{data.total === 1 ? '' : 's'} in {where}, read from company career pages{data.latest[0] && (data.latest[0].postedAt ?? data.latest[0].firstSeenAt) ? <> — the newest was {postedAgo(data.latest[0].postedAt ?? data.latest[0].firstSeenAt)?.toLowerCase() ?? 'posted recently'}</> : null}.</>
+            : <>Jobinko has no open {role} roles in {where} right now. It checks company career pages every day, so this fills in as employers post.</>}
           {' '}Sign in free and each one is scored against your résumé, with the line from the posting behind every number.
         </p>
         {!isIndexable(data.total) && data.total > 0 ? (
@@ -99,7 +99,7 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
         {vocab ? (
           <section className="mt-10" aria-label="What postings ask for">
             <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">What {role} postings use most</h2>
-            <p className="mt-1 text-[11px] text-muted-foreground">Terms counted across {vocab.postings.toLocaleString('en-IN')} {role} postings Saaf measured — words to check your résumé for, not a promise about any one job.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Terms counted across {vocab.postings.toLocaleString('en-IN')} {role} postings Jobinko measured — words to check your résumé for, not a promise about any one job.</p>
             <p className="mt-3 flex flex-wrap gap-2">
               {vocab.terms.slice(0, 12).map((t) => <span key={t} className="rounded-full border border-border bg-card px-3 py-1 text-xs text-primary">{t}</span>)}
             </p>

@@ -6,10 +6,10 @@ import type { StatedPay } from '@/lib/stated-pay'
  *
  * Rules (Google Search Central, job-posting guide, fetched 2026-10-08):
  *  - Required: title, description, datePosted, hiringOrganization, jobLocation — always present.
- *  - Recommended, included ONLY when Saaf holds the fact: employmentType (the provider's own contract type),
+ *  - Recommended, included ONLY when Jobinko holds the fact: employmentType (the provider's own contract type),
  *    jobLocationType TELECOMMUTE (only when the employer's own system says the role is remote),
  *    identifier, baseSalary (only pay the posting states).
- *  - Left out on purpose: validThrough ("do not include it if … expiration is unknown" — Saaf knows only that a
+ *  - Left out on purpose: validThrough ("do not include it if … expiration is unknown" — Jobinko knows only that a
  *    role is gone, and then the page is a 404, which is Google's other accepted way to retire a posting) and
  *    applicantLocationRequirements (needed only when applicants are limited to places; nobody has told us).
  * Never a field filled with a guess.

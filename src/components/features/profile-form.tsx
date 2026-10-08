@@ -217,7 +217,7 @@ export function ProfileForm({ initial, email, accountExtras, applyExtras }: { in
             The scorer reads none of them — no component moves because a phone
             number is present. They exist so the extension can fill an application
             form from the account instead of asking the candidate to type their
-            own name into a popup, which is duplicate entry of a fact Saaf could
+            own name into a popup, which is duplicate entry of a fact Jobinko could
             already have known. Optional throughout.
           */}
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
@@ -264,7 +264,7 @@ export function ProfileForm({ initial, email, accountExtras, applyExtras }: { in
           <div className="mt-8 border-t border-border pt-6">
             <h2 className="text-lg font-semibold tracking-[-0.03em] text-primary">Download my data</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Everything Saaf holds about you in one file: your profile, your applications and your saved résumés. Scores are counted, not listed, because they are rebuilt from your profile.
+              Everything Jobinko holds about you in one file: your profile, your applications and your saved résumés. Scores are counted, not listed, because they are rebuilt from your profile.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Button type="button" variant="ghost" onClick={download} disabled={exporting}>{exporting ? 'Putting it together…' : 'Download my data'}</Button>
