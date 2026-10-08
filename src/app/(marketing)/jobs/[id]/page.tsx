@@ -198,7 +198,7 @@ export default async function PublicJobPage({ params }: Props) {
 
           <div className="rounded-3xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-primary"><Tag className="size-3.5 text-accent" /> Apply</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Applications go to {job.company} directly. Saaf never applies for you.</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Applications go to {job.company} directly. Saaf applies for you only if you switch on “Apply for me” in its browser extension.</p>
             <a href={job.applyUrl} target="_blank" rel="nofollow noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
               Apply on {job.company}&apos;s site <ArrowUpRight className="size-3.5" />
             </a>

@@ -35,11 +35,14 @@ export default function TermsPage() {
       <Section>
         <H2>What this is</H2>
         <P>
-          A free tool that removes roles you&apos;re structurally disqualified from
-          and ranks what&apos;s left. Saaf never applies on your behalf, never
-          contacts an employer, and never claims to guarantee an interview or an
-          offer — it answers one question: which of these deserves your next
-          forty minutes.
+          A free tool that scores every role it finds against your profile, shows
+          the working behind each score, and ranks them — nothing is hidden from
+          you. Saaf applies on your behalf only if you switch on &ldquo;Apply for
+          me&rdquo; in its browser extension and press Start: it never goes past a
+          CAPTCHA, never guesses an answer, and counts an application as made only
+          when the employer&apos;s own page confirms it. It never claims to
+          guarantee an interview or an offer — it answers one question: which of
+          these deserves your next forty minutes.
         </P>
       </Section>
 

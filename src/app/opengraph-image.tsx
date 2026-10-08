@@ -7,6 +7,6 @@ export const contentType = OG_CONTENT_TYPE
 export default async function Image() {
   return ogCard({
     headline: 'Roles that fit, with the arithmetic shown.',
-    sub: 'Precision job matching for India. No spam, no auto-apply, ₹0.',
+    sub: 'Precision job matching for India. No spam. Free to use.',
   })
 }

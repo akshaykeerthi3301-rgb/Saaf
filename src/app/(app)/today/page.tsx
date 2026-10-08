@@ -451,7 +451,7 @@ export default async function TodayPage({
           <div className="space-y-3 rounded-2xl border border-border bg-secondary/60 p-4 text-[11px] leading-5 text-muted-foreground">
             <p className="flex items-center gap-2.5">
               <ShieldCheck className="size-4 shrink-0" />
-              <span className="font-semibold text-primary">We never apply for you.</span>
+              <span className="font-semibold text-primary">We apply only when you switch it on.</span>
             </p>
             {/* WAS: "No employer here publishes a salary." Measured against the
                 live index on 2026-09-07 and it was false — 12 of 799 postings
