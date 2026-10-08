@@ -310,7 +310,9 @@ function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
    * the other way round. Only that exact pattern swaps: a role word in the first part, or in neither, is left
    * as it was.
    */
-  if (parts.length >= 2 && !ROLE_WORD.test(parts[0]) && ROLE_WORD.test(parts[1])) parts.splice(0, 2, parts[1], parts[0])
+  const titleSideFirst = ROLE_WORD.test(parts[0] ?? '')
+  const lastLineHasPlace = lines.length >= 2 && endsInPlace(lines[lines.length - 1]) && !endsInPlace(lines[0])
+  if (parts.length >= 2 && !titleSideFirst && (ROLE_WORD.test(parts[1]) || lastLineHasPlace)) parts.splice(0, 2, parts[1], parts[0])
 
   return {
     title: parts[0] ?? null,
@@ -325,14 +327,21 @@ function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
  * is short, is written in Title Case and does not end like a sentence — which is what separates it from an
  * unglyphed bullet, the only other thing that can sit directly under a header.
  */
-function looksLikeTitleLine(line: string): boolean {
+/** "Go-to-Market & Client Growth        Bangalore, India" — something, then a gap, then a place. */
+function endsInPlace(line: string): boolean {
+  const cols = line.trim().split(/\t+|\s{3,}|\s+[|·]\s+/)
+  const place = cols.length > 1 ? cols[cols.length - 1].trim() : ''
+  return place !== '' && (/^remote$/i.test(place) || isCity(place.split(',')[0].trim()))
+}
+
+function looksLikeTitleLine(line: string, needsPlace = false): boolean {
   const t = line.trim()
   if (t.length === 0 || t.length > 90 || /[.!?;:]$/.test(t)) return false
   const [role, place] = t.split(/\t+|\s{3,}|\s+[|·]\s+/)
   const words = role.split(/\s+/)
   // A role noun, or — for "Go-to-Market & Client Growth        Bangalore" — a place in the second column.
   const placed = place !== undefined && (/^remote$/i.test(place.trim()) || isCity(place.split(',')[0].trim()))
-  if (words.length > 8 || !(ROLE_WORD.test(role) || placed)) return false
+  if (words.length > 8 || (needsPlace && !placed) || !(ROLE_WORD.test(role) || placed)) return false
   return words.every((w) => /^[A-Z(&]/.test(w) || /^(of|and|the|in|for|to|at|&)$/i.test(w))
 }
 
@@ -357,12 +366,34 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
     bullets = []
   }
 
-  for (const raw of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i]
     const line = raw.trim()
     if (!line) continue
 
+    /**
+     * A company on its own line, with the dates on the NEXT line ("ICICI Bank" / "Jun 2025 - Jul 2026"), opens a
+     * new entry. Without the look-ahead the company was swallowed as a wrapped sentence of the job above and
+     * the dates were left to start an entry with no name.
+     */
+    if (bullets.length > 0 && !BULLET_GLYPH.test(raw) && line.length <= 60 && !/[.!?;:,]$/.test(line)) {
+      const next = lines.slice(i + 1).find((l) => l.trim())?.trim()
+      if (next && next.length <= 40 && dateRange().test(next) && splitDates(next).rest.replace(/[\s|·•—–,-]+/g, '').length < 3) {
+        flush()
+        header = [line]
+        continue
+      }
+    }
+
     if (BULLET_GLYPH.test(raw)) {
-      bullets.push(line.replace(BULLET_GLYPH, '').trim())
+      const text = line.replace(BULLET_GLYPH, '').trim()
+      // Some exports bullet the title line itself: "• Private Banking Manager<tab>Bangalore, India" straight under
+      // "ICICI Bank" / "Jun 2025 - Jul 2026". Only with a place in a second column, so a real first bullet is safe.
+      if (bullets.length === 0 && header.length > 0 && header.length < 3 && header.some((h) => dateRange().test(h)) && looksLikeTitleLine(text, true)) {
+        header.push(text)
+        continue
+      }
+      bullets.push(text)
       continue
     }
 

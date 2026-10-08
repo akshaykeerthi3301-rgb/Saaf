@@ -292,4 +292,14 @@ Ran full-cycle recruiting for 15+ roles across early-stage startups.`
     const roles = parseSections('Experience\nProduct Manager at Paytm\nMar 2021 - Present\nOwned the merchant payments funnel end to end.').experience
     expect([roles[0].title, roles[0].employer]).toEqual(['Product Manager', 'Paytm'])
   })
+
+  it('reads a bulleted title line, the way one real exported résumé has it', () => {
+    const roles = parseSections(
+      'Experience\nICICI Bank\nJun 2025 - Jul 2026\n• Private Banking Manager (Relationship Manager)\tBangalore, India\n• Managed 150+ CXO, HNI and UHNI relationships as primary relationship manager.\nMind Customs\n2026 - Present\n• Go-to-Market & Client Growth (Independent Engagement)\tBangalore, India\n• Own GTM and client growth for a niche automotive service business.',
+    ).experience
+    expect(roles.map((r) => [r.title, r.employer, r.bullets.length])).toEqual([
+      ['Private Banking Manager (Relationship Manager)', 'ICICI Bank', 1],
+      ['Go-to-Market & Client Growth (Independent Engagement)', 'Mind Customs', 1],
+    ])
+  })
 })

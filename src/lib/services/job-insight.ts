@@ -216,9 +216,19 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     trackedStatus: (app as { status: string } | null)?.status ?? null,
     workMode: providerFacts?.work_mode ?? null,
     employmentType: providerFacts?.employment_type ?? null,
-    minYears: (() => {
-      const asked = reqRows.filter((q) => q.kind === 'experience_years' && q.min_years !== null && Number(q.confidence ?? 1) >= 0.6).map((q) => Number(q.min_years))
-      return asked.length ? Math.min(...asked) : null
-    })(),
+    minYears: askedYears(reqRows),
   }
+}
+
+/** The years a posting asks for: the lowest figure it states with confidence, or null. */
+function askedYears(rows: { kind: string; min_years: number | null; confidence: number | null }[]): number | null {
+  const asked = rows.filter((q) => q.kind === 'experience_years' && q.min_years !== null && Number(q.confidence ?? 1) >= 0.6).map((q) => Number(q.min_years))
+  return asked.length ? Math.min(...asked) : null
+}
+
+/** Just the years, for callers that need no more of the posting (the résumé tool's gap table). */
+export async function readMinYears(roleId: string): Promise<number | null> {
+  const supabase = await createClient()
+  const { data } = await supabase.from('role_requirements').select('kind, min_years, confidence').eq('role_id', roleId).eq('kind', 'experience_years')
+  return askedYears((data ?? []) as { kind: string; min_years: number | null; confidence: number | null }[])
 }

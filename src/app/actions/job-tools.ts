@@ -7,10 +7,11 @@ import { listResumes, getResume } from '@/lib/services/resume-documents'
 import { readAccountSummary } from '@/lib/services/workspace'
 import { extractFields } from '@/lib/parse/extract'
 import { extractSkillPhrases } from '@/lib/taxonomy/skills'
-import { sectionsToText, type ResumeSections } from '@/lib/parse/sections'
+import { parseSections, sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { checkResume } from '@/lib/ats-check'
 import { matchedSkills } from '@/lib/tailor'
 import { displayEmployer } from '@/lib/display-names'
+import { readMinYears } from '@/lib/services/job-insight'
 
 /**
  * The data behind the three AI tools on a job (Customize your résumé, Build a cover letter, Analyze how well you
@@ -61,10 +62,10 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
   if (saved.length === 0) return { ok: false, needsResume: true }
   const chosen = saved.find((r) => r.id === parsed.data.resumeId) ?? saved.find((r) => r.isPrimary) ?? saved[0]
 
-  const [detail, ctx, reqs] = await Promise.all([
+  const [detail, ctx, need] = await Promise.all([
     getResume(user.id, chosen.id).catch(() => null),
     getCookieContext(user.id, parsed.data.roleId),
-    supabase.from('role_requirements').select('kind, min_years, confidence').eq('role_id', parsed.data.roleId).eq('kind', 'experience_years'),
+    readMinYears(parsed.data.roleId).catch(() => null),
   ])
   if (!detail) return { ok: false, error: 'That saved résumé could not be found.' }
   if (!ctx.ok) return { ok: false, error: ctx.error }
@@ -72,7 +73,11 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
 
   // ---- the four rows, each read from the two documents and nothing else ------------------------------------------
   const jobWords = words(role.title)
-  const resumeTitles = detail.sections.experience.filter((e) => !e.isProject && e.title).map((e) => e.title as string)
+  // The stored sections were read when the résumé was saved; the body is read again here, so a résumé saved before
+  // a reader fix (e.g. company-first headers) is still judged on the titles it actually holds.
+  const fresh = (() => { try { return parseSections(detail.body).experience } catch { return [] } })()
+  const titlesOf = (entries: typeof fresh) => [...new Set(entries.filter((e) => !e.isProject && e.title).map((e) => e.title as string))]
+  const resumeTitles = titlesOf(fresh).length ? titlesOf(fresh) : titlesOf(detail.sections.experience)
   const resumeWords = new Set(resumeTitles.flatMap(words))
   const overlap = jobWords.filter((w) => resumeWords.has(w)).length
   const titleRow: GapRow = {
@@ -82,9 +87,6 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
     you: resumeTitles.slice(0, 2).join(' / ') || 'No job title found',
   }
 
-  const asked = ((reqs.data ?? []) as { min_years: number | null; confidence: number | null }[])
-    .filter((q) => q.min_years !== null && Number(q.confidence ?? 1) >= 0.6).map((q) => Number(q.min_years))
-  const need = asked.length ? Math.min(...asked) : null
   const have = extractFields(detail.body).fields.yearsExperience ?? null
   const yearsRow: GapRow = {
     key: 'years', label: 'Years of experience',
