@@ -37,6 +37,8 @@ const schema = z.object({
   /** One of the three ATS-safe templates. An unknown id falls back rather than
    *  failing — a stale client is exactly how a bad value arrives here. */
   template: z.enum(['classic', 'compact', 'headline']).optional(),
+  font: z.enum(['calibri', 'arial', 'georgia', 'times']).optional(),
+  accent: z.enum(['ink', 'navy', 'teal', 'maroon']).optional(),
   /** Present for a résumé tailored to one posting: the file is then named for the person, the role AND the company. */
   company: z.string().trim().max(120).optional(),
 })
@@ -66,7 +68,7 @@ export async function downloadOptimisedResume(
   }
 
   try {
-    const { sections, targetRole, template, company } = parsed.data
+    const { sections, targetRole, template, font, accent, company } = parsed.data
     const buffer = await buildFullResumeDocx({
       // `order` is typed as strings by the schema above because it is display
       // metadata the document never reads; casting it back keeps the builder's
@@ -74,6 +76,8 @@ export async function downloadOptimisedResume(
       sections: { ...sections, order: [] },
       targetRole,
       template,
+      font,
+      accent,
     })
     return {
       ok: true,

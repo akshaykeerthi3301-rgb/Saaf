@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { TEMPLATES, templateSpec, DEFAULT_TEMPLATE, DOCX_SIZES } from '../resume-templates'
 import { parseSections, sectionsToText } from '../parse/sections'
 import { checkResume } from '../ats-check'
+import { buildFullResumeDocx } from '../resume-docx'
+import JSZip from 'jszip'
 
 /**
  * ⚠️ THE TEST THAT MAKES THE TEMPLATES CLAIM TRUE.
@@ -96,5 +98,30 @@ describe('every template we ship', () => {
       expect(size.body).toBeGreaterThan(0)
       expect(size.name).toBeGreaterThan(size.body)
     }
+  })
+})
+
+describe('font and accent colour', () => {
+  const sections = parseSections(RESUME)
+  const xmlOf = async (opts: Parameters<typeof buildFullResumeDocx>[0]) => {
+    const zip = await JSZip.loadAsync(await buildFullResumeDocx(opts))
+    return {
+      doc: await zip.file('word/document.xml')!.async('string'),
+      styles: await zip.file('word/styles.xml')!.async('string'),
+    }
+  }
+
+  it('writes the chosen typeface and accent into the Word file, and nothing structural', async () => {
+    const { doc, styles } = await xmlOf({ sections, targetRole: 'PM', font: 'georgia', accent: 'navy' })
+    expect(styles).toContain('Georgia')
+    expect(doc).toContain('1F3A68')
+    expect(doc).not.toContain('<w:tbl>')
+    expect(doc).not.toContain('<w:txbxContent')
+  })
+
+  it('leaves the default file as it was when nothing is chosen', async () => {
+    const { doc, styles } = await xmlOf({ sections, targetRole: 'PM' })
+    expect(styles).toContain('Calibri')
+    expect(doc).not.toContain('1F3A68')
   })
 })

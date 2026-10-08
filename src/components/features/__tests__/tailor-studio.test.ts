@@ -169,8 +169,10 @@ describe('after tailoring', () => {
   it('offers the three styles, says how many pages, and names the file for the person, role and company', async () => {
     await tailored()
     const bar = host.querySelector('[aria-label="Style and page length"]')!
-    const names = [...bar.querySelectorAll('button')].map((b) => b.textContent)
+    // The colour swatches are buttons too, but carry a label and no text.
+    const names = [...bar.querySelectorAll('button')].map((b) => b.textContent).filter(Boolean)
     expect(names).toEqual(['Classic', 'Compact', 'Headline'])
+    expect([...bar.querySelectorAll('button[aria-label]')].map((b) => b.getAttribute('aria-label'))).toEqual(['Black', 'Navy', 'Teal', 'Maroon'])
     expect(bar.textContent).toMatch(/About 0\.\d pages? in Classic \(estimated\)/)
     expect(bar.textContent).toContain('Asha_Rao_Customer_Success_Manager_Diligent.docx')
     await click([...bar.querySelectorAll('button')].find((b) => b.textContent === 'Compact')!)

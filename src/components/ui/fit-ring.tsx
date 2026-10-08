@@ -36,9 +36,10 @@ import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
  * it is on the reason line and inside the breakdown. It is no longer the headline.
  */
 export function bandFor(score: number): string {
-  if (score >= HIGH_PRECISION_MIN) return 'High-precision match'
-  if (score >= 60) return 'Strong match'
-  if (score >= 45) return 'Worth a look'
+  // The words the reference product's score panel uses (founder, 2026-10-09: "ditto"): Great, Good, Fair, then ours for the rest.
+  if (score >= HIGH_PRECISION_MIN) return 'Great match'
+  if (score >= 60) return 'Good match'
+  if (score >= 45) return 'Fair match'
   return 'Long shot'
 }
 

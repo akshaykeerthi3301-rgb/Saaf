@@ -65,6 +65,11 @@ export type JobInsight = {
   snapshot: CompanySnapshot
   /** The candidate's tracker stage for this role, when tracked. */
   trackedStatus: string | null
+  /** What the employer's own system states (0041) — the facts grid in the detail view. */
+  workMode: RoleFactsRow['work_mode']
+  employmentType: RoleFactsRow['employment_type']
+  /** The years the posting asks for, when it states them with confidence. */
+  minYears: number | null
 }
 
 /** The posting's sections as display blocks, or null when its headings could not be read. */
@@ -209,5 +214,11 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
       culture: cultureTags(r.description ?? ''),
     },
     trackedStatus: (app as { status: string } | null)?.status ?? null,
+    workMode: providerFacts?.work_mode ?? null,
+    employmentType: providerFacts?.employment_type ?? null,
+    minYears: (() => {
+      const asked = reqRows.filter((q) => q.kind === 'experience_years' && q.min_years !== null && Number(q.confidence ?? 1) >= 0.6).map((q) => Number(q.min_years))
+      return asked.length ? Math.min(...asked) : null
+    })(),
   }
 }

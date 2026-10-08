@@ -366,3 +366,12 @@
   border-radius: 1rem;
   transition: outline-color 0.2s ease;
 }
+
+/* Printing from inside a drawer (the résumé tailor's Export PDF): show only the drawer, laid out as a normal page. */
+@media print {
+  body.printing-sheet > *:not(:has([data-sheet-print])) { display: none !important; }
+  body.printing-sheet [data-sheet-print] {
+    position: static !important; inset: auto !important; width: auto !important; max-width: none !important;
+    height: auto !important; overflow: visible !important; border: 0 !important; box-shadow: none !important;
+  }
+}

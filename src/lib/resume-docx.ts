@@ -1,6 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx'
 import { roleLine, type ResumeSections } from '@/lib/parse/sections'
-import { templateSpec, DOCX_SIZES, type TemplateId } from '@/lib/resume-templates'
+import { templateSpec, fontSpec, accentSpec, DOCX_SIZES, type AccentId, type FontId, type TemplateId } from '@/lib/resume-templates'
 import type { Draft } from '@/lib/tailor'
 
 /**
@@ -149,11 +149,16 @@ export type FullResumeInput = {
   targetRole: string
   /** One of the three ATS-safe templates. See src/lib/resume-templates.ts. */
   template?: TemplateId
+  /** Typeface and accent colour for the name and headings (src/lib/resume-templates.ts). Typographic only. */
+  font?: FontId
+  accent?: AccentId
 }
 
-export async function buildFullResumeDocx({ sections, targetRole, template }: FullResumeInput): Promise<Buffer> {
+export async function buildFullResumeDocx({ sections, targetRole, template, font, accent }: FullResumeInput): Promise<Buffer> {
   const s = sections
   const spec = templateSpec(template)
+  const face = fontSpec(font).docx
+  const ink = accentSpec(accent).hex ?? undefined
   const size = DOCX_SIZES[spec.density]
   const align = spec.align === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT
   const children: Paragraph[] = []
@@ -170,7 +175,7 @@ export async function buildFullResumeDocx({ sections, targetRole, template }: Fu
       spacing: { before: size.gapBefore, after: 90 },
       border:
         spec.heading === 'ruled'
-          ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: '888888', space: 2 } }
+          ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: ink ?? '888888', space: 2 } }
           : undefined,
       children: [
         new TextRun({
@@ -178,7 +183,7 @@ export async function buildFullResumeDocx({ sections, targetRole, template }: Fu
           bold: true,
           size: size.heading,
           characterSpacing: spec.heading === 'caps' ? 50 : spec.heading === 'ruled' ? 30 : 0,
-          color: spec.heading === 'caps' ? '555555' : undefined,
+          color: ink ?? (spec.heading === 'caps' ? '555555' : undefined),
         }),
       ],
     })
@@ -186,7 +191,7 @@ export async function buildFullResumeDocx({ sections, targetRole, template }: Fu
   children.push(
     new Paragraph({
       alignment: align,
-      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: size.name })],
+      children: [new TextRun({ text: s.contact.name ?? 'Your name', bold: true, size: size.name, color: ink })],
     }),
   )
 
@@ -270,7 +275,12 @@ export async function buildFullResumeDocx({ sections, targetRole, template }: Fu
     }
   }
 
-  return Packer.toBuffer(new Document({ sections: [{ properties: {}, children }] }))
+  return Packer.toBuffer(
+    new Document({
+      styles: { default: { document: { run: { font: face } } } },
+      sections: [{ properties: {}, children }],
+    }),
+  )
 }
 
 /** Their own name in the filename, because they will download several. */

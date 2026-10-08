@@ -13,7 +13,9 @@ import { sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { checkResume } from '@/lib/ats-check'
 import { sectionsSchema } from '@/lib/resume-schema'
 
-const schema = z.object({ roleId: z.string().uuid(), resumeId: z.string().uuid() })
+/** Which parts of the résumé to change — the drawer's step 2. Absent means the whole document, as before. */
+const scopeSchema = z.object({ summary: z.boolean(), experience: z.boolean(), skills: z.boolean() })
+const schema = z.object({ roleId: z.string().uuid(), resumeId: z.string().uuid(), scope: scopeSchema.optional() })
 
 /**
  * Five studio rewrites per ten minutes, per candidate — the same ceiling
@@ -96,8 +98,14 @@ export async function tailorSavedResume(input: z.input<typeof schema>): Promise<
         credential: read.credential ?? null,
       },
       role,
+      scope: parsed.data.scope ? { summary: parsed.data.scope.summary, experience: parsed.data.scope.experience } : undefined,
     })
     if (!result) return { ok: false, error: 'We could not tailor it just now. Your saved résumé is unchanged — try again in a moment.' }
+    // "Skills" unticked: keep the candidate's own order, whatever the rewrite computed.
+    if (parsed.data.scope && !parsed.data.scope.skills) {
+      result.sections = { ...result.sections, skills: resume.sections.skills }
+      result.skillsReordered = false
+    }
     // Both measured the same way — sections rendered to text — so the only thing that differs is the edit.
     const posting = role.description ?? undefined
     return {

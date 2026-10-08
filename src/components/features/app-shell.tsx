@@ -9,8 +9,8 @@ import { useAccount } from '@/components/features/account-context'
 import { FeedbackButton, InboxBell } from '@/components/features/feedback-and-inbox'
 import type { SearchStatus } from '@/lib/services/workspace'
 import {
-  BriefcaseBusiness, ChevronsUpDown, FileText, Gauge, KanbanSquare, LogOut, Menu, MessageCircle,
-  Send, Settings, ShieldCheck, Sparkles, UserRound, X, GraduationCap } from 'lucide-react'
+  BriefcaseBusiness, ChevronsUpDown, Compass, FileText, Gauge, LogOut, Menu, MessageCircle,
+  Settings, ShieldCheck, Sparkles, UserRound, X, GraduationCap } from 'lucide-react'
 
 /**
  * The signed-in workspace — the three-column split.
@@ -35,18 +35,23 @@ import {
  */
 const NAV: { label: string; short: string; href: string; icon: typeof BriefcaseBusiness }[] = [
   { label: 'Job search feed', short: 'Jobs', href: '/today', icon: BriefcaseBusiness },
+  { label: 'Search every role', short: 'Explore', href: '/today/explore', icon: Compass },
   { label: 'AI résumé builder', short: 'Résumé', href: '/resume', icon: FileText },
-  { label: 'Application tracker', short: 'Tracker', href: '/applications', icon: KanbanSquare },
-  { label: 'Networking and outreach', short: 'Outreach', href: '/outreach', icon: Send },
   // Unlocked 2026-09-15 on a measured 4.1% noise rate (TASK-080). If that number
   // is ever unknown again, re-lock it.
   { label: 'Interview prep', short: 'Interview', href: '/interview-prep', icon: MessageCircle },
   { label: 'Coaching', short: 'Coaching', href: '/coaching', icon: GraduationCap },
 ]
 
-const SECONDARY: { label: string; short: string; href: string; icon: typeof BriefcaseBusiness }[] = [
-  { label: 'Copilot diagnostic', short: 'Copilot', href: '/copilot', icon: Gauge },
-  { label: 'Index audit', short: 'Audit', href: '/audit', icon: ShieldCheck },
+/**
+ * Not on the rail since 2026-10-09 (the reference product's rail has seven items, and the founder asked for a clean
+ * one): the tracker is the Saved and Applied tabs on the feed, outreach is a job's AI tool, and these two live in the
+ * account menu. Every route still exists.
+ */
+const MENU_LINKS: { label: string; href: string; icon: typeof BriefcaseBusiness }[] = [
+  { label: 'Application tracker', href: '/applications', icon: BriefcaseBusiness },
+  { label: 'Copilot diagnostic', href: '/copilot', icon: Gauge },
+  { label: 'Index audit', href: '/audit', icon: ShieldCheck },
 ]
 
 const STATUS: Record<SearchStatus, { label: string; dot: string }> = {
@@ -56,7 +61,7 @@ const STATUS: Record<SearchStatus, { label: string; dot: string }> = {
 }
 
 export function AppShell({
-  title, eyebrow = 'Your workspace', initials, context, contextOnMobile = 'stack', children,
+  title, eyebrow = 'Your workspace', initials, context, contextOnMobile = 'stack', bar, children,
 }: {
   title: string
   eyebrow?: string
@@ -66,12 +71,18 @@ export function AppShell({
   context?: ReactNode
   /** Below xl: stack the panel under the page, or hide it (the page supplies its own sheet). */
   contextOnMobile?: 'stack' | 'hide'
+  /** Replaces the page title in the top bar — the feed puts its tabs and search there, as one bar. */
+  bar?: ReactNode
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const account = useAccount()
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) => {
+    // /today/explore is its own item: Jobs is lit on /today and its other children, not on Explore.
+    if (href === '/today') return pathname === '/today' || (pathname.startsWith('/today/') && !pathname.startsWith('/today/explore'))
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
 
   const navItem = ({ label, short, href, icon: Icon }: (typeof NAV)[number], small = false) => {
     const active = isActive(href)
@@ -126,11 +137,6 @@ export function AppShell({
             {NAV.map((n) => navItem(n))}
           </nav>
 
-          <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground lg:hidden">Insights</p>
-          <nav className="mt-2 space-y-0.5 lg:mt-4 lg:border-t lg:border-border lg:pt-3" aria-label="Insights">
-            {SECONDARY.map((n) => navItem(n, true))}
-          </nav>
-
           <div className="mt-auto space-y-2 pt-4">
             {navItem({ label: 'Profile and preferences', short: 'Profile', href: '/profile', icon: UserRound })}
             <UserCard fallbackInitials={initials} />
@@ -155,11 +161,15 @@ export function AppShell({
               >
                 <Menu className="size-5" />
               </button>
-              <div className="min-w-0">
-                {/* The eyebrow above every title was the second line of a two-line header; the title is enough. Kept as a prop, and as a screen-reader label. */}
-                <p className="sr-only">{eyebrow}</p>
-                <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-primary">{title}</h1>
-              </div>
+              {bar ? (
+                <div className="min-w-0 flex-1">{bar}</div>
+              ) : (
+                <div className="min-w-0">
+                  {/* The eyebrow above every title was the second line of a two-line header; the title is enough. Kept as a prop, and as a screen-reader label. */}
+                  <p className="sr-only">{eyebrow}</p>
+                  <h1 className="truncate text-lg font-semibold tracking-[-0.04em] text-primary">{title}</h1>
+                </div>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {account ? <><FeedbackButton /><InboxBell /></> : null}
@@ -257,6 +267,15 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
           <Settings className="size-4" />
         </Link>
       </div>
+
+      <nav aria-label="More" className="mt-3 space-y-0.5 border-t border-border pt-2">
+        {MENU_LINKS.map(({ label, href, icon: Icon }) => (
+          <Link key={href} href={href} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-primary">
+            <Icon className="size-3.5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
 
       <div className="relative mt-3">
         <button

@@ -75,3 +75,33 @@ export const DOCX_SIZES: Record<TemplateSpec['density'], { name: number; heading
   regular: { name: 34, heading: 22, body: 20, gapBefore: 260 },
   airy:    { name: 40, heading: 23, body: 21, gapBefore: 340 },
 }
+
+/**
+ * The look on top of the layout: a typeface and an accent colour for the name and headings. Both are
+ * typographic like everything else here — the text, its order and its structure do not change, so every
+ * combination parses exactly as Classic does. Typefaces are the four every Word and Google Docs install
+ * has (an ATS reads the characters, not the font; an unusual font that falls back is the real risk).
+ */
+export type FontId = 'calibri' | 'arial' | 'georgia' | 'times'
+export type AccentId = 'ink' | 'navy' | 'teal' | 'maroon'
+
+export const FONTS: { id: FontId; name: string; docx: string; css: string }[] = [
+  { id: 'calibri', name: 'Calibri', docx: 'Calibri', css: 'Calibri, Carlito, "Segoe UI", Arial, sans-serif' },
+  { id: 'arial', name: 'Arial', docx: 'Arial', css: 'Arial, Helvetica, sans-serif' },
+  { id: 'georgia', name: 'Georgia', docx: 'Georgia', css: 'Georgia, "Times New Roman", serif' },
+  { id: 'times', name: 'Times', docx: 'Times New Roman', css: '"Times New Roman", Times, serif' },
+]
+
+/** `hex` has no leading # — docx wants it bare; the preview adds one. `null` = leave the text its default colour. */
+export const ACCENTS: { id: AccentId; name: string; hex: string | null }[] = [
+  { id: 'ink', name: 'Black', hex: null },
+  { id: 'navy', name: 'Navy', hex: '1F3A68' },
+  { id: 'teal', name: 'Teal', hex: '0F766E' },
+  { id: 'maroon', name: 'Maroon', hex: '7F1D1D' },
+]
+
+export const DEFAULT_FONT: FontId = 'calibri'
+export const DEFAULT_ACCENT: AccentId = 'ink'
+
+export const fontSpec = (id: FontId | undefined) => FONTS.find((f) => f.id === id) ?? FONTS[0]
+export const accentSpec = (id: AccentId | undefined) => ACCENTS.find((a) => a.id === id) ?? ACCENTS[0]

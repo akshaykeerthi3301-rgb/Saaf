@@ -411,3 +411,16 @@ export async function countWorkModeMatches(userId: string): Promise<number> {
     return c ? c.points === c.max : false
   }).length
 }
+
+/**
+ * How many roles the candidate has saved and how many they have moved past "saved" (applied, interviewing, offer),
+ * for the feed's Saved / Applied tabs. One small read of their own tracker; a failure reads as zero.
+ */
+export async function readTrackerCounts(): Promise<{ saved: number; applied: number }> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('applications').select('status')
+  if (error) return { saved: 0, applied: 0 }
+  const rows = (data ?? []) as { status: string }[]
+  const saved = rows.filter((r) => r.status === 'saved').length
+  return { saved, applied: rows.filter((r) => ['applied', 'interviewing', 'offer'].includes(r.status)).length }
+}

@@ -48,7 +48,7 @@ export function JobPanel({ idle }: { idle: ReactNode }) {
 }
 
 /** True at xl and above, where the panel is a column rather than a sheet. */
-function useIsDesktop(): boolean {
+export function useIsDesktop(): boolean {
   return useSyncExternalStore(
     (cb) => {
       const mq = window.matchMedia('(min-width: 1280px)')
@@ -174,7 +174,7 @@ const BAND_TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-m
 const BAR_TONE = { high: 'bg-score-high', mid: 'bg-score-mid', low: 'bg-muted-foreground/50' } as const
 
 /** The ring, its word, and the three bars it is made of — then the one-line reason. */
-function ScoreCard({ j }: { j: JobInsight }) {
+export function ScoreCard({ j }: { j: JobInsight }) {
   const bars = barsFromShares(j.analysis.factors)
   if (j.score === null) {
     return <p className="mb-6 rounded-2xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">This role is not scored for you.</p>
@@ -288,7 +288,7 @@ function HowItIsBuilt({ j }: { j: JobInsight }) {
 }
 
 /** Employer facts, from our own index and open data — moved out of the Overview, where it was the sixth stacked section. */
-function CompanyTab({ j }: { j: JobInsight }) {
+export function CompanyTab({ j }: { j: JobInsight }) {
   return (
     <>
       <Section title="Company snapshot" icon={Building2}>
@@ -428,7 +428,7 @@ function useSkillCorrection(roleId: string) {
  * and the long reading (every factor with its note, every requirement quote, the
  * report button) behind one disclosure instead of five stacked sections.
  */
-function OverviewTab({ j }: { j: JobInsight }) {
+export function OverviewTab({ j }: { j: JobInsight }) {
   const a = j.analysis
   const skill = useSkillCorrection(j.roleId)
   return (
@@ -562,7 +562,7 @@ function CopilotTab({ j }: { j: JobInsight }) {
 }
 
 /** One run of description blocks. Untrusted text: rendered as text nodes only. */
-function Blocks({ blocks, mark }: { blocks: JobInsight['description']; mark: (t: string) => ReactNode }) {
+export function Blocks({ blocks, mark }: { blocks: JobInsight['description']; mark: (t: string) => ReactNode }) {
   return (
     <div className="space-y-2.5 text-sm leading-6 text-muted-foreground">
       {blocks.map((b, i) =>
@@ -585,7 +585,7 @@ function Blocks({ blocks, mark }: { blocks: JobInsight['description']; mark: (t:
   )
 }
 
-function DescriptionTab({ j }: { j: JobInsight }) {
+export function DescriptionTab({ j }: { j: JobInsight }) {
   const matched = j.analysis.matched
   const missing = j.analysis.missing.map((m) => m.term)
   const terms = [...matched, ...missing].filter((t) => t.length > 1)

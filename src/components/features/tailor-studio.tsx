@@ -8,7 +8,7 @@ import { rewriteStudioLine, scoreDraft, tailorSavedResume, type TailorStudioResu
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
-import { DEFAULT_TEMPLATE, TEMPLATES, templateSpec, type TemplateId } from '@/lib/resume-templates'
+import { ACCENTS, DEFAULT_ACCENT, DEFAULT_FONT, DEFAULT_TEMPLATE, FONTS, TEMPLATES, accentSpec, fontSpec, templateSpec, type AccentId, type FontId, type TemplateId } from '@/lib/resume-templates'
 import { diffSections, estimatePages, fitToOnePage, tailoredFilename } from '@/lib/resume-review'
 
 /**
@@ -48,7 +48,7 @@ function suggestionsFrom(original: ResumeSections, res: Ok): Suggestion[] {
 }
 
 export function TailorStudio({
-  roleId, resumeId, resumeLabel, original, roleTitle, company,
+  roleId, resumeId, resumeLabel, original, roleTitle, company, autoRun = false, scope, embedded = false,
 }: {
   roleId: string
   resumeId: string
@@ -56,6 +56,12 @@ export function TailorStudio({
   original: ResumeSections
   roleTitle: string
   company: string
+  /** Start tailoring on mount — the drawer's step 3 follows the candidate pressing Generate in step 2. */
+  autoRun?: boolean
+  /** Which parts to change (the drawer's step 2). Absent means the whole document. */
+  scope?: { summary: boolean; experience: boolean; skills: boolean }
+  /** Inside the job drawer: the control bar sticks to the top of the drawer, not under the app header. */
+  embedded?: boolean
 }) {
   const [res, setRes] = useState<Ok | null>(null)
   const [error, setError] = useState<string>()
@@ -70,6 +76,8 @@ export function TailorStudio({
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
   const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
+  const [font, setFont] = useState<FontId>(DEFAULT_FONT)
+  const [accent, setAccent] = useState<AccentId>(DEFAULT_ACCENT)
   const [fit, setFit] = useState(false)
   const [liveScore, setLiveScore] = useState<number | null>(null)
   const [scoring, setScoring] = useState(false)
@@ -82,6 +90,8 @@ export function TailorStudio({
   const pages = useMemo(() => estimatePages(working, effective), [working, effective])
   const fileName = tailoredFilename({ name: working.contact.name, role: roleTitle, company })
   const spec = templateSpec(effective)
+  const accentHex = accentSpec(accent).hex
+  const ink = accentHex ? { color: `#${accentHex}`, borderColor: `#${accentHex}` } : undefined
 
   // The score of the draft as it stands, after each accept, dismiss or hand edit. No change yet = the
   // saved résumé's own score, no call. `scoreSeq` drops a slow answer that a newer edit has overtaken.
@@ -106,7 +116,7 @@ export function TailorStudio({
   function run() {
     setError(undefined)
     startRun(async () => {
-      const r = await tailorSavedResume({ roleId, resumeId }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
+      const r = await tailorSavedResume({ roleId, resumeId, scope }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setError(r.error); return }
       setRes(r)
       setWorking(original)
@@ -114,6 +124,15 @@ export function TailorStudio({
       setSkillsDecision(r.skillsReordered ? 'pending' : 'dismissed')
     })
   }
+
+  // Step 3 of the drawer starts the run itself. A ref keeps React's double-invoked effect from tailoring twice.
+  const started = useRef(false)
+  useEffect(() => {
+    if (!autoRun || started.current) return
+    started.current = true
+    run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun])
 
   const setText = (s: Pick<Suggestion, 'entry' | 'idx'>, text: string) =>
     setWorking((w) =>
@@ -149,7 +168,7 @@ export function TailorStudio({
   function exportWord() {
     setNote(undefined)
     startBusy(async () => {
-      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, template: effective, company: company || undefined })
+      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, template: effective, font, accent, company: company || undefined })
         .catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setNote(r.error); return }
       const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0))
@@ -168,7 +187,9 @@ export function TailorStudio({
   function exportPdf() {
     const previous = document.title
     document.title = fileName.replace(/\.docx$/, '')
-    window.addEventListener('afterprint', () => { document.title = previous }, { once: true })
+    // In the drawer the rest of the app is behind it: mark the body so the print stylesheet (globals.css) shows only the drawer.
+    if (embedded) document.body.classList.add('printing-sheet')
+    window.addEventListener('afterprint', () => { document.title = previous; document.body.classList.remove('printing-sheet') }, { once: true })
     window.print()
   }
 
@@ -275,7 +296,7 @@ export function TailorStudio({
         Editing a résumé is roomier on a computer. Everything here still works on your phone — you read each change and accept it one at a time.
       </p>
       {/* The control bar. */}
-      <div className="glass sticky top-16 z-10 -mx-5 mb-5 flex flex-wrap items-center gap-2 border-b border-border px-5 py-3 sm:-mx-8 sm:px-8 print:hidden">
+      <div className={`glass sticky z-10 mb-5 flex flex-wrap items-center gap-2 border-b border-border py-3 print:hidden ${embedded ? 'top-0 -mx-6 px-6' : 'top-16 -mx-5 px-5 sm:-mx-8 sm:px-8'}`}>
         {!res ? (
           <button
             type="button"
@@ -360,6 +381,25 @@ export function TailorStudio({
                   : `Still about ${pages.toFixed(1)} pages in Compact, the tightest style — shorten older roles or long bullets.`
                 : `About ${pages.toFixed(1)} ${pages.toFixed(1) === '1.0' ? 'page' : 'pages'} in ${templateSpec(effective).name} (estimated).`}
             </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-primary">Font</span>
+            <select value={font} onChange={(e) => setFont(e.target.value as FontId)} aria-label="Font" className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-primary">
+              {FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            <span className="ml-2 text-xs font-semibold text-primary">Colour</span>
+            {ACCENTS.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                aria-pressed={accent === a.id}
+                aria-label={a.name}
+                title={a.name}
+                onClick={() => setAccent(a.id)}
+                style={{ backgroundColor: a.hex ? `#${a.hex}` : 'var(--color-paper-ink)' }}
+                className={`size-5 rounded-full border-2 transition ${accent === a.id ? 'border-accent ring-2 ring-accent/40' : 'border-border'}`}
+              />
+            ))}
           </div>
           <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
             {templateSpec(effective).note} Every style is one column of real text, so each passes the ATS checker. Word and PDF both use the style you pick; the file is named <span className="font-mono text-primary">{fileName}</span>.
@@ -468,19 +508,19 @@ export function TailorStudio({
       ) : null}
 
       {/* What Export PDF prints: the tailored document alone, on paper, in the chosen style. */}
-      <div className={`hidden bg-paper p-8 text-paper-ink print:block ${PRINT[spec.density].body}`}>
-        <h1 className={`${PRINT[spec.density].name} font-bold ${spec.align === 'center' ? 'text-center' : ''}`}>{working.contact.name}</h1>
+      <div style={{ fontFamily: fontSpec(font).css }} className={`hidden bg-paper p-8 text-paper-ink print:block ${PRINT[spec.density].body}`}>
+        <h1 style={ink} className={`${PRINT[spec.density].name} font-bold ${spec.align === 'center' ? 'text-center' : ''}`}>{working.contact.name}</h1>
         <p className={`text-paper-muted ${spec.align === 'center' ? 'text-center' : ''}`}>{[working.contact.email, working.contact.phone, ...working.contact.links].filter(Boolean).join(' · ')}</p>
         {working.summary ? <p className={PRINT[spec.density].gap}>{working.summary}</p> : null}
-        {working.experience.length ? <h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Experience</h2> : null}
+        {working.experience.length ? <h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Experience</h2> : null}
         {working.experience.map((e, i) => (
           <div key={i} className={PRINT[spec.density].role}>
             <p className="font-bold">{[e.title, e.employer].filter(Boolean).join(' — ')}<span className="font-normal text-paper-muted">{e.dates ? `  ${e.dates}` : ''}</span></p>
             <ul className="ml-5 list-disc">{e.bullets.map((b, j) => <li key={j}>{b}</li>)}</ul>
           </div>
         ))}
-        {working.skills.length ? <><h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Skills</h2><p className="mt-2">{working.skills.join(', ')}</p></> : null}
-        {working.education.length ? <><h2 className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Education</h2>{working.education.map((ed, i) => <p key={i} className="mt-1">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>)}</> : null}
+        {working.skills.length ? <><h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Skills</h2><p className="mt-2">{working.skills.join(', ')}</p></> : null}
+        {working.education.length ? <><h2 style={ink} className={`${PRINT[spec.density].gap} ${HEADING[spec.heading]}`}>Education</h2>{working.education.map((ed, i) => <p key={i} className="mt-1">{ed.qualification}{ed.institution ? ` — ${ed.institution}` : ''}{ed.dates ? ` · ${ed.dates}` : ''}</p>)}</> : null}
       </div>
     </div>
   )

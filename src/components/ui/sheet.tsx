@@ -21,20 +21,23 @@ export function Sheet({
   open,
   onOpenChange,
   trigger,
+  wide = false,
   children,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** A SheetTrigger, so focus returns to it when the sheet closes. */
   trigger: ReactNode
+  /** A working surface (the résumé and cover-letter tools) rather than a note: nearly the whole width. */
+  wide?: boolean
   children: ReactNode
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger}
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-primary/25 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-lg flex-col border-l border-border bg-card shadow-sm outline-none">
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-primary/25 backdrop-blur-sm print:hidden" />
+        <Dialog.Popup data-sheet-print className={`fixed inset-y-0 right-0 z-50 flex h-full w-full ${wide ? 'max-w-[min(1240px,94vw)]' : 'max-w-lg'} flex-col border-l border-border bg-card shadow-sm outline-none`}>
           {children}
         </Dialog.Popup>
       </Dialog.Portal>
