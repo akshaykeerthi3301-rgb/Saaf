@@ -19,30 +19,13 @@ import { ShieldCheck, Sparkles } from 'lucide-react'
  * scored until the candidate confirms it, and the file is deleted after parsing.
  */
 
-/** One source of truth for the flow's length and its pacing.
- *  Starts at 10%, never 0 — momentum from screen one. */
 /**
- * Four steps: choose portals, upload, confirm what we read, and the résumé
- * reading in between. The fifth was the credential question — CA / CFA / CS —
- * and it is gone. It asked every candidate to answer for a requirement 3.6% of
- * the index states (780 roles of 21,806), and it is still editable on /profile
- * for the finance roles that do state one. A step that serves one candidate in
- * thirty does not belong in the path to a first shortlist.
+ * Since 2026-10-09 this frames one screen only: /start/confirm, the check-your-details form a person lands on when
+ * their résumé did not yield everything the first match needs (or when they chose to type it in). The first run
+ * itself is /start (src/components/features/first-run.tsx). The old step counter and progress bar went with the
+ * five-screen flow they measured.
  */
-// Five since 2026-09-23: the preference matrix sits between confirming what
-// was read and the first shortlist.
-const STEPS = [10, 28, 48, 70, 88] as const
-
-export function OnboardingShell({
-  step,
-  children,
-}: {
-  /** 1-based, into STEPS. */
-  step: number
-  children: React.ReactNode
-}) {
-  const pct = STEPS[step - 1]
-
+export function OnboardingShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-card text-foreground lg:grid lg:grid-cols-[minmax(340px,0.8fr)_minmax(600px,1.2fr)]">
       {/* Sticky, not just min-h-screen as the export had it: the confirm screen's
@@ -73,7 +56,7 @@ export function OnboardingShell({
             headline says, and the two promises said the same thing twice. */}
         <div className="relative mt-auto max-w-md pb-2 pt-16 lg:pb-14">
           <h2 className="text-balance text-3xl font-semibold leading-[1.08] tracking-[-0.05em] text-primary sm:text-4xl">
-            Five steps to your first shortlist.
+            Check what we read, then see your jobs.
           </h2>
           <p className="mt-6 flex items-center gap-2 text-xs font-medium text-primary/60">
             <ShieldCheck className="size-4 shrink-0 text-accent" />
@@ -84,24 +67,6 @@ export function OnboardingShell({
 
       <section className="flex flex-col px-5 py-8 sm:px-10 sm:py-12 lg:min-h-screen lg:px-16 lg:py-14 xl:px-24">
         <div className="mx-auto w-full max-w-xl">
-          <div className="mb-9">
-            {/* The step's own name sat here beside the counter and again as the
-                page's h1 one line below. The counter is enough. */}
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-              Step {step} of {STEPS.length}
-            </p>
-            <div
-              role="progressbar"
-              aria-valuenow={pct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Onboarding progress"
-              className="h-1 w-full overflow-hidden rounded-full bg-secondary"
-            >
-              <div className="bg-brand-gradient h-full rounded-full" style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-
           {children}
         </div>
       </section>

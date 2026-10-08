@@ -50,9 +50,11 @@ export default function PrivacyPage() {
         <H2>Your résumé</H2>
         <P>
           Uploaded, parsed in memory, and deleted the moment parsing finishes. It is
-          never written to storage and never logged. Only the fields you explicitly
-          confirm on the next screen — current title, employer, years of experience,
-          preferred role, skills, city, credential — are saved to your profile.
+          never written to storage and never logged. Only what we read from it — current
+          title, employer, years of experience, preferred role, skills, city — is saved
+          to your profile, as soon as the read finishes. If the résumé does not give us
+          something we need, we ask you for it first rather than guess. Every field is
+          on your profile, where you can change or delete it.
         </P>
         <P>
           <strong>One thing you can choose to keep.</strong> If you use the ATS checker
@@ -71,7 +73,7 @@ export default function PrivacyPage() {
             configured on this deployment, so your résumé text is read by our own
             code and leaves our server for nowhere at all. Skills are the one thing
             fixed patterns cannot reliably read across arbitrary layouts, so you may
-            need to add yours by hand on the confirmation screen.
+            need to add yours by hand on your profile.
           </P>
         ) : (
           <>
@@ -81,9 +83,9 @@ export default function PrivacyPage() {
               extracted text to <strong>{providerLabel}</strong>, the model provider we
               currently use for this. Your email address, phone number and profile links
               are stripped out before it leaves our server, and the file itself is never
-              sent — only text. Everything the model returns is shown to you for
-              confirmation before any of it is stored, and you can delete any of it. If
-              we change provider, this sentence changes with it.
+              sent — only text. Everything the model returns is saved to your
+              profile, where you can see, change or delete any of it. If we change
+              provider, this sentence changes with it.
             </P>
             {provider === 'groq' ? (
               <P>

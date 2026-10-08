@@ -82,13 +82,13 @@ export default function ConfirmPage() {
       skills,
       domain: fields.domain,
     } })
-    // Step 5, the preference matrix, sits between this and the first shortlist.
-    router.push('/start/preferences')
+    // The preference matrix is no longer a step (2026-10-09): seniority, cities and pay are set on /profile.
+    router.push('/start/matching')
   }
 
 
   return (
-    <OnboardingShell step={4}>
+    <OnboardingShell>
       <h1 className="text-2xl font-semibold leading-[1.15] tracking-[-0.045em] text-primary sm:text-3xl">
         Confirm what we read from your résumé
       </h1>

@@ -13,6 +13,7 @@ import { resolveCity } from '@/lib/taxonomy/locations'
 import { countMatchingRoles, readApplyUrls, readCards, readExperienceFloors, readReposts, readRoleFacts, readShortlist, readStatedPays, readTrackerCounts } from '@/lib/services/shortlist'
 import { FeedProvider, SelectableCard } from '@/components/features/feed-selection'
 import { JobSheet } from '@/components/features/job-panel'
+import { WelcomeModal } from '@/components/features/welcome-modal'
 import { JobRail, JobsStage } from '@/components/features/jobs-stage'
 import { ProfileChip } from '@/components/features/profile-chip'
 import { isEasyApply } from '@/lib/job-facts'
@@ -54,6 +55,8 @@ export default async function TodayPage({
     q?: string; city?: string; hidden?: string
     /** TASK-155: the drawer's filters. */
     posted?: string; level?: string; type?: string; mode?: string; pay?: string; skip?: string
+    /** '1' straight after the first scan: the welcome card (src/components/features/welcome-modal.tsx). */
+    welcome?: string
     /** TASK-219: role type (IC / manager) and the employers to show only. */
     rt?: string; only?: string
   }>
@@ -93,7 +96,7 @@ export default async function TodayPage({
   // Scores never run against an unconfirmed profile, so there would be nothing
   // to show — send them back rather than rendering an empty list they would
   // reasonably read as a verdict.
-  if (!profile?.confirmed_at) redirect('/start/confirm')
+  if (!profile?.confirmed_at) redirect('/start')
 
   const { failed: error, indexed } = shortlist
   /**
@@ -431,6 +434,7 @@ export default async function TodayPage({
       contextOnMobile="hide"
     >
       <ShortlistViewed cleared={strong} withheld={0} />
+      {params.welcome === '1' ? <WelcomeModal found={allRows.length} years={profile.years_experience ?? null} /> : null}
       <JobSheet />
 
       <JobsStage>

@@ -144,14 +144,18 @@ export async function readTrackedStatuses(roleIds?: string[]): Promise<Map<strin
   return new Map(((data ?? []) as { role_id: string; status: string }[]).map((r) => [r.role_id, r.status]))
 }
 
-/** How many roles were scored for the candidate, and how many high-precision. */
-export async function countMatches(userId: string, strongMin: number): Promise<{ matched: number; strong: number }> {
+/** What the welcome card saves: the level the person is at, and a LinkedIn link if they gave one. False when migration 0028 is missing. */
+export async function writeWelcomeChoices(
+  userId: string,
+  c: { seniority: Seniority | null; linkedinUrl: string | null },
+): Promise<{ ok: boolean }> {
+  const patch: Record<string, string> = {}
+  if (c.seniority) patch.seniority = c.seniority
+  if (c.linkedinUrl) patch.linkedin_url = c.linkedinUrl
+  if (!Object.keys(patch).length) return { ok: true }
   const supabase = await createClient()
-  const [all, strong] = await Promise.all([
-    supabase.from('gate_results').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('gate_results').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('score', strongMin),
-  ])
-  return { matched: all.count ?? 0, strong: strong.count ?? 0 }
+  const { error } = await supabase.from('profiles').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', userId)
+  return { ok: !error }
 }
 
 /** The sidebar's job-search status. False when migration 0028 is missing. */

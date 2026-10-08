@@ -3,8 +3,7 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { countMatches, writePreferences, writeSearchStatus } from '@/lib/services/workspace'
-import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
+import { writePreferences, writeSearchStatus } from '@/lib/services/workspace'
 
 /**
  * Writes for the fields migration 0028 adds: the sidebar's job-search status
@@ -53,10 +52,3 @@ export async function savePreferences(input: z.input<typeof prefsSchema>) {
   return { ok: false as const, error: res.which === 'work-mode' ? 'Could not save your work-mode preference.' : NOT_YET }
 }
 
-/** The onboarding splash's two numbers. A read; takes no input. */
-export async function getMatchSummary() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { ok: false as const, error: 'Not signed in.' }
-  return { ok: true as const, ...(await countMatches(user.id, HIGH_PRECISION_MIN)) }
-}
