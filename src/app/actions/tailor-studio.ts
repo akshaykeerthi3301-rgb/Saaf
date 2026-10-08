@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getResume } from '@/lib/services/resume-documents'
 import { saveTailored } from '@/lib/services/tailored-resumes'
+import { restoreUnselected } from '@/lib/scope-restore'
 import { styleSchema } from '@/lib/resume-style'
 import { getCookieContext } from '@/lib/services/cookie'
 import { rewriteResume, rewriteOneBullet, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
@@ -16,8 +17,14 @@ import { checkResume } from '@/lib/ats-check'
 import { sectionsSchema } from '@/lib/resume-schema'
 
 /** Which parts of the résumé to change — the drawer's step 2. Absent means the whole document, as before. */
-const scopeSchema = z.object({ summary: z.boolean(), experience: z.boolean(), skills: z.boolean() })
-const schema = z.object({ roleId: z.string().uuid(), resumeId: z.string().uuid(), scope: scopeSchema.optional() })
+const scopeSchema = z.object({ summary: z.boolean(), experience: z.boolean(), skills: z.boolean(), projects: z.boolean().optional() })
+const schema = z.object({
+  roleId: z.string().uuid(),
+  resumeId: z.string().uuid(),
+  scope: scopeSchema.optional(),
+  /** Posting terms the candidate ticked in step 2. */
+  emphasise: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
+})
 
 /**
  * Five studio rewrites per ten minutes, per candidate — the same ceiling
@@ -100,9 +107,18 @@ export async function tailorSavedResume(input: z.input<typeof schema>): Promise<
         credential: read.credential ?? null,
       },
       role,
-      scope: parsed.data.scope ? { summary: parsed.data.scope.summary, experience: parsed.data.scope.experience } : undefined,
+      // Jobs and projects are one list to the rewrite; asking for either asks for the bullets, and whichever was NOT asked
+      // for is put back below.
+      scope: parsed.data.scope ? { summary: parsed.data.scope.summary, experience: parsed.data.scope.experience || parsed.data.scope.projects !== false } : undefined,
+      emphasise: parsed.data.emphasise,
     })
     if (!result) return { ok: false, error: 'We could not tailor it just now. Your saved résumé is unchanged — try again in a moment.' }
+    // Put back whichever of jobs / projects was left unticked, and drop the changes the rewrite reported for it.
+    if (parsed.data.scope) {
+      const kept = restoreUnselected(result.sections, result.changes, resume.sections, { experience: parsed.data.scope.experience, projects: parsed.data.scope.projects !== false })
+      result.sections = kept.sections
+      result.changes = kept.changes
+    }
     // "Skills" unticked: keep the candidate's own order, whatever the rewrite computed.
     if (parsed.data.scope && !parsed.data.scope.skills) {
       result.sections = { ...result.sections, skills: resume.sections.skills }

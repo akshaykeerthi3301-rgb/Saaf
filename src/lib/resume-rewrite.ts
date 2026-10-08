@@ -288,6 +288,7 @@ function prompt(
   me: CandidateFacts,
   role: RoleFacts,
   scope: Required<RewriteScope>,
+  emphasise: string[] = [],
 ): string {
   const entries = sections.experience
     .map((e, i) => {
@@ -343,6 +344,14 @@ function prompt(
     '   it. Do not add a skill the candidate has not demonstrated.',
     '8. The summary is two or three sentences, in the first person implied (no "I"),',
     '   naming the candidate\'s real title, real years and real domain.',
+    ...(emphasise.length
+      ? [
+          '',
+          `THE CANDIDATE ASKED YOU TO WORK THESE TERMS IN WHERE THEY FIT: ${emphasise.join(', ')}.`,
+          'Rule 7 still governs: use a term ONLY in a line whose facts already support it. If none of their lines',
+          'does, leave the term out — a missing keyword is better than a claim they cannot defend.',
+        ]
+      : []),
     '',
     scope.summary && scope.experience
       ? 'Return JSON: { "summary": string, "entries": [{ "index": number, "bullets": string[] }] }'
@@ -375,6 +384,8 @@ export async function rewriteResume(input: {
   role: RoleFacts
   /** Defaults to the whole document, which is the behaviour this always had. */
   scope?: RewriteScope
+  /** Posting terms the candidate ticked in step 2 — worked in only where a line already supports them. */
+  emphasise?: string[]
 }): Promise<RewriteResult | null> {
   const { sections, facts, role } = input
   const scope: Required<RewriteScope> = {
@@ -417,7 +428,7 @@ export async function rewriteResume(input: {
   }
 
   const answer = await callJsonModel({
-    prompt: prompt(sections, facts, role, scope),
+    prompt: prompt(sections, facts, role, scope, input.emphasise),
     system: SYSTEM,
     schema: schemaFor(scope),
     caller: 'rewrite-document',

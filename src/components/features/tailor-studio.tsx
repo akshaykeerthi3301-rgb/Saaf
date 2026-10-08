@@ -40,7 +40,7 @@ const CHIPS = [
 ] as const
 
 export function TailorStudio({
-  roleId, resumeId, resumeLabel, original, roleTitle, company, applyUrl, restored, autoRun = false, scope, embedded = false,
+  roleId, resumeId, resumeLabel, original, roleTitle, company, applyUrl, restored, autoRun = false, scope, emphasise, embedded = false,
 }: {
   roleId: string
   resumeId: string
@@ -58,7 +58,9 @@ export function TailorStudio({
   /** Start tailoring on mount — the drawer's step 3 follows the candidate pressing Generate in step 2. */
   autoRun?: boolean
   /** Which parts to change (the drawer's step 2). Absent means the whole document. */
-  scope?: { summary: boolean; experience: boolean; skills: boolean }
+  scope?: { summary: boolean; experience: boolean; skills: boolean; projects?: boolean }
+  /** Posting terms to work in where a line supports them (step 2's ticked keywords). */
+  emphasise?: string[]
   /** Inside the job drawer: the page column sticks to the top of the drawer, not under the app header. */
   embedded?: boolean
 }) {
@@ -133,7 +135,7 @@ export function TailorStudio({
   function run() {
     setError(undefined)
     startRun(async () => {
-      const r = await tailorSavedResume({ roleId, resumeId, scope }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
+      const r = await tailorSavedResume({ roleId, resumeId, scope, emphasise: emphasise?.length ? emphasise : undefined }).catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
       if (!r.ok) { setError(r.error); return }
       setRes(r)
       // Applied at once, as the reference does: the person undoes and edits from here. The guard has already run.

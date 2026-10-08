@@ -13,6 +13,7 @@ import { matchedSkills } from '@/lib/tailor'
 import { displayEmployer } from '@/lib/display-names'
 import { readMinYears } from '@/lib/services/job-insight'
 import { getTailored } from '@/lib/services/tailored-resumes'
+import { industriesIn } from '@/lib/industry'
 
 /**
  * The data behind the three AI tools on a job (Customize your résumé, Build a cover letter, Analyze how well you
@@ -23,7 +24,7 @@ import { getTailored } from '@/lib/services/tailored-resumes'
 const roleSchema = z.object({ roleId: z.string().uuid(), resumeId: z.string().uuid().optional() })
 
 export type GapRow = {
-  key: 'title' | 'years' | 'keywords' | 'summary'
+  key: 'title' | 'years' | 'industry' | 'keywords' | 'summary'
   label: string
   /** good = green tick, warn = amber, bad = red cross. */
   status: 'good' | 'warn' | 'bad'
@@ -99,6 +100,16 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
     you: have === null ? 'Not stated' : `${have} years`,
   }
 
+  // Industry: the posting's own words against the résumé's. "Not stated" when the posting names none — never a guess.
+  const wantIndustries = industriesIn(`${role.title}\n${role.description ?? ''}`, 2)
+  const haveIndustries = wantIndustries.filter((n) => industriesIn(detail.body, 21).includes(n))
+  const industryRow: GapRow = {
+    key: 'industry', label: 'Industry experience',
+    status: wantIndustries.length === 0 || haveIndustries.length > 0 ? 'good' : 'warn',
+    job: wantIndustries.length ? wantIndustries.join(' · ') : 'Not stated',
+    you: wantIndustries.length === 0 ? '—' : haveIndustries.length ? haveIndustries.join(' · ') : 'Not named on your résumé',
+  }
+
   const terms = extractSkillPhrases(`${role.title}\n${role.description ?? ''}`).slice(0, 12)
   const body = detail.body.toLowerCase()
   const keywords = terms.map((term) => ({ term, inResume: body.includes(term.toLowerCase()) }))
@@ -129,7 +140,7 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
     resumes: saved.map((r) => ({ id: r.id, label: r.label, isPrimary: Boolean(r.isPrimary) })),
     resume: { id: detail.id, label: detail.label, sections: detail.sections },
     gauge,
-    rows: [titleRow, yearsRow, kwRow, summaryRow],
+    rows: [titleRow, yearsRow, industryRow, kwRow, summaryRow],
     keywords,
     existing: tailored ? { sections: tailored.sections, style: tailored.style, updatedAt: tailored.updatedAt } : null,
   }

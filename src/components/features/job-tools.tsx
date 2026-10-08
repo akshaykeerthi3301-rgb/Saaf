@@ -8,6 +8,7 @@ import { OverviewTab } from '@/components/features/job-panel'
 import { TailorStudio } from '@/components/features/tailor-studio'
 import { CoverLetterStudio } from '@/components/features/cover-letter-studio'
 import { Gauge, GAUGE_LABEL } from '@/components/features/score-gauge'
+import { groupKeywords } from '@/lib/keyword-groups'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { styleSchema, type ResumeStyle } from '@/lib/resume-style'
 import { keepResumeFromFile } from '@/lib/keep-resume'
@@ -208,7 +209,9 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
   const [ctx, setCtx] = useState<TailorContext | null>(null)
   const [fromSaved, setFromSaved] = useState(false)
   const [mode, setMode] = useState<'quick' | 'full'>('full')
-  const [scope, setScope] = useState({ summary: true, experience: true, skills: true })
+  const [scope, setScope] = useState({ summary: true, experience: true, skills: true, projects: true })
+  // The posting's missing keywords the candidate ticked in step 2 — worked in only where a line already supports them.
+  const [picked, setPicked] = useState<string[]>([])
   // The résumé the candidate picked in the table, and whether a read is already running.
   const wanted = useRef<string | undefined>(undefined)
   const inflight = useRef(false)
@@ -224,8 +227,8 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
   const loading = ctx === null
   const load = (resumeId: string) => { wanted.current = resumeId; setCtx(null) }
 
-  const pickMode = (m: 'quick' | 'full') => { setMode(m); setScope(m === 'quick' ? { summary: true, experience: false, skills: true } : { summary: true, experience: true, skills: true }) }
-  const none = !scope.summary && !scope.experience && !scope.skills
+  const pickMode = (m: 'quick' | 'full') => { setMode(m); setScope(m === 'quick' ? { summary: true, experience: false, skills: true, projects: false } : { summary: true, experience: true, skills: true, projects: true }) }
+  const none = !scope.summary && !scope.experience && !scope.skills && !scope.projects
 
   let body: ReactNode
   if (!ctx) {
@@ -246,6 +249,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Scored the way an applicant tracking system reads it, against this posting. Each row below shows what the job asks and what your résumé says.
             </p>
+            {g !== null && g < 6 ? <p className="mt-2 text-sm font-medium text-score-mid">Résumés under 6.0 are likely to be filtered out by an applicant tracking system — we&rsquo;ll help you fix it fast.</p> : null}
           </div>
           <Gauge value={g} />
         </div>
@@ -282,6 +286,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
               ['summary', 'Summary', 'Reworded to speak to this posting'],
               ['experience', 'Experience bullets', 'Reworded, never invented — each line is checked against yours'],
               ['skills', 'Skills order', 'The skills this job names come first'],
+              ...(ctx.resume.sections.experience.some((e) => e.isProject) ? ([['projects', 'Projects', 'Reworded the same way as your roles — never invented']] as const) : []),
             ] as const).map(([k, name, line]) => (
               <label key={k} className="flex cursor-pointer items-start gap-3 p-4">
                 <input type="checkbox" checked={scope[k]} onChange={() => toggle(k)} className="mt-1 size-4 accent-[var(--color-accent)]" />
@@ -291,16 +296,42 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
           </div>
         </section>
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h3 className="text-lg font-semibold tracking-[-0.02em] text-primary">Keywords from the posting <span className="font-mono text-sm text-muted-foreground">{ctx.keywords.length - miss.length}/{ctx.keywords.length}</span></h3>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {ctx.keywords.map((k) => (
-              <span key={k.term} className={`rounded-lg px-2.5 py-1 text-xs font-medium ${k.inResume ? 'bg-score-high/15 text-score-high' : 'bg-secondary text-muted-foreground'}`}>
-                {k.inResume ? '✓ ' : ''}{k.term}
-              </span>
-            ))}
-            {ctx.keywords.length === 0 ? <span className="text-sm text-muted-foreground">This posting names no skills we recognise.</span> : null}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-lg font-semibold tracking-[-0.02em] text-primary">
+              Add missing keywords from the posting <span className="font-mono text-sm text-muted-foreground">{picked.length}/{miss.length}</span>
+            </h3>
+            {miss.length ? (
+              <button type="button" onClick={() => setPicked(picked.length === miss.length ? [] : miss.map((k) => k.term))} className="text-xs font-semibold text-primary underline underline-offset-4">
+                {picked.length === miss.length ? 'Clear all' : 'Select all'}
+              </button>
+            ) : null}
           </div>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">A missing keyword is only added where a line you already wrote supports it — we do not claim skills you have not shown.</p>
+          {ctx.keywords.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">This posting names no skills we recognise.</p> : null}
+          {([['Functional skills', groupKeywords(ctx.keywords).functional], ['Tools', groupKeywords(ctx.keywords).tools]] as const).map(([name, list]) =>
+            list.length ? (
+              <div key={name} className="mt-4">
+                <p className="text-xs font-semibold text-muted-foreground">{name}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {list.map((k) =>
+                    k.inResume ? (
+                      <span key={k.term} className="rounded-lg bg-score-high/15 px-2.5 py-1 text-xs font-medium text-score-high" title="Already on your résumé">✓ {k.term}</span>
+                    ) : (
+                      <button
+                        key={k.term}
+                        type="button"
+                        aria-pressed={picked.includes(k.term)}
+                        onClick={() => setPicked((p) => (p.includes(k.term) ? p.filter((x) => x !== k.term) : [...p, k.term]))}
+                        className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${picked.includes(k.term) ? 'border-accent bg-accent/15 text-primary' : 'border-border bg-secondary text-muted-foreground hover:border-accent/60'}`}
+                      >
+                        {picked.includes(k.term) ? '✓ ' : '+ '}{k.term}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            ) : null,
+          )}
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">A ticked keyword is only worked in where a line you already wrote supports it — we do not claim skills you have not shown. Green ones are already on your résumé.</p>
         </section>
       </div>
     )
@@ -317,6 +348,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
           company={ctx.role.company}
           applyUrl={applyUrl}
           scope={scope}
+          emphasise={picked}
           restored={fromSaved && ctx.existing ? { sections: ctx.existing.sections, style: styleOf(ctx.existing.style) ?? null, before: ctx.gauge === null ? null : Math.round(ctx.gauge * 10), keywords: ctx.keywords.map((k) => k.term) } : undefined}
           autoRun={!fromSaved}
           embedded
