@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fileFromExtension, fileSiteRequestsFromExtension, getExtensionSync } from '@/app/actions/extension-bridge'
 import { fileAskedQuestions } from '@/app/actions/answer-bank'
+import { confirmAutoQueued, proposeAutoQueue } from '@/app/actions/agent'
 import { askExtension } from '@/lib/extension-client'
 
 /**
@@ -61,6 +62,17 @@ export function ExtensionBridge() {
         if (queued?.ok && queued.sites?.length) {
           const res = await fileSiteRequestsFromExtension(queued.sites)
           if (res.ok && res.handled.length) await ask({ type: 'saaf:ack-sites', hosts: res.handled })
+        }
+
+        // Auto-queue mode (TASK-191): add the roles the agent picked to the Apply-for-me queue. Only queues —
+        // the extension submits nothing until Apply for me is on and Start is pressed. Remembered only once queued.
+        const picks = await proposeAutoQueue().catch(() => null)
+        if (picks?.ok && picks.jobs.length) {
+          const added = await ask<{ ok: boolean }>({ type: 'saaf:autoapply-add', jobs: picks.jobs.map((j) => ({ url: j.url, title: j.title, company: j.company })) })
+          if (added?.ok) {
+            await confirmAutoQueued(picks.jobs.map((j) => j.roleId))
+            setNote(`Saaf queued ${picks.jobs.length} Easy-apply role${picks.jobs.length === 1 ? '' : 's'} for you. Nothing is sent until you press Start in the extension.`)
+          }
         }
 
         const data = await getExtensionSync()

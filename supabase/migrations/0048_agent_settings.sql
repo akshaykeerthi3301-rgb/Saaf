@@ -1,0 +1,13 @@
+-- Saaf — the agent's settings (2026-10-08, TASK-191; F-706, F-707, F-708).
+--
+-- One small jsonb on the candidate's own profile row: { mode, weeklyTarget, minScore, queued }.
+--   mode          'off' | 'suggest' (default: Saaf proposes, the candidate confirms) | 'queue' (Saaf adds
+--                 to the Apply-for-me queue when Saaf is open; nothing is submitted until Start is pressed
+--                 in the extension)
+--   weeklyTarget  applications a week the candidate is aiming for (0 = none) — the meter, and the cap on queueing
+--   minScore      the lowest score Saaf may propose or queue
+--   queued        [{ id, at }] roles Saaf has already queued, so it never queues one twice (capped in code)
+-- Lives on profiles, so the existing owner-only policies are the access control. Written only by the
+-- candidate's own action; no new table, no new policy.
+-- SAFE TO DEPLOY BEFORE THIS IS APPLIED: the panel says its update is missing and the agent stays on its default.
+alter table profiles add column if not exists agent_settings jsonb not null default '{}'::jsonb;

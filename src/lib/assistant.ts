@@ -13,11 +13,17 @@
  * to argue against. Writing tools that do call a model (cover letter, tailoring) keep
  * their own grounding checks and are unchanged.
  */
-export type Intent = 'new' | 'best' | 'strong' | 'improve' | 'followups' | 'applied' | 'remote' | 'pay' | 'help'
+export type Intent = 'new' | 'best' | 'strong' | 'improve' | 'followups' | 'applied' | 'remote' | 'pay' | 'queue' | 'progress' | 'help'
 
 export type RoleItem = { id: string; title: string; company: string; score: number; /** One short fact under the title, e.g. the stated pay. */ note?: string }
+/** A role the agent proposes to put on the Apply-for-me queue — everything needed to queue it and nothing more. */
+export type QueueItem = { roleId: string; title: string; company: string; score: number; url: string }
 export type Card =
   | { type: 'text'; text: string }
+  /** The weekly objective (F-707): applications in the last 7 days against the candidate's own target. */
+  | { type: 'progress'; done: number; target: number; line: string }
+  /** A batch the agent proposes to queue (F-708). Nothing is queued until the candidate presses the button; nothing is submitted until they press Start in the extension. */
+  | { type: 'queue'; title: string; items: QueueItem[]; note?: string }
   | { type: 'stat'; label: string; value: string; note?: string }
   | { type: 'roles'; title: string; items: RoleItem[]; more?: string; href: string }
   | { type: 'link'; label: string; href: string }
@@ -32,9 +38,14 @@ export const PROMPTS: { label: string; q: string }[] = [
   { label: 'How many have I applied to?', q: 'how many applications do I have' },
   { label: 'Remote roles', q: 'show remote roles' },
   { label: 'Roles that state pay', q: 'which roles state pay' },
+  { label: 'Queue my best Easy-apply roles', q: 'queue my best easy apply roles' },
+  { label: 'How is my week going?', q: 'how am i doing against my weekly goal' },
 ]
 
 const RULES: [Intent, RegExp][] = [
+  // The agent's two: first, so "queue my best" is not read as "best" and "weekly goal" not as "new".
+  ['progress', /\b(weekly (goal|target|objective)|my (goal|target|objective)|how am i doing|how is my week|progress)\b/],
+  ['queue', /\b(queue|apply for me|auto[- ]?apply|line up|lined up)\b/],
   // Order matters: "strong" and "pay" must not be swallowed by "best" or "new".
   ['followups', /\b(follow[- ]?ups?|pending|due|overdue|reminders?|chase|nudge)\b/],
   ['applied', /\b(applied|applications?|how many (have i|did i)|my tracker|in my pipeline|interviews?|offers?)\b/],

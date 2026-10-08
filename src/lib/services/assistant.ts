@@ -9,6 +9,8 @@ import { countConnections } from '@/lib/services/network'
 import { readPreferences } from '@/lib/services/workspace'
 import { readRoleFacts, readStatedPays } from '@/lib/services/shortlist'
 import { payFromRow } from '@/lib/role-facts'
+import { weeklyLine } from '@/lib/agent'
+import { proposeForCandidate, readAgentSettings, readAppliedThisWeek } from '@/lib/services/agent'
 
 /**
  * What "Ask Saaf" reads to answer. Every query runs as the signed-in candidate, so RLS
@@ -54,6 +56,26 @@ export async function answerFor(userId: string, intent: Intent): Promise<Answer>
   const supabase = await createClient()
 
   if (intent === 'help') return { intent, cards: [{ type: 'text', text: 'I answer a set of questions about your own shortlist and tracker — I do not guess at anything else. Try one of these:' }, helpCard()] }
+
+  if (intent === 'progress') {
+    const [{ settings, stored }, done] = await Promise.all([readAgentSettings(userId), readAppliedThisWeek()])
+    if (done === null) return { intent, cards: [{ type: 'text', text: 'I could not read your tracker just now. That is on our side, not a result.' }] }
+    const line = weeklyLine(done, settings.weeklyTarget)
+    return { intent, cards: [{ type: 'progress', done, target: settings.weeklyTarget, line }, { type: 'link', label: stored ? 'Change the target in your profile' : 'Set a weekly target (needs a database update)', href: '/profile' }] }
+  }
+
+  if (intent === 'queue') {
+    const r = await proposeForCandidate(userId, { max: 5 })
+    if (!r.stored) return { intent, cards: [{ type: 'text', text: 'The agent needs a database update (0048) that has not been applied yet, so it cannot propose anything.' }] }
+    if (r.settings.mode === 'off') return { intent, cards: [{ type: 'text', text: 'The agent is off in your settings, so I will not propose roles to queue.' }, { type: 'link', label: 'Change that in your profile', href: '/profile' }] }
+    if (!r.picks.length) {
+      const why = r.appliedThisWeek !== null && r.settings.weeklyTarget > 0 && r.appliedThisWeek >= r.settings.weeklyTarget
+        ? `You have already applied to ${r.appliedThisWeek} this week, which meets your target of ${r.settings.weeklyTarget}.`
+        : `No Easy-apply role you have not already tracked, hidden or queued scores ${r.settings.minScore} or above right now${r.settings.weeklyTarget > 0 ? ', or this week’s room under your target is used up' : ''}.`
+      return { intent, cards: [{ type: 'text', text: why }, { type: 'link', label: 'Change your target or minimum score', href: '/profile' }] }
+    }
+    return { intent, cards: [{ type: 'queue', title: `${r.picks.length} Easy-apply role${r.picks.length === 1 ? '' : 's'} scoring ${r.settings.minScore}+, not yet tracked`, items: r.picks.map((c) => ({ roleId: c.roleId, title: c.title, company: c.company, score: c.score, url: c.applyUrl })), note: 'Adding them only queues them. Nothing is submitted until you switch on “Apply for me” in the extension and press Start — and you can remove any from its queue first.' }] }
+  }
 
   if (intent === 'best') {
     const { rows, error } = await topScored(userId, 5)

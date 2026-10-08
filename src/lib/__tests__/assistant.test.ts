@@ -11,6 +11,8 @@ describe('what the question is asking', () => {
     ['how many applications do I have', 'applied'], ['how many have I applied to', 'applied'],
     ['show remote roles', 'remote'], ['wfh jobs', 'remote'],
     ['which roles state pay', 'pay'], ['anything paying over 20 lakh', 'pay'],
+    ['queue my best easy apply roles', 'queue'], ['apply for me to the top five', 'queue'], ['line up some roles', 'queue'],
+    ['how am I doing against my weekly goal', 'progress'], ['how is my week going', 'progress'], ['my weekly target', 'progress'],
   ])('%s → %s', (q, want) => { expect(classify(q)).toBe(want) })
 
   it('says it does not understand rather than guess', () => {

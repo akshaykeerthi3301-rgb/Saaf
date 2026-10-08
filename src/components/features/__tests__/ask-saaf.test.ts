@@ -24,3 +24,22 @@ describe('AskSaaf', () => {
     expect(html).toContain('aria-label="Ask a question about your shortlist"')
   })
 })
+
+describe('the agent’s queue card (TASK-191)', () => {
+  it('lists the proposed roles with their scores, links to tailor first, and says nothing is submitted by adding them', async () => {
+    const { createElement } = await import('react')
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { QueueCard } = await import('../ask-saaf')
+    const html = renderToStaticMarkup(createElement(QueueCard, {
+      card: { type: 'queue', title: '2 Easy-apply roles scoring 75+, not yet tracked', note: 'Adding them only queues them. Nothing is submitted until you press Start.', items: [
+        { roleId: 'r1', title: 'Product Manager', company: 'Acme', score: 91, url: 'https://boards.greenhouse.io/a/jobs/1' },
+        { roleId: 'r2', title: 'Growth Lead', company: 'Beta', score: 82, url: 'https://jobs.lever.co/b/2' },
+      ] },
+    }))
+    expect(html).toContain('Product Manager')
+    expect(html).toContain('>91<')
+    expect(html).toContain('/resume/tailor?role=r1')
+    expect(html).toContain('Add 2 to my Apply-for-me queue')
+    expect(html).toContain('Nothing is submitted')
+  })
+})
