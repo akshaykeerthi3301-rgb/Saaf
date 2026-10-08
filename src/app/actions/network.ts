@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { normaliseCompany } from '@/lib/company-name'
-import { readConnectionsExport } from '@/lib/linkedin-connections'
-import { connectionsAt, deleteConnections, replaceConnections } from '@/lib/services/network'
+import { manualContact, readAnyContactsFile } from '@/lib/contacts'
+import { addManualContact, connectionsAt, deleteConnections, MAX_MANUAL, replaceConnections } from '@/lib/services/network'
 
 /**
  * The candidate's own LinkedIn connections: upload, delete, and "who do I know
@@ -32,19 +32,52 @@ export async function importConnections(csv: string) {
   if (!checkRateLimit(user.id, { scope: 'connections-import', limit: 5, windowMs: 60 * 60 * 1000 }).ok) {
     return { ok: false as const, error: 'Too many uploads — try again in an hour.' }
   }
-  const read = readConnectionsExport(parsed.data)
+  const read = readAnyContactsFile(parsed.data)
   if (!read.ok) return { ok: false as const, error: read.reason }
-  const saved = await replaceConnections(user.id, read.connections)
-  if (saved === null) return { ok: false as const, error: MISSING_0031 }
+  const saved = await replaceConnections(user.id, read.contacts, read.source)
+  if (saved === null) return { ok: false as const, error: read.source === 'linkedin' ? MISSING_0031 : 'Importing a contacts file needs a database update (0043) that has not been applied yet.' }
   revalidatePath('/today')
   revalidatePath('/profile')
-  return { ok: true as const, count: saved, companies: new Set(read.connections.map((c) => c.companyNorm).filter(Boolean)).size }
+  return {
+    ok: true as const, count: saved, source: read.source,
+    companies: new Set(read.contacts.map((c) => c.companyNorm).filter(Boolean)).size,
+    withEmail: read.contacts.filter((c) => c.email).length,
+  }
 }
 
-export async function removeConnections() {
+const removeSchema = z.enum(['linkedin', 'google', 'manual']).optional()
+
+export async function removeConnections(source?: 'linkedin' | 'google' | 'manual') {
+  const parsedSource = removeSchema.safeParse(source)
+  if (!parsedSource.success) return { ok: false as const, error: 'That could not be removed.' }
   const user = await sessionUser()
   if (!user) return { ok: false as const, error: 'Not signed in.' }
-  if (!(await deleteConnections(user.id))) return { ok: false as const, error: MISSING_0031 }
+  if (!(await deleteConnections(user.id, parsedSource.data))) return { ok: false as const, error: MISSING_0031 }
+  revalidatePath('/today')
+  revalidatePath('/profile')
+  return { ok: true as const }
+}
+
+const addSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  company: z.string().trim().min(1).max(200),
+  position: z.string().trim().max(200).optional(),
+  email: z.string().trim().max(254).optional(),
+})
+
+/** One person the candidate already knows. Owner-only; never used to find anyone else's address. */
+export async function addContact(input: z.input<typeof addSchema>) {
+  const parsed = addSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: 'Add a name and a company.' }
+  const user = await sessionUser()
+  if (!user) return { ok: false as const, error: 'Not signed in.' }
+  if (!checkRateLimit(user.id, { scope: 'contact-add', limit: 60, windowMs: 60 * 60 * 1000 }).ok) return { ok: false as const, error: 'Too many in an hour — try again later.' }
+  const c = manualContact(parsed.data)
+  if (!c) return { ok: false as const, error: 'That needs a name and a company name we can recognise.' }
+  const r = await addManualContact(user.id, c)
+  if (r === 'full') return { ok: false as const, error: `You can keep ${MAX_MANUAL} people by hand — delete some first, or upload a file.` }
+  if (r === 'missing-update') return { ok: false as const, error: 'Adding people by hand needs a database update (0043) that has not been applied yet.' }
+  if (r === 'failed') return { ok: false as const, error: 'That did not save. Try again in a moment.' }
   revalidatePath('/today')
   revalidatePath('/profile')
   return { ok: true as const }

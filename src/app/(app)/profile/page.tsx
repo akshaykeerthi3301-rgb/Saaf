@@ -5,7 +5,7 @@ import { ProfileForm } from '@/components/features/profile-form'
 import { PreferencesPanel } from '@/components/features/preferences-panel'
 import { readPreferences } from '@/lib/services/workspace'
 import { profileHealth } from '@/lib/profile-health'
-import { countConnections } from '@/lib/services/network'
+import { connectionCounts } from '@/lib/services/network'
 import { ConnectionsImport } from '@/components/features/connections-import'
 import { SelfIdAnswers } from '@/components/features/self-id-answers'
 import { AlertSettingsPanel } from '@/components/features/alert-settings-panel'
@@ -39,7 +39,7 @@ export default async function ProfilePage() {
   if (!profile) redirect('/start')
 
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
-  const [prefs, connections, selfId, alerts] = await Promise.all([readPreferences(user.id), countConnections(user.id), readSelfId(user.id), readAlertSettings(user.id)])
+  const [prefs, connections, selfId, alerts] = await Promise.all([readPreferences(user.id), connectionCounts(user.id), readSelfId(user.id), readAlertSettings(user.id)])
   const health = profileHealth({
     currentTitle: profile.current_title, employer: profile.employer,
     yearsExperience: profile.years_experience === null ? null : Number(profile.years_experience),
@@ -77,7 +77,7 @@ export default async function ProfilePage() {
         }}
           email={user.email ?? ''}
           applyExtras={<SelfIdAnswers initial={selfId.answers} stored={selfId.stored} />}
-          accountExtras={<><AlertSettingsPanel initial={alerts.settings} stored={alerts.stored} /><ConnectionsImport count={connections ?? 0} stored={connections !== null} /></>}
+          accountExtras={<><AlertSettingsPanel initial={alerts.settings} stored={alerts.stored} /><ConnectionsImport counts={connections ?? { linkedin: 0, google: 0, manual: 0, sourced: false }} stored={connections !== null} /></>}
         />
       </div>
     </AppShell>

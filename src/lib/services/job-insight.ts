@@ -8,6 +8,7 @@ import { findStatedPay } from '@/lib/stated-pay'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 import { structureJob, SECTION_LABEL, type SectionKey } from '@/lib/job-sections'
 import { hiringSignals } from '@/lib/hiring-signals'
+import { publishedEmails, type PublishedEmail } from '@/lib/contacts'
 import type { ScoreBreakdown } from '@/match/score'
 
 /**
@@ -57,6 +58,8 @@ export type JobInsight = {
   /** Experience, Seniority, Education, Core skills — each with the words it rests on (TASK-160). */
   sections: FitSection[]
   description: JdBlock[]
+  /** Addresses the EMPLOYER wrote into the posting, with the words around them. Never guessed, never looked up. */
+  postingEmails: PublishedEmail[]
   /** The posting under the employer's own headings, sorted by what they say — null when it has fewer than two (TASK-179). */
   jobSections: { key: SectionKey; label: string; heading: string; blocks: JdBlock[] }[] | null
   snapshot: CompanySnapshot
@@ -193,6 +196,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
     analysis,
     sections,
     description: formatDescription(r.description ?? ''),
+    postingEmails: publishedEmails(r.description ?? ''),
     jobSections: jobSectionsOf(r.description ?? ''),
     snapshot: {
       name: displayEmployer(r.company_name),

@@ -27,16 +27,24 @@ export function ConnectionsAt({ company }: { company: string }) {
               <span className="font-semibold text-primary">{p.fullName}</span>
               {p.position ? <span className="block truncate text-xs text-muted-foreground">{p.position}</span> : null}
             </span>
-            {p.profileUrl ? (
-              <a href={p.profileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-accent">
-                Profile <ArrowUpRight className="size-3" />
-              </a>
-            ) : null}
+            <span className="flex shrink-0 flex-col items-end gap-0.5">
+              {p.profileUrl ? (
+                <a href={p.profileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                  Profile <ArrowUpRight className="size-3" />
+                </a>
+              ) : null}
+              {p.email ? (
+                <a href={`mailto:${p.email}`} className="max-w-[170px] truncate text-xs font-semibold text-accent" title={`${p.email} — ${p.source === 'google' ? 'from your contacts file' : 'you added it'}`}>
+                  {p.email}
+                </a>
+              ) : null}
+              <span className="text-[10px] text-muted-foreground">{p.source === 'linkedin' ? 'from LinkedIn' : p.source === 'google' ? 'your contacts file' : 'added by you'}</span>
+            </span>
           </li>
         ))}
       </ul>
       <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
-        From the LinkedIn connections you uploaded. A short, specific note asking about the team usually beats asking for a referral outright —{' '}
+        From the contacts you uploaded or added. A short, specific note asking about the team usually beats asking for a referral outright —{' '}
         <Link href="/outreach" className="font-semibold text-accent underline underline-offset-2">draft one</Link>.
       </p>
     </section>

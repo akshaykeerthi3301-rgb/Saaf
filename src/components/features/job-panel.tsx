@@ -491,6 +491,20 @@ function OverviewTab({ j }: { j: JobInsight }) {
       </Section>
 
       <ConnectionsAt company={j.company} />
+      {j.postingEmails.length ? (
+        <section className="mb-6 rounded-xl border border-border bg-secondary/30 p-4" data-testid="posting-emails">
+          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary"><Mail className="size-3.5 text-accent" /> Published in this posting</h3>
+          <ul className="mt-3 space-y-2">
+            {j.postingEmails.map((e) => (
+              <li key={e.email} className="text-sm">
+                <a href={`mailto:${e.email}`} className="font-semibold text-accent">{e.email}</a>
+                <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">“…{e.context}…”</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[11px] leading-4 text-muted-foreground">Written by the employer in the posting itself. Saaf never looks up or guesses an address.</p>
+        </section>
+      ) : null}
 
       <HowItIsBuilt j={j} />
     </>
