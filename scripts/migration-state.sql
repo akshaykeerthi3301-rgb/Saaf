@@ -1,6 +1,7 @@
 -- Which of Saaf's database updates (0029 onward) are applied? Read-only: run it in the Supabase SQL editor.
--- Each line tests for one thing the update creates. 2026-10-08, against production: applied = 0029, 0030,
--- 0032, 0033; NOT applied = 0031 and 0034–0049 (0034 failed in the dashboard editor, which sent it truncated).
+-- Each line tests for one thing the update creates. 2026-10-08, against production, BEFORE applying: applied = 0029, 0030,
+-- 0032, 0033; not applied = 0031 and 0034–0049 (0034 failed in the dashboard editor, which sent it truncated).
+-- AFTER applying (same day): all 21 are applied.
 select v.n as migration, v.applied from (values
  ('0029_rejected_stage', exists(select 1 from pg_enum e join pg_type t on t.oid=e.enumtypid where t.typname='application_status' and e.enumlabel='rejected')),
  ('0030_feed_preferences', exists(select 1 from information_schema.columns where table_schema='public' and table_name='profiles' and column_name='hidden_role_ids')),
