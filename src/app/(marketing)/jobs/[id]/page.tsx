@@ -5,6 +5,7 @@ import { ArrowUpRight, BarChart3, Building2, FileSearch, MapPin, Quote, Sparkles
 import { readPublicJob } from '@/lib/services/public-jobs'
 import { postedAgo } from '@/lib/day'
 import { siteUrl } from '@/lib/site'
+import { jobPostingLd } from '@/lib/job-posting-ld'
 import { readCompanyFacts, readCompanyNews } from '@/lib/services/company-facts'
 import { CompanyFactsView } from '@/components/features/company-facts'
 
@@ -37,7 +38,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${job.title} at ${job.company}${where} | Saaf`,
     description: summary,
     alternates: { canonical: `/jobs/${job.id}` },
-    openGraph: { title: `${job.title} at ${job.company}`, description: summary, url: `/jobs/${job.id}`, type: 'website' },
+    // The site-wide card, not one drawn from the posting: a job title is text an employer controls, and
+    // it should never reach the image generator (the next/og advisory GHSA-vcvr-r3jv-pc5j, TASK-213).
+    openGraph: { title: `${job.title} at ${job.company}`, description: summary, url: `/jobs/${job.id}`, type: 'website', images: [{ url: `${siteUrl()}/opengraph-image`, width: 1200, height: 630 }] },
+    twitter: { card: 'summary_large_image', title: `${job.title} at ${job.company}`, description: summary, images: [`${siteUrl()}/opengraph-image`] },
   }
 }
 
@@ -51,23 +55,7 @@ export default async function PublicJobPage({ params }: Props) {
   const within = <T,>(p: Promise<T>, fallback: T) => Promise.race([p, new Promise<T>((r) => setTimeout(() => r(fallback), 5000))])
   const facts = await within(readCompanyFacts(job.company).catch(() => null), null)
   const news = facts ? await within(readCompanyNews(facts.label).catch(() => []), []) : []
-  const structured = {
-    '@context': 'https://schema.org',
-    '@type': 'JobPosting',
-    title: job.title,
-    description: job.plainDescription,
-    // Only the parts the posting's own headings let us read — never a field filled with a guess.
-    ...job.postingFields,
-    datePosted: (job.postedAt ?? job.firstSeenAt).slice(0, 10),
-    hiringOrganization: { '@type': 'Organization', name: job.company },
-    jobLocation: {
-      '@type': 'Place',
-      address: { '@type': 'PostalAddress', addressLocality: job.city ?? job.location ?? undefined, addressCountry: job.inIndia ? 'IN' : undefined },
-    },
-    ...(job.pay ? { baseSalary: { '@type': 'MonetaryAmount', currency: job.pay.currency, value: { '@type': 'QuantitativeValue', minValue: job.pay.low, maxValue: job.pay.high, unitText: job.pay.period === 'year' ? 'YEAR' : job.pay.period === 'hour' ? 'HOUR' : 'MONTH' } } } : {}),
-    directApply: false,
-    url: `${siteUrl()}/jobs/${job.id}`,
-  }
+  const structured = jobPostingLd(job, siteUrl())
 
   return (
     <div className="min-h-screen bg-background text-foreground">

@@ -22,6 +22,12 @@ describe('readPublicJob', () => {
     h.role = role(null)
     expect((await readPublicJob(ID))?.title).toBe('Product Manager')
   })
+  it('carries the employer\'s own contract type and work mode through to the page', async () => {
+    h.role = { ...role(null), employment_type: 'contract', work_mode: 'remote' }
+    const job = await readPublicJob(ID)
+    expect(job?.employmentType).toBe('contract')
+    expect(job?.workMode).toBe('remote')
+  })
   it('returns null for a role the employer has taken down, so the page 404s and the crawl drops it', async () => {
     h.role = role('2026-10-08T07:58:18Z')
     expect(await readPublicJob(ID)).toBeNull()

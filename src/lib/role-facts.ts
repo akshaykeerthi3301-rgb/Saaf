@@ -31,3 +31,13 @@ export function payFromRow(r: Pick<RoleFactsRow, 'pay_min' | 'pay_max' | 'pay_cu
 export function jobTypeFromStated(t: RoleFactsRow['employment_type']): JobType | null {
   return t === 'fulltime' ? 'fulltime' : t === 'parttime' ? 'parttime' : t === 'intern' ? 'intern' : t === 'contract' || t === 'temporary' ? 'contract' : null
 }
+
+/**
+ * schema.org / Google JobPosting vocabulary for the stated contract type
+ * (developers.google.com/search/docs/appearance/structured-data/job-posting, fetched 2026-10-08:
+ * FULL_TIME, PART_TIME, CONTRACTOR, TEMPORARY, INTERN, …). Undefined when the provider stated nothing —
+ * the field is then left out, never guessed.
+ */
+export function googleEmploymentType(t: RoleFactsRow['employment_type']): 'FULL_TIME' | 'PART_TIME' | 'CONTRACTOR' | 'TEMPORARY' | 'INTERN' | undefined {
+  return t === 'fulltime' ? 'FULL_TIME' : t === 'parttime' ? 'PART_TIME' : t === 'contract' ? 'CONTRACTOR' : t === 'temporary' ? 'TEMPORARY' : t === 'intern' ? 'INTERN' : undefined
+}

@@ -45,6 +45,9 @@ export type PublicJob = {
   seniority: TitleSeniority | null
   /** Pay as the posting states it, or null. Never estimated. */
   pay: StatedPay | null
+  /** What the employer's own system says about contract type and work mode (0041), or null. */
+  employmentType: RoleFactsRow['employment_type']
+  workMode: RoleFactsRow['work_mode']
   description: JdBlock[]
   /** schema.org JobPosting fields for the sections we could read; each present only when its section is. */
   postingFields: { responsibilities?: string; qualifications?: string; jobBenefits?: string }
@@ -115,7 +118,8 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
   const blocks = formatDescription(r.description ?? '')
   // What the provider itself states about pay (0041); its own query so a missing column costs nothing.
   const factsRes = await db.from('roles').select(ROLE_FACT_COLUMNS).eq('id', id).maybeSingle()
-  const providerPay = factsRes.error ? null : payFromRow((factsRes.data ?? {}) as unknown as RoleFactsRow)
+  const facts = factsRes.error ? null : ((factsRes.data ?? {}) as unknown as RoleFactsRow)
+  const providerPay = facts ? payFromRow(facts) : null
 
   return {
     id: r.id,
@@ -130,6 +134,8 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
     easyApply: isEasyApply(r.apply_url),
     seniority: titleSeniority(r.title),
     pay: providerPay ?? findStatedPay(r.description ?? ''),
+    employmentType: facts?.employment_type ?? null,
+    workMode: facts?.work_mode ?? null,
     description: blocks,
     postingFields: jobPostingFields(structureJob(r.description ?? '').sections),
     plainDescription: blocks.map((b) => (b.kind === 'bullet' ? `• ${b.text}` : b.text)).join('\n'),
