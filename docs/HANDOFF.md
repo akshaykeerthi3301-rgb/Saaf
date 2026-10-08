@@ -2,13 +2,11 @@
 
 ---
 
-## 🔶 2026-10-08 — the ingest and recompute have RUN on production; a fix for "taken-down jobs counted as open" is WRITTEN, NOT LIVE
+## ✅ 2026-10-08 — taken-down jobs are hidden, LIVE (`dpl_9nDhTkTTnTaJQFHYR4HRyeDDoUqb`), and every candidate's matches were recomputed
 
-**Live now:** the daily ingest and the recompute both ran against production today. Roles 27,882 → 28,751; the new fields (reposted, work mode, contract type, pay, "posting closed") are now filled; every confirmed profile was rescored. **11 boards returned "not found"** (probably retired — I have not checked them one by one; worth looking at when you next tidy the registry).
+**Live and checked.** The daily ingest and the recompute ran on production today (roles 27,882 → 28,751; reposted, work mode, contract type, pay and "posting closed" now filled). 7,014 of the stored roles (24%) had been taken down by their employer; the site now hides them. **Checked after the deploy:** the Product Manager page in a real browser says 257 open roles (was 352), the remote page 865 (was 1,070); 5 of 5 sampled taken-down job pages show "not found" and 3 of 3 live ones load; none of the newest 1,000 taken-down jobs is in the sitemap. **After the recompute:** matches pointing at a taken-down job went from 693 of 3,970 to 0 of 3,277.
 
-**Found, fixed in code, NOT deployed:** 7,014 of the 28,751 stored roles (24%) had been taken down by their employer, and the live site still counts them — e.g. the Product Manager page says 352, the truth is 257; the remote hub says 1,070, the truth is 865; and the candidate's matches can include them. The fix (TASK-212) is committed on `phase-18`, tested, and **checked against production data**, but it is not on the website until a deploy. **After that deploy, run the recompute once more** so each candidate's stored list drops them (the daily cron does it by itself within a day if you would rather wait).
-
-**Needs you:** say "deploy" (then I run the recompute again), and say whether to also apply one more small database update that stops the match-finder wasting slots on closed roles (only matters for very broad searches; I have not written or applied it).
+**Still open, none urgent:** 11 boards returned "not found" in the ingest (probably retired — not yet checked one by one); the match-finder's database function still ranks taken-down jobs before the app drops them (only matters for searches matching 500+ jobs — a one-line database update I have NOT written; say if you want it); `phase-18` is not merged into `main` and nothing is pushed.
 
 ---
 
