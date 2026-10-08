@@ -5,6 +5,9 @@ import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
 import type { ScoreBreakdown } from '@/match/score'
 import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
+import { AskSaaf } from '@/components/features/ask-saaf'
+import { missionProgress, missions, proactive } from '@/lib/assistant'
+import { readMissionFacts, readProactiveFacts } from '@/lib/services/assistant'
 
 /**
  * The copilot diagnostic.
@@ -50,6 +53,11 @@ export default async function CopilotPage() {
     .from('gate_results')
     .select('score, score_breakdown')
     .eq('user_id', user.id)
+
+  const [missionFacts, proactiveFacts] = await Promise.all([readMissionFacts(user.id), readProactiveFacts(user.id)])
+  const checklist = missions(missionFacts)
+  const progress = missionProgress(checklist)
+  const notes = proactive(proactiveFacts)
 
   const scored = (rows ?? []) as { score: number | null; score_breakdown: ScoreBreakdown | null }[]
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
@@ -119,7 +127,42 @@ export default async function CopilotPage() {
   return (
     <AppShell title="Copilot Diagnostic" initials={initials}>
       <div className="mx-auto max-w-3xl p-5 sm:p-8">
-        <div className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        {notes.length > 0 ? (
+          <ul aria-label="Worth a look" className="mb-5 space-y-2">
+            {notes.map((n) => (
+              <li key={n.key} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-primary">
+                <span>{n.text}</span>
+                <Link href={n.href} className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">{n.cta}<ArrowRight className="size-3.5" /></Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <AskSaaf />
+
+        <section aria-label="Getting started" className="mt-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" data-testid="missions">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Getting started</h2>
+            <p className="font-mono text-xs tabular-nums text-muted-foreground">{progress.done} of {progress.total}</p>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary" role="presentation">
+            <div className="h-full rounded-full bg-accent" style={{ width: `${progress.total ? (100 * progress.done) / progress.total : 0}%` }} />
+          </div>
+          <ul className="mt-4 space-y-3">
+            {checklist.map((m) => (
+              <li key={m.key} className="flex items-start gap-3">
+                <span aria-hidden="true" className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${m.done ? 'border-accent bg-accent text-primary-foreground' : 'border-border text-transparent'}`}>✓</span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-medium ${m.done ? 'text-muted-foreground line-through' : 'text-primary'}`}>{m.label}</p>
+                  {!m.done ? <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{m.why}</p> : null}
+                </div>
+                {!m.done ? <Link href={m.href} className="shrink-0 text-xs font-semibold text-accent hover:underline">{m.cta}</Link> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div className="mt-5 flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
             <Calculator className="size-5" />
           </span>
