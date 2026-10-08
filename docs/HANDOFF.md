@@ -8,6 +8,8 @@
 
 **Found on the live site:** voice input is broken (a one-line header fix), job pages are missing six Google-recommended fields, and the search box cannot look beyond your 395 matches.
 
+**NEW 2026-10-08 (found while building TASK-216): Sentry rejects Saaf's error reports — a one-minute fix only you can do.** Sentry answers `403 … rejected with_reason: ProjectId` to the DSN that production uses, so no browser or server error has been recorded. In Sentry: Settings → Projects → (your project) → Client Keys (DSN) → copy the DSN → in Vercel set both `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_DSN` → tell me to redeploy, and I will send a test event through the new tunnel to confirm.
+
 **Only you can do these, so the 21 unchecked rows can be checked:** (1) save a résumé in Saaf — or say "save a synthetic test résumé on my account" (11 rows need it); (2) load the Saaf extension 0.7.0 in Chrome (8 rows need it); (3) say "go" on TASK-214 first, then the rest in order.
 
 ---
