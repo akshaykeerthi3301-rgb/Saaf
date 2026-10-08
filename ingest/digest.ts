@@ -73,11 +73,19 @@ export async function sendDigests(): Promise<void> {
     if (!shouldSendToday(alerts, runAt)) continue
     const since = new Date(runAt.getTime() - lookbackHours(alerts) * 3600_000).toISOString()
 
-    const { data: allRows } = await db
-      .from('gate_results')
-      .select('role_id, outcome, reason, score, roles(title, company_name, city)')
-      .eq('user_id', p.id)
-      .gte('computed_at', since)
+    // Paged and ordered best-first: a person can hold 3,000 matches and PostgREST stops at 1,000 without saying so,
+    // so an unpaged read would have dropped rows at random and could have lost the best ones.
+    const allRows = await pageAll<{ role_id: string; outcome: string; reason: string; score: number | null; roles: unknown }>(async (from, to) => {
+      const r = await db
+        .from('gate_results')
+        .select('role_id, outcome, reason, score, roles(title, company_name, city)')
+        .eq('user_id', p.id)
+        .gte('computed_at', since)
+        .order('score', { ascending: false, nullsFirst: false })
+        .order('id')
+        .range(from, to)
+      return { data: r.data as unknown as { role_id: string; outcome: string; reason: string; score: number | null; roles: unknown }[] | null, error: r.error }
+    }).catch(() => [])
 
     // Jobs the candidate hid (migration 0030) stay out of the email too. A
     // separate read, and its failure is ignored: before 0030 is applied the
@@ -107,7 +115,7 @@ export async function sendDigests(): Promise<void> {
     // nothing. A send that cannot be confirmed must not be reported as one.
     try {
       const { error } = await resend.emails.send({
-        from: 'Jobinko <onboarding@resend.dev>',
+        from: 'Jobinko <noreply@jobinko.in>',
         to: email,
         subject: ranked.length
           ? `${ranked.length} new role${ranked.length === 1 ? '' : 's'} matched today`

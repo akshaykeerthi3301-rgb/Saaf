@@ -7,6 +7,7 @@ import type { ScoreBreakdown } from '@/match/score'
 import type { ArrangeableRow } from '@/lib/shortlist'
 import type { RepostRecord } from '@/lib/repost'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
+import { pageAll } from '@/lib/paging'
 
 /**
  * The reads behind /today, in two steps. Moved out of the page 2026-09-23
@@ -75,28 +76,38 @@ type ThinRow = {
 
 export async function readShortlist(userId: string): Promise<Shortlist> {
   const supabase = await createClient()
+  // ⚠️ PAGED: PostgREST stops at 1,000 rows without saying so, and a person can now hold 3,000 matches
+  // (MAX_ROLES_PER_CANDIDATE). Each ordering ends on a unique column so the pages neither repeat nor skip a row.
   const [results, indexed, firstShown] = await Promise.all([
-    supabase
-      .from('gate_results')
-      .select('id, role_id, score, location:score_breakdown->>location, experience:score_breakdown->>experience')
-      .eq('user_id', userId)
-      .order('score', { ascending: false, nullsFirst: false }),
+    pageAll<ThinRow>(async (from, to) => {
+      const r = await supabase
+        .from('gate_results')
+        .select('id, role_id, score, location:score_breakdown->>location, experience:score_breakdown->>experience')
+        .eq('user_id', userId)
+        .order('score', { ascending: false, nullsFirst: false })
+        .order('id')
+        .range(from, to)
+      return { data: r.data as unknown as ThinRow[] | null, error: r.error }
+    }).then((data) => ({ data, failed: false }), () => ({ data: [] as ThinRow[], failed: true })),
     supabase.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).is('closed_at', null),
     // Insert-once, survives gate_results being deleted and recreated by the
     // sweep in evaluate-user.ts. See supabase/migrations/0007_role_first_shown.sql.
-    supabase.from('role_first_shown').select('role_id, first_shown_at').eq('user_id', userId),
+    pageAll<{ role_id: string; first_shown_at: string }>(async (from, to) => {
+      const r = await supabase.from('role_first_shown').select('role_id, first_shown_at').eq('user_id', userId).order('role_id').range(from, to)
+      return { data: r.data as { role_id: string; first_shown_at: string }[] | null, error: r.error }
+    }).catch(() => [] as { role_id: string; first_shown_at: string }[]),
   ])
 
   return {
-    rows: ((results.data ?? []) as unknown as ThinRow[]).map((r) => ({
+    rows: results.data.map((r) => ({
       id: r.id,
       role_id: r.role_id,
       score: r.score,
       score_breakdown: { location: r.location ?? undefined, experience: r.experience ?? undefined },
     })),
-    failed: Boolean(results.error),
+    failed: results.failed,
     indexed: indexed.count ?? 0,
-    firstShownAt: new Map((firstShown.data ?? []).map((r) => [r.role_id, r.first_shown_at])),
+    firstShownAt: new Map(firstShown.map((r) => [r.role_id, r.first_shown_at])),
   }
 }
 
@@ -384,12 +395,13 @@ export async function countMatchingRoles(
  */
 export async function countWorkModeMatches(userId: string): Promise<number> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('gate_results')
-    .select('components:score_breakdown->components')
-    .eq('user_id', userId)
   type Component = { key: string; points: number; max: number }
-  return ((data ?? []) as unknown as { components: Component[] | null }[]).filter((r) => {
+  type Row = { components: Component[] | null }
+  const data = await pageAll<Row>(async (from, to) => {
+    const r = await supabase.from('gate_results').select('components:score_breakdown->components').eq('user_id', userId).order('id').range(from, to)
+    return { data: r.data as unknown as Row[] | null, error: r.error }
+  }).catch(() => [] as Row[])
+  return data.filter((r) => {
     const c = r.components?.find((x) => x.key === 'work_mode')
     return c ? c.points === c.max : false
   }).length

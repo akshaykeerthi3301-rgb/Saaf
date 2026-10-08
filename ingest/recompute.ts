@@ -19,7 +19,16 @@ import { pageAll } from './paging'
  * roughly 5,000 users this becomes incremental recompute against roles
  * changed since the last run.
  */
-export async function recomputeAll(): Promise<void> {
+/** Profiles rescored at once. Scoring a person now reads up to 3,000 roles (MAX_ROLES_PER_CANDIDATE), so three at a time. */
+const CONCURRENCY = 3
+
+/**
+ * @param opts.budgetMs stop STARTING new profiles after this many ms. The cron route has a 60 s ceiling and one
+ *   profile can take 5-8 s now (measured 2026-10-08: 0.4-7.4 s across 9 profiles), so the run must degrade into a
+ *   partial night, loudly, rather than be killed mid-write. The CLI passes nothing and sweeps everyone.
+ *   The start point rotates by day, so when a night is cut short it is not always the same people left waiting.
+ */
+export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ rescored: number; skipped: number; failed: number }> {
   const db = createServiceClient()
 
   // Paged. PostgREST caps a response at 1,000 rows and does not say so, so the
@@ -29,10 +38,28 @@ export async function recomputeAll(): Promise<void> {
   const profiles = await pageAll<{ id: string }>((from, to) =>
     db.from('profiles').select('id').not('confirmed_at', 'is', null).order('id').range(from, to)
   )
-  if (!profiles.length) { console.log('  recompute: no confirmed profiles'); return }
+  if (!profiles.length) { console.log('  recompute: no confirmed profiles'); return { rescored: 0, skipped: 0, failed: 0 } }
 
-  for (const p of profiles) {
-    const { written } = await evaluateUser(p.id)
-    console.log(`  recomputed ${written} results for one profile`)
+  const start = Math.floor(Date.now() / 86_400_000) % profiles.length
+  const order = [...profiles.slice(start), ...profiles.slice(0, start)]
+  const t0 = Date.now()
+  let rescored = 0, failed = 0, skipped = 0
+  for (let i = 0; i < order.length; i += CONCURRENCY) {
+    if (opts.budgetMs !== undefined && Date.now() - t0 > opts.budgetMs) {
+      skipped = order.length - i
+      console.warn(`  recompute: stopped at the ${opts.budgetMs} ms budget — ${skipped} of ${order.length} profiles NOT rescored tonight`)
+      break
+    }
+    await Promise.all(order.slice(i, i + CONCURRENCY).map(async (p) => {
+      try {
+        const { written } = await evaluateUser(p.id)
+        rescored++
+        console.log(`  recomputed ${written} results for one profile`)
+      } catch (e) {
+        failed++
+        console.error('  recompute failed for one profile (the others continue):', (e as Error).message)
+      }
+    }))
   }
+  return { rescored, skipped, failed }
 }

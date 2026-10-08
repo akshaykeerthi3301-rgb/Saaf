@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { scoreAgainstIndex } from '@/lib/score-candidate'
 import { candidateFromProfile } from '@/lib/candidate-profile'
+import { chunk } from '@/lib/paging'
 import type { CandidateProfile } from '@/gates/types'
 
 /**
@@ -74,12 +75,12 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
     computed_at: computedAt,
   }))
 
-  for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db
-      .from('gate_results')
-      .upsert(rows.slice(i, i + 500), { onConflict: 'user_id,role_id' })
-    if (error) throw error
-  }
+  // Up to 3,000 rows now, so the 500-row batches go out together rather than one after another (6 round trips
+  // in a row was most of the write time).
+  const writes = await Promise.all(
+    chunk(rows, 500).map((part) => db.from('gate_results').upsert(part, { onConflict: 'user_id,role_id' })),
+  )
+  for (const w of writes) if (w.error) throw w.error
 
   // Insert-once record of when this candidate first saw each role — survives
   // gate_results rows being deleted and recreated by the sweep below, unlike
@@ -90,15 +91,15 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // their shortlist must never depend on this secondary bookkeeping table
   // succeeding — including the real window between this code deploying and
   // that migration actually being run.
-  for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db
-      .from('role_first_shown')
-      .upsert(
-        rows.slice(i, i + 500).map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
-        { onConflict: 'user_id,role_id', ignoreDuplicates: true }
-      )
-    if (error) console.error('role_first_shown upsert failed (non-fatal):', error.message)
-  }
+  const shown = await Promise.all(
+    chunk(rows, 500).map((part) =>
+      db.from('role_first_shown').upsert(
+        part.map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
+        { onConflict: 'user_id,role_id', ignoreDuplicates: true },
+      ),
+    ),
+  )
+  for (const w of shown) if (w.error) console.error('role_first_shown upsert failed (non-fatal):', w.error.message)
 
   // Sweep results this pass did not rewrite.
   //

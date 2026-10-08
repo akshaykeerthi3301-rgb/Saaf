@@ -13,6 +13,7 @@ export const maxDuration = 60
 
 export const GET = cronRoute('recompute', async () => {
   const { recomputeAll } = await import('../../../../../ingest/recompute')
-  await recomputeAll()
-  return {}
+  // 50 s of the 60 s ceiling: stop starting new profiles after that, and say how many were left (a run that
+  // silently skipped people used to look exactly like a complete one).
+  return recomputeAll({ budgetMs: 50_000 })
 })

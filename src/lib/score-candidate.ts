@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { scoreRole, summarise, type ScoreBreakdown } from '@/match/score'
+import { chunk, pageAll } from '@/lib/paging'
 import type { CandidateProfile, Credential, RequirementKind, TypedRequirement } from '@/gates/types'
 
 /**
@@ -19,17 +20,22 @@ import type { CandidateProfile, Credential, RequirementKind, TypedRequirement } 
  */
 
 /**
- * Most recent roles scored per candidate.
+ * The most roles scored per candidate, best title match first.
  *
- * Descriptions are pulled for skill matching, so an unbounded query is both a
- * memory and a time cost. A broad preferred role already matches 229 of 652
- * roles; at Stage B's target index size it would match thousands.
+ * 500 until 2026-10-08, then 3,000 (founder direction: 'we don't need to limit ourselves to a small number of
+ * jobs'). MEASURED before the change on the three profiles that have matches: jobs scoring 50+ went 38 -> 80,
+ * 224 -> 431 and 107 -> 207 when the ceiling doubled, so there are many good matches past the 500th by title
+ * relevance. Cost: scoring 1,000 roles took 1-2 s; stored matches are ~2.9 KB a row, so 3,000 is ~8.7 MB a person.
  *
- * The cap survived the move to relevance ordering; what changed is which 500
- * it keeps. It used to be the 500 freshest, which is the wrong 500 the moment
- * more than 500 match — see roles_for_candidate() below.
+ * ⚠️ THE CONSTANT WAS NOT THE ONLY CEILING. PostgREST returns at most 1,000 rows per request, silently, so a limit
+ * of 2,000 or 5,000 still scored 1,000. The ranked ids are therefore read in pages (src/lib/paging.ts) and the
+ * roles — with their descriptions, the heavy part — are fetched in small batches by id.
  */
-export const MAX_ROLES_PER_CANDIDATE = 500
+export const MAX_ROLES_PER_CANDIDATE = 3000
+
+/** Roles fetched per request when reading descriptions by id, and how many of those requests run at once. */
+const ROLE_FETCH_CHUNK = 150
+const ROLE_FETCH_PARALLEL = 4
 
 /**
  * PostgREST reports an absent function as PGRST202 (no matching function in the
@@ -184,28 +190,41 @@ export async function scoreAgainstIndex(
    * Without (2) a candidate with two roles would have seen only the first until
    * someone remembered to run the SQL.
    */
-  const ranked = await db
-    .rpc('roles_for_candidates', {
-      searches: search.searches,
-      adjacent,
-      max_rows: cap,
+  let roles: RoleRow[] = []
+  let rankedError: { code?: string; message?: string } | null = null
+  try {
+    // Ids first (a light column, paged past the 1,000-row ceiling), then the roles by id in small batches. A role
+    // the employer has taken down (closed_at, 0035) is not an opportunity; 0050 made the function skip them and the
+    // filter stays as a second line of defence.
+    const ranked = await pageAll<{ id: string }>(async (from, to) => {
+      const r = await db
+        .rpc('roles_for_candidates', { searches: search.searches, adjacent, max_rows: cap })
+        .select('id')
+        .is('closed_at', null)
+        .range(from, to)
+      // The client types a SETOF function's result as row-or-rows; it is rows.
+      return { data: r.data as unknown as { id: string }[] | null, error: r.error }
     })
-    .select(COLUMNS)
-    // A role the employer has taken down (ingest stamps closed_at, 0035) is not an opportunity. Filtered after the
-    // ranking, so a closed role still takes a slot of the cap until roles_for_candidates() learns to skip it.
-    .is('closed_at', null)
-
-  // The RPC's returned shape is a union of row and row[] as far as the client's
-  // static inference goes — it cannot know a SETOF function returns many. One
-  // annotation here rather than a cast at every field below.
-  let roles = (ranked.data ?? []) as unknown as RoleRow[]
-  if (ranked.error) {
+    const batches = chunk([...new Set(ranked.map((r) => r.id))], ROLE_FETCH_CHUNK)
+    for (let i = 0; i < batches.length; i += ROLE_FETCH_PARALLEL) {
+      const got = await Promise.all(
+        batches.slice(i, i + ROLE_FETCH_PARALLEL).map((part) => db.from('roles').select(COLUMNS).in('id', part).is('closed_at', null)),
+      )
+      for (const g of got) {
+        if (g.error) throw g.error
+        roles.push(...((g.data ?? []) as unknown as RoleRow[]))
+      }
+    }
+  } catch (e) {
     // Migrations here are pasted into the Supabase SQL editor by hand, so there
     // is a real window where this code is deployed and the function is not.
     // A missing function must degrade to the old behaviour, not to an empty
     // shortlist — the ordering is a large improvement, and it is not worth the
     // product going dark for.
-    if (!isMissingFunction(ranked.error)) throw ranked.error
+    if (!isMissingFunction(e as { code?: string; message?: string })) throw e
+    rankedError = e as { code?: string; message?: string }
+  }
+  if (rankedError) {
 
     // ---- fallback 2: the single-role RPC, once per role ---------------------
     const perRole = await Promise.all(

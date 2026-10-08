@@ -1,3 +1,4 @@
+import { pageAll } from '@/lib/paging'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Calculator, TrendingUp } from 'lucide-react'
@@ -49,10 +50,11 @@ export default async function CopilotPage() {
     .maybeSingle()
   if (!profile?.confirmed_at) redirect('/start')
 
-  const { data: rows } = await supabase
-    .from('gate_results')
-    .select('score, score_breakdown')
-    .eq('user_id', user.id)
+  // Paged: a person can hold 3,000 matches and PostgREST stops at 1,000 without saying so.
+  const rows = await pageAll<{ score: number | null; score_breakdown: unknown }>(async (from, to) => {
+    const r = await supabase.from('gate_results').select('score, score_breakdown').eq('user_id', user.id).order('id').range(from, to)
+    return { data: r.data as unknown as { score: number | null; score_breakdown: unknown }[] | null, error: r.error }
+  }).catch(() => [])
 
   const [missionFacts, proactiveFacts] = await Promise.all([readMissionFacts(user.id), readProactiveFacts(user.id)])
   const checklist = missions(missionFacts)
