@@ -6,7 +6,7 @@
 const HOST = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/
 
 /** Sites that are excluded on purpose (extension/README.md), and Saaf itself. A request for one would be noise. */
-const NEVER = [/(^|\.)linkedin\.com$/, /(^|\.)naukri\.com$/, /(^|\.)saaf-ten\.vercel\.app$/]
+const NEVER = [/(^|\.)linkedin\.com$/, /(^|\.)naukri\.com$/, /(^|\.)saaf-ten\.vercel\.app$/, /(^|\.)jobinko\.in$/]
 
 /** The hostname to file, or null when it is not one worth filing. */
 export function cleanHost(raw: unknown): string | null {

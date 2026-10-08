@@ -25,7 +25,7 @@ import { normaliseCompany } from '@/lib/company-name'
 
 export { normaliseCompany }
 
-const UA = 'SaafBot/1.0 (https://saaf-ten.vercel.app; job-seeker tool)'
+const UA = 'SaafBot/1.0 (https://jobinko.in; job-seeker tool)'
 const WEEK = 7 * 24 * 3600
 const TIMEOUT_MS = 4000
 

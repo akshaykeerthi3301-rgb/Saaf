@@ -4,6 +4,14 @@
   "regions": [
     "bom1"
   ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.jobinko.in" }],
+      "destination": "https://jobinko.in/$1",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

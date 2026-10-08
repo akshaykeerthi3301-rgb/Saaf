@@ -12,7 +12,7 @@ describe('cleanHost', () => {
     }
   })
   it('refuses the sites that are excluded on purpose, and Saaf itself', () => {
-    for (const h of ['linkedin.com', 'www.linkedin.com', 'naukri.com', 'saaf-ten.vercel.app']) expect(cleanHost(h), h).toBeNull()
+    for (const h of ['linkedin.com', 'www.linkedin.com', 'naukri.com', 'saaf-ten.vercel.app', 'jobinko.in', 'www.jobinko.in']) expect(cleanHost(h), h).toBeNull()
     expect(cleanHost('notlinkedin.com')).toBe('notlinkedin.com')
   })
 })
