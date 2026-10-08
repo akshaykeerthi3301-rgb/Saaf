@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getResume } from '@/lib/services/resume-documents'
 import { getCookieContext } from '@/lib/services/cookie'
-import { rewriteResume, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
+import { rewriteResume, rewriteOneBullet, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
 import { PROVIDER_LABEL, ModelBusyError } from '@/lib/parse/llm'
 import { extractSkillPhrases } from '@/lib/taxonomy/skills'
 import { extractFields } from '@/lib/parse/extract'
@@ -161,4 +161,48 @@ export async function scoreDraft(input: z.input<typeof draftSchema>): Promise<Dr
   if (!ctx.ok) return { ok: false, error: ctx.error }
   const { role } = ctx.context
   return { ok: true, score: scoreSections(parsed.data.sections as unknown as ResumeSections, role.title, role.description ?? undefined) }
+}
+
+const lineSchema = z.object({ roleId: z.string().uuid(), line: z.string().trim().min(8).max(600) })
+
+/** Twenty single-line rewrites per ten minutes per candidate — one line is ~200 tokens, so this is for working through a page. */
+const LINE_LIMIT = { scope: 'studio-line', limit: 20, windowMs: 10 * 60_000 }
+
+export type StudioLineResult = { ok: true; line: string; providerLabel: string } | { ok: false; error: string; refused?: boolean }
+
+/**
+ * "Edit with AI" on one line the candidate is looking at (F-410, TASK-188). Returns a
+ * suggestion for the box they are already editing — nothing is applied until they press Done.
+ *
+ * ⚠️ THE FABRICATION GUARD IS THE SAME ONE. rewriteOneBullet refuses a line that adds a
+ * number, a name or a word the original did not have, and the refusal is shown, not hidden.
+ * The line is supplied by the browser (it is the candidate's own text going back to them,
+ * as in scoreDraft); the POSTING it is sharpened for is read server-side from the role id.
+ */
+export async function rewriteStudioLine(input: z.input<typeof lineSchema>): Promise<StudioLineResult> {
+  const parsed = lineSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'That line is too short to rewrite.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+
+  const limit = checkRateLimit(user.id, LINE_LIMIT)
+  if (!limit.ok) return { ok: false, error: 'You have rewritten a lot of lines in a short while. Try again in a few minutes.' }
+
+  const ctx = await getCookieContext(user.id, parsed.data.roleId)
+  if (!ctx.ok) return { ok: false, error: ctx.error }
+  try {
+    const out = await rewriteOneBullet(
+      parsed.data.line,
+      { currentTitle: null, employer: null, yearsExperience: null, skills: [], domain: null, credential: null },
+      ctx.context.role,
+    )
+    if (!out) return { ok: false, error: 'We could not rewrite that line just now. Yours is unchanged.' }
+    if ('refused' in out) return { ok: false, refused: true, error: `Our filter refused the rewrite — it ${out.refused}. Your line is unchanged.` }
+    return { ok: true, line: out.text, providerLabel: PROVIDER_LABEL[out.provider] }
+  } catch (e) {
+    if (e instanceof ModelBusyError) return { ok: false, error: 'The writing model is busy right now. Try that line again in about a minute.' }
+    return { ok: false, error: 'We could not rewrite that line just now. Yours is unchanged.' }
+  }
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } f
 import {
   Check, CheckCheck, Download, FileDown, Loader2, Pencil, Printer, Save, ShieldCheck, Sparkles, Undo2, X,
 } from 'lucide-react'
-import { scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
+import { rewriteStudioLine, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
 import { downloadOptimisedResume } from '@/app/actions/resume-download'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
@@ -65,6 +65,8 @@ export function TailorStudio({
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [note, setNote] = useState<string>()
+  const [lineNote, setLineNote] = useState<string>()
+  const [lineBusy, setLineBusy] = useState(false)
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
   const [template, setTemplate] = useState<TemplateId>(DEFAULT_TEMPLATE)
@@ -186,6 +188,19 @@ export function TailorStudio({
     )
   }
 
+  /** "Edit with AI" on the line being edited: the suggestion lands in the box for the candidate to keep, change or drop. */
+  function editWithAi(text: string) {
+    if (lineBusy) return
+    setLineBusy(true); setLineNote(undefined)
+    rewriteStudioLine({ roleId, line: text })
+      .then((r) => {
+        if (r.ok) { setDraft(r.line); setLineNote('Suggested by AI — read it, change it if you like, then press Done. Cancel keeps your line.') }
+        else setLineNote(r.error)
+      })
+      .catch(() => setLineNote('Check your connection and try again.'))
+      .finally(() => setLineBusy(false))
+  }
+
   const line = (s: Suggestion | undefined, key: string, entry: number, idx: number, current: string, originalText: string) => {
     const d = s ? decisions[s.key] ?? 'pending' : undefined
     const changed = current !== originalText
@@ -199,10 +214,12 @@ export function TailorStudio({
             aria-label="Edit this line"
             className="w-full rounded-lg border border-input bg-background p-2.5 text-sm leading-6 text-primary outline-none focus:border-accent"
           />
-          <div className="flex gap-2">
-            <SmallButton onClick={() => { setText({ entry, idx }, draft.trim() || originalText); setEditing(null) }} icon={Check}>Done</SmallButton>
-            <SmallButton onClick={() => setEditing(null)} icon={X}>Cancel</SmallButton>
+          <div className="flex flex-wrap items-center gap-2">
+            <SmallButton onClick={() => { setText({ entry, idx }, draft.trim() || originalText); setEditing(null); setLineNote(undefined) }} icon={Check}>Done</SmallButton>
+            <SmallButton onClick={() => { setEditing(null); setLineNote(undefined) }} icon={X}>Cancel</SmallButton>
+            {res ? <SmallButton onClick={() => editWithAi(draft)} icon={lineBusy ? Loader2 : Sparkles}>{lineBusy ? 'Rewriting…' : 'Rewrite with AI'}</SmallButton> : null}
           </div>
+          {lineNote ? <p role="status" className="text-xs leading-5 text-muted-foreground">{lineNote}</p> : null}
         </div>
       )
     }

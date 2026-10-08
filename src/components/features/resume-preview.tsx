@@ -141,17 +141,23 @@ function Mark({ on, children }: { on: boolean; children: React.ReactNode }) {
   )
 }
 
+/** A one-click fix drawn beside a line, keyed by `${entry}:${bullet}`. An overlay like the highlight: never part of the document. */
+export type LineChips = Record<string, { label: string; onClick: () => void }[]>
+
 export function ResumePreview({
   sections,
   targetRole,
   template,
   highlight,
+  chips,
 }: {
   sections: ResumeSections
   targetRole?: string
   template?: TemplateId
   /** Text quoted by the finding on screen; the matching line is marked. */
   highlight?: string
+  /** Inline fixes for the lines that have one (F-504). */
+  chips?: LineChips
 }) {
   const spec = templateSpec(template)
   const hit = matcher(highlight)
@@ -226,6 +232,17 @@ export function ResumePreview({
                       {e.bullets.map((b, j) => (
                         <li key={j}>
                           <Mark on={hit(b)}>{b}</Mark>
+                          {chips?.[`${i}:${j}`]?.map((c) => (
+                            <button
+                              key={c.label}
+                              type="button"
+                              data-testid="fix-chip"
+                              onClick={c.onClick}
+                              className="ml-2 rounded-full border border-accent/50 px-2 py-px align-baseline font-sans text-[10.5px] font-semibold text-accent hover:bg-accent/10"
+                            >
+                              {c.label}
+                            </button>
+                          ))}
                         </li>
                       ))}
                     </ul>

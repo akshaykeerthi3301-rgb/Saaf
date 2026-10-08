@@ -9,9 +9,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, Eyebrow } from '@/components/ui/card'
 import { Combobox } from '@/components/ui/combobox'
-import { ResumePreview } from '@/components/features/resume-preview'
+import { ResumePreview, type LineChips } from '@/components/features/resume-preview'
 import { readResumeFile } from '@/app/actions/read-resume-file'
 import { LinkedInStart } from '@/components/features/linkedin-start'
+import { FastStart } from '@/components/features/fast-start'
 import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { checkResumeForAts } from '@/app/actions/ats-check'
 import { optimiseResume } from '@/app/actions/optimise-resume'
@@ -83,6 +84,12 @@ const ROLE_GROUPS = [{ label: 'Roles we measure postings for', options: ROLES.ma
 type Step = 'input' | 'score' | 'gap' | 'choose' | 'apply' | 'preview'
 
 const STAGES = ['score', 'gap', 'choose', 'apply', 'preview'] as const
+/** What a line's fix chip says, by the finding it comes from. */
+const CHIP_LABEL: Record<string, string> = {
+  'weak-openers': 'stronger opening', 'action-verb-coverage': 'stronger opening',
+  'bullet-punctuation': 'match punctuation', 'bullet-too-long': 'split long line',
+}
+
 const STAGE_NAMES = ['Your score', 'This job', 'What to change', 'Fix it', 'Rewrite'] as const
 
 /**
@@ -191,6 +198,22 @@ export function AtsFlow() {
   const visibleFindings = (report?.findings ?? []).filter((f) => !skipped.has(f.id))
   const activeFinding = visibleFindings.find((f) => f.id === selected) ?? visibleFindings[0]
   const activeFix = activeFinding && sections ? fixFor(activeFinding.id, sections) : null
+  // One-click fixes drawn on the lines themselves (F-504). Only the deterministic edits — a line the
+  // table can repair — so a chip never asks for a model and never invents; the rest stay advice.
+  const lineChips: LineChips = {}
+  if (sections) {
+    const seenChip = new Set<string>()
+    for (const f of visibleFindings) {
+      const fix = fixFor(f.id, sections)
+      if (fix?.kind !== 'edit') continue
+      for (const e of fix.edits) {
+        const at = `${e.entry}:${e.bullet}`
+        if (seenChip.has(`${at}|${e.after}`)) continue
+        seenChip.add(`${at}|${e.after}`)
+        ;(lineChips[at] ??= []).push({ label: `Fix: ${CHIP_LABEL[f.id] ?? 'tidy this line'}`, onClick: () => acceptEdit(e, `${f.id}:${e.entry}:${e.bullet}`) })
+      }
+    }
+  }
   /** Empty rather than undefined: every reader of this now just checks length. */
   const coverage =
     targetRole && sections ? marketCoverage(targetRole, sectionsToText(sections)) : []
@@ -650,6 +673,14 @@ export function AtsFlow() {
               setPastedFallback(true)
             }}
           />
+          <FastStart
+            onText={(text) => {
+              setFile(undefined)
+              setError(undefined)
+              setResumeText(text)
+              setPastedFallback(true)
+            }}
+          />
 
           <div className="mt-6">
             <Combobox
@@ -998,12 +1029,13 @@ export function AtsFlow() {
                     sections={sections}
                     targetRole={targetRole || undefined}
                     highlight={activeFinding?.evidence}
+                    chips={lineChips}
                   />
                 </div>
                 <p className="mt-3 px-1 text-xs leading-5 text-muted-foreground">
                   This is the structure a parser recovered, not a picture of your original file — which is the
-                  point: anything missing here is missing for an applicant tracking system too. The highlight is
-                  ours and never appears in the document you download.
+                  point: anything missing here is missing for an applicant tracking system too. The highlight and the fix buttons are
+                  ours and never appear in the document you download.
                 </p>
               </section>
             )}
