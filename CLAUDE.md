@@ -65,10 +65,12 @@ fresh session can trust the rule instead of discovering it is aspirational.
 
 Full reasoning, with the defects that motivated each: `docs/ARCHITECTURE-AUDIT.md`.
 
-**Counts below were measured on 2026-09-08** (24 legacy query sites, 11 server
-actions, 8 of 11 re-authenticating, 0 `any` types). They will drift. If one
-disagrees with the codebase, the codebase is right — re-measure and correct this
-file rather than working around it. The *rules* do not drift; only the numbers.
+**Counts below were re-measured on 2026-10-08** (22 legacy query sites in 14
+files, 43 action files, 35 of 43 re-authenticating, 39 of 43 with a Zod schema,
+0 `any` types — the three grep hits for "any" are words in comments). They were
+24 / 11 / 8 of 11 / 7 of 11 / 0 on 2026-09-08. They will drift. If one disagrees
+with the codebase, the codebase is right — re-measure and correct this file
+rather than working around it. The *rules* do not drift; only the numbers.
 
 ### 1. Application code lives in `src/`, imported with `@/*`
 
@@ -91,9 +93,9 @@ it runs under the service role and must stay outside the web app's import graph.
 
 ### 2. Server Actions in `src/app/actions/`. Route handlers are the exception
 
-**Mutations are Server Actions.** All 11 live in `src/app/actions/`. Do not move
+**Mutations are Server Actions.** All 43 live in `src/app/actions/`. Do not move
 them to route handlers: an action is invoked as a function and Next generates the
-endpoint, so there is no hand-written public URL to guess or fuzz. Converting 11
+endpoint, so there is no hand-written public URL to guess or fuzz. Converting 43
 actions to routes means 11 public URLs each needing its own hand-written auth
 check — trading a structural guarantee for a procedural one.
 
@@ -109,7 +111,7 @@ today is exactly three kinds:
 There are **no webhooks in this repo yet**. When one lands it belongs here, and
 its signature must be verified before the payload is trusted.
 
-**Every action that touches user data re-authenticates itself** — 8 of the 11
+**Every action that touches user data re-authenticates itself** — 35 of the 43
 call `supabase.auth.getUser()` rather than trusting the page that called them.
 Keep that: an exported function is its own entry point, reachable without the
 page that renders it ever running. `src/app/actions/bench.ts` repeats its own
@@ -150,12 +152,12 @@ Enforced by `no-restricted-syntax` in `eslint.config.mjs`:
 | Scope | Severity | Violations |
 |---|---|---|
 | `src/components/**` | **error** | **0 — clean, keep it that way** |
-| `src/app/**` | **warn** | **24 legacy sites across 14 files** |
+| `src/app/**` | **warn** | **22 legacy sites across 14 files** |
 
-⚠️ **The 24 are known, authorised, and mid-migration.** Every one predates the
+⚠️ **The 22 are known, authorised, and mid-migration.** Every one predates the
 rule, calls `getUser()` first, and runs under RLS — none is a security defect.
 They warn rather than error so `npm run lint` stays green while they are absorbed
-into `src/lib/services/`. **Do not add a 25th, and do not bulk-migrate them
+into `src/lib/services/`. **Do not add a 23rd, and do not bulk-migrate them
 unasked.** Order (cheapest first): `auth/callback` + `instant-signin` → the
 single-profile reads → `applications` → `today/page.tsx` **last, with tests** —
 it is the core surface and has none of its own. When the count reaches 0, raise
@@ -203,9 +205,9 @@ it from something that does not exist.
 genuinely cannot be inferred, the codebase uses a named row type plus a single
 `as unknown as RowType` at the query, not `any` and not a cast per field.
 
-**Zod validates every untrusted input.** In practice that is 7 of the 11 server
+**Zod validates every untrusted input.** In practice that is 39 of the 43 server
 actions — the four without a schema (`sign-out`, `delete-account`,
-`restart-onboarding`, `role-catalogue`) take no caller-supplied data. Do not add
+`restart-onboarding`, `account`) take no caller-supplied data. Do not add
 ceremonial schemas to those; do not omit one from anything that takes input.
 
 **`src/lib/types/` does not exist yet.** Create it for the first genuinely

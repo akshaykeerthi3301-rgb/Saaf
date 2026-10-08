@@ -44,7 +44,7 @@ Assumptions to replace: ₹88 per $1; prices below include GST and **GST registr
 | ₹299 | ≈ ₹246 | ≈ 17 |
 | ₹499 | ≈ ₹411 | ≈ 10 |
 
-("Keep" = price ÷ 1.18, minus Razorpay's 2% + GST.) This is the **infrastructure floor only** — it excludes the model key, email, your time and any refunds. Saaf has **no measured conversion rate** (no one has been asked to pay), so I will not guess how many users produce 17 payers.
+("Keep" = price ÷ 1.18, minus Razorpay's 2% + GST.) This is the **infrastructure floor only** — it excludes the model key, email, your time and any refunds. For a ceiling, the compared product's own published prices are in the private teardown (`docs/jobright-map/12-unseen-items-findings.local.md`, OBSERVED 2026-10-07, US dollars, not an Indian price); they are not repeated here because that file is private. Saaf has **no measured conversion rate** (no one has been asked to pay), so I will not guess how many users produce 17 payers.
 
 ## 5. What you must decide (nothing is built until these are answered)
 

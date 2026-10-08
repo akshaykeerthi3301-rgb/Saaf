@@ -2,6 +2,30 @@
 
 ---
 
+## 🔶 2026-10-08 (session 2) — 48 of 57 Phase 17/18 tasks BUILT on `phase-18`, NOT LIVE, nineteen database updates waiting
+
+**Written, not shipped.** Branch `phase-18` is **38 commits ahead of `main`**; nothing deployed, nothing pushed. The live site is still the 03:01 IST deploy (`dpl_9sX4KDQm9YnKcQkMa31eLmiKN6ST`). Scoreboard (`npm run parity`, a file that exists only on this machine — see PROJECT-STATE Stage AN): **HAS 109 · PARTIAL 13 · MISSING 11 of 133** (it was 36 / 55 / 42 on 2026-10-07). **Checked before this note:** 1,781 tests pass, lint 0 errors, typecheck clean, **`next build` succeeds**. What is **not** checked: the extension on any real page, and every screen that needs a database update has been seen only in its "update missing" state.
+
+**Only you can do these, in this order:**
+
+1. **Apply the database updates, in order, in the Supabase SQL editor, then run `npm run verify:rls`:** `0029` `0030` `0031` (pending from before), `0032`–`0042` (the previous entry), then the new ones — **`0043_connection_sources`, `0044_feedback_inbox_surveys`, `0045_credits_referrals`, `0046_answer_bank`, `0047_site_requests`, `0048_agent_settings`, `0049_office_hours`**. Every screen says plainly when its update is missing, so deploying first is safe. **Read `0045` before applying** — it is the one that handles money-shaped data: the credits ledger can only be written by database functions, and a referrer is paid for at most 20 people.
+2. **Reload the extension (now 0.7.0).** New: your own saved answers to employers' custom questions, "Tailor my résumé", the "This site" section with "Ask Saaf to support this site". **It is not in the Chrome Web Store** — the public `/extension` page and the auto-apply comparison page both say so. When it is listed, set `NEXT_PUBLIC_EXTENSION_URL` (it switches on the install nudge and the "Add to Chrome" button).
+3. **Decisions only you can make** (each has a page with the numbers and my recommendation — none is built until you answer):
+   - **Thin-content threshold N** for the role and city pages: `MIN_ROLES_TO_INDEX` in `src/lib/seo-pages.ts`, now 5. On the newest 5,000 roles that admits 39 role pages and 32 role-in-city pages (N=10: 25 and 14). After the deploy, watch Vercel's usage — the pages are built on first request and refreshed hourly.
+   - **The paid plan** — `docs/PAID-PLAN.md`: seven decisions. The one that forces your hand: Vercel Hobby is non-commercial, so even announcing a plan needs Pro first (floor ≈ $45 ≈ ₹4,000 a month). Credits exist and everything is priced at zero.
+   - **The employer side** — `docs/EMPLOYER-CONSENT.md`: six decisions. TASK-207/208 wait for your yes. Recommended first step: candidates can share with one employer; nobody can be found who did not act.
+   - **Abroad mode** (TASK-209): the database holds only India roles, and the same boards list ~7.6× more elsewhere — ≈ 825 MB (estimated) against a 500 MB free tier. Upgrade the database, allow a download of the US Labor Department's public H-1B files for a company-level lookup, or leave it out.
+   - **Four held staffing boards** on SmartRecruiters (8,476 / 3,861 / 1,782 / 294 India roles): leave out (my view) or add.
+   - **Should `docs/PARITY.md` be tracked?** It is ignored by `*parity*`; I left it local because it describes the compared product.
+   - **Interview-question content source** (TASK-164) — candidate-reported with provenance; no scraping.
+4. **Add the first people.** Coaches (Supabase → Table editor → `coaches`, after you have checked who they are) and the first office-hour session (`office_hours`). Promo codes, if you want any, go in `promo_codes` (a code in capitals, a credit amount, an optional expiry and use limit). Until you add them, those screens say plainly that nothing is listed.
+5. **Alert emails still will not arrive** until a sending domain is verified (flip `ALERT_EMAIL_LIVE` in `src/lib/alert-settings.ts`). Apple sign-in needs your Apple developer account; the human check on the public tools needs a provider key — neither is built (reasons in ROADMAP TASK-204/205).
+6. **Say go and I will deploy** by `docs/RUNBOOK.md`. Recommended order: apply 0029–0049, merge `phase-18`, deploy, run one ingest (so reposts, closed postings and provider fields fill), then walk the new screens signed in — the credits card and invite link (Profile → Account & data), the agent and the saved answers (Profile → Application details), office hours (Coaching).
+
+**Three things I found that you should know:** (a) `first_seen_at` is one instant for a whole ingest batch, so "newest" by it meant nothing — the public lists now sort by the employer's posted date; (b) the 0.6% of postings that state pay (measured today on 4,000) does not match the 2.6% recorded earlier — not reconciled, the blog quotes only the new one; (c) the extension's README said 22 sites; the list has 23, and **only one of them (Greenhouse) has ever been checked against a real form**.
+
+---
+
 ## 🔶 2026-10-08 (night) — 16 more tasks BUILT on `phase-18`, NOT LIVE, eleven database updates waiting
 
 **Written, not shipped.** Branch `phase-18` (16 commits off `main`); nothing deployed, nothing pushed. HAS rows on the scoreboard: 48 → 76 of 133 (`npm run parity`; **that file exists only on this machine — see PROJECT-STATE Stage AN**). **Only you can:**
