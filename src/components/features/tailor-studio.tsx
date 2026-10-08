@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
 import { ArrowUp, FileDown, Loader2, Pencil, Save, ShieldCheck, Sparkles, Undo2, X } from 'lucide-react'
-import { rewriteStudioLine, rewriteStudioLines, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
+import { keepTailoredResume, rewriteStudioLine, rewriteStudioLines, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
 import { downloadWordFile } from '@/lib/download-word'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
@@ -40,7 +40,7 @@ const CHIPS = [
 ] as const
 
 export function TailorStudio({
-  roleId, resumeId, resumeLabel, original, roleTitle, company, applyUrl, autoRun = false, scope, embedded = false,
+  roleId, resumeId, resumeLabel, original, roleTitle, company, applyUrl, restored, autoRun = false, scope, embedded = false,
 }: {
   roleId: string
   resumeId: string
@@ -50,6 +50,11 @@ export function TailorStudio({
   company: string
   /** The employer's own application page, for "Apply now". */
   applyUrl?: string
+  /**
+   * The résumé already tailored for this job: open straight on the result, with no model run. `before` is the saved
+   * résumé's score for this posting (0–100), `keywords` the posting's terms, for the same marks as a fresh run.
+   */
+  restored?: { sections: ResumeSections; style: ResumeStyle | null; before: number | null; keywords: string[] }
   /** Start tailoring on mount — the drawer's step 3 follows the candidate pressing Generate in step 2. */
   autoRun?: boolean
   /** Which parts to change (the drawer's step 2). Absent means the whole document. */
@@ -57,9 +62,13 @@ export function TailorStudio({
   /** Inside the job drawer: the page column sticks to the top of the drawer, not under the app header. */
   embedded?: boolean
 }) {
-  const [res, setRes] = useState<Ok | null>(null)
+  const [res, setRes] = useState<Ok | null>(
+    restored
+      ? { ok: true, sections: restored.sections, changes: [], reverted: [], skillsReordered: false, providerLabel: '', keywords: restored.keywords, scores: { before: restored.before, after: null } }
+      : null,
+  )
   const [error, setError] = useState<string>()
-  const [working, setWorking] = useState<ResumeSections>(original)
+  const [working, setWorking] = useState<ResumeSections>(restored?.sections ?? original)
   const [tab, setTab] = useState<Tab>('rewrite')
   const [note, setNote] = useState<string>()
   const [aiNote, setAiNote] = useState<string>()
@@ -68,7 +77,7 @@ export function TailorStudio({
   const [lineBusy, setLineBusy] = useState<string | null>(null)
   const [running, startRun] = useTransition()
   const [busy, startBusy] = useTransition()
-  const [style, setStyle] = useState<ResumeStyle>(DEFAULT_STYLE)
+  const [style, setStyle] = useState<ResumeStyle>(restored?.style ?? DEFAULT_STYLE)
   const [fit, setFit] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [liveScore, setLiveScore] = useState<number | null>(null)
@@ -100,6 +109,21 @@ export function TailorStudio({
     }, 700)
     return () => clearTimeout(t)
   }, [res, working, roleId, changes.length])
+  // Kept with the job as the person works, so reopening "Customize your résumé" here continues from this. A quiet
+  // write: a failure (or an unapplied update) just means the next visit starts fresh; nothing is shown about it.
+  const lastKept = useRef(restored ? JSON.stringify([restored.sections, restored.style ?? DEFAULT_STYLE]) : '')
+  const [keptAt, setKeptAt] = useState<number | null>(null)
+  useEffect(() => {
+    if (!res) return
+    const key = JSON.stringify([working, style])
+    if (key === lastKept.current) return
+    const t = setTimeout(() => {
+      keepTailoredResume({ roleId, baseResumeId: resumeId, sections: working, style })
+        .then((r) => { if (r.ok) { lastKept.current = key; setKeptAt(Date.now()) } })
+        .catch(() => {})
+    }, 1500)
+    return () => clearTimeout(t)
+  }, [res, working, style, roleId, resumeId])
   const before = res?.scores.before ?? null
   const now = res ? (changes.length === 0 ? before : liveScore) : null
   const tenth = (n: number | null) => (n === null ? null : Math.round(n) / 10)
@@ -449,6 +473,7 @@ export function TailorStudio({
               ? fitRes.fits ? `Fits one page (estimated, about ${estimatePagesForStyle(working, effective).toFixed(1)}).` : 'Still more than a page with the tightest spacing — shorten older roles or long bullets.'
               : null}
             {note ? ` ${note}` : null}
+            {keptAt ? ' Saved with this job.' : null}
           </p>
           <PaperBox blocks={blocks} style={effective} decorate={decorate} onPages={setPages} pages={pages} />
         </section>

@@ -14,12 +14,13 @@ const mocks = vi.hoisted(() => ({
   scoreDraft: vi.fn(),
   rewriteStudioLine: vi.fn(),
   rewriteStudioLines: vi.fn(),
+  keepTailoredResume: vi.fn(),
   downloadOptimisedResume: vi.fn(),
   saveResumeToAccount: vi.fn(),
 }))
 vi.mock('@/app/actions/tailor-studio', () => ({
   tailorSavedResume: mocks.tailorSavedResume, scoreDraft: mocks.scoreDraft,
-  rewriteStudioLine: mocks.rewriteStudioLine, rewriteStudioLines: mocks.rewriteStudioLines,
+  rewriteStudioLine: mocks.rewriteStudioLine, rewriteStudioLines: mocks.rewriteStudioLines, keepTailoredResume: mocks.keepTailoredResume,
 }))
 vi.mock('@/app/actions/resume-download', () => ({ downloadOptimisedResume: mocks.downloadOptimisedResume }))
 vi.mock('@/app/actions/resume-documents', () => ({ saveResumeToAccount: mocks.saveResumeToAccount }))
@@ -89,6 +90,7 @@ beforeEach(() => {
   Object.values(mocks).forEach((m) => m.mockReset())
   mocks.tailorSavedResume.mockResolvedValue(okResult)
   mocks.scoreDraft.mockResolvedValue({ ok: true, score: 70 })
+  mocks.keepTailoredResume.mockResolvedValue({ ok: true, score: 70 })
   mocks.downloadOptimisedResume.mockResolvedValue({ ok: true, filename: 'x.docx', base64: 'AA==' })
   host = document.createElement('div')
   document.body.appendChild(host)
@@ -286,5 +288,46 @@ describe('style, fit and download', () => {
     const a = [...host.querySelectorAll('a')].find((x) => /Apply now/.test(x.textContent ?? ''))!
     expect(a.getAttribute('href')).toBe('https://careers.example.com/apply/1')
     expect(a.getAttribute('rel')).toContain('noopener')
+  })
+})
+
+describe('kept with the job', () => {
+  it('saves the result for this job shortly after it appears, and again after an edit', async () => {
+    await tailored()
+    expect(mocks.keepTailoredResume).not.toHaveBeenCalled() // a pause, so typing is one save, not forty
+    await act(async () => { await vi.advanceTimersByTimeAsync(1600) })
+    await flush()
+    expect(mocks.keepTailoredResume).toHaveBeenCalledTimes(1)
+    expect(mocks.keepTailoredResume.mock.calls[0][0]).toMatchObject({
+      roleId: '00000000-0000-4000-8000-000000000001', baseResumeId: '00000000-0000-4000-8000-000000000002',
+    })
+    expect(mocks.keepTailoredResume.mock.calls[0][0].sections.experience[0].bullets[0]).toBe('Owned 40 accounts worth ₹6 Cr.')
+    expect(text()).toContain('Saved with this job.')
+
+    await click(tab(/Editor/))
+    await type([...host.querySelectorAll('textarea')].find((t) => t.value === 'Owned 40 accounts worth ₹6 Cr.')!, 'Owned 45 accounts.')
+    await act(async () => { await vi.advanceTimersByTimeAsync(1600) })
+    await flush()
+    expect(mocks.keepTailoredResume).toHaveBeenCalledTimes(2)
+    expect(mocks.keepTailoredResume.mock.calls[1][0].sections.experience[0].bullets[0]).toBe('Owned 45 accounts.')
+  })
+
+  it('a save that fails is silent — nothing is shown about it, and the page is unaffected', async () => {
+    mocks.keepTailoredResume.mockRejectedValue(new Error('down'))
+    await tailored()
+    await act(async () => { await vi.advanceTimersByTimeAsync(1600) })
+    await flush()
+    expect(text()).not.toContain('Saved with this job.')
+    expect(paper().textContent).toContain('Owned 40 accounts worth ₹6 Cr.')
+  })
+
+  it('opens on a résumé already tailored for this job with no model run and no immediate re-save', async () => {
+    await mount({ restored: { sections: rewrittenDoc, style: null, before: 60, keywords: ['Excel'] } })
+    expect(mocks.tailorSavedResume).not.toHaveBeenCalled()
+    expect(paper().textContent).toContain('Owned 40 accounts worth ₹6 Cr.')
+    expect(host.querySelector('[role="tablist"]')).not.toBeNull()
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+    await flush()
+    expect(mocks.keepTailoredResume).not.toHaveBeenCalled() // unchanged since it was saved
   })
 })

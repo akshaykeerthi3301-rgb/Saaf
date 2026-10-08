@@ -12,6 +12,7 @@ import { checkResume } from '@/lib/ats-check'
 import { matchedSkills } from '@/lib/tailor'
 import { displayEmployer } from '@/lib/display-names'
 import { readMinYears } from '@/lib/services/job-insight'
+import { getTailored } from '@/lib/services/tailored-resumes'
 
 /**
  * The data behind the three AI tools on a job (Customize your résumé, Build a cover letter, Analyze how well you
@@ -40,6 +41,8 @@ export type TailorContext =
       gauge: number | null
       rows: GapRow[]
       keywords: { term: string; inResume: boolean }[]
+      /** The résumé already tailored for THIS job (migration 0051), when there is one — step 1 offers to continue from it. */
+      existing: { sections: ResumeSections; style: unknown; updatedAt: string } | null
     }
   | { ok: false; needsResume: true }
   | { ok: false; error: string }
@@ -62,10 +65,11 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
   if (saved.length === 0) return { ok: false, needsResume: true }
   const chosen = saved.find((r) => r.id === parsed.data.resumeId) ?? saved.find((r) => r.isPrimary) ?? saved[0]
 
-  const [detail, ctx, need] = await Promise.all([
+  const [detail, ctx, need, tailored] = await Promise.all([
     getResume(user.id, chosen.id).catch(() => null),
     getCookieContext(user.id, parsed.data.roleId),
     readMinYears(parsed.data.roleId).catch(() => null),
+    getTailored(user.id, parsed.data.roleId),
   ])
   if (!detail) return { ok: false, error: 'That saved résumé could not be found.' }
   if (!ctx.ok) return { ok: false, error: ctx.error }
@@ -127,6 +131,7 @@ export async function loadTailorContext(input: z.input<typeof roleSchema>): Prom
     gauge,
     rows: [titleRow, yearsRow, kwRow, summaryRow],
     keywords,
+    existing: tailored ? { sections: tailored.sections, style: tailored.style, updatedAt: tailored.updatedAt } : null,
   }
 }
 

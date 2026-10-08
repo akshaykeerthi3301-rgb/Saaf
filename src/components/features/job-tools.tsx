@@ -8,6 +8,8 @@ import { OverviewTab } from '@/components/features/job-panel'
 import { TailorStudio } from '@/components/features/tailor-studio'
 import { CoverLetterStudio } from '@/components/features/cover-letter-studio'
 import { Gauge, GAUGE_LABEL } from '@/components/features/score-gauge'
+import { formatDistanceToNowStrict } from 'date-fns'
+import { styleSchema, type ResumeStyle } from '@/lib/resume-style'
 import { keepResumeFromFile } from '@/lib/keep-resume'
 import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { loadCoverLetterContext, loadTailorContext, type CoverLetterContext, type GapRow, type TailorContext } from '@/app/actions/job-tools'
@@ -23,6 +25,10 @@ import { loadCoverLetterContext, loadTailorContext, type CoverLetterContext, typ
  */
 
 type Tool = 'tailor' | 'letter' | 'fit'
+
+const ago = (iso: string) => formatDistanceToNowStrict(new Date(iso), { addSuffix: true })
+/** A saved style, or undefined when it is missing or no longer valid — never a half-read one. */
+const styleOf = (raw: unknown): ResumeStyle | undefined => { const p = styleSchema.safeParse(raw); return p.success ? (p.data as ResumeStyle) : undefined }
 
 export function AiToolsRail({ roleId, title }: { roleId: string; title: string }) {
   const [open, setOpen] = useState<Tool | null>(null)
@@ -200,6 +206,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
   const applyUrl = current.status === 'done' && current.result.ok ? current.result.insight.applyUrl : undefined
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [ctx, setCtx] = useState<TailorContext | null>(null)
+  const [fromSaved, setFromSaved] = useState(false)
   const [mode, setMode] = useState<'quick' | 'full'>('full')
   const [scope, setScope] = useState({ summary: true, experience: true, skills: true })
   // The résumé the candidate picked in the table, and whether a read is already running.
@@ -242,6 +249,15 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
           </div>
           <Gauge value={g} />
         </div>
+        {ctx.existing ? (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4">
+            <p className="text-sm text-primary">
+              <span className="font-semibold">You already customised a résumé for this job</span>{' '}
+              <span className="text-muted-foreground">({ago(ctx.existing.updatedAt)}).</span>
+            </p>
+            <button type="button" onClick={() => { setFromSaved(true); setStep(3) }} className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Continue where I left off</button>
+          </div>
+        ) : null}
         <GapTable rows={ctx.rows} resumeLabel={ctx.resume.label} resumes={ctx.resumes} onPick={(id) => load(id)} busy={loading} />
       </div>
     )
@@ -292,7 +308,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
     body = (
       <div className="mx-auto w-full max-w-[1200px] p-6">
         <TailorStudio
-          key={`${ctx.resume.id}:${JSON.stringify(scope)}`}
+          key={`${ctx.resume.id}:${JSON.stringify(scope)}:${fromSaved}`}
           roleId={roleId}
           resumeId={ctx.resume.id}
           resumeLabel={ctx.resume.label}
@@ -301,7 +317,8 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
           company={ctx.role.company}
           applyUrl={applyUrl}
           scope={scope}
-          autoRun
+          restored={fromSaved && ctx.existing ? { sections: ctx.existing.sections, style: styleOf(ctx.existing.style) ?? null, before: ctx.gauge === null ? null : Math.round(ctx.gauge * 10), keywords: ctx.keywords.map((k) => k.term) } : undefined}
+          autoRun={!fromSaved}
           embedded
         />
       </div>
@@ -310,7 +327,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
 
   const ready = ctx?.ok === true
   return (
-    <Sheet open={open} onOpenChange={(o) => { if (!o) setStep(1); onOpenChange(o) }} trigger={<></>} wide>
+    <Sheet open={open} onOpenChange={(o) => { if (!o) { setStep(1); setFromSaved(false) } onOpenChange(o) }} trigger={<></>} wide>
       <DrawerHeader title="Generate your custom résumé" />
       <Stepper step={step} />
       <div className="min-h-0 flex-1 overflow-y-auto bg-background">{body}</div>

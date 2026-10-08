@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getResume } from '@/lib/services/resume-documents'
+import { saveTailored } from '@/lib/services/tailored-resumes'
+import { styleSchema } from '@/lib/resume-style'
 import { getCookieContext } from '@/lib/services/cookie'
 import { rewriteResume, rewriteOneBullet, RewriteError, type BulletChange } from '@/lib/resume-rewrite'
 import { PROVIDER_LABEL, ModelBusyError } from '@/lib/parse/llm'
@@ -269,4 +271,41 @@ export async function rewriteStudioLines(input: z.input<typeof instructionSchema
     if (e instanceof ModelBusyError) return { ok: false, error: 'The writing model is busy right now. Try again in about a minute.' }
     return { ok: false, error: 'We could not rewrite those lines just now. Yours are unchanged.' }
   }
+}
+
+const keepSchema = z.object({
+  roleId: z.string().uuid(),
+  baseResumeId: z.string().uuid().nullable(),
+  sections: sectionsSchema,
+  style: styleSchema.optional(),
+})
+
+export type KeepTailoredResult = { ok: true; score: number | null } | { ok: false }
+
+/**
+ * Keep the résumé tailored for THIS job, with the job (migration 0051). Called quietly as the person edits the result,
+ * so reopening "Customize your résumé" on the job continues from it instead of paying for another model run.
+ *
+ * ⚠️ THE SCORE IS RECOMPUTED HERE, against the posting read server-side from the role id — never taken from the browser
+ * (it is stored, and shown back later as fact). The sections come from the browser (they are the candidate's own text
+ * going back to their own row; RLS ties the row to them) and the title and company are read from the role, not sent.
+ * `{ ok: false }` covers a missing table as well as a failed write: the caller does not distinguish and does not nag.
+ */
+export async function keepTailoredResume(input: z.input<typeof keepSchema>): Promise<KeepTailoredResult> {
+  const parsed = keepSchema.safeParse(input)
+  if (!parsed.success) return { ok: false }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false }
+
+  const ctx = await getCookieContext(user.id, parsed.data.roleId)
+  if (!ctx.ok) return { ok: false }
+  const { role } = ctx.context
+  const sections = { ...parsed.data.sections, order: [] } as unknown as ResumeSections
+  const score = scoreSections(sections, role.title, role.description ?? undefined)
+  const saved = await saveTailored({
+    userId: user.id, roleId: parsed.data.roleId, roleTitle: role.title, company: role.company,
+    baseResumeId: parsed.data.baseResumeId, sections, style: parsed.data.style ?? null, score,
+  })
+  return saved ? { ok: true, score } : { ok: false }
 }
