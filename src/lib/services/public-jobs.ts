@@ -252,7 +252,7 @@ export async function readRolePage(role: string, city: City | null): Promise<Rol
 }
 
 /** The words that make a posting's location "remote" — the feed's own rule (src/gates/extract.ts isRemoteLocation). */
-const REMOTE_LOCATION = 'location_raw.ilike.%remote%,location_raw.ilike.%anywhere%,location_raw.ilike.%work from home%'
+export const REMOTE_LOCATION = 'location_raw.ilike.%remote%,location_raw.ilike.%anywhere%,location_raw.ilike.%work from home%'
 
 /**
  * The remote hub (F-1205): roles whose location says remote, with the role mix of the newest 300 (counted by

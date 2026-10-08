@@ -21,6 +21,7 @@ import { isEasyApply } from '@/lib/job-facts'
 import { readTrackedStatuses } from '@/lib/services/workspace'
 import { applyQuickPills, arrangeShortlist, holdingLine, NEW_WITHIN_DAYS, SHOW_MORE_STEP } from '@/lib/shortlist'
 import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
+import { exploreHref } from '@/lib/explore'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
@@ -198,6 +199,8 @@ export default async function TodayPage({
     ? soloCounts(view, (x) => runFilters(x).rows.length)
     : []
   const drawerPairs = drawerParams(view)
+  // The sentence box only searches the roles already scored for this candidate; this carries the same filters to the whole index (TASK-217).
+  const exploreTo = exploreHref(viewToQuery(view))
   const pillCount = Object.values(pills).filter(Boolean).length + (view.q ? 1 : 0) + (view.city ? 1 : 0) + drawerPairs.length
   // The text filter, the drawer and the hidden view ride along on every link, like the pills.
   const textParams: [string, string][] = [
@@ -730,6 +733,9 @@ export default async function TodayPage({
                   )
                 })}
               </div>
+              <p className="mt-3 text-xs">
+                Or <Link href={exploreTo} className="font-semibold text-primary underline underline-offset-4">search all {indexed.toLocaleString('en-IN')} roles</Link>, not only the ones you saved.
+              </p>
             </div>
           ) : solo.length > 0 ? (
             <div className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
@@ -754,13 +760,17 @@ export default async function TodayPage({
                   )
                 })}
               </div>
+              <p className="mt-3 text-xs">
+                Or <Link href={exploreTo} className="font-semibold text-primary underline underline-offset-4">search all {indexed.toLocaleString('en-IN')} roles</Link>, not only the ones you saved.
+              </p>
             </div>
           ) : pillCount > 0 && rows.length === 0 ? (
             <p className="mb-4 rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-muted-foreground">
               No role in your {allRows.length} matches passes {pillCount === 1 ? 'that filter' : 'all of those filters'}.
               That is the filter, not the market —{' '}
               <Link href="/today" className="font-semibold text-primary underline underline-offset-4">clear it</Link>{' '}
-              to see everything.
+              to see everything — or{' '}
+              <Link href={exploreTo} className="font-semibold text-primary underline underline-offset-4">search all {indexed.toLocaleString('en-IN')} roles for it</Link>.
             </p>
           ) : null}
 
@@ -772,6 +782,12 @@ export default async function TodayPage({
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-primary">{shownCount.toLocaleString('en-IN')}</span> {shownCount === 1 ? 'job' : 'jobs'}
               {ofLine ? ` ${ofLine}` : ''}
+              {view.q || view.city ? (
+                <>
+                  {' · '}
+                  <Link href={exploreTo} className="font-semibold text-primary underline underline-offset-4">Search all roles</Link>
+                </>
+              ) : null}
               {baselineText ? (
                 <span className="hidden sm:inline">
                   {' · '}for {baselineText}{' · '}

@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { scoreAgainstIndex } from '@/lib/score-candidate'
+import { candidateFromProfile } from '@/lib/candidate-profile'
 import type { CandidateProfile } from '@/gates/types'
 
 /**
@@ -32,23 +33,7 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // in the UI — the UI is one refactor away from forgetting.
   if (!profile?.confirmed_at) return { written: 0 }
 
-  const candidate: CandidateProfile = {
-    yearsExperience: Number(profile.years_experience ?? 0),
-    currentTitle: profile.current_title ?? undefined,
-    city: profile.city ?? undefined,
-    credential: profile.credential ?? 'none',
-    preferredRole: profile.preferred_role ?? undefined,
-    /**
-     * Added by migration 0022. The select above is `*`, so an unmigrated
-     * database simply returns no such key and these stay undefined — the
-     * candidate gets the single-role behaviour they had before, with no error.
-     * scoreAgainstIndex reads both and dedupes.
-     */
-    preferredRoles: profile.preferred_roles ?? undefined,
-    keywords: profile.keywords ?? undefined,
-    workModePreference: profile.work_mode_preference ?? undefined,
-    skills: profile.skills ?? undefined,
-  }
+  const candidate: CandidateProfile = candidateFromProfile(profile)
 
   // Matching used to be an exact equality against the candidate's own guessed
   // function bucket. That bucket was itself guessed from the résumé by a

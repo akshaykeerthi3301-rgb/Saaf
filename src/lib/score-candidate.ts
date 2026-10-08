@@ -42,7 +42,7 @@ function isMissingFunction(e: { code?: string; message?: string }): boolean {
 }
 
 /** The columns COLUMNS selects, plus the embedded requirement rows. */
-type RoleRow = {
+export type RoleRow = {
   id: string
   title: string
   company_name: string | null
@@ -264,7 +264,7 @@ export async function scoreAgainstIndex(
 }
 
 /** Rows → scored roles. Extracted so every fallback path scores identically. */
-function scoreRows(roles: RoleRow[], candidate: CandidateProfile): ScoredRole[] {
+export function scoreRows(roles: RoleRow[], candidate: CandidateProfile): ScoredRole[] {
   return roles.map((role) => {
     // Shape inferred from the select above, exactly as evaluateUser did it.
     const reqs: TypedRequirement[] = (role.role_requirements ?? []).map((q) => ({
