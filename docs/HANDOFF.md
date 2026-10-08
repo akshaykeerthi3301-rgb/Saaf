@@ -2,6 +2,16 @@
 
 ---
 
+## 🔶 2026-10-08 — parity audit done: 50 of 109 match, 24 partial, 3 gaps, 21 could not be checked
+
+**Written, not shipped.** Nothing was changed on the site. Result and evidence: ROADMAP Phase 19 (TASK-214–221) and PROJECT-STATE Stage AQ; the full row-by-row table is the local file `docs/jobright-map/20-parity-audit.local.md` (never published).
+
+**Found on the live site:** voice input is broken (a one-line header fix), job pages are missing six Google-recommended fields, and the search box cannot look beyond your 395 matches.
+
+**Only you can do these, so the 21 unchecked rows can be checked:** (1) save a résumé in Saaf — or say "save a synthetic test résumé on my account" (11 rows need it); (2) load the Saaf extension 0.7.0 in Chrome (8 rows need it); (3) say "go" on TASK-214 first, then the rest in order.
+
+---
+
 ## ✅ 2026-10-08 — taken-down jobs are hidden, LIVE (`dpl_9nDhTkTTnTaJQFHYR4HRyeDDoUqb`), and every candidate's matches were recomputed
 
 **Live and checked.** The daily ingest and the recompute ran on production today (roles 27,882 → 28,751; reposted, work mode, contract type, pay and "posting closed" now filled). 7,014 of the stored roles (24%) had been taken down by their employer; the site now hides them. **Checked after the deploy:** the Product Manager page in a real browser says 257 open roles (was 352), the remote page 865 (was 1,070); 5 of 5 sampled taken-down job pages show "not found" and 3 of 3 live ones load; none of the newest 1,000 taken-down jobs is in the sitemap. **After the recompute:** matches pointing at a taken-down job went from 693 of 3,970 to 0 of 3,277.

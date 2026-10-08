@@ -2825,6 +2825,20 @@ The tasks below, one commit each (TASK-197/198 share one because they share one 
 
 **Correction to an earlier number:** pay stated in postings measured **0.6%** on 4,000 sampled postings today against 2.6% earlier; the two samples differ and have not been reconciled — do not quote either as the Indian-market figure.
 
+### Stage AQ — the end-to-end parity audit (2026-10-08, `main`)
+
+**What it was:** all 109 scoreboard rows graded against the competitor's signed-in product (the founder's own Chrome, black-box, nothing saved) and Saaf's live production screens. Full table and evidence in the local file `docs/jobright-map/20-parity-audit.local.md`.
+
+| Grade (2026-10-08) | Rows |
+|---|---|
+| Match | 50 (46%) |
+| Same capability, deliberate lawful form | 11 |
+| Partial | 24 |
+| Gap | 3 |
+| Could not be verified today | 21 |
+
+**Strict parity is therefore 46%, 56% counting the lawful forms** — ~~"109 rows built"~~ meant built to the row's own lawful acceptance, not identical. **Measured defects:** voice input is blocked on production by `vercel.json` (`microphone=()`), so F-203/F-411 were counted as built but do not work live; public job pages omit six Google-recommended JobPosting fields and an `og:image`; browser errors go to Sentry without a tunnel. **Biggest functional gap:** the sentence box searches only the user's ~395 scored roles, not the 21,737 indexed. **A measurement withdrawn:** a "slow detail pane" reading came from timing a background automation tab — the pane's request took 2.8 s once the page ran. Follow-ups are Phase 19 (TASK-214–221).
+
 ## Index coverage by function — probed live 2026-09-08
 
 *Measured against the live index (21,813 India roles) by scoring four probe
