@@ -91,6 +91,14 @@ questions** are left for you unless you typed your own answer to that exact
 question on your Saaf profile (0.6.0, TASK-171); date of birth, age and pregnancy
 are never answered.
 
+**0.7.0 (2026-10-08, TASK-194):** **custom questions.** Employers add their own free-text
+questions. Write your answer once on your Saaf profile (Apply details → *Questions
+employers asked*) and the extension fills it only when a form asks **exactly that
+question** (compared after lower-casing and dropping punctuation — never "similar").
+A *required* question with no answer is not guessed: it is sent to your Saaf profile,
+blank, for you to answer. Apply for me uses an answer only if you ticked it for that.
+Gender, religion, caste, passwords, ID numbers and consent boxes never come from this.
+
 **0.6.0 (2026-10-08):** the popup shows the **queue** (remove a job, or clear it),
 and each finished application shows **how much of what the employer required was
 answered** and which fields were missing. Saaf can **pause every extension at

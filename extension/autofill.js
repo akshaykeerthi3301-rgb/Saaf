@@ -40,6 +40,16 @@
  * inferred from anything else on the profile. Date of birth, age and pregnancy
  * are not on that list and stay refused for everyone.
  *
+ * ⚠️ A CUSTOM QUESTION IS ANSWERED ONLY WITH WORDS THE CANDIDATE WROTE FOR THAT
+ * EXACT QUESTION (2026-10-08, TASK-194). Employers add their own free-text
+ * questions ("Why Razorpay?"). The candidate can write an answer in Saaf once;
+ * it is filled only when a form asks the same question — compared after
+ * lower-casing and dropping punctuation, never "similar", never a model's
+ * guess. A required question with no saved answer is not guessed either: it is
+ * reported back so the candidate can answer it in Saaf, and filled next time.
+ * Demographic, credential and consent questions never come from this bank, and
+ * Apply for me uses an answer only if the candidate ticked it for that.
+ *
  * Attached to a global rather than exported, because MV3 content scripts are
  * not ES modules. The test imports this file for its side effect and reads the
  * same global.
@@ -63,7 +73,7 @@
     { re: /\b(gender|sex|sexual|race|ethnic|ethnicity|veteran|disabilit|disabled|orientation|pronoun|caste|religion|marital|pregnan|date\s*of\s*birth|\bdob\b|age\b)/i,
       reason: 'a demographic question — yours alone to answer', selfId: true },
     { re: /\b(why\s*(do\s*)?you|cover\s*letter|motivation|tell\s*us|describe|essay|what\s*interests|in\s*your\s*own\s*words)\b/i,
-      reason: 'free text the employer asked you — not us' },
+      reason: 'free text the employer asked you — not us', written: true },
     { re: /\b(password|passcode|ssn|social\s*security|aadhaar|\bpan\b|bank|account\s*number|ifsc)\b/i,
       reason: 'a credential or identity number — never entered by us' },
     { re: /\b(i\s*agree|agree\s*to|consent|terms\s*(and|&)\s*conditions|privacy\s*(policy|notice)|i\s*(hereby\s*)?(certify|confirm|declare|acknowledge))/i,
@@ -193,6 +203,45 @@
     bits.push(el.id || '')
     return tidy(bits.join(' '))
   }
+
+  // ------------------------------------------------------ saved answers (bank) --
+
+  /**
+   * One question, one key: lower-case, "(optional)"/"(required)" and every mark
+   * of punctuation dropped, spaces collapsed. Mirrored by questionKey() in
+   * src/lib/answer-bank.ts — extension/answer-bank.test.ts fails if they drift.
+   */
+  function questionKey(label) {
+    return String(label || '').toLowerCase()
+      .replace(/\((optional|required)\)/g, ' ')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ').trim().slice(0, 200)
+  }
+
+  /** The question as the page words it — the label, not the machine names signalsFor also searches. */
+  function questionLabel(el, doc) {
+    const first = (...bits) => bits.map((b) => tidy(b || '')).find(Boolean) || ''
+    const lab = el.id && doc ? doc.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null
+    const by = el.getAttribute?.('aria-labelledby')
+    return first(
+      textOf(lab),
+      textOf(el.closest ? el.closest('label') : null),
+      el.getAttribute?.('aria-label'),
+      by && doc ? by.split(/\s+/).map((id) => textOf(doc.getElementById?.(id))).join(' ') : '',
+      el.getAttribute?.('placeholder'),
+    )
+  }
+
+  /** A plain text box or text area — not a picker, a number or an email field. */
+  function isTextBox(el) {
+    const tag = (el.tagName || '').toLowerCase()
+    if (el.getAttribute?.('role') === 'combobox' || el.getAttribute?.('aria-autocomplete') === 'list') return false
+    return tag === 'textarea' || (tag === 'input' && ['text', ''].includes((el.type || 'text').toLowerCase()))
+  }
+
+  /** Demographic, credential and consent questions: the bank is never consulted, whatever it holds. */
+  const neverFromBank = (signals) => NEVER_ANSWERED.test(signals) || REFUSALS.some((r) => !r.written && r.re.test(signals))
+
+  const isRequiredEl = (el) => !!el.required || el.getAttribute?.('aria-required') === 'true'
 
   /**
    * ⚠️ SEPARATORS BECOME SPACES, AND WITHOUT THIS THE WHOLE MODULE IS INERT ON
@@ -537,7 +586,7 @@
    * what was picked for the candidate to check. Never submits, never navigates.
    */
   async function fillForm(profile, doc, opts = {}) {
-    const out = { filled: [], refused: [], skipped: 0 }
+    const out = { filled: [], refused: [], skipped: 0, unanswered: [] }
     const refuse = (reason) => {
       if (reason && !out.refused.some((r) => r.reason === reason)) out.refused.push({ reason })
     }
@@ -573,6 +622,24 @@
       if (!isFillable(el)) continue
       const signals = signalsFor(el, doc)
       const verdict = classify(signals, profile.selfId)
+
+      // ---- a custom question: the candidate's own saved answer, or a note that it is theirs to write.
+      const written = !verdict || (verdict.refused && REFUSALS.find((r) => r.re.test(signals))?.written)
+      if (written && isTextBox(el) && !neverFromBank(signals)) {
+        const q = questionLabel(el, doc)
+        const entry = q && profile.answerBank ? profile.answerBank[questionKey(q)] : null
+        if (el.value && el.value.trim()) { out.skipped++; continue }
+        if (entry && entry.a) {
+          if (opts.mode === 'auto' && !entry.auto) { refuse('a question you answered in Saaf, but not for Apply for me — left for you'); continue }
+          setNativeValue(el, entry.a)
+          out.filled.push({ key: 'answer', value: entry.a.length > 60 ? entry.a.slice(0, 57) + '…' : entry.a, how: 'typed' })
+          continue
+        }
+        if (!entry && q && isRequiredEl(el) && out.unanswered.length < 20 && !out.unanswered.some((u) => u.key === questionKey(q))) {
+          out.unanswered.push({ key: questionKey(q), question: q.slice(0, 200) })
+        }
+      }
+
       if (!verdict) { out.skipped++; continue }
       if (verdict.refused) { refuse(verdict.reason); continue }
       const raw = valueFor(verdict.key, profile)
@@ -674,6 +741,6 @@
 
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

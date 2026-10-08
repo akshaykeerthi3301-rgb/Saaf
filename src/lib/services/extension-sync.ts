@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { readSelfId } from '@/lib/services/self-id'
 import type { SelfIdAnswers } from '@/lib/self-id'
+import { readAnswerBank } from '@/lib/services/answer-bank'
+import { forExtension } from '@/lib/answer-bank'
 
 /**
  * The web app's half of the extension bridge (2026-09-25, Jobright parity).
@@ -35,6 +37,8 @@ export type ExtensionSync = {
   profile: ExtensionProfile
   /** The answers the candidate typed for demographic questions; empty when none. Replaces the extension's copy. */
   selfId: SelfIdAnswers
+  /** The candidate's own answers to custom questions, by question key (0046); empty when none. Replaces the extension's copy. */
+  answerBank: { key: string; a: string; auto: boolean }[]
   resumeText: string
   tracked: { url: string; status: Stage }[]
 }
@@ -84,6 +88,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
     supabase.from('applications').select('apply_url, status').not('apply_url', 'is', null).limit(500),
   ])
   const { answers: selfId } = await readSelfId(userId)
+  const { bank } = await readAnswerBank(userId)
   const row = (p as unknown as ProfileRow | null)
   const s = (v: string | number | null | undefined) => (v == null ? '' : String(v))
   return {
@@ -102,6 +107,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       portfolio: s(row?.portfolio_url),
     },
     selfId,
+    answerBank: forExtension(bank),
     resumeText: s(((!primary.error && primary.data ? primary.data : latest.data) as { body: string | null } | null)?.body),
     tracked: ((apps ?? []) as unknown as { apply_url: string; status: Stage }[])
       .map((a) => ({ url: a.apply_url, status: a.status })),

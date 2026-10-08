@@ -61,6 +61,24 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
 
+  // Required questions a form asked that the candidate has no saved answer for.
+  // Held here until the Saaf web app collects them (saaf:drain); the candidate
+  // answers them in Saaf and the next form that asks the same question is filled.
+  if (msg?.type === 'saaf:questions') {
+    ;(async () => {
+      const { pendingQuestions = [] } = await chrome.storage.local.get('pendingQuestions')
+      for (const q of Array.isArray(msg.items) ? msg.items : []) {
+        const key = typeof q?.key === 'string' ? q.key.slice(0, 200) : ''
+        const question = typeof q?.question === 'string' ? q.question.slice(0, 200) : ''
+        if (!key || !question || pendingQuestions.some((p) => p.key === key)) continue
+        pendingQuestions.push({ key, question })
+      }
+      await chrome.storage.local.set({ pendingQuestions: pendingQuestions.slice(-50) })
+      sendResponse({ ok: true })
+    })()
+    return true
+  }
+
   if (msg?.type !== 'saaf:score') return false
 
   ;(async () => {
@@ -102,8 +120,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
  *  saaf:hello  → is the extension installed, and which version
  *  saaf:sync   ← profile fields, résumé text and the tracker's url→stage list,
  *                pushed by the signed-in app on load
- *  saaf:drain  → the roles queued on job sites since the last visit
+ *  saaf:drain  → the roles queued on job sites since the last visit, and the
+ *                required custom questions forms asked that have no saved answer
  *  saaf:ack    ← those the app has filed, so they are not filed twice
+ *  saaf:ack-questions ← the questions the app has put on file
  *
  * ⚠️ SYNC FILLS, IT DOES NOT ERASE. A field the web profile leaves blank keeps
  * whatever the candidate typed into the extension, and the fields only the
@@ -136,6 +156,18 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
         }
         profile.selfId = next
       }
+      // The candidate's own saved answers to custom questions, keyed by the question
+      // (autofill.js questionKey). REPLACED, like selfId: deleting one on the web must
+      // stop it being filled here. Capped so a bad message cannot fill storage.
+      if (Array.isArray(msg.answerBank)) {
+        const bank = {}
+        for (const e of msg.answerBank.slice(0, 60)) {
+          if (typeof e?.key === 'string' && typeof e?.a === 'string' && e.key && e.a.trim()) {
+            bank[e.key.slice(0, 200)] = { a: e.a.trim().slice(0, 1500), auto: e.auto === true }
+          }
+        }
+        profile.answerBank = bank
+      }
       const patch = { profile, syncedAt: new Date().toISOString() }
       if (typeof msg.resumeText === 'string' && msg.resumeText.trim().length >= 120) {
         patch.resumeText = msg.resumeText.slice(0, 40000)
@@ -151,8 +183,15 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
       return
     }
     if (msg?.type === 'saaf:drain') {
-      const { pendingTrack = [] } = await chrome.storage.local.get('pendingTrack')
-      sendResponse({ ok: true, items: pendingTrack })
+      const { pendingTrack = [], pendingQuestions = [] } = await chrome.storage.local.get(['pendingTrack', 'pendingQuestions'])
+      sendResponse({ ok: true, items: pendingTrack, questions: pendingQuestions })
+      return
+    }
+    if (msg?.type === 'saaf:ack-questions') {
+      const done = new Set(Array.isArray(msg.keys) ? msg.keys : [])
+      const { pendingQuestions = [] } = await chrome.storage.local.get('pendingQuestions')
+      await chrome.storage.local.set({ pendingQuestions: pendingQuestions.filter((p) => !done.has(p.key)) })
+      sendResponse({ ok: true })
       return
     }
     if (msg?.type === 'saaf:autoapply-add') {

@@ -1,0 +1,12 @@
+-- Saaf — the candidate's own answers to employers' custom questions (2026-10-08, TASK-194; F-705).
+--
+-- A list of { q, a, auto }: the question as a form worded it, the answer THE CANDIDATE
+-- WROTE, and whether Apply for me may use it. An entry with a blank answer is a question
+-- the extension met on a form and could not answer — it waits here for the candidate.
+-- Lives on profiles, so the existing owner-only policies are the access control; there is
+-- no new table and no new policy to get wrong. Capped in code (60 entries, 1,500
+-- characters an answer), not in SQL.
+--
+-- SAFE TO DEPLOY BEFORE THIS IS APPLIED: the panel says its update is missing and the
+-- extension simply has no saved answers to use.
+alter table profiles add column if not exists answer_bank jsonb not null default '[]'::jsonb;

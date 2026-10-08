@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Saaf \u2014 score any job posting",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Score any job posting against your resume, see the missing keywords, fill the application form, apply for you when you turn it on, and track it in Saaf. Reads only the page you are on.",
   "permissions": [
     "storage",

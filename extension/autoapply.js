@@ -145,14 +145,14 @@
     }
     if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'The employer asks for a CAPTCHA — that one is yours', filled: [] }
 
-    const res = await root.SaafAutofill.fillForm(profile, doc, { resumeFile: opts.resumeFile, waitMs: opts.waitMs })
+    const res = await root.SaafAutofill.fillForm(profile, doc, { resumeFile: opts.resumeFile, waitMs: opts.waitMs, mode: 'auto' })
     await sleep(opts.settleMs ?? 400)
     if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled: res.filled, coverage: coverage(doc) }
 
     const cov = coverage(doc)
     const missing = missingRequired(doc)
     if (missing.length) {
-      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled: res.filled, coverage: cov }
+      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled: res.filled, coverage: cov, unanswered: res.unanswered }
     }
     const submit = findSubmit(doc)
     if (!submit) return { status: 'needs-you', reason: 'Could not find the form’s own Submit button', filled: res.filled, coverage: cov }

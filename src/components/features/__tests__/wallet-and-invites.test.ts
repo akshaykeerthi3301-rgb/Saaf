@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 vi.mock('@/app/actions/credits', () => ({ redeemPromoCode: async () => ({ ok: true, message: 'Added 5 credits.' }) }))
 const { WalletAndInvites } = await import('../wallet-and-invites')
 
-const base = { stored: true, balance: 15, rows: [{ id: '1', delta: 10, reason: 'referral', note: null, created_at: '2026-10-01T00:00:00Z' }, { id: '2', delta: 5, reason: 'promo', note: null, created_at: '2026-10-02T00:00:00Z' }], code: 'AB12CD34', joined: 2, invitesStored: true }
+const base = { stored: true, balance: 15, rows: [{ id: '1', delta: 10, reason: 'referral', note: null, created_at: '2026-10-01T00:00:00Z' }, { id: '2', delta: 5, reason: 'promo', note: null, created_at: '2026-10-02T00:00:00Z' }], code: 'AB12CD34' as string | null, joined: 2, invitesStored: true }
 const html = (over: Partial<typeof base> = {}) => renderToStaticMarkup(createElement(WalletAndInvites, { ...base, ...over }))
 
 describe('WalletAndInvites', () => {

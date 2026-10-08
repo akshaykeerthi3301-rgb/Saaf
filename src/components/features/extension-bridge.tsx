@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fileFromExtension, getExtensionSync } from '@/app/actions/extension-bridge'
+import { fileAskedQuestions } from '@/app/actions/answer-bank'
 import { askExtension } from '@/lib/extension-client'
 
 /**
@@ -35,7 +36,7 @@ export function ExtensionBridge() {
         // Remembered on this device so the install nudge never asks someone who already has it.
         try { window.localStorage.setItem('saaf.extension.seen', String(Date.now())) } catch { /* no storage: the nudge stays off too */ }
 
-        const queued = await ask<{ ok: boolean; items: Queued[] }>({ type: 'saaf:drain' })
+        const queued = await ask<{ ok: boolean; items: Queued[]; questions?: { key: string; question: string }[] }>({ type: 'saaf:drain' })
         if (queued?.ok && queued.items.length) {
           const res = await fileFromExtension(queued.items)
           if (res.ok && res.handled.length) {
@@ -47,9 +48,18 @@ export function ExtensionBridge() {
           }
         }
 
+        // Required questions a form asked that have no saved answer: put on file, blank, for the candidate to answer.
+        if (queued?.ok && queued.questions?.length) {
+          const res = await fileAskedQuestions(queued.questions)
+          if (res.ok && res.handled.length) {
+            await ask({ type: 'saaf:ack-questions', keys: res.handled })
+            if (res.added) setNote(`${res.added} question${res.added === 1 ? '' : 's'} from a job form ${res.added === 1 ? 'is' : 'are'} waiting for your answer in Profile → Apply details.`)
+          }
+        }
+
         const data = await getExtensionSync()
         if (data.ok) {
-          await ask({ type: 'saaf:sync', profile: data.profile, selfId: data.selfId, resumeText: data.resumeText, tracked: data.tracked })
+          await ask({ type: 'saaf:sync', profile: data.profile, selfId: data.selfId, answerBank: data.answerBank, resumeText: data.resumeText, tracked: data.tracked })
         }
       } finally {
         running = false

@@ -202,6 +202,7 @@ function mountActions(root, job) {
         return
       }
       const res = await globalThis.SaafAutofill.fillForm(profile, doc, { resumeFile })
+      if (res.unanswered.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: res.unanswered })
       const how = { typed: 'Typed', chose: 'Chose', ticked: 'Ticked', attached: 'Attached' }
       const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
       const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
@@ -209,7 +210,8 @@ function mountActions(root, job) {
       wrap.insertAdjacentHTML('beforeend', `<div class="report">
         <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
         ${picks ? `<ul>${picks}</ul>` : ''}
-        ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}</div>`)
+        ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
+        ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Open Saaf → Profile → Apply details, write it once, and it is filled next time the same question is asked.</div>` : ''}</div>`)
       btn.textContent = 'Fill again'
       btn.disabled = false
       // Filling a form is the candidate applying, so the role goes on the
@@ -257,6 +259,7 @@ async function autoApplyIfAssigned() {
     r = await A.run(document, profile, { resumeFile, beforeSubmit })
     if (r.status === 'open-form') r = { status: 'needs-you', reason: 'Could not reach the application form' }
   }
+  if (r.unanswered?.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: r.unanswered })
   await report(r.status, r.reason, r.coverage)
   return true
 }
