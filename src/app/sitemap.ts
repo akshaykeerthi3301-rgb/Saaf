@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/site'
-import { listPublicJobsForSitemap } from '@/lib/services/public-jobs'
+import { listPublicJobsForSitemap, listSeoPagesForSitemap } from '@/lib/services/public-jobs'
 
 /**
  * Every public URL, and nothing else.
@@ -30,6 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return []
   })
 
+  // Role and role-in-city pages (TASK-158): only those with enough live roles to be worth indexing (MIN_ROLES_TO_INDEX).
+  const seo = await listSeoPagesForSitemap().catch((e: unknown) => {
+    console.error('sitemap: role pages left out — database unreachable at build/revalidate', e)
+    return { roles: [] as string[], pairs: [] as { role: string; city: string }[] }
+  })
+
   return [
     { url: `${base}/tools/ats-checker`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
     { url: `${base}/tools/paste-jd`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
@@ -41,6 +47,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/extension`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${base}/roles`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    ...seo.roles.map((r) => ({ url: `${base}/roles/${r}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.7 })),
+    ...seo.pairs.map((p) => ({ url: `${base}/roles/${p.role}/${p.city}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.6 })),
     ...jobs.map((j) => ({ url: `${base}/jobs/${j.id}`, lastModified: new Date(j.lastSeenAt), changeFrequency: 'daily' as const, priority: 0.6 })),
   ]
 }

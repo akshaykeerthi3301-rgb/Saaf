@@ -6,6 +6,9 @@ import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay, type StatedPay } from '@/lib/stated-pay'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 import { MAX_PAGE, PAGE_SIZE, searchTokens } from '@/lib/public-search'
+import { cityPatterns, MIN_ROLES_TO_INDEX, roleSlug, rolePhrase, titleIsRole, citySlug } from '@/lib/seo-pages'
+import { ALL_ROLES } from '@/lib/taxonomy/roles'
+import { resolveCity, type City } from '@/lib/taxonomy/locations'
 
 /**
  * Public job pages — one indexed role, readable without an account.
@@ -168,7 +171,9 @@ export type PublicSearchRow = { id: string; title: string; company: string; city
 /**
  * The public job search (F-1202). ⚠️ SERVICE CLIENT, CONTAINED BY SHAPE like the rest of this file:
  * it reads `roles` only, returns a fixed set of display fields, and the query is first reduced to a few
- * plain word-tokens (src/lib/public-search.ts), so nothing a stranger types can widen what is read. At
+ * plain word-tokens (src/lib/public-search.ts), so nothing a stranger types can widen what is read. ORDER IS THE
+ * EMPLOYER'S OWN POSTED DATE, undated roles last: `first_seen_at` is the same instant for a whole daily ingest
+ * batch (measured 2026-10-08: the newest eight rows share one second), so it cannot say which role is newer. At
  * most PAGE_SIZE rows a page and MAX_PAGE pages. No score is read or computed: a score belongs to a
  * signed-in candidate, which is why the page shows it locked.
  */
@@ -184,7 +189,7 @@ export async function searchPublicJobs(input: { q?: string; city?: string; page?
   if (city.length) query = query.ilike('city', `%${city.join(' ')}%`)
   const from = (page - 1) * PAGE_SIZE
   // One extra row says whether there is a next page without a count.
-  const { data, error } = await query.order('first_seen_at', { ascending: false }).order('id').range(from, from + PAGE_SIZE)
+  const { data, error } = await query.order('posted_at', { ascending: false, nullsFirst: false }).order('first_seen_at', { ascending: false }).order('id').range(from, from + PAGE_SIZE)
   if (error || !data) return { rows: [], more: false }
   const rows = (data as unknown as { id: string; title: string; company_name: string | null; city: string | null; apply_url: string; posted_at: string | null; first_seen_at: string }[])
   return {
@@ -196,14 +201,14 @@ export async function searchPublicJobs(input: { q?: string; city?: string; page?
   }
 }
 
-/** For the landing page's ticker: real counts and the newest postings, nothing estimated. Null on any failure. */
+/** For the landing page's ticker: the count of roles Saaf first saw in the last 24 hours, and the six most recently POSTED roles (by the employer's date). Nothing estimated. Null on any failure. */
 export async function readTicker(): Promise<{ last24h: number; latest: { id: string; title: string; company: string; city: string | null }[] } | null> {
   try {
     const db = createServiceClient()
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString()
     const [recent, latest] = await Promise.all([
       db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).gte('first_seen_at', since),
-      db.from('roles').select('id, title, company_name, city').eq('in_india', true).order('first_seen_at', { ascending: false }).limit(6),
+      db.from('roles').select('id, title, company_name, city').eq('in_india', true).order('posted_at', { ascending: false, nullsFirst: false }).limit(6),
     ])
     if (recent.error || latest.error || !latest.data?.length) return null
     return {
@@ -213,5 +218,83 @@ export async function readTicker(): Promise<{ last24h: number; latest: { id: str
     }
   } catch {
     return null
+  }
+}
+
+export type RolePageData = {
+  /** Live roles in India whose title has every word of the role (and is in the city, on a city page). */
+  total: number
+  latest: PublicSearchRow[]
+  /** Counted among the newest `sampled` roles, not all of them — the page says so. */
+  employers: { company: string; n: number }[]
+  cities: { city: string; n: number }[]
+  sampled: number
+}
+
+/**
+ * One programmatic role page, or role-in-city page (F-1203). ⚠️ SERVICE CLIENT, CONTAINED BY SHAPE like
+ * the rest of this file: `roles` only, a fixed set of display fields, and the filter comes from Saaf's
+ * own taxonomy (role words and city spellings) — never from the visitor. The total is exact; the
+ * employer and city breakdowns are of the newest 300 roles and are labelled that way.
+ */
+export async function readRolePage(role: string, city: City | null): Promise<RolePageData> {
+  const db = createServiceClient()
+  const patterns = city ? cityPatterns(city) : []
+  const scope = <T extends { ilike: (c: string, p: string) => T; or: (f: string) => T }>(q: T): T => {
+    let out = q
+    out = out.ilike('title', `%${rolePhrase(role)}%`)
+    if (patterns.length) out = out.or(patterns.map((p) => `city.ilike.%${p}%`).join(','))
+    return out
+  }
+  const [count, sample] = await Promise.all([
+    scope(db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)),
+    scope(db.from('roles').select('id, title, company_name, city, apply_url, posted_at, first_seen_at').eq('in_india', true)).order('posted_at', { ascending: false, nullsFirst: false }).order('first_seen_at', { ascending: false }).order('id').limit(300),
+  ])
+  const rows = (sample.error ? [] : (sample.data ?? [])) as unknown as { id: string; title: string; company_name: string | null; city: string | null; apply_url: string; posted_at: string | null; first_seen_at: string }[]
+  const tally = (key: (r: (typeof rows)[number]) => string) => {
+    const m = new Map<string, number>()
+    for (const r of rows) { const k = key(r); if (k) m.set(k, (m.get(k) ?? 0) + 1) }
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8)
+  }
+  return {
+    total: count.error ? rows.length : (count.count ?? rows.length),
+    latest: rows.slice(0, 20).map((r) => ({ id: r.id, title: r.title, company: displayEmployer(r.company_name), city: displayCity(r.city) || null, postedAt: r.posted_at, firstSeenAt: r.first_seen_at, easyApply: isEasyApply(r.apply_url) })),
+    employers: tally((r) => displayEmployer(r.company_name)).map(([company, n]) => ({ company, n })),
+    cities: tally((r) => resolveCity(r.city)?.name ?? '').map(([city, n]) => ({ city, n })),
+    sampled: rows.length,
+  }
+}
+
+/**
+ * Which role and role-in-city pages are worth a search engine's time, for the sitemap: one scan of the
+ * newest 5,000 India roles (title and city only), counted in memory, kept when at least
+ * MIN_ROLES_TO_INDEX. Counted from a sample, so it can only under-list, never list a thin page.
+ */
+export async function listSeoPagesForSitemap(): Promise<{ roles: string[]; pairs: { role: string; city: string }[] }> {
+  const db = createServiceClient()
+  const rows: { title: string; city: string | null }[] = []
+  for (let from = 0; from < 5000; from += 1000) {
+    const { data, error } = await db.from('roles').select('title, city').eq('in_india', true).order('first_seen_at', { ascending: false }).order('id').range(from, from + 999)
+    if (error || !data) break
+    rows.push(...(data as unknown as { title: string; city: string | null }[]))
+    if (data.length < 1000) break
+  }
+  const roleCount = new Map<string, number>()
+  const pairCount = new Map<string, number>()
+  for (const r of rows) {
+    const city = resolveCity(r.city)
+    for (const role of ALL_ROLES) {
+      if (!titleIsRole(r.title, role)) continue
+      roleCount.set(role, (roleCount.get(role) ?? 0) + 1)
+      if (city) { const k = `${role}|${city.name}`; pairCount.set(k, (pairCount.get(k) ?? 0) + 1) }
+    }
+  }
+  return {
+    roles: [...roleCount].filter(([, n]) => n >= MIN_ROLES_TO_INDEX).map(([role]) => roleSlug(role)),
+    pairs: [...pairCount].filter(([, n]) => n >= MIN_ROLES_TO_INDEX).map(([k]) => {
+      const [role, cityName] = k.split('|')
+      const c = resolveCity(cityName)!
+      return { role: roleSlug(role), city: citySlug(c) }
+    }),
   }
 }

@@ -5,7 +5,8 @@ import Link from 'next/link'
 
 /**
  * The landing page's "just now" line (F-1201). Every number and every role in it is real: the count is
- * the roles Saaf first saw in the last 24 hours, and the roles are the newest it has — read on the
+ * the roles Saaf first saw in the last 24 hours (new to Saaf — some are older postings it only just found),
+ * and the roles are the most recently posted ones by the employer's own date — read on the
  * server, never made up and never "someone just applied" (we have no such event to show). It is one
  * quiet line that steps through the newest few roles every few seconds, and does not move at all for
  * anyone who has asked their device for reduced motion.
@@ -23,10 +24,10 @@ export function LandingTicker({ data }: { data: TickerData }) {
   return (
     <p className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground" data-testid="ticker">
       <span className="size-1.5 rounded-full bg-score-high" aria-hidden="true" />
-      <span><span className="font-semibold text-primary">{data.last24h.toLocaleString('en-IN')}</span> new roles in India in the last 24 hours</span>
+      <span><span className="font-semibold text-primary">{data.last24h.toLocaleString('en-IN')}</span> roles added to Saaf in the last 24 hours</span>
       <span aria-hidden="true">·</span>
       <span aria-live="off">
-        newest: <Link href={`/jobs/${r.id}`} className="font-semibold text-primary underline-offset-4 hover:underline">{r.title}</Link> at {r.company}{r.city ? `, ${r.city}` : ''}
+        latest posting: <Link href={`/jobs/${r.id}`} className="font-semibold text-primary underline-offset-4 hover:underline">{r.title}</Link> at {r.company}{r.city ? `, ${r.city}` : ''}
       </span>
       <Link href="/jobs" className="font-semibold text-primary underline underline-offset-4">Browse</Link>
     </p>
