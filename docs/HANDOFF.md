@@ -6,8 +6,12 @@
 
 **Live and checked** (`dpl_C5BRhVSXKGHguNwRCHrGQF6sezX8`): https://jobinko.in serves the site over HTTPS; `www.jobinko.in` redirects to it; `http` redirects to `https`; page addresses, sitemap and robots all say `jobinko.in`; the old `saaf-ten.vercel.app` still works. Hostinger DNS `A @` now points at Vercel (76.76.21.21). Supabase sign-in settings accept the new address (Site URL = `https://jobinko.in`).
 
+**UPDATE, later that night:** (a) **the product is now called Jobinko** — live (`dpl_4zBJWXCGsRzjkCKgsJxKMnGAYTR2`); the extension source says Jobinko and talks to jobinko.in too (not yet loaded by anyone). (b) **Email:** you signed in to Resend; I added jobinko.in there and the four DNS records in Hostinger; all four are visible worldwide; Resend still shows **Pending** and re-checks by itself (can take hours). Once it says Verified I point Supabase's email at it. (c) **Job limits** measured, not built — see ROADMAP TASK-222: a second hidden ceiling at 1,000 rows; two decisions for you below.
+
 **Only you can do:**
-1. **Sign in to Resend** in the Chrome tab I left open at resend.com/login, then say "signed in". I add `jobinko.in` there, put the DNS records into Hostinger, verify, and point Supabase's email sender at it (TASK-075). Until then sign-in emails reach only you.
+0. ~~**Sign in to Resend**~~ **done.** Still yours: rename the app in the **Google sign-in screen** (Google Cloud Console → OAuth consent screen → App name) and in **Supabase → Authentication → Emails** templates ("Saaf" still appears there), because those live in your accounts and show on the sign-in screen and in sign-in emails.
+0b. **Decide:** (i) the four held SmartRecruiters boards (~14,400 jobs, staffing-firm bulk) — I recommend not by default; (ii) when to move Supabase to the paid plan (~35 people).
+1. ~~**Sign in to Resend**~~ in the Chrome tab I left open at resend.com/login, then say "signed in". I add `jobinko.in` there, put the DNS records into Hostinger, verify, and point Supabase's email sender at it (TASK-075). Until then sign-in emails reach only you.
 2. **Do one real sign-in at https://jobinko.in/signin** (Google, one click) so we know it works end to end — I did not sign in for you. Unverified until then.
 3. **Answer: is the product being renamed?** Every screen, email and file still says "Saaf"; the domain says "jobinko". I changed no wording.
 4. Later: the browser extension still talks to `saaf-ten.vercel.app` (nobody has loaded it yet); I'll move it when you load 0.7.0.
