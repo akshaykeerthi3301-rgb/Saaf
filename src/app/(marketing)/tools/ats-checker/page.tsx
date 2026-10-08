@@ -149,18 +149,9 @@ export default function AtsCheckerPage() {
             </dl>
 
             <p className="mt-10 text-sm leading-6 text-muted-foreground">
-              A readable résumé is only half the question — the other half is whether the
-              role is worth the application at all. To score one you have already found,
-              use{' '}
-              <Link
-                href="/tools/paste-jd"
-                className="font-semibold text-primary underline underline-offset-4"
-              >
-                Should I apply?
-              </Link>{' '}
-              To get scored roles daily without hunting for them,{' '}
-              <Link href="/" className="font-semibold text-primary underline underline-offset-4">
-                see what Jobinko does
+              Want matched jobs and a tailored résumé for each one?{' '}
+              <Link href="/signin" className="font-semibold text-primary underline underline-offset-4">
+                Get started with Jobinko
               </Link>
               .
             </p>

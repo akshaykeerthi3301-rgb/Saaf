@@ -46,7 +46,7 @@ export const COMPARISONS: Comparison[] = [
       { q: 'Does it keep your résumé?', saaf: 'No. Your file is read inside the request and dropped when it ends — never written to storage. Signed in, you can choose to save a version you built here, and delete it.', check: { label: 'Read the privacy page', href: '/privacy' } },
       { q: 'Do you need an account, an email, or a card?', saaf: 'None of them. The checker is free with no sign-up.', check: { label: 'Open the checker', href: '/tools/ats-checker' } },
       { q: 'Can it fix things without inventing facts?', saaf: 'The mechanical fixes (a stronger opening verb, matching punctuation, splitting a long line) change only the wording of your own line. A missing number or link is asked of you, never made up, and a rewrite that adds a figure or a name that was not in your line is refused and shown.', check: { label: 'See the fixes in the checker', href: '/tools/ats-checker' } },
-      { q: 'Is it measured against real postings for your role?', saaf: `Yes: for ${FACTS.keywordRoles} roles, the keyword list is counted from real postings, with the share of postings that contain each term and how many postings that is.`, check: { label: 'See the measured keywords by role', href: '/tools/resume-keywords' } },
+      { q: 'Is it measured against real postings for your role?', saaf: `Yes: for ${FACTS.keywordRoles} roles, the keyword list is counted from real postings, with the share of postings that contain each term and how many postings that is.`, check: { label: 'Check your résumé against a role', href: '/tools/ats-checker' } },
     ],
   },
   {

@@ -66,10 +66,10 @@ export function ToolPage({
         </Link>
         <div className="flex items-center gap-5 text-sm">
           <Link
-            href="/tools"
+            href="/tools/ats-checker"
             className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
-            Free tools
+            ATS checker
           </Link>
           <Link
             href="/signin"

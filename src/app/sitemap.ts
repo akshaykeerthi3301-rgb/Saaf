@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/site'
 import { listPublicJobsForSitemap, listSeoPagesForSitemap } from '@/lib/services/public-jobs'
-import { keywordRoleSlug, KEYWORD_ROLES } from '@/lib/role-keywords'
 import { COMPARISONS } from '@/lib/compare'
 import { POSTS } from '@/lib/blog'
 
@@ -41,8 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: `${base}/tools/ats-checker`, lastModified: now, changeFrequency: 'weekly', priority: 1 },
-    { url: `${base}/tools/paste-jd`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${base}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     // Updated by the daily cron, so it genuinely changes daily — unlike the rest.
     { url: `${base}/audit`, lastModified: now, changeFrequency: 'daily', priority: 0.5 },
@@ -50,8 +47,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/extension`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${base}/tools/resume-keywords`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    ...KEYWORD_ROLES.map((r) => ({ url: `${base}/tools/resume-keywords/${keywordRoleSlug(r)}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 })),
     { url: `${base}/compare`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     ...COMPARISONS.map((c) => ({ url: `${base}/compare/${c.slug}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 })),
     { url: `${base}/blog`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },

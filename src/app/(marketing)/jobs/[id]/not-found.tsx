@@ -15,7 +15,7 @@ export default function RoleClosed() {
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Link href="/today" className="bg-brand-gradient rounded-xl px-4 py-2.5 text-sm font-semibold">See roles open today</Link>
-          <Link href="/tools/paste-jd" className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-primary">Score any posting</Link>
+          <Link href="/tools/ats-checker" className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-primary">Check your résumé</Link>
         </div>
       </div>
     </div>

@@ -1,379 +1,112 @@
 import Link from 'next/link'
-import { ArrowUpRight, Check, FileUp, Sparkles } from 'lucide-react'
+import { ArrowRight, FileText, PenLine, Sparkles, Target } from 'lucide-react'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
-import { LandingTicker } from '@/components/features/landing-ticker'
-import { readTicker } from '@/lib/services/public-jobs'
-
-/** The ticker's numbers are refreshed every ten minutes; a failed read just leaves the line out. */
-export const revalidate = 600
+import { ScoreRing } from '@/components/ui/score-ring'
 
 /**
- * ⚠️ THE LABEL NAMES THE OUTCOME, NOT THE MECHANIC. It read "Upload Résumé &
- * Get True-Fit Match", which describes what the product does to a file rather
- * than what the candidate came for, and it named a score ("True-Fit") that
- * means nothing to somebody who has not used us yet. The two doors in the hero
- * are "Find your next job" and "ATS score checker", and every other button on
- * the page has to agree with them or the page reads as three products.
- */
-const CTA = 'Find your next job'
-
-/**
- * The landing page, in the saaf-ai design language and carrying the saaf-ai copy.
+ * The landing page — rebuilt as a short page on 2026-10-09 after the founder's verdict on the old one:
+ * "text heavy, need a more minimalistic clean UI". It said everything at length (a ticker, a how-it-works
+ * list, six FAQs, a compliance paragraph); it now says one thing, offers two doors, and shows the product.
  *
- * EVERY CLAIM ON THIS PAGE DESCRIBES SOMETHING THAT SHIPS. It did not until
- * 2026-09-07: a three-card section promised True-Fit Scoring (needs the
- * trajectory and industry components, unbuilt), Review & Approve (the co-pilot,
- * parked) and WhatsApp Nudges (parked, needs a budget). They were kept on the
- * explicit understanding that deployment was on hold and nothing was public —
- * and they came off the moment it was not, which is the condition the founder
- * set and docs/ROADMAP.md TASK-053 recorded.
- *
- * Put them back when the features land, not before. The standing rule is that a
- * promise the product cannot keep is a defect rather than marketing.
+ * Every claim here describes something that ships: matched jobs, a tailored résumé and a cover letter per
+ * job, and the free ATS checker. The explanations that used to live here (how scores are built, what happens
+ * to a résumé) live on /privacy and /compare, one link away in the footer.
  */
-const howItWorks = [
-  ['We read your résumé once', 'Then delete it. You confirm every field.'],
-  ['We read the posting the same way', 'Experience, credential, location — quoted from the job description.'],
-  ['We rank, and show the arithmetic', 'Open any score to see each part and the line it came from.'],
+const features = [
+  { icon: Target, title: 'Jobs matched to you', body: 'Ranked against your résumé, with a clear score.' },
+  { icon: FileText, title: 'A résumé for every job', body: 'Tailored to the posting in a few clicks.' },
+  { icon: PenLine, title: 'Cover letters in seconds', body: 'Written from your own experience.' },
 ]
 
-const faqs = [
-  ['Naukri already says it matches me. Why is this different?', 'Our number breaks into parts you can check against the posting. A portal shows a badge and no working.'],
-  ['Can my employer find out I’m looking?', 'No. No employer is contacted, nothing is public or sold, and no recruiter can search this.'],
-  ['What happens to my résumé?', 'Parsed once, then deleted. Only the fields you confirm are stored.'],
-  ['Why isn’t LinkedIn or Naukri in here?', 'Their terms don’t allow it. We pull from company hiring boards — which is why we publish how many we indexed.'],
-]
-
-function Cta({ className = '' }: { className?: string }) {
+export default function Landing() {
   return (
-    <Link
-      href="/signin"
-      className={`group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/10 transition-transform hover:-translate-y-0.5 ${className}`}
-    >
-      <FileUp className="size-4" />
-      {CTA}
-      <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-    </Link>
-  )
-}
+    <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      <div aria-hidden="true" className="pointer-events-none absolute -top-56 left-1/2 h-[30rem] w-[60rem] max-w-[150vw] -translate-x-1/2 rounded-full bg-accent/15 blur-3xl" />
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.04em] text-primary sm:text-4xl">
-      {children}
-    </h2>
-  )
-}
-
-/** Hairline-separated rows. Kept from the previous design deliberately — a list
- *  someone else compiled and is accountable for reads differently from a grid
- *  of cards, and that distinction is the product's argument. */
-function Rows({ items, numbered = false }: { items: string[][]; numbered?: boolean }) {
-  return (
-    <div className="mt-8 border-t border-border">
-      {items.map(([title, description], i) => (
-        <div key={title} className="border-b border-border py-5">
-          <div className="flex items-baseline gap-3">
-            {numbered && (
-              <span className="font-mono text-sm text-muted-foreground tabular-nums">{i + 1}</span>
-            )}
-            <strong className="text-base font-semibold tracking-[-0.02em] text-primary sm:text-lg">
-              {title}
-            </strong>
-          </div>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
-            {description}
-          </p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export default async function Landing() {
-  const ticker = await readTicker()
-  return (
-    <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-6 sm:px-8 lg:px-10">
+      <header className="relative mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-6 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Jobinko home">
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Sparkles className="size-4" strokeWidth={2.2} />
           </span>
           <span className="text-base font-semibold tracking-[-0.03em]">Jobinko</span>
         </Link>
-        <div className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
-          {/* ⚠️ THE TOOLS WERE ORPHANS UNTIL 2026-09-08 — zero inbound links from
-              anywhere, reachable only by typing the URL, on the two pages whose
-              entire purpose is to be useful before anybody signs up. This is the
-              first of them, and it is deliberately in the primary nav rather
-              than the footer. */}
-          <Link href="/tools" className="transition-colors hover:text-foreground">Free tools</Link>
-          <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
-          <Link href="/audit" className="transition-colors hover:text-foreground">Index audit</Link>
-          <a href="#faq" className="transition-colors hover:text-foreground">FAQ</a>
-        </div>
-        <Link
-          href="/signin"
-          className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-foreground/30 hover:shadow-sm"
-        >
-          Log in
-        </Link>
+        <nav className="flex items-center gap-3 text-sm sm:gap-6">
+          <Link href="/tools/ats-checker" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">ATS checker</Link>
+          <Link
+            href="/signin"
+            className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-secondary/60"
+          >
+            Log in
+          </Link>
+        </nav>
       </header>
 
-      {/* Hero */}
-      <section className="relative mx-auto max-w-6xl px-5 pb-16 pt-10 sm:px-8 sm:pb-20 sm:pt-16 lg:px-10">
+      <section className="relative mx-auto max-w-5xl px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-20">
         <AuthFragmentNotice />
-
-        <div
-          className="absolute -right-28 top-8 hidden size-64 rounded-full border border-accent/25 bg-accent/5 lg:block"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute -right-8 top-24 hidden size-40 rounded-full border border-accent/25 lg:block"
-          aria-hidden="true"
-        />
-
-        <div className="relative max-w-4xl">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground shadow-sm">
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Built for the way India works
-          </div>
-
-          <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.05em] text-primary sm:text-6xl lg:text-7xl">
-            {/*
-              ⚠️ "AI" ATTACHES TO THE COPILOT, NEVER TO THE SCORE, AND THE SPLIT
-              IS LOAD-BEARING. The locked rule is that a model READS and never
-              DECIDES: the LLM reads skills and domain off a résumé and writes
-              drafts, while scoring is deterministic arithmetic. A reader who
-              concludes the score is AI has lost the one claim the product rests
-              on — that every number can be checked. So the headline says
-              copilot and the line under it says arithmetic.
-
-              ⚠️ "100% TAILORED." WAS CUT FROM HERE, 2026-09-14 — a completeness
-              figure nothing measures, on the page arguing against numbers you
-              cannot check. Do not reintroduce a figure here.
-            */}
-            AI career copilot for <span className="text-accent">India.</span>
-          </h1>
-
-          <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Roles ranked against your résumé — and the score is arithmetic, not a model. Every
-            component opens into the line from the posting it was read from.
-          </p>
-
-          {/*
-            ⚠️ TWO DOORS, PRESENTED AS EQUALS — founder decision, 2026-09-08.
-            This was one primary button (sign in, upload, get matched) with the
-            ATS check demoted to a link beside it. That ordering described how
-            the product was BUILT rather than how people arrive at it: most
-            organic traffic is somebody searching "ATS score checker" who has
-            never heard of us, and asking them to create an account thirty
-            seconds in is the largest possible ask at the smallest possible
-            moment of trust.
-
-            So the checker is a door, not a footnote. It needs no account, it
-            answers a question they already had, and the rewrite at the end of
-            it is where signing in finally buys something concrete.
-
-            Both cards say plainly what they cost. A "free" badge on the one
-            that needs an account would be the sort of small dishonesty this
-            product exists to argue against.
-          */}
-          <div className="mt-9 grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/signin"
-              className="group flex flex-col rounded-2xl border border-border bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/10 transition-transform hover:-translate-y-0.5"
-            >
-              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-                <FileUp className="size-3.5" aria-hidden="true" />
-                Needs an account
-              </span>
-              <span className="mt-3 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
-                Find your next job
-                <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </span>
-              <span className="mt-2 text-sm leading-6 text-primary-foreground/75">
-                Roles from company hiring boards, ranked against your résumé — each score opening
-                into the line it was read from.
-              </span>
-            </Link>
-
-            <Link
-              href="/tools/ats-checker"
-              className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5 hover:border-foreground/30"
-            >
-              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-                <Sparkles className="size-3.5" aria-hidden="true" />
-                No account, ₹0
-              </span>
-              <span className="mt-3 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.03em] text-primary">
-                ATS score checker
-                <ArrowUpRight className="size-4 text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </span>
-              <span className="mt-2 text-sm leading-6 text-muted-foreground">
-                Upload your résumé and see what a parser actually reads out of it — then have it
-                rewritten for the role you are after.
-              </span>
-            </Link>
-          </div>
-
-          <p className="mt-4 flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm">
-            <Check className="size-4 text-accent" />
-            No spam. No guesswork. The checker needs no account.
-          </p>
-
-          <div className="mt-16 flex items-center gap-3 border-t border-border pt-5 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground sm:mt-20">
-            <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-            A calmer way to find your next role
-          </div>
+        <h1 className="mx-auto max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.05em] text-primary sm:text-6xl">
+          Your AI job copilot for India.
+        </h1>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+          Find roles that fit, tailor your résumé and write the cover letter — in one place.
+        </p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/signin"
+            className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
+          >
+            Get started — it’s free
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            href="/tools/ats-checker"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-secondary/60 sm:w-auto"
+          >
+            Check your résumé
+          </Link>
         </div>
-
-        {/* The comparison — the product's whole argument in one block. */}
-        <div className="mt-14 grid gap-4 md:grid-cols-2">
-          <article className="rounded-2xl border border-border bg-card p-6">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              A job portal
-            </span>
-            <p className="mt-3 text-lg font-medium tracking-[-0.02em] text-primary">
-              Staff Engineer · 8+ years required
-            </p>
-            <p className="mt-4 text-sm font-bold text-primary">★ TOP APPLICANT</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              No number, no reason, no way to check it.
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-accent/40 bg-card p-6 shadow-sm">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-              Jobinko
-            </span>
-            <p className="mt-3 text-lg font-medium tracking-[-0.02em] text-primary">
-              Staff Engineer · <span className="font-bold tabular-nums">35</span>
-            </p>
-            {/* THESE NUMBERS ARE THE REAL OUTPUT, not an illustration. Produced
-                by scoreRole() for a two-year candidate in Bengaluru against a
-                "Staff Engineer, 8+ years" posting, and checked again whenever
-                WEIGHTS or the caps change — see the test that pins them.
-                They were 35/35, 2/30, 15/15 and 10/10 until 2026-09-07: four
-                denominators the scorer has never used, on the one page whose
-                entire argument is that our arithmetic can be checked.
-
-                ⚠️ WORK MODE AND CREDENTIAL CAME OFF THIS LINE ON 2026-09-14,
-                and their absence is the honest version. Both used to pay out
-                full marks when the candidate had stated no preference and the
-                posting required nothing — measured at 100% and 98% average
-                award across 504 scored roles. Printing "Work mode 7/7 ·
-                Credential 10/10" here advertised seventeen points that were
-                awarded for absence of data, on the page arguing against scores
-                you cannot check. The scorer now omits a component with nothing
-                to measure, so the example shows three real ones. */}
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Role match 28/28 · Experience 1/25 — asks for 8 years, you have 2 · Location 10/10 —
-              then capped at 50, because you are well under the bar this posting states. Work mode
-              and credential are not scored here: you set no preference and the posting names none.
-            </p>
-          </article>
-        </div>
-
-        {/* ONE QUIET LINE of live, checkable numbers (F-1201, TASK-202) — not the audit strip's old
-            section, which the founder cut for a minimal page. Omitted entirely when it cannot be read. */}
-        {ticker ? <LandingTicker data={ticker} /> : null}
-
-        {/* ⚠️ <AuditStrip /> WAS REMOVED HERE, 2026-09-15, on a founder call to
-            keep the page minimal. Worth knowing what went: it was the page's
-            only first-party verifiable evidence — live indexed / matched /
-            strong counts — and it was put here deliberately INSTEAD of a logo
-            bar, per the landing-page spec's own rule that you either show the
-            logos or remove the section. With it gone the page carries no proof
-            of any kind, so the /audit link in the footer is now load-bearing
-            rather than convenient. Do not remove that too without replacing it
-            with something. The component still exists and still works. */}
       </section>
 
-      {/* Value props */}
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-10">
-        {/* The problem */}
-        <section className="py-16 sm:py-20">
-          <SectionHeading>The match wasn’t missing. It was unexplained.</SectionHeading>
-          {/* The explanatory paragraph was cut 2026-09-15 for the minimal-copy
-              pass. The CITED QUOTE stays: it is external evidence about the
-              category rather than a claim about us, and with the audit strip
-              gone it is the only evidence left above the fold. */}
-          <blockquote className="mt-8 rounded-2xl border border-border bg-card p-6">
-            <p className="text-lg font-medium tracking-[-0.02em] text-primary">
-              “not even one call.”
-            </p>
-            <footer className="mt-3 text-sm text-muted-foreground">
-              Blind — Bangalore, 13+ years, 50+ applications across LinkedIn, Naukri and Instahyre
-            </footer>
-          </blockquote>
-        </section>
-
-        <section id="how" className="scroll-mt-8 border-t border-border py-16 sm:py-20">
-          <SectionHeading>How it works</SectionHeading>
-          <Rows items={howItWorks} numbered />
-        </section>
-
-        <section className="border-t border-border py-16 sm:py-20">
-          <SectionHeading>What you get</SectionHeading>
-          <Rows
-            items={[
-              ['Scored against you, not the posting', 'Your years, city, work mode and credential all move the number.'],
-              ['Every score opens up', 'Each part, with the line from the posting it was read from.'],
-              ['Nobody can find you here', 'File deleted after parsing. No employer contacted. Delete in one click.'],
-              // Folded up from its own section in the minimal-copy pass. The
-              // claim is load-bearing and short; a full section for one
-              // sentence was the thing being trimmed, not the sentence.
-              ['Free, and not free-for-now', 'No card, no ads, no paid tier. It stays at ₹0.'],
-            ]}
-          />
-        </section>
-
-        <section id="faq" className="scroll-mt-8 border-t border-border py-16 sm:py-20">
-          <SectionHeading>Questions</SectionHeading>
-          <Rows items={faqs} />
-        </section>
-
-        <section className="border-t border-border py-16 text-center sm:py-20">
-          <SectionHeading>
-            <span className="mx-auto block">See how your matches are scored.</span>
-          </SectionHeading>
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <Cta />
-            {/* The second door repeated at the bottom, for a reader who got all
-                the way here and still is not ready to make an account. */}
-            <Link
-              href="/tools/ats-checker"
-              className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors hover:text-primary"
-            >
-              Or check your ATS score first — no account needed
-            </Link>
+      {/* One illustrative card: what a match looks like. Static, labelled as an example. */}
+      <section className="relative mx-auto max-w-3xl px-5 pb-16 sm:px-8" aria-label="Example match">
+        <div className="flex items-stretch overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="min-w-0 flex-1 p-5 sm:p-6">
+            <p className="text-xs text-muted-foreground">Example</p>
+            <h2 className="mt-1 truncate text-lg font-semibold tracking-[-0.02em] text-primary sm:text-xl">Customer Success Manager</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">Acme Software · Bengaluru</p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+              {['Full-time', 'Hybrid', 'Mid level', '3+ years'].map((t) => (
+                <span key={t} className="rounded-full bg-secondary px-2.5 py-1">{t}</span>
+              ))}
+            </div>
           </div>
-        </section>
-      </div>
+          <div className="flex w-32 shrink-0 flex-col items-center justify-center gap-1.5 border-l border-border bg-secondary/40 p-4 sm:w-40">
+            <ScoreRing score={86} size={64} stroke={5} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-score-high">Strong match</span>
+          </div>
+        </div>
+      </section>
 
-      <footer className="border-t border-border bg-secondary/40">
-        <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Jobinko</span>
-            <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
-            <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">Free ATS checker</Link>
-            <Link href="/tools/paste-jd" className="transition-colors hover:text-foreground">Should I apply?</Link>
-            <Link href="/jobs" className="transition-colors hover:text-foreground">Search jobs</Link>
-            <Link href="/roles" className="transition-colors hover:text-foreground">Jobs by role</Link>
-            <Link href="/remote" className="transition-colors hover:text-foreground">Remote jobs</Link>
-            <Link href="/blog" className="transition-colors hover:text-foreground">Data blog</Link>
-            <Link href="/compare" className="transition-colors hover:text-foreground">How Jobinko compares</Link>
-            <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
+      <section className="relative mx-auto max-w-5xl px-5 pb-20 sm:px-8">
+        <ul className="grid gap-4 sm:grid-cols-3">
+          {features.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="rounded-2xl border border-border bg-card p-5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-primary"><Icon className="size-4" /></span>
+              <h3 className="mt-4 text-base font-semibold tracking-[-0.02em] text-primary">{title}</h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <footer className="relative border-t border-border">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-8 text-sm text-muted-foreground sm:px-8">
+          <span className="font-semibold text-foreground">Jobinko</span>
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link href="/jobs" className="transition-colors hover:text-foreground">Jobs</Link>
+            <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">ATS checker</Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
-            <Link href="/profile" className="transition-colors hover:text-foreground">Delete your account</Link>
-          </div>
-          {/* Kept, shortened. Saying what we have NOT earned is the point of the
-              line, so the clause naming the certifications survives the cut. */}
-          <p className="mt-6 max-w-2xl text-xs leading-6 text-muted-foreground">
-            No compliance badges: we hold no SOC 2 or GDPR certification and will not display marks
-            we have not earned.
-          </p>
+          </nav>
         </div>
       </footer>
     </main>

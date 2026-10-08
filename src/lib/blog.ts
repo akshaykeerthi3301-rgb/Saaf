@@ -72,7 +72,7 @@ export const POSTS: Post[] = [
       { h: 'The least', p: ['Performance Marketing asks for 1 year (28 postings). Business Development Executive, Content Marketing and Field Sales ask for 2 (41, 15 and 161). Relationship Manager and Technical Support Engineer ask for 3 (101 and 45).'] },
       { h: 'What to do with it', p: ['If a posting asks for more than you have, the number alone is not a verdict — many postings ask for more than they hire. Jobinko shows these roles scored honestly with the reason, never hidden.'] },
     ],
-    related: [{ label: 'Résumé keywords by role', href: '/tools/resume-keywords' }, { label: 'Jobs by role', href: '/roles' }],
+    related: [{ label: 'Jobs by role', href: '/roles' }],
   },
 ]
 

@@ -73,7 +73,7 @@ export default async function PublicJobPage({ params }: Props) {
             Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
-            <Link href="/tools" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Free tools</Link>
+            <Link href="/tools/ats-checker" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">ATS checker</Link>
             <Link href="/signin" className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-secondary/60">
               Sign in
             </Link>
@@ -177,10 +177,10 @@ export default async function PublicJobPage({ params }: Props) {
           </div>
 
           <div className="rounded-3xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold text-primary">Check without signing up</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Paste this posting and your résumé into the free match checker. Nothing is stored.</p>
-            <Link href="/tools/paste-jd" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
-              Open the match checker <ArrowUpRight className="size-3.5" />
+            <h2 className="text-sm font-semibold text-primary">Check your résumé</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">See what an applicant tracking system reads out of your résumé. Free, nothing is stored.</p>
+            <Link href="/tools/ats-checker" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+              Open the ATS checker <ArrowUpRight className="size-3.5" />
             </Link>
           </div>
 

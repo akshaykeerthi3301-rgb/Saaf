@@ -17,7 +17,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-5 text-sm">
             <Link href="/jobs" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Search jobs</Link>
-            <Link href="/tools" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">Free tools</Link>
+            <Link href="/tools/ats-checker" className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline">ATS checker</Link>
             <Link href="/signin" className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-secondary/60">Sign in</Link>
           </div>
         </div>
