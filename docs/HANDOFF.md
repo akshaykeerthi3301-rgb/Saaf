@@ -2,7 +2,10 @@
 
 ---
 
-## 🔶 2026-10-08 (session 2) — 48 of 57 Phase 17/18 tasks BUILT on `phase-18`, NOT LIVE, nineteen database updates waiting
+## 🔶 2026-10-08 (session 2) — 48 of 57 Phase 17/18 tasks LIVE (deployed 2026-10-08 10:44 IST, `dpl_HBW4jkVsCzFJdUuTidwnz7iMXdEJ`), nineteen database updates still waiting
+
+**UPDATE — DEPLOYED.** The code below is live at https://saaf-ten.vercel.app. **Checked on the live site as a visitor:** 22 public pages return 200 (the landing page with its "254 roles added to Saaf in the last 24 hours" line, `/jobs` search, `/roles/…`, `/remote`, `/blog`, `/compare/…`, `/extension`, the keyword pages); invented slugs 404; the nine signed-in routes redirect to sign-in; `/api/dev-signin` is 404; the sitemap lists 5,166 URLs (5,000 jobs, 39 role pages, 32 role-in-city, 75 keyword pages, 3 posts, 3 comparisons); a role page carries its list data and a job page its JobPosting data; no browser errors. **NOT checked on the live site:** any signed-in screen (they need your sign-in, and most need the database updates), the extension. The deploy needed one fix first: the extension capability list had to move from `extension/` into `src/` because the deploy leaves `extension/` out. Staging hit the known "Not authorized" reply; the RUNBOOK re-link in the staged copy fixed it on the first try (project and team ids unchanged; the token file was deleted). `phase-18` is not merged into `main`.
+
 
 **Written, not shipped.** Branch `phase-18` is **38 commits ahead of `main`**; nothing deployed, nothing pushed. The live site is still the 03:01 IST deploy (`dpl_9sX4KDQm9YnKcQkMa31eLmiKN6ST`). Scoreboard (`npm run parity`, a file that exists only on this machine — see PROJECT-STATE Stage AN): **HAS 109 · PARTIAL 13 · MISSING 11 of 133** (it was 36 / 55 / 42 on 2026-10-07). **Checked before this note:** 1,781 tests pass, lint 0 errors, typecheck clean, **`next build` succeeds**. What is **not** checked: the extension on any real page, and every screen that needs a database update has been seen only in its "update missing" state.
 

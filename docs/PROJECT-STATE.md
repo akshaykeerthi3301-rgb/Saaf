@@ -2768,7 +2768,7 @@ Sixteen tasks, one commit each, on `phase-18` off `main` (`370edfa`). **Eleven d
 ~~**Not done in this session, and why (open):** TASK-158 (public role/city pages — the founder sets the thin-content threshold N), 164/165/166/170 (decisions, not code), 169 (design doc), 183–184, 186–209.~~ **Struck 2026-10-08: session 2 did all of it that could be done — see Stage AO, which also lists what was deliberately not built and why.**
 
 
-### Stage AO — the rest of the 133, session 2 (2026-10-08, branch `phase-18`, NOT deployed)
+### Stage AO — the rest of the 133, session 2 (2026-10-08, branch `phase-18`, **DEPLOYED 2026-10-08 10:44 IST, `dpl_HBW4jkVsCzFJdUuTidwnz7iMXdEJ`** — code only; migrations 0029–0049 still unapplied)
 
 The tasks below, one commit each (TASK-197/198 share one because they share one migration), on top of Stage AN. **Seven more database updates (0043–0049) are written and NONE applied**; every new screen reads its data in a query of its own and says so when its update is missing, so deploying before applying is safe. Extension is now **0.7.0** (the founder reloads it). Scoreboard `npm run parity` (a local file — see Stage AN's correction): **HAS 109 · PARTIAL 13 · MISSING 11** (it was HAS 36 / PARTIAL 55 / MISSING 42 on 2026-10-07). Tests **1,781**, `lint` 0 errors / 23 warnings, typecheck clean, **`next build` green**. Tags: **MEASURED** (a script or a count run this session) · **OBSERVED** (a vendor page read) · **ESTIMATED**.
 
