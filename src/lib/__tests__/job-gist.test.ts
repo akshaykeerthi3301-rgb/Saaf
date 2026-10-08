@@ -59,6 +59,12 @@ describe('jobGist — the posting\'s own words about the job, never invented', (
     const g = jobGist(d)!
     expect(g).toMatch(/^[A-Z]/)
   })
+  it('drops a run of header facts that ends in a summary label', () => {
+    const d = 'Location: Bangalore Hybrid Full-time Role Summary As a Regional Customer Success Operations Manager, you will enable Customer Success teams to drive retention and growth.'
+    const g = jobGist(d, 'Regional Customer Success Operations Manager')!
+    expect(g.startsWith('As a Regional')).toBe(true)
+    expect(plain(d).includes(g)).toBe(true)
+  })
   it('says nothing for a posting with nothing usable', () => {
     expect(jobGist(null)).toBeNull()
     expect(jobGist('')).toBeNull()

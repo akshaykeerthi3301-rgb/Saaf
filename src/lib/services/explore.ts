@@ -60,7 +60,8 @@ export async function exploreIndex(userId: string, view: FeedView): Promise<Expl
   if (plan.remote) q = q.or(REMOTE_LOCATION)
   if (plan.postedDays !== null) q = q.gte('posted_at', new Date(Date.now() - plan.postedDays * 86_400_000).toISOString())
   if (plan.types.length) q = q.in('employment_type', plan.types)
-  if (plan.mode) q = q.eq('work_mode', plan.mode)
+  if (plan.modes.length) q = q.in('work_mode', plan.modes)
+  if (plan.onlyNames.length) q = q.or(plan.onlyNames.map((n) => `company_name.ilike.%${n}%`).join(','))
   for (const name of plan.skipNames) q = q.not('company_name', 'ilike', `%${name}%`)
 
   const { data, count, error } = await q

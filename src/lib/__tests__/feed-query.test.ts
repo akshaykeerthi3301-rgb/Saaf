@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  activeFilters, applyDrawerFilters, applyTextFilter, cleanSkip, drawerParams, EMPTY_VIEW, feedViewSchema, interpretFeedQuery, isEmptyView, jobTypeOf,
+  activeFilters, applyDrawerFilters, applyTextFilter, cleanCities, cleanSkip, modesOf, roleTypeOf, typesOf, drawerParams, EMPTY_VIEW, feedViewSchema, interpretFeedQuery, isEmptyView, jobTypeOf,
   levelOfYears, matchesQuery, onlyFilter, parseFeedQuery, promptChips, relaxations, soloCounts, toggleSkill, viewFromParams,
   viewFromStored, viewToParams, viewToQuery, withoutFilter,
   type FeedView,
@@ -93,7 +93,7 @@ describe('toggleSkill', () => {
 /** Every field set at once — a view that exercises the whole shape. */
 const FULL: FeedView = {
   min80: true, fresh: true, remote: true, easy: true, q: 'product manager', city: 'Pune',
-  posted: '7', level: 'mid', type: 'contract', mode: 'hybrid', pay: 12, skip: 'Accenture,TCS', sort: 'new',
+  posted: '7', level: 'mid', type: 'contract', mode: 'hybrid', roleType: 'manager', only: 'Zoho,Freshworks', pay: 12, skip: 'Accenture,TCS', sort: 'new',
 }
 const roundTrip = (v: FeedView) => viewFromParams(Object.fromEntries(new URLSearchParams(viewToQuery(v))))
 
@@ -138,13 +138,13 @@ describe('every drawer field round-trips through the URL', () => {
   })
 
   it('keeps the drawer params together for links that carry them', () => {
-    expect(drawerParams(FULL)).toEqual([['posted', '7'], ['level', 'mid'], ['type', 'contract'], ['mode', 'hybrid'], ['pay', '12'], ['skip', 'Accenture,TCS']])
+    expect(drawerParams(FULL)).toEqual([['posted', '7'], ['level', 'mid'], ['type', 'contract'], ['mode', 'hybrid'], ['rt', 'manager'], ['only', 'Zoho,Freshworks'], ['pay', '12'], ['skip', 'Accenture,TCS']])
     expect(drawerParams(EMPTY_VIEW)).toEqual([])
   })
 
   it('counts a drawer field or the sort as a non-empty view', () => {
     expect(isEmptyView(EMPTY_VIEW)).toBe(true)
-    for (const patch of [{ posted: '3' }, { level: 'mid' }, { type: 'intern' }, { mode: 'hybrid' }, { pay: 5 }, { skip: 'X' }, { sort: 'new' }, { sort: 'pay' }] as Partial<FeedView>[]) {
+    for (const patch of [{ posted: '3' }, { posted: '1' }, { level: 'mid' }, { type: 'intern' }, { mode: 'hybrid' }, { roleType: 'ic' }, { only: 'Zoho' }, { pay: 5 }, { skip: 'X' }, { sort: 'new' }, { sort: 'pay' }] as Partial<FeedView>[]) {
       expect(isEmptyView({ ...EMPTY_VIEW, ...patch })).toBe(false)
     }
   })
@@ -516,5 +516,100 @@ describe('staffing agencies (TASK-175)', () => {
   it('round-trips through the URL', () => {
     const v = { ...EMPTY_VIEW, skip: '@agencies,TCS' }
     expect(viewFromParams(Object.fromEntries(new URLSearchParams(viewToQuery(v))))).toEqual(v)
+  })
+})
+
+// ------------------------------------------------------------ TASK-219: the filters Jobright has and Saaf's data can honour
+
+describe('Past 24 hours in the drawer', () => {
+  it('is a date window of its own, kept through the URL', () => {
+    expect(viewFromParams({ posted: '1' }).posted).toBe('1')
+    expect(roundTrip({ ...EMPTY_VIEW, posted: '1' }).posted).toBe('1')
+    expect(viewFromParams({ posted: '2' }).posted).toBe('')
+  })
+  it('keeps only roles posted within the day, by the employer\'s own date', () => {
+    const NOW = Date.parse('2026-10-08T12:00:00Z')
+    const rows = ['a', 'b', 'c'].map((role_id) => ({ role_id }))
+    const text = new Map(rows.map((r) => [r.role_id, { title: 'Analyst', company: 'Acme', location: '' }]))
+    const postedAt = new Map([['a', new Date(NOW - 3 * 3_600_000).toISOString()], ['b', new Date(NOW - 30 * 3_600_000).toISOString()]]) // c undated
+    const out = applyDrawerFilters(rows, { ...EMPTY_VIEW, posted: '1' }, { text, postedAt }, NOW)
+    expect(out.rows.map((r) => r.role_id)).toEqual(['a'])
+    expect(out.notes.undated).toBe(1)
+  })
+})
+
+describe('several job types and work modes at once', () => {
+  it('reads a list from the URL in a fixed order, drops anything unknown, and round-trips', () => {
+    expect(viewFromParams({ type: 'contract,fulltime' }).type).toBe('fulltime,contract')
+    expect(viewFromParams({ type: 'fulltime,bogus' }).type).toBe('fulltime')
+    expect(viewFromParams({ type: 'bogus' }).type).toBe('')
+    expect(viewFromParams({ mode: 'onsite,remote' }).mode).toBe('remote,onsite')
+    expect(roundTrip({ ...EMPTY_VIEW, type: 'fulltime,contract', mode: 'remote,hybrid' })).toMatchObject({ type: 'fulltime,contract', mode: 'remote,hybrid' })
+    expect(typesOf({ type: 'fulltime,intern' })).toEqual(['fulltime', 'intern'])
+    expect(modesOf({ mode: '' })).toEqual([])
+  })
+  it('accepts a role of ANY ticked type and ANY ticked mode', () => {
+    const rows = ['a', 'b', 'c', 'd'].map((role_id) => ({ role_id }))
+    const text = new Map(rows.map((r) => [r.role_id, { title: 'Engineer', company: 'Acme', location: '' }]))
+    const types = new Map<string, 'fulltime' | 'parttime' | 'intern' | 'contract'>([['a', 'fulltime'], ['b', 'contract'], ['c', 'intern'], ['d', 'parttime']])
+    const ids = (v: Partial<FeedView>, modes?: Map<string, 'remote' | 'hybrid' | 'onsite'>) => applyDrawerFilters(rows, { ...EMPTY_VIEW, ...v }, { text, types, modes }).rows.map((r) => r.role_id)
+    expect(ids({ type: 'fulltime,contract' })).toEqual(['a', 'b'])
+    expect(ids({ type: 'intern' })).toEqual(['c'])
+    const modes = new Map<string, 'remote' | 'hybrid' | 'onsite'>([['a', 'remote'], ['b', 'hybrid'], ['c', 'onsite']])
+    expect(ids({ mode: 'remote,hybrid' }, modes)).toEqual(['a', 'b'])
+  })
+  it('the saved-filter boundary accepts lists and refuses invented values', () => {
+    const ok = { ...EMPTY_VIEW, type: 'fulltime,contract', mode: 'remote,onsite' }
+    expect(feedViewSchema.safeParse(ok).success).toBe(true)
+    expect(feedViewSchema.safeParse({ ...ok, type: 'fulltime,bogus' }).success).toBe(false)
+    expect(feedViewSchema.safeParse({ ...ok, mode: 'onsite,remote' }).success).toBe(false) // not in canonical order
+  })
+})
+
+describe('role type — read from the title only', () => {
+  it('calls head / director / VP / chief / general manager / team lead / supervisor and function managers people managers', () => {
+    for (const t of ['Head of Growth', 'Director, Product', 'VP Engineering', 'Chief of Staff', 'General Manager - Operations', 'Team Lead, Support', 'Shift Supervisor', 'Engineering Manager', 'Sales Manager', 'Regional Manager', 'Branch Manager', 'Store Manager', 'Delivery Manager'])
+      expect(roleTypeOf(t), t).toBe('manager')
+  })
+  it('counts Product, Project, Account and plain titles as individual contributors — and says so in the drawer', () => {
+    for (const t of ['Product Manager', 'Project Manager', 'Account Manager', 'Customer Success Manager', 'Software Engineer', 'Headhunter', 'Data Analyst', 'Business Analyst'])
+      expect(roleTypeOf(t), t).toBe('ic')
+  })
+  it('filters by it and survives the URL', () => {
+    const rows = ['a', 'b'].map((role_id) => ({ role_id }))
+    const text = new Map([['a', { title: 'Engineering Manager', company: 'Acme', location: '' }], ['b', { title: 'Software Engineer', company: 'Acme', location: '' }]])
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, roleType: 'manager' }, { text }).rows.map((r) => r.role_id)).toEqual(['a'])
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, roleType: 'ic' }, { text }).rows.map((r) => r.role_id)).toEqual(['b'])
+    expect(roundTrip({ ...EMPTY_VIEW, roleType: 'manager' }).roleType).toBe('manager')
+    expect(viewFromParams({ rt: 'boss' }).roleType).toBe('')
+  })
+})
+
+describe('show only these employers', () => {
+  const rows = ['a', 'b', 'c'].map((role_id) => ({ role_id }))
+  const text = new Map([['a', { title: 'Analyst', company: 'Zoho Corporation', location: '' }], ['b', { title: 'Analyst', company: 'Freshworks Inc', location: '' }], ['c', { title: 'Analyst', company: 'Accenture', location: '' }]])
+  it('keeps only the named employers, matched by name the way "leave out" is', () => {
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, only: 'Zoho,Freshworks' }, { text }).rows.map((r) => r.role_id)).toEqual(['a', 'b'])
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, only: 'Nobody Ltd' }, { text }).rows).toEqual([])
+  })
+  it('a role whose employer was not read cannot be shown to be one of them', () => {
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, only: 'Zoho' }, { text: new Map() }).rows).toEqual([])
+  })
+  it('works together with leaving employers out', () => {
+    expect(applyDrawerFilters(rows, { ...EMPTY_VIEW, only: 'Zoho,Freshworks', skip: 'Freshworks' }, { text }).rows.map((r) => r.role_id)).toEqual(['a'])
+  })
+})
+
+describe('several cities', () => {
+  it('cleans to at most three distinct names', () => {
+    expect(cleanCities(' Pune , Mumbai ,pune, Delhi, Chennai')).toBe('Pune,Mumbai,Delhi')
+    expect(cleanCities('')).toBe('')
+    expect(viewFromParams({ city: 'Pune, Mumbai' }).city).toBe('Pune,Mumbai')
+  })
+  it('a role in ANY named city passes, with the usual spellings', () => {
+    const rows = ['a', 'b', 'c'].map((role_id) => ({ role_id }))
+    const text = new Map([['a', { title: 'Analyst', company: 'X', location: 'Pune, Maharashtra' }], ['b', { title: 'Analyst', company: 'X', location: 'Bangalore' }], ['c', { title: 'Analyst', company: 'X', location: 'Delhi' }]])
+    const out = applyTextFilter(rows, { q: '', city: 'Pune,Bengaluru' }, text).map((r) => r.role_id)
+    expect(out).toEqual(['a', 'b'])
   })
 })

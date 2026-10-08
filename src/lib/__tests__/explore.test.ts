@@ -47,6 +47,29 @@ describe('planExplore — the same parsed sentence, turned into what the databas
   })
 })
 
+describe('planExplore — the TASK-219 filters', () => {
+  it('carries several job types, work modes, cities and employers to the database query', () => {
+    const p = planExplore(view({ type: 'fulltime,contract', mode: 'remote,hybrid', city: 'Pune,Bengaluru', only: 'Zoho,Fresh%works' }))
+    expect(p.types).toEqual(['fulltime', 'contract', 'temporary'])
+    expect(p.modes).toEqual(['remote', 'hybrid'])
+    expect(p.cityPatterns).toEqual(expect.arrayContaining(['pune', 'bengaluru', 'bangalore']))
+    expect(p.onlyNames).toEqual(['Zoho', 'Fresh works'])
+  })
+  it('counts the new filters as narrowing, so the search is not open-ended', () => {
+    expect(isOpenEnded(planExplore(view({ only: 'Zoho' })))).toBe(false)
+    expect(isOpenEnded(planExplore(view({ mode: 'remote' })))).toBe(false)
+    expect(isOpenEnded(planExplore(view({ roleType: 'manager' })))).toBe(true) // read from the title after scoring, not a narrowing
+  })
+  it('applies role type after scoring, from the title', () => {
+    const rows = [
+      { score: 80, title: 'Engineering Manager', company: 'A', applyUrl: null, postedAt: null },
+      { score: 70, title: 'Software Engineer', company: 'B', applyUrl: null, postedAt: null },
+    ]
+    expect(afterScoring(rows, planExplore(view({ roleType: 'manager' }))).map((r) => r.company)).toEqual(['A'])
+    expect(afterScoring(rows, planExplore(view({ roleType: 'ic' }))).map((r) => r.company)).toEqual(['B'])
+  })
+})
+
 describe('afterScoring', () => {
   const r = (score: number, company: string, applyUrl: string | null, postedAt: string | null) => ({ score, company, applyUrl, postedAt })
   const rows = [

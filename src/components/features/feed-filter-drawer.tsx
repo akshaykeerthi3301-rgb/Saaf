@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { SavedFilters } from '@/components/features/feed-controls'
-import { cleanSkip, SKIP_AGENCIES, viewToQuery, type FeedView, type JobType, type Level, type Mode, type PostedWindow } from '@/lib/feed-query'
+import { cleanCities, cleanSkip, JOB_TYPES, MODES, modesOf, SKIP_AGENCIES, typesOf, viewToQuery, type FeedView, type Level, type PostedWindow, type RoleType } from '@/lib/feed-query'
 
 /**
  * "All filters" — a drawer from the right (redesign 2026-10-08, from the teardown's
@@ -23,6 +23,7 @@ import { cleanSkip, SKIP_AGENCIES, viewToQuery, type FeedView, type JobType, typ
 
 const POSTED: { value: PostedWindow | ''; label: string }[] = [
   { value: '', label: 'Any time' },
+  { value: '1', label: 'Past 24 hours' },
   { value: '3', label: 'Past 3 days' },
   { value: '7', label: 'Past week' },
   { value: '30', label: 'Past month' },
@@ -33,20 +34,28 @@ const LEVELS: { value: Level | ''; label: string }[] = [
   { value: 'mid', label: 'Mid — asks 3 to 5 years' },
   { value: 'senior', label: 'Senior — asks 6 or more' },
 ]
-const TYPES: { value: JobType | ''; label: string }[] = [
-  { value: '', label: 'Any' },
+/** Several may be ticked at once; none ticked means any. */
+const TYPES: { value: (typeof JOB_TYPES)[number]; label: string }[] = [
   { value: 'fulltime', label: 'Full-time' },
   { value: 'intern', label: 'Internship' },
   { value: 'contract', label: 'Contract' },
   { value: 'parttime', label: 'Part-time' },
 ]
 
-const MODE_OPTIONS: { value: Mode | ''; label: string }[] = [
-  { value: '', label: 'Any' },
+const MODE_OPTIONS: { value: (typeof MODES)[number]; label: string }[] = [
   { value: 'remote', label: 'Remote' },
   { value: 'hybrid', label: 'Hybrid' },
   { value: 'onsite', label: 'On-site' },
 ]
+
+const ROLE_TYPE_OPTIONS: { value: RoleType | ''; label: string }[] = [
+  { value: '', label: 'Any' },
+  { value: 'ic', label: 'Individual contributor' },
+  { value: 'manager', label: 'People manager' },
+]
+
+/** Ticked values back into the stored comma list, in the list's own order. */
+const canonical = <T extends string>(all: readonly T[], picked: Set<string>): string => all.filter((x) => picked.has(x)).join(',')
 
 const fieldClass =
   'w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-primary outline-none focus:border-accent'
@@ -73,8 +82,12 @@ export function AllFiltersDrawer({
   const [open, setOpen] = useState(false)
   const [posted, setPosted] = useState<PostedWindow | ''>(view.posted)
   const [level, setLevel] = useState<Level | ''>(view.level)
-  const [type, setType] = useState<JobType | ''>(view.type)
-  const [mode, setMode] = useState<Mode | ''>(view.mode)
+  const [types, setTypes] = useState<Set<string>>(new Set(typesOf(view)))
+  const [modes, setModes] = useState<Set<string>>(new Set(modesOf(view)))
+  const [roleType, setRoleType] = useState<RoleType | ''>(view.roleType)
+  const [only, setOnly] = useState(view.only.split(',').join(', '))
+  const [cities, setCities] = useState(view.city.split(',').join(', '))
+  const flip = (set: Set<string>, v: string) => { const n = new Set(set); if (n.has(v)) n.delete(v); else n.add(v); return n }
   const [pay, setPay] = useState(view.pay ? String(view.pay) : '')
   const hasAgencyToken = (list: string) => list.split(',').some((n) => n.trim().toLowerCase() === SKIP_AGENCIES)
   const [agencies, setAgencies] = useState(hasAgencyToken(view.skip))
@@ -123,7 +136,7 @@ export function AllFiltersDrawer({
               className="space-y-7"
               onSubmit={(e) => {
                 e.preventDefault()
-                go({ ...view, posted, level, type, mode, pay: Number(pay) || 0, skip: composedSkip() }, reach)
+                go({ ...view, posted, level, type: canonical(JOB_TYPES, types), mode: canonical(MODES, modes), roleType, only: cleanSkip(only), city: cleanCities(cities), pay: Number(pay) || 0, skip: composedSkip() }, reach)
               }}
             >
               <section>
@@ -143,19 +156,47 @@ export function AllFiltersDrawer({
                     </select>
                     <span className={hintClass}>From the years the posting states. A role that states none stays in the list.</span>
                   </label>
+                  <fieldset>
+                    <legend className="text-xs font-semibold text-primary">Job type</legend>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1.5">
+                      {TYPES.map((o) => (
+                        <label key={o.value} className="flex cursor-pointer items-center gap-2 text-xs text-primary">
+                          <input type="checkbox" checked={types.has(o.value)} onChange={() => setTypes(flip(types, o.value))} className="size-4 accent-accent" />
+                          {o.label}
+                        </label>
+                      ))}
+                    </div>
+                    <span className={hintClass}>Tick one or more; none means any. As the employer’s own system states it where it does; otherwise read from the title, where no marker counts as full-time.</span>
+                  </fieldset>
+                  <fieldset>
+                    <legend className="text-xs font-semibold text-primary">Work mode</legend>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1.5">
+                      {MODE_OPTIONS.map((o) => (
+                        <label key={o.value} className="flex cursor-pointer items-center gap-2 text-xs text-primary">
+                          <input type="checkbox" checked={modes.has(o.value)} onChange={() => setModes(flip(modes, o.value))} className="size-4 accent-accent" />
+                          {o.label}
+                        </label>
+                      ))}
+                    </div>
+                    <span className={hintClass}>Tick one or more. Only roles whose employer states it can pass — about 4 in 10 do. The rest are left out, and the count is shown. “Remote only” in the pills reads the location instead.</span>
+                  </fieldset>
                   <label className="block text-xs font-semibold text-primary">
-                    Job type
-                    <select className={`${fieldClass} mt-1`} value={type} onChange={(e) => setType(e.target.value as JobType | '')}>
-                      {TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    Role type
+                    <select className={`${fieldClass} mt-1`} value={roleType} onChange={(e) => setRoleType(e.target.value as RoleType | '')}>
+                      {ROLE_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
-                    <span className={hintClass}>As the employer’s own system states it where it does; otherwise read from the title, where no marker counts as full-time.</span>
+                    <span className={hintClass}>Read from the title only — there is no field for managing people. Head, Director, VP, Chief, General Manager, Team Lead, Supervisor and Engineering / Sales / Operations / Branch / Regional / Area / Store / Office / Delivery Manager count as people managers; everything else, including Product Manager, counts as an individual contributor.</span>
                   </label>
                   <label className="block text-xs font-semibold text-primary">
-                    Work mode
-                    <select className={`${fieldClass} mt-1`} value={mode} onChange={(e) => setMode(e.target.value as Mode | '')}>
-                      {MODE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                    <span className={hintClass}>Only roles whose employer states it can pass — about 4 in 10 do. The rest are left out, and the count is shown. “Remote only” in the pills reads the location instead.</span>
+                    City
+                    <input
+                      className={`${fieldClass} mt-1`}
+                      value={cities}
+                      onChange={(e) => setCities(e.target.value)}
+                      maxLength={80}
+                      placeholder="Pune, Mumbai — up to three, separate with commas"
+                    />
+                    <span className={hintClass}>Any of them can match, with the other spellings (Bangalore and Bengaluru are one city). Distance from a city isn’t offered: Saaf holds no coordinates, so it cannot say what is “within 25 km” without guessing.</span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-input p-3 text-xs">
                     <input type="checkbox" checked={reach} onChange={(e) => setReach(e.target.checked)} className="mt-0.5 size-4 accent-accent" />
@@ -202,6 +243,17 @@ export function AllFiltersDrawer({
                   />
                   <span className={hintClass}>Matched by the employer’s name as the posting shows it. “Accenture” also leaves out “Accenture India”.</span>
                 </label>
+                <label className="mt-4 block text-xs font-semibold text-primary">
+                  Show only these employers
+                  <input
+                    className={`${fieldClass} mt-1`}
+                    value={only}
+                    onChange={(e) => setOnly(e.target.value)}
+                    maxLength={410}
+                    placeholder="Zoho, Freshworks — separate with commas"
+                  />
+                  <span className={hintClass}>Applying to specific companies? Name them here. Matched by name, the same way as the list above.</span>
+                </label>
               </section>
             </form>
 
@@ -224,8 +276,8 @@ export function AllFiltersDrawer({
               type="button"
               className="text-xs font-semibold text-muted-foreground hover:text-primary"
               onClick={() => {
-                setPosted(''); setLevel(''); setType(''); setMode(''); setPay(''); setSkip(''); setAgencies(false); setReach(false)
-                go({ ...view, posted: '', level: '', type: '', mode: '', pay: 0, skip: '' }, false)
+                setPosted(''); setLevel(''); setTypes(new Set()); setModes(new Set()); setRoleType(''); setOnly(''); setCities(''); setPay(''); setSkip(''); setAgencies(false); setReach(false)
+                go({ ...view, posted: '', level: '', type: '', mode: '', roleType: '', only: '', city: '', pay: 0, skip: '' }, false)
               }}
             >
               Clear these

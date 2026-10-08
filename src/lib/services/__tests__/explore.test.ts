@@ -68,6 +68,11 @@ describe('exploreIndex', () => {
     expect(called('not')).toContainEqual(['company_name', 'ilike', '%TCS%'])
     expect(called('limit')).toEqual([[200]])
   })
+  it('sends several work modes and "only these employers" to the query too (TASK-219)', async () => {
+    await exploreIndex('u1', view({ q: 'manager', mode: 'remote,hybrid', only: 'Zoho' }))
+    expect(called('in')).toContainEqual(['work_mode', ['remote', 'hybrid']])
+    expect(called('or').some(([f]) => String(f) === 'company_name.ilike.%Zoho%')).toBe(true)
+  })
   it('scores what it finds with the real scorer, best first, and says how many fit in all', async () => {
     h.count = 1432
     h.roles = [role('r1', 'Warehouse Supervisor'), role('r2', 'Product Manager', { pay_min: 1500000, pay_max: 2000000, pay_currency: 'INR', pay_period: 'year' })]

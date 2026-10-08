@@ -41,9 +41,11 @@ function sentences(s: string): Sentence[] {
 /** The first good sentence of `s` (plus the next when the first is short), as an exact slice of `s`. */
 /** "About the Role We are…" → "We are…", "· Visiting 5-6 clients…" → "Visiting 5-6 clients…": drop a leading label or bullet; what is left is still an exact span. */
 const LEAD_LABEL = /^(?:(?:about|the|your|this)\s+(?:the\s+)?(?:role|job|position|opportunity|team|company)|job\s+(?:description|summary|overview)|role\s+(?:description|summary|overview)|position\s+(?:summary|overview)|overview|summary|description|responsibilities|key responsibilities|what you(?:'|’)ll do|our company)\s*[:\-–—]?\s+(?=[A-Z])/i
+/** "Location: Bangalore Hybrid Full-time Role Summary As a Regional Manager, you…" → "As a Regional Manager, you…": a short run of header facts ending in a summary label. */
+const MID_LABEL = /^[^.!?]{0,120}?\b(?:role|job|position|opportunity) (?:summary|overview|description)\s*[:\-–—]?\s+(?=[A-Z])/i
 function stripLead(g: string): string {
   let out = g.replace(/^[\s·•▪●◦*\-–—>]+/, '')
-  for (let i = 0; i < 2; i++) out = out.replace(LEAD_LABEL, '')
+  for (let i = 0; i < 2; i++) out = out.replace(LEAD_LABEL, '').replace(MID_LABEL, '')
   return out.trim()
 }
 

@@ -27,21 +27,27 @@ export function sanitizeHistory(rows: unknown): HistoryEntry[] {
   return out
 }
 
-const POSTED = { '3': 'Last 3 days', '7': 'Last week', '30': 'Last month' } as const
+const POSTED = { '1': 'Last 24 hours', '3': 'Last 3 days', '7': 'Last week', '30': 'Last month' } as const
 const LEVEL = { entry: 'Entry level', mid: 'Mid level', senior: 'Senior level' } as const
-const TYPE = { fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as const
+const TYPE: Record<string, string> = { fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' }
+const MODE: Record<string, string> = { remote: 'Remote (stated)', hybrid: 'Hybrid', onsite: 'On-site' }
+const ROLE_TYPE = { ic: 'Individual contributor', manager: 'People manager' } as const
+const or = (list: string, names: Record<string, string>) => list.split(',').map((x) => names[x] ?? x).join(' or ')
 
 /** The filters a view applies, in words — what "Read as:" shows. Empty when it applies none. */
 export function describeView(v: FeedView): string[] {
   const out: string[] = []
   if (v.q) out.push(`“${v.q}”`)
-  if (v.city) out.push(`In ${v.city}`)
+  if (v.city) out.push(`In ${v.city.split(',').join(' or ')}`)
   if (v.remote) out.push('Remote')
   if (v.min80) out.push('Match 80+')
   if (v.fresh) out.push('Last 24 hours')
   if (v.posted) out.push(POSTED[v.posted])
   if (v.level) out.push(LEVEL[v.level])
-  if (v.type) out.push(TYPE[v.type])
+  if (v.type) out.push(or(v.type, TYPE))
+  if (v.mode) out.push(or(v.mode, MODE))
+  if (v.roleType) out.push(ROLE_TYPE[v.roleType])
+  if (v.only) out.push(`Only ${v.only.split(',').join(', ')}`)
   if (v.easy) out.push('Easy apply')
   if (v.pay) out.push(`Pay ≥ ₹${v.pay} L`)
   if (v.skip) out.push(`Not ${v.skip.split(',').join(', ')}`)

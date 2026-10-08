@@ -26,17 +26,19 @@ import { isStaffingAgency } from '@/lib/taxonomy/agencies'
  * Pure. No database, no model.
  */
 
-export const POSTED_WINDOWS = ['3', '7', '30'] as const
+export const POSTED_WINDOWS = ['1', '3', '7', '30'] as const
 export const LEVELS = ['entry', 'mid', 'senior'] as const
 export const JOB_TYPES = ['fulltime', 'intern', 'contract', 'parttime'] as const
 export const MODES = ['remote', 'hybrid', 'onsite'] as const
 export const SORTS = ['new', 'pay', 'company'] as const
+export const ROLE_TYPES = ['ic', 'manager'] as const
 
 export type PostedWindow = (typeof POSTED_WINDOWS)[number]
 export type Level = (typeof LEVELS)[number]
 export type JobType = (typeof JOB_TYPES)[number]
 export type Mode = (typeof MODES)[number]
 export type Sort = (typeof SORTS)[number]
+export type RoleType = (typeof ROLE_TYPES)[number]
 
 export type FeedView = {
   min80: boolean
@@ -45,16 +47,20 @@ export type FeedView = {
   easy: boolean
   /** Words that must appear in the role title or company name. */
   q: string
-  /** A city name; matched with the same alias rules the scorer uses. */
+  /** One to three city names, comma-separated; any may match. Each is matched with the same alias rules the scorer uses. */
   city: string
   /** Posted within this many days, by the employer's own date. '' = any. */
   posted: PostedWindow | ''
   /** The years the posting asks for, banded. Roles that state none are kept. '' = any. */
   level: Level | ''
-  /** The contract type the provider STATES; where it states none, read from the title. '' = any. */
-  type: JobType | ''
-  /** Where the work happens, ONLY where the employer's own system says (remote / hybrid / on-site). Roles that state none are left out and counted. '' = any. */
-  mode: Mode | ''
+  /** The contract type(s) the provider STATES, comma-separated JobType values (the drawer allows several); where it states none, read from the title. '' = any. */
+  type: string
+  /** Where the work happens, comma-separated Mode values — ONLY where the employer's own system says (remote / hybrid / on-site). Roles that state none are left out and counted. '' = any. */
+  mode: string
+  /** Individual contributor or people manager, READ FROM THE TITLE ONLY (see roleTypeOf). '' = any. */
+  roleType: RoleType | ''
+  /** Show only these employers, comma-separated, in the candidate's own spelling. '' = all. */
+  only: string
   /** Minimum STATED annual pay in lakh rupees; roles that state no pay are left out. 0 = off. */
   pay: number
   /** Employers to leave out, comma-separated, in the candidate's own spelling. */
@@ -65,7 +71,7 @@ export type FeedView = {
 
 export const EMPTY_VIEW: FeedView = {
   min80: false, fresh: false, remote: false, easy: false, q: '', city: '',
-  posted: '', level: '', type: '', mode: '', pay: 0, skip: '', sort: '',
+  posted: '', level: '', type: '', mode: '', roleType: '', only: '', pay: 0, skip: '', sort: '',
 }
 
 const MAX_Q = 80
@@ -77,6 +83,30 @@ export const SKIP_AGENCIES = '@agencies'
 
 const pick = <T extends string>(list: readonly T[], v: string | undefined): T | '' =>
   list.includes(v as T) ? (v as T) : ''
+
+/** Several allowed values from one param: "contract,fulltime" → "fulltime,contract" (canonical order, whitelist, no repeats). */
+function pickMany<T extends string>(list: readonly T[], v: string | undefined): string {
+  if (!v) return ''
+  const wanted = new Set(v.split(',').map((x) => x.trim()))
+  return list.filter((x) => wanted.has(x)).join(',')
+}
+
+/** The job types / work modes a view allows, as lists. */
+export const typesOf = (v: Pick<FeedView, 'type'>): JobType[] => (v.type ? (v.type.split(',') as JobType[]) : [])
+export const modesOf = (v: Pick<FeedView, 'mode'>): Mode[] => (v.mode ? (v.mode.split(',') as Mode[]) : [])
+
+/** "Pune, Mumbai" → "Pune,Mumbai": at most three names, each trimmed and capped, no repeats. */
+export function cleanCities(raw: string): string {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const part of raw.split(',')) {
+    const name = part.replace(/\s+/g, ' ').trim().slice(0, 40)
+    if (!name || seen.has(name.toLowerCase())) continue
+    seen.add(name.toLowerCase()); out.push(name)
+    if (out.length === 3) break
+  }
+  return out.join(',').slice(0, 60)
+}
 
 const cleanPay = (v: string | undefined): number => {
   const n = Math.floor(Number(v))
@@ -111,13 +141,15 @@ export function viewFromParams(p: Record<string, string | undefined>): FeedView 
     remote: p.remote === '1',
     easy: p.easy === '1',
     q: (p.q ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_Q),
-    city: (p.city ?? '').trim().slice(0, 60),
+    city: cleanCities(p.city ?? ''),
     posted: pick(POSTED_WINDOWS, p.posted),
     level: pick(LEVELS, p.level),
-    type: pick(JOB_TYPES, p.type),
+    type: pickMany(JOB_TYPES, p.type),
     pay: cleanPay(p.pay),
     skip: cleanSkip(p.skip ?? ''),
-    mode: pick(MODES, p.mode),
+    mode: pickMany(MODES, p.mode),
+    roleType: pick(ROLE_TYPES, p.rt),
+    only: cleanSkip(p.only ?? ''),
     sort: pick(SORTS, p.sort),
   }
 }
@@ -129,6 +161,7 @@ export function viewToParams(v: FeedView): Record<string, string | undefined> {
     remote: v.remote ? '1' : undefined, easy: v.easy ? '1' : undefined,
     q: v.q || undefined, city: v.city || undefined,
     posted: v.posted || undefined, level: v.level || undefined, type: v.type || undefined, mode: v.mode || undefined,
+    rt: v.roleType || undefined, only: v.only || undefined,
     pay: v.pay ? String(v.pay) : undefined, skip: v.skip || undefined, sort: v.sort || undefined,
   }
 }
@@ -148,7 +181,7 @@ export function viewFromStored(raw: unknown): FeedView | null {
     q: str('q'), city: str('city'), posted: str('posted'), level: str('level'), type: str('type'), mode: str('mode'),
     // Pay is the one field stored as a number; every other field must be text.
     pay: typeof o.pay === 'number' ? String(o.pay) : str('pay'),
-    skip: str('skip'), sort: str('sort'),
+    skip: str('skip'), sort: str('sort'), rt: str('roleType'), only: str('only'),
   })
 }
 
@@ -158,8 +191,10 @@ export const feedViewSchema = z.object({
   q: z.string().max(MAX_Q), city: z.string().max(60),
   posted: z.enum(['', ...POSTED_WINDOWS]),
   level: z.enum(['', ...LEVELS]),
-  type: z.enum(['', ...JOB_TYPES]),
-  mode: z.enum(['', ...MODES]),
+  type: z.string().max(40).refine((v) => pickMany(JOB_TYPES, v) === v, 'unknown job type'),
+  mode: z.string().max(30).refine((v) => pickMany(MODES, v) === v, 'unknown work mode'),
+  roleType: z.enum(['', ...ROLE_TYPES]),
+  only: z.string().max(MAX_SKIP * (MAX_SKIP_NAME + 1)),
   pay: z.number().int().min(0).max(MAX_PAY_LAKH),
   skip: z.string().max(MAX_SKIP * (MAX_SKIP_NAME + 1)),
   sort: z.enum(['', ...SORTS]),
@@ -179,6 +214,8 @@ export function drawerParams(v: FeedView): [string, string][] {
   if (v.level) out.push(['level', v.level])
   if (v.type) out.push(['type', v.type])
   if (v.mode) out.push(['mode', v.mode])
+  if (v.roleType) out.push(['rt', v.roleType])
+  if (v.only) out.push(['only', v.only])
   if (v.pay) out.push(['pay', String(v.pay)])
   if (v.skip) out.push(['skip', v.skip])
   return out
@@ -186,7 +223,7 @@ export function drawerParams(v: FeedView): [string, string][] {
 
 export function isEmptyView(v: FeedView): boolean {
   return !v.min80 && !v.fresh && !v.remote && !v.easy && !v.q && !v.city &&
-    !v.posted && !v.level && !v.type && !v.mode && !v.pay && !v.skip && !v.sort
+    !v.posted && !v.level && !v.type && !v.mode && !v.roleType && !v.only && !v.pay && !v.skip && !v.sort
 }
 
 // ------------------------------------------------------------ sentence search
@@ -375,8 +412,8 @@ export function interpretFeedQuery(text: string, current: FeedView): FeedView {
 
 // ------------------------------------------------------------ "why so few results"
 
-export type FilterKey = 'min80' | 'fresh' | 'remote' | 'easy' | 'q' | 'city' | 'posted' | 'level' | 'type' | 'mode' | 'pay' | 'skip'
-export const FILTER_KEYS: FilterKey[] = ['min80', 'fresh', 'remote', 'easy', 'q', 'city', 'posted', 'level', 'type', 'mode', 'pay', 'skip']
+export type FilterKey = 'min80' | 'fresh' | 'remote' | 'easy' | 'q' | 'city' | 'posted' | 'level' | 'type' | 'mode' | 'roleType' | 'only' | 'pay' | 'skip'
+export const FILTER_KEYS: FilterKey[] = ['min80', 'fresh', 'remote', 'easy', 'q', 'city', 'posted', 'level', 'type', 'mode', 'roleType', 'only', 'pay', 'skip']
 
 export function activeFilters(v: FeedView): FilterKey[] {
   return FILTER_KEYS.filter((k) => Boolean(v[k]))
@@ -475,12 +512,12 @@ export function applyTextFilter<R extends { role_id: string }>(
   text: Map<string, RoleText>,
 ): R[] {
   if (!view.q && !view.city) return rows
-  const wantsCity = view.city ? resolveCity(view.city)?.name ?? view.city : ''
+  const wantsCities = view.city ? view.city.split(',').map((c) => c.trim()).filter(Boolean).map((c) => resolveCity(c)?.name ?? c) : []
   return rows.filter((r) => {
     const t = text.get(r.role_id)
     if (!t) return false
     if (view.q && !matchesQuery(view.q, t)) return false
-    if (wantsCity && !matchLocation(wantsCity, t.location)) return false
+    if (wantsCities.length && !wantsCities.some((c) => matchLocation(c, t.location))) return false
     return true
   })
 }
@@ -547,15 +584,30 @@ export type DrawerFacts = {
 /** What a filter could not decide, so the page can say so instead of letting a count look like the market's answer. */
 export type DrawerNotes = { undated: number; unstatedLevel: number; unstatedPay: number; unstatedMode: number }
 
-/** True when a role's employer is one the candidate named. Compared the way every other company match here is. */
-function isSkipped(company: string, skip: string): boolean {
+/** True when a role's employer is one in the candidate's comma-separated list. Compared the way every other company match here is. */
+function inCompanyList(company: string, list: string): boolean {
   const key = normaliseCompany(company)
   if (!key) return false
-  return skip.split(',').some((name) => {
+  return list.split(',').some((name) => {
     if (name.trim().toLowerCase() === SKIP_AGENCIES) return isStaffingAgency(company)
     const s = normaliseCompany(name)
     return s.length > 0 && (key === s || (s.length >= 4 && key.startsWith(s)))
   })
+}
+
+/**
+ * Individual contributor or people manager, READ FROM THE TITLE ONLY — Saaf has no field for "manages people", so
+ * the words are the whole evidence and the drawer says so. A title is a manager's when it says head / director /
+ * VP / chief / general manager / team lead / supervisor, or names a function's manager that is a people-leader in
+ * practice (engineering, sales, operations, branch, regional, area, store, office, delivery). Everything else —
+ * including "Product Manager", "Project Manager", "Account Manager" — is counted as an individual contributor.
+ * Whole words only; "Headhunter" is not "head".
+ */
+export function roleTypeOf(title: string): RoleType {
+  const t = title.toLowerCase()
+  if (/\b(head of|head,|director|vp\b|vice president|chief|general manager|team lead|supervisor|managing)\b/.test(t) || /\bhead\b(?!\s*(count|hunter))/.test(t)) return 'manager'
+  if (/\b(engineering|sales|operations|ops|branch|regional|area|store|office|delivery|business|plant|site|warehouse|hr)\s+manager\b/.test(t)) return 'manager'
+  return 'ic'
 }
 
 /**
@@ -577,20 +629,28 @@ export function applyDrawerFilters<R extends { role_id: string }>(
   now: number = Date.now(),
 ): { rows: R[]; notes: DrawerNotes } {
   const notes: DrawerNotes = { undated: 0, unstatedLevel: 0, unstatedPay: 0, unstatedMode: 0 }
-  if (!view.posted && !view.level && !view.type && !view.mode && !view.pay && !view.skip) return { rows, notes }
+  if (!view.posted && !view.level && !view.type && !view.mode && !view.roleType && !view.only && !view.pay && !view.skip) return { rows, notes }
   const since = view.posted ? now - Number(view.posted) * 86_400_000 : 0
+  const wantTypes = typesOf(view)
+  const wantModes = modesOf(view)
 
   const kept = rows.filter((r) => {
     const id = r.role_id
     const text = facts.text.get(id)
 
-    if (view.skip && text && isSkipped(text.company, view.skip)) return false
-    // The contract type the employer's system states wins; the title is the fallback for the rest.
-    if (view.type && (facts.types?.get(id) ?? (text ? jobTypeOf(text.title) : null)) !== view.type) return false
-    if (view.mode) {
+    if (view.skip && text && inCompanyList(text.company, view.skip)) return false
+    // "Only these employers": a role whose employer we cannot read cannot be shown to be one of them.
+    if (view.only && !(text && inCompanyList(text.company, view.only))) return false
+    if (view.roleType && text && roleTypeOf(text.title) !== view.roleType) return false
+    // The contract type the employer's system states wins; the title is the fallback for the rest. Several may be allowed.
+    if (wantTypes.length) {
+      const have = facts.types?.get(id) ?? (text ? jobTypeOf(text.title) : null)
+      if (!have || !wantTypes.includes(have)) return false
+    }
+    if (wantModes.length) {
       const m = facts.modes?.get(id)
       if (!m) { notes.unstatedMode++; return false }
-      if (m !== view.mode) return false
+      if (!wantModes.includes(m)) return false
     }
 
     if (view.posted) {

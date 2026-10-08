@@ -80,6 +80,8 @@ export default async function TodayPage({
     q?: string; city?: string; hidden?: string
     /** TASK-155: the drawer's filters. */
     posted?: string; level?: string; type?: string; mode?: string; pay?: string; skip?: string
+    /** TASK-219: role type (IC / manager) and the employers to show only. */
+    rt?: string; only?: string
   }>
 }) {
   const params = await searchParams
@@ -152,7 +154,7 @@ export default async function TodayPage({
   ])
   // Title/company/city are read only when a text filter is on (Phase 15). Job
   // type and "leave out" need the same title and employer.
-  const roleText = view.q || view.city || view.type || view.skip || byCompany ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
+  const roleText = view.q || view.city || view.type || view.skip || view.roleType || view.only || byCompany ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()
   // The drawer (TASK-155). Floors and pay are read for every scored role, and only
   // when their filter is on — pay reads descriptions, which the list read
   // deliberately does not. Every role, not just the survivors of the other
@@ -227,11 +229,13 @@ export default async function TodayPage({
               : chipLabel(k, String(view[k]))
   /** The words on a filter chip. Every drawer filter says what it is, so the chip can be removed knowingly. */
   const chipLabel = (k: string, v: string): string => {
-    if (k === 'city') return `In ${v}`
-    if (k === 'posted') return `Posted in the past ${v === '30' ? 'month' : v === '7' ? 'week' : `${v} days`}`
+    if (k === 'city') return `In ${v.split(',').join(' or ')}`
+    if (k === 'posted') return v === '1' ? 'Posted in the past 24 hours' : `Posted in the past ${v === '30' ? 'month' : v === '7' ? 'week' : `${v} days`}`
     if (k === 'level') return `${({ entry: 'Entry', mid: 'Mid', senior: 'Senior' } as Record<string, string>)[v] ?? v} level`
-    if (k === 'type') return ({ fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as Record<string, string>)[v] ?? v
-    if (k === 'mode') return ({ remote: 'Remote (stated)', hybrid: 'Hybrid', onsite: 'On-site' } as Record<string, string>)[v] ?? v
+    if (k === 'type') return v.split(',').map((x) => ({ fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as Record<string, string>)[x] ?? x).join(' or ')
+    if (k === 'mode') return v.split(',').map((x) => ({ remote: 'Remote (stated)', hybrid: 'Hybrid', onsite: 'On-site' } as Record<string, string>)[x] ?? x).join(' or ')
+    if (k === 'roleType') return v === 'manager' ? 'People manager (by title)' : 'Individual contributor (by title)'
+    if (k === 'only') return `Only ${v.split(',').join(', ')}`
     if (k === 'pay') return `Pay ≥ ₹${v} L`
     if (k === 'skip') return `Not ${v.split(',').map((x) => (x.trim().toLowerCase() === SKIP_AGENCIES ? 'staffing agencies' : x)).join(', ')}`
     return `“${v}”`
@@ -625,11 +629,12 @@ export default async function TodayPage({
               ]}
             />
             <PillMenu
-              label={view.type ? TYPE_NAME[view.type] : 'Job type'}
+              label={view.type ? view.type.split(',').map((t) => TYPE_NAME[t] ?? t).join(' or ') : 'Job type'}
               active={Boolean(view.type)}
               quietOnPhone
               options={[
                 { label: 'Any', href: hrefFor({ ...view, type: '' }), selected: !view.type },
+                // Single choices here; the drawer's tick-boxes allow several.
                 ...(['fulltime', 'intern', 'contract', 'parttime'] as const).map((t) => ({ label: TYPE_NAME[t], href: hrefFor({ ...view, type: t }), selected: view.type === t })),
               ]}
             />
