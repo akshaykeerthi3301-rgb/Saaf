@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { upcoming, type OfficeHour } from '@/lib/office-hours'
 
 /**
  * Career coaches (migration 0031). Jobright runs a marketplace of rated human
@@ -38,4 +39,17 @@ export async function applyAsCoach(userId: string, a: { name: string; headline: 
     user_id: userId, name: a.name, headline: a.headline, experience: a.experience, booking_url: a.bookingUrl,
   })
   return !error
+}
+
+/**
+ * The free live sessions the founder has scheduled (migration 0049). `stored:false` means the update is not
+ * applied yet. Read as the caller; the table's own rule hides sessions that ended more than three hours ago.
+ */
+export async function listOfficeHours(): Promise<{ sessions: OfficeHour[]; stored: boolean }> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('office_hours').select('id, title, host_name, starts_at, duration_min, join_url, description').eq('active', true).order('starts_at').limit(20)
+  if (error) return { sessions: [], stored: false }
+  type Row = { id: string; title: string; host_name: string; starts_at: string; duration_min: number; join_url: string; description: string | null }
+  const sessions = ((data ?? []) as Row[]).map((r) => ({ id: r.id, title: r.title, hostName: r.host_name, startsAt: r.starts_at, durationMin: r.duration_min, joinUrl: r.join_url, description: r.description }))
+  return { sessions: upcoming(sessions), stored: true }
 }

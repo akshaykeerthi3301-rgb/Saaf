@@ -396,6 +396,14 @@ async function crossUserIsolation() {
       check('survey_answers: A cannot answer as B', forgeAnswer.status >= 400, `http ${forgeAnswer.status}`)
     }
 
+    // office_hours (0049): read-only to candidates; the founder writes in the dashboard.
+    const writeHours = await asA('office_hours', { method: 'POST', body: JSON.stringify({ title: '__rls_probe__', host_name: 'x', starts_at: new Date(Date.now() + 86_400_000).toISOString(), join_url: 'https://example.com' }) })
+    if (writeHours.status === 404) {
+      console.log('  – office_hours: table not present, skipped (migration 0049 pending)')
+    } else {
+      check('office_hours: a candidate cannot schedule a session', writeHours.status >= 400, `http ${writeHours.status}`)
+    }
+
     // site_requests (0047): owner-only, hostnames only.
     const forgeSite = await asA('site_requests', { method: 'POST', body: JSON.stringify({ user_id: b.id, host: 'rls-probe.example.com' }) })
     if (forgeSite.status === 404) {

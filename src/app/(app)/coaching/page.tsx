@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
-import { ArrowUpRight, GraduationCap } from 'lucide-react'
+import { ArrowUpRight, CalendarPlus, GraduationCap, Video } from 'lucide-react'
 import { AppShell } from '@/components/features/app-shell'
 import { createClient } from '@/lib/supabase/server'
-import { listCoaches } from '@/lib/services/coaching'
+import { listCoaches, listOfficeHours } from '@/lib/services/coaching'
+import { icsFor, whenIst } from '@/lib/office-hours'
 import { CoachApplication } from '@/components/features/coach-application'
 
 /**
@@ -14,7 +15,7 @@ export default async function CoachingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
-  const { coaches, stored } = await listCoaches()
+  const [{ coaches, stored }, hours] = await Promise.all([listCoaches(), listOfficeHours()])
   const initials = (user.email ?? '?').slice(0, 2).toUpperCase()
 
   return (
@@ -23,6 +24,35 @@ export default async function CoachingPage() {
         <p className="text-sm leading-6 text-muted-foreground">
           One-to-one help with your résumé, interviews and negotiation, from people who have hired. You book and pay the coach directly on their own page — Saaf takes nothing and sees nothing of the session.
         </p>
+
+        {/* FREE LIVE SESSIONS (F-1006, TASK-196): written by the founder, hosted on the host's own link. Saaf
+            offers a calendar file and nothing else — no booking, no recording, no payment. */}
+        <section aria-label="Office hours" className="mt-6">
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Office hours</h2>
+          {hours.sessions.length ? (
+            <ul className="mt-3 space-y-3">
+              {hours.sessions.map((s) => {
+                const ics = icsFor(s)
+                return (
+                  <li key={s.id} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+                    <p className="text-base font-semibold text-primary">{s.title}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{whenIst(s.startsAt)} · {s.durationMin} min · with {s.hostName}</p>
+                    {s.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{s.description}</p> : null}
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <a href={s.joinUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold"><Video className="size-3.5" aria-hidden="true" /> Join <ArrowUpRight className="size-3.5" aria-hidden="true" /></a>
+                      {ics ? <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`saaf-office-hours-${s.id.slice(0, 8)}.ics`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent"><CalendarPlus className="size-3.5" aria-hidden="true" /> Add to calendar</a> : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              No sessions are scheduled right now. Free live sessions are added here when they are booked — nothing is listed that is not on a calendar.
+              {!hours.stored ? ' (This needs a database update, 0049, that has not been applied yet.)' : ''}
+            </p>
+          )}
+        </section>
 
         {coaches.length ? (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
