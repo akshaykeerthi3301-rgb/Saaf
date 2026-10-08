@@ -19,8 +19,8 @@ import { pageAll } from './paging'
  * roughly 5,000 users this becomes incremental recompute against roles
  * changed since the last run.
  */
-/** Profiles rescored at once. Scoring a person now reads up to 3,000 roles (MAX_ROLES_PER_CANDIDATE), so three at a time. */
-const CONCURRENCY = 3
+/** Profiles rescored at once. Scoring a person now reads up to 3,000 roles (MAX_ROLES_PER_CANDIDATE), so two at a time (three at once hit the database's statement timeout, measured 2026-10-08). */
+const CONCURRENCY = 2
 
 /**
  * @param opts.budgetMs stop STARTING new profiles after this many ms. The cron route has a 60 s ceiling and one
@@ -44,6 +44,7 @@ export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ 
   const order = [...profiles.slice(start), ...profiles.slice(0, start)]
   const t0 = Date.now()
   let rescored = 0, failed = 0, skipped = 0
+  const retry: { id: string }[] = []
   for (let i = 0; i < order.length; i += CONCURRENCY) {
     if (opts.budgetMs !== undefined && Date.now() - t0 > opts.budgetMs) {
       skipped = order.length - i
@@ -56,10 +57,16 @@ export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ 
         rescored++
         console.log(`  recomputed ${written} results for one profile`)
       } catch (e) {
-        failed++
-        console.error('  recompute failed for one profile (the others continue):', (e as Error).message)
+        retry.push(p)
+        console.error('  recompute failed for one profile (the others continue, one retry follows):', (e as Error).message)
       }
     }))
+  }
+  // One sequential retry for anything that failed under load, while the budget lasts.
+  for (const p of retry) {
+    if (opts.budgetMs !== undefined && Date.now() - t0 > opts.budgetMs) { failed++; continue }
+    try { const { written } = await evaluateUser(p.id); rescored++; console.log(`  recomputed ${written} results for one profile (retry)`) }
+    catch (e) { failed++; console.error('  recompute failed again for one profile:', (e as Error).message) }
   }
   return { rescored, skipped, failed }
 }

@@ -35,7 +35,7 @@ export const MAX_ROLES_PER_CANDIDATE = 3000
 
 /** Roles fetched per request when reading descriptions by id, and how many of those requests run at once. */
 const ROLE_FETCH_CHUNK = 150
-const ROLE_FETCH_PARALLEL = 4
+const ROLE_FETCH_PARALLEL = 8
 
 /**
  * PostgREST reports an absent function as PGRST202 (no matching function in the
