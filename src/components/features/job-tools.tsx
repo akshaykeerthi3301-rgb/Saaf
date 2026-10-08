@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { AlertCircle, CheckCircle2, ChevronRight, FileText, Loader2, PenLine, Sparkles, ThumbsUp, X, XCircle } from 'lucide-react'
-import Link from 'next/link'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { useFeed } from '@/components/features/feed-selection'
 import { OverviewTab } from '@/components/features/job-panel'
 import { TailorStudio } from '@/components/features/tailor-studio'
 import { CoverLetterStudio } from '@/components/features/cover-letter-studio'
+import { keepResumeFromFile } from '@/lib/keep-resume'
+import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { loadCoverLetterContext, loadTailorContext, type CoverLetterContext, type GapRow, type TailorContext } from '@/app/actions/job-tools'
 
 /**
@@ -160,6 +161,60 @@ function GapTable({ rows, resumeLabel, resumes, onPick, busy }: {
   )
 }
 
+/**
+ * What the tailor drawer shows when the account holds no saved résumé: an upload box, right there. It used to say
+ * "upload yours to the ATS checker, press Keep, and come back" — a trip to another page that never returned to the
+ * job. A saved résumé now arrives at sign-up (src/lib/keep-resume.ts); this covers an account that predates that or
+ * deleted it, and returns straight to step 1 for the same job.
+ */
+export function ResumeIntake({ onSaved }: { onSaved: (resumeId: string) => void }) {
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string>()
+
+  async function pick(file: File | undefined) {
+    if (!file) return
+    setError(undefined)
+    if (file.size > MAX_RESUME_BYTES) { setError(TOO_LARGE_MESSAGE); return }
+    setBusy(true)
+    try {
+      const r = await keepResumeFromFile(file, { makePrimary: true })
+      if (!r.ok) { setError(r.error); return }
+      onSaved(r.saved.id)
+    } catch {
+      setError('Something went wrong reading that file. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-md p-10 text-center sm:p-12">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-secondary text-primary"><FileText className="size-7" /></span>
+      <h3 className="mt-5 text-lg font-semibold text-primary">Add your résumé to tailor it for this job</h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        Upload a PDF or Word file (up to {MAX_RESUME_MB} MB). We keep its text in your account — not the file — so you can tailor it to any job. Delete it any time on the Résumé page.
+      </p>
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        disabled={busy}
+        className="bg-brand-gradient mt-6 inline-flex min-w-48 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold disabled:opacity-60"
+      >
+        {busy ? <><Loader2 className="size-4 animate-spin" /> Reading your résumé…</> : 'Upload your résumé'}
+      </button>
+      {error ? <p role="alert" className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</p> : null}
+      <input
+        ref={input}
+        type="file"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        hidden
+        onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = '' }}
+      />
+    </div>
+  )
+}
+
 export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [ctx, setCtx] = useState<TailorContext | null>(null)
@@ -187,14 +242,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
   if (!ctx) {
     body = <p className="flex items-center justify-center gap-2 p-16 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Reading your résumé against this job…</p>
   } else if (!ctx.ok && 'needsResume' in ctx) {
-    body = (
-      <div className="mx-auto max-w-md p-12 text-center">
-        <FileText className="mx-auto size-8 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold text-primary">Add your résumé first</h3>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">Tailoring rewrites a résumé you have saved in Jobinko. Upload yours to the ATS checker, press Keep, and come back.</p>
-        <Link href="/tools/ats-checker" className="bg-brand-gradient mt-5 inline-flex rounded-xl px-5 py-3 text-sm font-semibold">Add a résumé</Link>
-      </div>
-    )
+    body = <ResumeIntake onSaved={(id) => load(id)} />
   } else if (!ctx.ok) {
     body = <p className="p-10 text-center text-sm text-muted-foreground">{ctx.error}</p>
   } else if (step === 1) {

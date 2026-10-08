@@ -49,23 +49,25 @@ export default function PrivacyPage() {
       <Section>
         <H2>Your résumé</H2>
         <P>
-          Uploaded, parsed in memory, and deleted the moment parsing finishes. It is
-          never written to storage and never logged. Only what we read from it — current
-          title, employer, years of experience, preferred role, skills, city — is saved
-          to your profile, as soon as the read finishes. If the résumé does not give us
-          something we need, we ask you for it first rather than guess. Every field is
-          on your profile, where you can change or delete it.
+          Uploaded, read in memory, and the file is deleted the moment reading finishes.
+          It is never written to storage and never logged. Two things are kept in your
+          account, and both are yours to see and delete: the fields we read from it —
+          current title, employer, years of experience, preferred role, skills, city,
+          saved to your profile as soon as the read finishes (if the résumé does not
+          give us something we need, we ask you for it rather than guess) — and the
+          <em> text</em> of the résumé you upload at sign-up, which is what &ldquo;Customize
+          your résumé&rdquo; rewrites for each job.
         </P>
         <P>
-          <strong>One thing you can choose to keep.</strong> If you use the ATS checker
-          and press &ldquo;keep this résumé&rdquo;, the version you built here — the text
-          you saw on screen, not the file you uploaded — is saved to your account so it
-          can be scored against roles we index later. It is listed on your{' '}
+          <strong>Where to see and delete them.</strong> The fields are on your profile.
+          The résumé text — and any version you build in the ATS checker and press
+          &ldquo;keep this résumé&rdquo; on, which is the text you saw on screen rather
+          than the file — is listed on your{' '}
           <Link href="/resume" className="font-semibold text-primary underline underline-offset-4">
             résumé page
           </Link>
-          , you can delete any of it there, and deleting your account deletes all of it.
-          Nothing is saved unless you press that button.
+          , where you can delete any of it, and deleting your account deletes all of it.
+          Using the ATS checker without signing in saves nothing.
         </P>
         {provider === null ? (
           <P>

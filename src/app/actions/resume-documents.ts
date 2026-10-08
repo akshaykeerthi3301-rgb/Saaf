@@ -37,6 +37,8 @@ const sectionsSchema = z.object({
         dates: z.string().max(80).nullable(),
         location: z.string().max(120).nullable(),
         bullets: z.array(z.string().max(600)).max(30),
+        /** Set for an entry read from a Projects section. Dropped by this schema until 2026-10-09, which turned every saved project into a "job". */
+        isProject: z.boolean().optional(),
       }),
     )
     .max(20),

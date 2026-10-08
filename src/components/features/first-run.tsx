@@ -7,6 +7,7 @@ import { ScanHighlights } from '@/components/features/scan-highlights'
 import { parseResume } from '@/app/actions/parse-resume'
 import { confirmProfile } from '@/app/actions/confirm-profile'
 import { signOut } from '@/app/actions/sign-out'
+import { keepResumeFromFile } from '@/lib/keep-resume'
 import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { profileFromRead } from '@/lib/first-run'
 import { clearDraft, writeDraft } from '@/lib/onboarding-store'
@@ -69,7 +70,12 @@ export function FirstRun() {
     try {
       const fd = new FormData()
       fd.set('file', file)
-      const read = await parseResume(fd)
+      // The résumé's text is kept in the account alongside the profile read, so "Customize your résumé" has something to
+      // tailor the moment the feed opens. Run together so it adds no time; a failure to keep never blocks the profile.
+      const [read] = await Promise.all([
+        parseResume(fd),
+        keepResumeFromFile(file, { makePrimary: true }).catch(() => null),
+      ])
       if (!read.ok) { setPhase('idle'); setError(read.error); return }
 
       const made = profileFromRead(read.fields, read.suggestedRole)
@@ -151,7 +157,7 @@ export function FirstRun() {
           <p className="mt-6 text-sm text-muted-foreground">PDF or Word, up to {MAX_RESUME_MB} MB.</p>
 
           <p className="mt-6 rounded-2xl bg-accent/10 px-5 py-4 text-sm leading-6 text-muted-foreground">
-            Your file is read once and deleted. Only stripped text goes to one model provider, to read it —{' '}
+            Your file is read once and deleted. We keep its text in your account so we can tailor it to each job — you can delete it any time on the Résumé page. Only stripped text goes to one model provider, to read it —{' '}
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">details</a>.
           </p>
 
