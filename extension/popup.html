@@ -23,6 +23,10 @@
 <p>Everything below stays on this machine, in the browser's own extension storage. Only your résumé text is sent, to score a posting, and it is not kept at the other end.</p>
 <div class="sync" id="sync"></div>
 
+<h2>This site</h2>
+<p id="siteMsg"></p>
+<button id="siteAsk" hidden style="margin-top:0"></button>
+
 <h2>Your résumé</h2>
 <p>Text scores the posting you are looking at. The file is attached to résumé uploads when you press “Fill this application”.</p>
 <textarea id="resume" placeholder="Paste your résumé text…"></textarea>
@@ -86,4 +90,5 @@
   “Apply for me”, only after you switch it on, and never past a CAPTCHA.
 </div>
 
+<script src="extractor.js"></script>
 <script src="popup.js"></script>

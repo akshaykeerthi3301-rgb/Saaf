@@ -178,7 +178,15 @@ function mountActions(root, job) {
    * left running for the life of the tab is a cost every page pays forever.
    */
   const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form select'
-  wrap.innerHTML = `<div class="actions"><button class="ghost" id="save">Save to tracker</button></div>`
+  wrap.innerHTML = `<div class="actions"><button class="ghost" id="save">Save to tracker</button><button class="ghost" id="tailor">Tailor my résumé</button></div>`
+  // Opens Saaf's tailoring tool with this posting (and the résumé stored here) already in its boxes.
+  root.getElementById('tailor').addEventListener('click', async (e) => {
+    const b = e.currentTarget
+    b.disabled = true
+    const r = await chrome.runtime.sendMessage({ type: 'saaf:tailor-open', jdText: job.description, jdTitle: job.title, jdLocation: job.location }).catch(() => null)
+    b.textContent = r?.ok ? 'Opened in a new tab' : 'Could not open it'
+    setTimeout(() => { b.textContent = 'Tailor my résumé'; b.disabled = false }, 4000)
+  })
   root.getElementById('save').addEventListener('click', async (e) => {
     e.currentTarget.disabled = true
     await queue(job, 'saved')

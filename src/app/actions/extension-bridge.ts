@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { fileQueuedRoles, readExtensionSync } from '@/lib/services/extension-sync'
+import { fileSiteRequests } from '@/lib/services/site-requests'
 
 /**
  * The two server calls behind the web app ↔ extension bridge
@@ -46,4 +47,15 @@ export async function fileFromExtension(input: z.input<typeof queueSchema>) {
   const res = await fileQueuedRoles(user.id, parsed.data)
   if (res.filed || res.handled.length) revalidatePath('/applications')
   return { ok: true as const, ...res }
+}
+
+/** Sites the candidate asked the extension to support (hostnames only; each is re-checked in the service). */
+const sitesSchema = z.array(z.string().max(200)).max(20)
+
+export async function fileSiteRequestsFromExtension(input: z.input<typeof sitesSchema>) {
+  const parsed = sitesSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, handled: [] as string[], filed: 0 }
+  const user = await sessionUser()
+  if (!user) return { ok: false as const, handled: [] as string[], filed: 0 }
+  return { ok: true as const, ...(await fileSiteRequests(user.id, parsed.data)) }
 }

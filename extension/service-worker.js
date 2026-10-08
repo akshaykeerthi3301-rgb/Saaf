@@ -79,6 +79,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
 
+  // "Tailor my résumé" on a posting. The extension calls no model and holds no session, so it hands
+  // the posting to Saaf's own tailoring tool: the text waits here for ten minutes, one time, and the
+  // tool it opens collects it (saaf:take-jd). Nothing leaves the browser in this step.
+  if (msg?.type === 'saaf:tailor-open') {
+    ;(async () => {
+      const text = String(msg.jdText || '').slice(0, 20000)
+      if (text.length < 120) { sendResponse({ ok: false }); return }
+      await chrome.storage.local.set({ pendingJd: { text, title: String(msg.jdTitle || '').slice(0, 200), location: String(msg.jdLocation || '').slice(0, 200), at: new Date().toISOString() } })
+      await chrome.tabs.create({ url: `${new URL(ENDPOINT).origin}/tools/paste-jd?from=extension` })
+      sendResponse({ ok: true })
+    })()
+    return true
+  }
+
   if (msg?.type !== 'saaf:score') return false
 
   ;(async () => {
@@ -121,9 +135,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
  *  saaf:sync   ← profile fields, résumé text and the tracker's url→stage list,
  *                pushed by the signed-in app on load
  *  saaf:drain  → the roles queued on job sites since the last visit, and the
- *                required custom questions forms asked that have no saved answer
+ *                required custom questions forms asked that have no saved answer,
+ *                and the hostnames the candidate asked Saaf to support
  *  saaf:ack    ← those the app has filed, so they are not filed twice
  *  saaf:ack-questions ← the questions the app has put on file
+ *  saaf:ack-sites     ← the "support this site" requests the app has put on file
+ *  saaf:take-jd       → the posting "Tailor my résumé" left for Saaf's tailoring tool (once, ≤10 min)
  *
  * ⚠️ SYNC FILLS, IT DOES NOT ERASE. A field the web profile leaves blank keeps
  * whatever the candidate typed into the extension, and the fields only the
@@ -183,8 +200,23 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
       return
     }
     if (msg?.type === 'saaf:drain') {
-      const { pendingTrack = [], pendingQuestions = [] } = await chrome.storage.local.get(['pendingTrack', 'pendingQuestions'])
-      sendResponse({ ok: true, items: pendingTrack, questions: pendingQuestions })
+      const { pendingTrack = [], pendingQuestions = [], requestedSites = [] } = await chrome.storage.local.get(['pendingTrack', 'pendingQuestions', 'requestedSites'])
+      sendResponse({ ok: true, items: pendingTrack, questions: pendingQuestions, sites: requestedSites })
+      return
+    }
+    if (msg?.type === 'saaf:ack-sites') {
+      const done = new Set(Array.isArray(msg.hosts) ? msg.hosts : [])
+      const { requestedSites = [] } = await chrome.storage.local.get('requestedSites')
+      await chrome.storage.local.set({ requestedSites: requestedSites.filter((h) => !done.has(h)) })
+      sendResponse({ ok: true })
+      return
+    }
+    if (msg?.type === 'saaf:take-jd') {
+      const { pendingJd, resumeText } = await chrome.storage.local.get(['pendingJd', 'resumeText'])
+      await chrome.storage.local.remove('pendingJd') // one time only
+      const fresh = pendingJd && Date.now() - Date.parse(pendingJd.at) < 10 * 60 * 1000
+      // The résumé goes along only with a fresh posting the candidate just chose to tailor for.
+      sendResponse({ ok: true, jd: fresh ? { text: pendingJd.text, title: pendingJd.title, location: pendingJd.location } : null, resumeText: fresh && resumeText ? String(resumeText).slice(0, 40000) : '' })
       return
     }
     if (msg?.type === 'saaf:ack-questions') {

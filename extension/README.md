@@ -91,6 +91,8 @@ questions** are left for you unless you typed your own answer to that exact
 question on your Saaf profile (0.6.0, TASK-171); date of birth, age and pregnancy
 are never answered.
 
+**0.7.0 (2026-10-08, TASK-192):** **Tailor my résumé** on a posting opens Saaf's tailoring tool with the posting and your résumé already filled in (nothing is sent until you press its button); the popup's **This site** section says how Saaf handles the tab you are on and, for a site it does not run on, offers **Ask Saaf to support this site** — only the hostname is kept and filed the next time you open Saaf signed in.
+
 **0.7.0 (2026-10-08, TASK-194):** **custom questions.** Employers add their own free-text
 questions. Write your answer once on your Saaf profile (Apply details → *Questions
 employers asked*) and the extension fills it only when a form asks **exactly that
@@ -146,15 +148,15 @@ us nothing here.~~ Saaf's "Apply for me" is the parity answer (2026-09-25).
 
 | Jobright | Saaf |
 |---|---|
-| One-click autofill, "thousands of ATS sites" | ✅ 32 host patterns across 22 ATS platforms — text, dropdowns, radios, pickers, résumé upload, CTC (2026-09-25) |
+| One-click autofill, "thousands of ATS sites" | ✅ ~~32 host patterns across 22 ATS platforms~~ 23 ATS platforms (counted from `extractor.js`, 2026-10-08) — text, dropdowns, radios, pickers, résumé upload, CTC. **Per-site list, including what has NOT been checked on a live form: `ats-capabilities.json`, published at /extension** |
 | Match score on the posting | ✅ and every component opens into the posting's own sentence |
 | Missing keywords / ATS gaps | ✅ from a vocabulary mined out of our index, not a generic word list |
 | Track the application | ✅ filed on the Saaf tracker when you next open Saaf; stage shown back on the card (2026-09-25). ~~via a link into the Saaf tracker~~ — the link's `?add=` was read by nothing |
-| AI tailored résumé in the extension | ❌ **budget** — see below |
+| AI tailored résumé in the extension | ✅ in its lawful form (0.7.0): **Tailor my résumé** opens Saaf's own tailoring tool with this posting and your résumé already in the boxes; the rewrite runs there, on the same limits. ~~❌ budget~~ — the extension itself still calls no model |
 | Insider connections / referrals | ❌ **structurally impossible** — see below |
 
-**Tailored résumé is a budget limit, not a design one.** It exists on the web
-app. Groq's free tier is 8,000 tokens a minute shared across every environment,
+**~~Tailored résumé is a budget limit, not a design one.~~ Still true of generating one INSIDE the extension** (the extension holds no session and calls no model). It exists on the web
+app, and 0.7.0's button hands the posting to it. Groq's free tier is 8,000 tokens a minute shared across every environment,
 so a per-posting generator serves roughly three people a minute site-wide. It
 returns when there is a paid tier.
 

@@ -18,7 +18,7 @@ vi.mock('@/lib/supabase/server', () => ({
           eq: (col: string, val: unknown) => { db.eqs.push([`${table}.${col}`, val]); return chain },
           or: () => chain,
           maybeSingle: async () => ({ data: db.profile, error: null }),
-          then: (res: (v: unknown) => unknown) => res(table === 'applications' ? db.apps : opts?.head ? db.scored : { data: [], error: null }),
+          then: (res: (v: unknown) => unknown) => res(table === 'applications' ? db.apps : opts?.head ? db.scored : table === 'site_requests' ? { data: [{ host: 'careers.acme.com' }], error: null } : table === 'referrals' ? { data: [{ referrer_id: 'x' }], error: null } : { data: [], error: null }),
         }
         return chain
       },
@@ -76,10 +76,11 @@ describe('readAccountExport', () => {
     expect(e.notes.join(' ')).toContain('saved résumés could not be read')
     expect(e.notes.join(' ')).toContain('database update')
   })
-  it('carries the credit ledger and invites, and says when that update is missing', async () => {
+  it('carries the credit ledger, invites and site requests — each from its own table', async () => {
     const e = await readAccountExport('u1', null)
     expect(e.credits).toEqual([])
-    expect(e.referrals).toEqual([])
+    expect(e.referrals).toEqual([{ referrer_id: 'x' }])
+    expect(e.siteRequests).toEqual([{ host: 'careers.acme.com' }])
   })
   it('an empty account exports empty lists, not nulls', async () => {
     db.apps = { data: [], error: null }

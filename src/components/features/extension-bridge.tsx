@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fileFromExtension, getExtensionSync } from '@/app/actions/extension-bridge'
+import { fileFromExtension, fileSiteRequestsFromExtension, getExtensionSync } from '@/app/actions/extension-bridge'
 import { fileAskedQuestions } from '@/app/actions/answer-bank'
 import { askExtension } from '@/lib/extension-client'
 
@@ -36,7 +36,7 @@ export function ExtensionBridge() {
         // Remembered on this device so the install nudge never asks someone who already has it.
         try { window.localStorage.setItem('saaf.extension.seen', String(Date.now())) } catch { /* no storage: the nudge stays off too */ }
 
-        const queued = await ask<{ ok: boolean; items: Queued[]; questions?: { key: string; question: string }[] }>({ type: 'saaf:drain' })
+        const queued = await ask<{ ok: boolean; items: Queued[]; questions?: { key: string; question: string }[]; sites?: string[] }>({ type: 'saaf:drain' })
         if (queued?.ok && queued.items.length) {
           const res = await fileFromExtension(queued.items)
           if (res.ok && res.handled.length) {
@@ -55,6 +55,12 @@ export function ExtensionBridge() {
             await ask({ type: 'saaf:ack-questions', keys: res.handled })
             if (res.added) setNote(`${res.added} question${res.added === 1 ? '' : 's'} from a job form ${res.added === 1 ? 'is' : 'are'} waiting for your answer in Profile → Apply details.`)
           }
+        }
+
+        // Sites the candidate asked Saaf to support: hostnames only.
+        if (queued?.ok && queued.sites?.length) {
+          const res = await fileSiteRequestsFromExtension(queued.sites)
+          if (res.ok && res.handled.length) await ask({ type: 'saaf:ack-sites', hosts: res.handled })
         }
 
         const data = await getExtensionSync()

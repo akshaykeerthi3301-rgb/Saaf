@@ -1,0 +1,154 @@
+{
+  "asOf": "2026-10-08",
+  "basis": "The reading, filling and Apply-for-me code is the same on every site, so what differs is how well it was checked and what shape the employer's form usually has. 'tier' is MEASURED (a captured real form is a test in this repo, or it is not). 'flow' is INFERRED from how each vendor's application usually works and is NOT verified per site — a correction is welcome (the extension's 'Ask Saaf to support this site' button, or write to us).",
+  "tiers": {
+    "verified": "Filled a real application form that was captured as a test.",
+    "recognised": "The extension runs here and reads the posting; the form filler has not been checked on a live form from this vendor."
+  },
+  "flows": {
+    "one-page": "Usually one page with a Submit button. Fill and Apply for me both work as designed.",
+    "multi-step": "Usually several pages. Fill works on each page you open; Apply for me stops at the first page with no Submit button and hands the tab to you.",
+    "account-first": "Usually asks you to create an account first. Saaf never types a password, so Apply for me stops there and hands the tab to you; Fill works once you are in."
+  },
+  "platforms": [
+    {
+      "name": "Greenhouse",
+      "example": "boards.greenhouse.io",
+      "tier": "verified",
+      "flow": "one-page",
+      "evidence": "A real application form (Bluevine's) was captured on 2026-09-15 and is a test in this repo"
+    },
+    {
+      "name": "Lever",
+      "example": "jobs.lever.co",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Ashby",
+      "example": "jobs.ashbyhq.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Workable",
+      "example": "apply.workable.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Recruitee",
+      "example": "acme.recruitee.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "SmartRecruiters",
+      "example": "jobs.smartrecruiters.com",
+      "tier": "recognised",
+      "flow": "multi-step"
+    },
+    {
+      "name": "Workday",
+      "example": "acme.wd3.myworkdayjobs.com",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "iCIMS",
+      "example": "careers-acme.icims.com",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "Taleo",
+      "example": "acme.taleo.net",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "SuccessFactors",
+      "example": "career.successfactors.com",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "Oracle Recruiting",
+      "example": "acme.fa.oraclecloud.com",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "BrassRing",
+      "example": "sjobs.brassring.com",
+      "tier": "recognised",
+      "flow": "account-first"
+    },
+    {
+      "name": "Jobvite",
+      "example": "jobs.jobvite.com",
+      "tier": "recognised",
+      "flow": "multi-step"
+    },
+    {
+      "name": "BambooHR",
+      "example": "acme.bamboohr.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Breezy",
+      "example": "acme.breezy.hr",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Teamtailor",
+      "example": "acme.teamtailor.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Personio",
+      "example": "acme.personio.de",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Pinpoint",
+      "example": "acme.pinpointhq.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Rippling",
+      "example": "ats.rippling.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    },
+    {
+      "name": "Zoho Recruit",
+      "example": "acme.zohorecruit.com",
+      "tier": "recognised",
+      "flow": "multi-step"
+    },
+    {
+      "name": "Keka",
+      "example": "acme.keka.com",
+      "tier": "recognised",
+      "flow": "multi-step"
+    },
+    {
+      "name": "Darwinbox",
+      "example": "acme.darwinbox.in",
+      "tier": "recognised",
+      "flow": "multi-step"
+    },
+    {
+      "name": "Freshteam",
+      "example": "acme.freshteam.com",
+      "tier": "recognised",
+      "flow": "one-page"
+    }
+  ]
+}

@@ -396,6 +396,21 @@ async function crossUserIsolation() {
       check('survey_answers: A cannot answer as B', forgeAnswer.status >= 400, `http ${forgeAnswer.status}`)
     }
 
+    // site_requests (0047): owner-only, hostnames only.
+    const forgeSite = await asA('site_requests', { method: 'POST', body: JSON.stringify({ user_id: b.id, host: 'rls-probe.example.com' }) })
+    if (forgeSite.status === 404) {
+      console.log('  – site_requests: table not present, skipped (migration 0047 pending)')
+    } else {
+      check('site_requests: A cannot file one as B', forgeSite.status >= 400, `http ${forgeSite.status}`)
+      const badSite = await asA('site_requests', { method: 'POST', body: JSON.stringify({ user_id: a.id, host: 'https://example.com/jobs/1' }) })
+      check('site_requests: a URL is refused — hostnames only', badSite.status >= 400, `http ${badSite.status}`)
+      const ownSite = await asA('site_requests', { method: 'POST', body: JSON.stringify({ user_id: a.id, host: 'rls-probe.example.com' }) })
+      check('site_requests: A CAN file their own', ownSite.status < 400, `http ${ownSite.status}`)
+      const seenSite = await (await asA(`site_requests?user_id=eq.${b.id}&select=host`)).json()
+      check("site_requests: A cannot read B's", Array.isArray(seenSite) && seenSite.length === 0)
+      await asA(`site_requests?user_id=eq.${a.id}`, { method: 'DELETE' })
+    }
+
     // credits / referrals (0045): the ledger is read-only to its owner; every write is a definer function.
     const forgeLedger = await asA('credit_ledger', { method: 'POST', body: JSON.stringify({ user_id: a.id, delta: 999, reason: 'grant', ref: '__rls_probe__' }) })
     if (forgeLedger.status === 404) {

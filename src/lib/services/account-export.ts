@@ -35,6 +35,8 @@ export type AccountExport = {
   /** Credits granted and spent, and who invited whom (0045). Null when that update is missing. */
   credits: Record<string, unknown>[] | null
   referrals: Record<string, unknown>[] | null
+  /** Sites the candidate asked the extension to support — hostnames only (0047). Null when that update is missing. */
+  siteRequests: Record<string, unknown>[] | null
   counts: { scoredRoles: number | null; connectionsUploaded: number | null }
   notes: string[]
 }
@@ -43,7 +45,7 @@ export async function readAccountExport(userId: string, email: string | null): P
   const supabase = await createClient()
   const notes: string[] = []
 
-  const [profile, apps, scored, connections, resumes, searches, reports, feedback, surveys, ledger, referrals] = await Promise.all([
+  const [profile, apps, scored, connections, resumes, searches, reports, feedback, surveys, ledger, sites, referrals] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('applications').select('*').eq('user_id', userId),
     supabase.from('gate_results').select('id', { count: 'exact', head: true }).eq('user_id', userId),
@@ -58,6 +60,7 @@ export async function readAccountExport(userId: string, email: string | null): P
     supabase.from('survey_answers').select('survey_id, answer, note, created_at').eq('user_id', userId),
     supabase.from('credit_ledger').select('delta, reason, ref, note, created_at').eq('user_id', userId),
     // RLS lets a candidate see a referral they are on either side of; the export lists only the ones where they invited or were invited, by date.
+    supabase.from('site_requests').select('host, created_at').eq('user_id', userId),
     supabase.from('referrals').select('created_at, referrer_id, referred_id').or(`referrer_id.eq.${userId},referred_id.eq.${userId}`),
   ])
 
@@ -86,6 +89,7 @@ export async function readAccountExport(userId: string, email: string | null): P
     surveyAnswers: surveys.error ? null : ((surveys.data ?? []) as Record<string, unknown>[]),
     credits: ledger.error ? null : ((ledger.data ?? []) as Record<string, unknown>[]),
     referrals: referrals.error ? null : ((referrals.data ?? []) as Record<string, unknown>[]),
+    siteRequests: sites.error ? null : ((sites.data ?? []) as Record<string, unknown>[]),
     counts: { scoredRoles: scored.error ? null : scored.count ?? 0, connectionsUploaded: connections },
     notes,
   }

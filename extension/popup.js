@@ -115,3 +115,40 @@ chrome.storage.onChanged.addListener((c, area) => {
   if (area === 'local' && (c.autoApplyLog || c.autoApplyQueue || c.autoApplyDay)) renderAutoApply()
 })
 renderAutoApply()
+
+// --------------------------------------------------------------- This site
+/**
+ * What Saaf does on the tab you are looking at, and — for a site it does not run on — a button
+ * to ask for it. Only the HOSTNAME is kept (never the URL or anything on the page), and it is
+ * filed in Saaf the next time you open it signed in (service-worker.js, saaf:drain).
+ * The popup can read the tab's address because opening it grants `activeTab` for that tab.
+ */
+const NEVER_ASK = /(^|\.)(linkedin\.com|naukri\.com|saaf-ten\.vercel\.app)$/
+async function renderSite() {
+  const msg = $('siteMsg'), btn = $('siteAsk')
+  btn.hidden = true
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => [])
+  let host = ''
+  try {
+    const u = new URL(tab?.url || '')
+    if (/^https?:$/.test(u.protocol)) host = u.hostname.toLowerCase().replace(/\.$/, '')
+  } catch { /* a page with no address (a new tab) */ }
+  if (!host || host === 'localhost' || /^[\d.]+$/.test(host) || !host.includes('.')) {
+    msg.textContent = 'Open a job page and then this popup, to see how Saaf handles that site.'
+    return
+  }
+  const ats = globalThis.SaafExtract?.detectAts(host)
+  if (ats) { msg.textContent = `${ats} — Saaf runs on this site. How well each site has been checked: saaf-ten.vercel.app/extension`; return }
+  if (NEVER_ASK.test(host)) { msg.textContent = 'Saaf does not run on this site, on purpose.'; return }
+  const { requestedSites = [] } = await chrome.storage.local.get('requestedSites')
+  if (requestedSites.includes(host)) { msg.textContent = `You asked Saaf to support ${host}. It is sent the next time you open Saaf signed in.`; return }
+  msg.textContent = `${host} is not a site Saaf runs on yet.`
+  btn.textContent = `Ask Saaf to support ${host}`
+  btn.hidden = false
+  btn.onclick = async () => {
+    const { requestedSites: have = [] } = await chrome.storage.local.get('requestedSites')
+    if (!have.includes(host)) await chrome.storage.local.set({ requestedSites: [...have, host].slice(-20) })
+    renderSite()
+  }
+}
+renderSite()
