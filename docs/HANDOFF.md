@@ -6,7 +6,7 @@
 
 **Live and checked.** The daily ingest and the recompute ran on production today (roles 27,882 → 28,751; reposted, work mode, contract type, pay and "posting closed" now filled). 7,014 of the stored roles (24%) had been taken down by their employer; the site now hides them. **Checked after the deploy:** the Product Manager page in a real browser says 257 open roles (was 352), the remote page 865 (was 1,070); 5 of 5 sampled taken-down job pages show "not found" and 3 of 3 live ones load; none of the newest 1,000 taken-down jobs is in the sitemap. **After the recompute:** matches pointing at a taken-down job went from 693 of 3,970 to 0 of 3,277.
 
-**Still open, none urgent:** 11 boards returned "not found" in the ingest (probably retired — not yet checked one by one); the match-finder's database function still ranks taken-down jobs before the app drops them (only matters for searches matching 500+ jobs — a one-line database update I have NOT written; say if you want it); `phase-18` is not merged into `main` and nothing is pushed.
+**Still open, none urgent:** 11 boards returned "not found" in the ingest (probably retired — not yet checked one by one); the match-finder's database function still ranks taken-down jobs before the app drops them (only matters for searches matching 500+ jobs) — **the fix, database update `0050`, is WRITTEN and tested on a scratch database but NOT applied to production; say "apply 0050" and I do it the same way as before** (or run `DATABASE_URL=… scripts/apply-migrations.sh 0050 0050` yourself); `phase-18` is not merged into `main` and nothing is pushed.
 
 ---
 

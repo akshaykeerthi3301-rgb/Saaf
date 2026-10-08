@@ -1,7 +1,7 @@
 -- Which of Saaf's database updates (0029 onward) are applied? Read-only: run it in the Supabase SQL editor.
 -- Each line tests for one thing the update creates. 2026-10-08, against production, BEFORE applying: applied = 0029, 0030,
 -- 0032, 0033; not applied = 0031 and 0034–0049 (0034 failed in the dashboard editor, which sent it truncated).
--- AFTER applying (same day): all 21 are applied.
+-- AFTER applying (same day): all 21 are applied. 0050 was written the same evening and is NOT applied until HANDOFF says so.
 select v.n as migration, v.applied from (values
  ('0029_rejected_stage', exists(select 1 from pg_enum e join pg_type t on t.oid=e.enumtypid where t.typname='application_status' and e.enumlabel='rejected')),
  ('0030_feed_preferences', exists(select 1 from information_schema.columns where table_schema='public' and table_name='profiles' and column_name='hidden_role_ids')),
@@ -23,5 +23,6 @@ select v.n as migration, v.applied from (values
  ('0046_answer_bank', exists(select 1 from information_schema.columns where table_schema='public' and table_name='profiles' and column_name='answer_bank')),
  ('0047_site_requests', exists(select 1 from information_schema.tables where table_schema='public' and table_name='site_requests')),
  ('0048_agent_settings', exists(select 1 from information_schema.columns where table_schema='public' and table_name='profiles' and column_name='agent_settings')),
- ('0049_office_hours', exists(select 1 from information_schema.tables where table_schema='public' and table_name='office_hours'))
+ ('0049_office_hours', exists(select 1 from information_schema.tables where table_schema='public' and table_name='office_hours')),
+ ('0050_match_finder_skips_closed_roles', exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='roles_for_candidates' and p.prosrc like '%closed_at is null%'))
 ) as v(n, applied) order by v.n;
