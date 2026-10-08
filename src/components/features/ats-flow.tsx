@@ -11,6 +11,7 @@ import { Card, Eyebrow } from '@/components/ui/card'
 import { Combobox } from '@/components/ui/combobox'
 import { ResumePreview } from '@/components/features/resume-preview'
 import { readResumeFile } from '@/app/actions/read-resume-file'
+import { LinkedInStart } from '@/components/features/linkedin-start'
 import { MAX_RESUME_BYTES, MAX_RESUME_MB, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { checkResumeForAts } from '@/app/actions/ats-check'
 import { optimiseResume } from '@/app/actions/optimise-resume'
@@ -639,6 +640,16 @@ export function AtsFlow() {
               </div>
             )}
           </div>
+
+          <LinkedInStart
+            onText={(text) => {
+              // Lands in the paste box, for the candidate to read and edit before anything is scored.
+              setFile(undefined)
+              setError(undefined)
+              setResumeText(text)
+              setPastedFallback(true)
+            }}
+          />
 
           <div className="mt-6">
             <Combobox
