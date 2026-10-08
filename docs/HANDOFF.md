@@ -4,13 +4,13 @@
 
 ## 🔶 2026-10-08 — parity audit done: 50 of 109 match, 24 partial, 3 gaps, 21 could not be checked
 
-**Written, not shipped.** Nothing was changed on the site. Result and evidence: ROADMAP Phase 19 (TASK-214–221) and PROJECT-STATE Stage AQ; the full row-by-row table is the local file `docs/jobright-map/20-parity-audit.local.md` (never published).
+~~**Written, not shipped.** Nothing was changed on the site.~~ **CORRECTED 2026-10-08 (late): the fixes are LIVE** at https://saaf-ten.vercel.app — latest deploy `dpl_GDMaDXVVGnVKeAPrkYZdkCkxB4Ts`. Live and re-measured on production: voice input (TASK-214), job-page markup for Google (215), the error-report tunnel `/api/monitoring` (216 — live, not confirmed, see below), "Search all roles" beyond your matches at `/today/explore` (217), a one-line gist of the job on every card (218), the wider filters (219), and the Reposted chip on that search page (220). **Not pushed:** `main` is ahead of both GitLab and GitHub (as of 2026-10-08 evening, 16 commits) — say "push main to gitlab and github" and I will. Result and evidence: ROADMAP Phase 19 (TASK-214–221) and PROJECT-STATE Stage AQ; the full row-by-row table is the local file `docs/jobright-map/20-parity-audit.local.md` (never published).
 
 **Found on the live site:** voice input is broken (a one-line header fix), job pages are missing six Google-recommended fields, and the search box cannot look beyond your 395 matches.
 
 **NEW 2026-10-08 (found while building TASK-216): Sentry rejects Saaf's error reports — a one-minute fix only you can do.** Sentry answers `403 … rejected with_reason: ProjectId` to the DSN that production uses, so no browser or server error has been recorded. In Sentry: Settings → Projects → (your project) → Client Keys (DSN) → copy the DSN → in Vercel set both `NEXT_PUBLIC_SENTRY_DSN` and `SENTRY_DSN` → tell me to redeploy, and I will send a test event through the new tunnel to confirm.
 
-**Only you can do these, so the 21 unchecked rows can be checked:** (1) save a résumé in Saaf — or say "save a synthetic test résumé on my account" (11 rows need it); (2) load the Saaf extension 0.7.0 in Chrome (8 rows need it); (3) say "go" on TASK-214 first, then the rest in order.
+**Only you can do these, so the 21 unchecked rows can be checked:** (1) save a résumé in Saaf — or say "save a synthetic test résumé on my account" (11 rows need it); (2) load the Saaf extension 0.7.0 in Chrome (8 rows need it); ~~(3) say "go" on TASK-214 first, then the rest in order.~~ (3) fix the Sentry DSN above so TASK-216 can be confirmed. Phase 19 is 6 of 8: TASK-216 waits on that DSN, TASK-221 on (1) and (2). Freshness (TASK-220) was measured and deliberately left as a tie-break — a score bonus did not make the top 20 any newer; see ROADMAP TASK-220.
 
 ---
 
