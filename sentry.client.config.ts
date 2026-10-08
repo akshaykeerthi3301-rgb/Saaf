@@ -2,6 +2,9 @@ import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  // Through Saaf's own origin (src/app/api/monitoring/route.ts): content blockers drop requests to sentry.io
+  // and would hide the errors candidates hit most. The route forwards only to this project.
+  tunnel: '/api/monitoring',
   tracesSampleRate: 0.1,
   // Session replay is off: this product's third guarantee is that nothing about
   // a candidate's job search is shared, and replaying their screen while they

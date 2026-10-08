@@ -100,13 +100,14 @@ actions to routes means 11 public URLs each needing its own hand-written auth
 check — trading a structural guarantee for a procedural one.
 
 **`src/app/api/` is reserved for requests that arrive without a session**, which
-today is exactly three kinds:
+today is exactly four kinds:
 
 | Group | Route | Guard |
 |---|---|---|
 | Cron | `api/cron/{ingest,recompute,audit,digest}` | `CRON_SECRET` bearer, via `lib/cron-route.ts` |
 | Public read | `api/audit/today` | None by design — it is the landing page's proof |
 | Dev tool | `api/dev-signin` | 404s unless `NODE_ENV !== 'production'` |
+| Error-report tunnel | `api/monitoring` | Forwards only envelopes addressed to Saaf's own Sentry project (`lib/sentry-tunnel.ts`); 200 KB cap; rate-limited. Added 2026-10-08 (TASK-216) |
 
 There are **no webhooks in this repo yet**. When one lands it belongs here, and
 its signature must be verified before the payload is trusted.
