@@ -15,6 +15,8 @@ import { HIGH_PRECISION_MIN } from '@/lib/score-bands'
 /** Badges "seen in the last 7 days" rather than tracking each user's actual
  *  last-visit timestamp — simpler, no write-on-every-page-load. */
 export const NEW_WITHIN_DAYS = 7
+/** A role the employer posted longer ago than this is never "new", whenever we first showed it. */
+export const NEW_POSTED_WITHIN_DAYS = 14
 
 /** How many cards of a section are rendered before the "show more" link.
  *
@@ -132,9 +134,17 @@ export function arrangeShortlist<T extends ArrangeableRow>(
   opts: ArrangeOptions,
 ) {
   const newCutoff = (opts.now ?? Date.now()) - NEW_WITHIN_DAYS * 86_400_000
+  // ⚠️ "NEW" IS NEW TO YOU AND NOT AN OLD POSTING. Until 2026-10-08 it meant only "first shown to this candidate
+  // within a week". Raising the ceiling from 500 to 3,000 matches made 1,779 roles "new" in one night (MEASURED on
+  // the founder's feed), most of them months old — so a role the employer posted more than NEW_POSTED_WITHIN_DAYS
+  // ago is not new however recently we began showing it. A role with no posting date keeps the old rule.
+  const postedCutoff = (opts.now ?? Date.now()) - NEW_POSTED_WITHIN_DAYS * 86_400_000
   const isNew = (r: T) => {
     const shown = firstShownAt.get(r.role_id)
-    return shown ? new Date(shown).getTime() >= newCutoff : false
+    if (!shown || new Date(shown).getTime() < newCutoff) return false
+    const posted = opts.postedAt?.get(r.role_id)
+    const at = posted ? Date.parse(posted) : NaN
+    return Number.isNaN(at) || at >= postedCutoff
   }
 
   const newCount = rows.filter(isNew).length

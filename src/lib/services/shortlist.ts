@@ -64,6 +64,8 @@ export type Shortlist = {
   failed: boolean
   indexed: number
   firstShownAt: Map<string, string>
+  /** role_id -> the employer's posting date, where the board gave one. */
+  postedAt: Map<string, string>
 }
 
 type ThinRow = {
@@ -72,6 +74,8 @@ type ThinRow = {
   score: number | null
   location: ScoreBreakdown['location'] | null
   experience: ScoreBreakdown['experience'] | null
+  /** Embedded so the posting dates arrive with the list — reading them separately was 30 requests at 3,000 matches. */
+  roles: { posted_at: string | null } | null
 }
 
 export async function readShortlist(userId: string): Promise<Shortlist> {
@@ -82,7 +86,7 @@ export async function readShortlist(userId: string): Promise<Shortlist> {
     pageAll<ThinRow>(async (from, to) => {
       const r = await supabase
         .from('gate_results')
-        .select('id, role_id, score, location:score_breakdown->>location, experience:score_breakdown->>experience')
+        .select('id, role_id, score, location:score_breakdown->>location, experience:score_breakdown->>experience, roles(posted_at)')
         .eq('user_id', userId)
         .order('score', { ascending: false, nullsFirst: false })
         .order('id')
@@ -108,6 +112,7 @@ export async function readShortlist(userId: string): Promise<Shortlist> {
     failed: results.failed,
     indexed: indexed.count ?? 0,
     firstShownAt: new Map(firstShown.map((r) => [r.role_id, r.first_shown_at])),
+    postedAt: new Map(results.data.flatMap((r) => (r.roles?.posted_at ? [[r.role_id, r.roles.posted_at] as [string, string]] : []))),
   }
 }
 

@@ -14,7 +14,7 @@ import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
 import { resolveCity } from '@/lib/taxonomy/locations'
-import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readExperienceFloors, readInterest, readPostedDates, readReposts, readRoleFacts, readShortlist, readStatedPays } from '@/lib/services/shortlist'
+import { countMatchingRoles, countWorkModeMatches, readApplyUrls, readCards, readExperienceFloors, readInterest, readReposts, readRoleFacts, readShortlist, readStatedPays } from '@/lib/services/shortlist'
 import { FeedProvider, SelectableCard } from '@/components/features/feed-selection'
 import { JobPanel, JobSheet } from '@/components/features/job-panel'
 import { isEasyApply } from '@/lib/job-facts'
@@ -147,11 +147,10 @@ export default async function TodayPage({
     remote: params.remote === '1',
     easy: params.easy === '1',
   }
-  const [postedAll, applyAll] = await Promise.all([
-    // Always: the best-match order breaks ties by freshness (src/lib/shortlist.ts), so the dates are needed on every render.
-    readPostedDates(allRows.map((r) => r.role_id)),
-    pills.easy ? readApplyUrls(allRows.map((r) => r.role_id)) : Promise.resolve(undefined),
-  ])
+  // The posting dates arrive with the list (readShortlist embeds them): the best-match order breaks ties by freshness
+  // and "New" needs them (src/lib/shortlist.ts), so they are needed on every render.
+  const postedAll = shortlist.postedAt
+  const applyAll = pills.easy ? await readApplyUrls(allRows.map((r) => r.role_id)) : undefined
   // Title/company/city are read only when a text filter is on (Phase 15). Job
   // type and "leave out" need the same title and employer.
   const roleText = view.q || view.city || view.type || view.skip || view.roleType || view.only || byCompany ? await readRoleText(allRows.map((r) => r.role_id)) : new Map()

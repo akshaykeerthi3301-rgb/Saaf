@@ -71,6 +71,19 @@ describe('arrangeShortlist — new and newest', () => {
     expect(onlyNew.sections[0].rows).toEqual([fresh])
   })
 
+  it('an old posting is not "new" just because we started showing it this week (the ceiling was raised to 3,000)', () => {
+    const recent = row(50, 'exact')
+    const oldPosting = row(60, 'exact')
+    const undated = row(55, 'exact')
+    const shown = new Map([[recent.role_id, daysAgo(1)], [oldPosting.role_id, daysAgo(1)], [undated.role_id, daysAgo(1)]])
+    const postedAt = new Map([[recent.role_id, daysAgo(5)], [oldPosting.role_id, daysAgo(90)]])
+    const r = arrangeShortlist([recent, oldPosting, undated], shown, { ...base, postedAt })
+    expect(r.isNew(recent)).toBe(true)
+    expect(r.isNew(oldPosting)).toBe(false)
+    expect(r.isNew(undated)).toBe(true) // no posting date: the old rule applies
+    expect(r.newCount).toBe(2)
+  })
+
   it('newest sorts by first-shown descending, then by score', () => {
     const a = row(40, 'exact')
     const b = row(90, 'exact')
