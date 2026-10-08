@@ -34,3 +34,27 @@ export async function pageAll<T>(
     if (rows.length < PAGE) return out
   }
 }
+
+/**
+ * Like pageAll, but after the first page the rest are requested TOGETHER. The first request asks for the exact
+ * total (`count`), so the remaining ranges are known up front. Three pages of 1,000 cost one round trip of waiting
+ * instead of three. Same rule as pageAll: end the ordering on a unique column.
+ */
+export async function pageAllParallel<T>(
+  page: (from: number, to: number, withCount: boolean) => PromiseLike<{ data: T[] | null; error: unknown; count?: number | null }>,
+): Promise<T[]> {
+  const first = await page(0, PAGE - 1, true)
+  if (first.error) throw first.error
+  const head = first.data ?? []
+  const total = first.count ?? head.length
+  if (head.length < PAGE || total <= PAGE) return head
+  const starts: number[] = []
+  for (let from = PAGE; from < total; from += PAGE) starts.push(from)
+  const rest = await Promise.all(starts.map((from) => page(from, from + PAGE - 1, false)))
+  const out = [...head]
+  for (const r of rest) {
+    if (r.error) throw r.error
+    out.push(...(r.data ?? []))
+  }
+  return out
+}

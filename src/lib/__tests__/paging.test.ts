@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { chunk, pageAll, PAGE } from '../paging'
+import { chunk, pageAll, pageAllParallel, PAGE } from '../paging'
 
 describe('chunk', () => {
   it('splits into fixed sizes and keeps the remainder', () => {
@@ -20,5 +20,29 @@ describe('pageAll', () => {
   })
   it('throws the database error instead of returning a silent partial list', async () => {
     await expect(pageAll(async () => ({ data: null, error: new Error('boom') }))).rejects.toThrow('boom')
+  })
+})
+
+describe('pageAllParallel', () => {
+  const rows = (n: number) => Array.from({ length: n }, (_, i) => i)
+  const source = (all: number[], calls: number[][]) => async (from: number, to: number, withCount: boolean) => {
+    calls.push([from, to, withCount ? 1 : 0])
+    return { data: all.slice(from, to + 1), error: null, count: withCount ? all.length : undefined }
+  }
+  it('asks for the total once, then the remaining pages together', async () => {
+    const calls: number[][] = []
+    const out = await pageAllParallel(source(rows(3500), calls))
+    expect(out).toEqual(rows(3500))
+    expect(calls).toEqual([[0, 999, 1], [1000, 1999, 0], [2000, 2999, 0], [3000, 3999, 0]])
+  })
+  it('stops after one request when everything fits in the first page', async () => {
+    const calls: number[][] = []
+    expect(await pageAllParallel(source(rows(400), calls))).toHaveLength(400)
+    expect(calls).toHaveLength(1)
+  })
+  it('throws when a later page fails instead of returning a silent partial list', async () => {
+    const bad = async (from: number, _to: number, withCount: boolean) =>
+      from >= 2000 ? { data: null, error: new Error('late page failed') } : { data: rows(PAGE), error: null, count: withCount ? 3000 : undefined }
+    await expect(pageAllParallel(bad)).rejects.toThrow('late page failed')
   })
 })
