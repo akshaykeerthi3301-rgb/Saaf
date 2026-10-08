@@ -33,7 +33,9 @@ export async function POST(req: Request) {
 
   try {
     const up = await fetch(target, { method: 'POST', headers: { 'Content-Type': 'application/x-sentry-envelope' }, body })
-    return new NextResponse(null, { status: up.ok ? 200 : 502 })
+    // The browser only needs ok / not ok; the real answer rides in a header so a curl shows why Sentry said no
+    // (2026-10-08: 403 "rejected with_reason: ProjectId" — the configured DSN's key and project do not belong together).
+    return new NextResponse(null, { status: up.ok ? 200 : 502, headers: { 'X-Upstream-Status': String(up.status) } })
   } catch {
     // Sentry unreachable: the browser has nothing useful to do with the reason.
     return new NextResponse(null, { status: 502 })

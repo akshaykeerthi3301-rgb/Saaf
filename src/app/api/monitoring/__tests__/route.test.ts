@@ -22,6 +22,13 @@ describe('POST /api/monitoring', () => {
     expect(f).toHaveBeenCalledTimes(1)
     expect((f.mock.calls[0] as unknown as [string])[0]).toBe('https://o999.ingest.us.sentry.io/api/4512345/envelope/')
   })
+  it('says which status Sentry gave when it refuses, so a curl shows why', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"detail":"rejected"}', { status: 403 })))
+    const { POST } = await import('../route')
+    const res = await POST(post(envelope()))
+    expect(res.status).toBe(502)
+    expect(res.headers.get('x-upstream-status')).toBe('403')
+  })
   it('refuses an envelope for someone else\'s project without calling out', async () => {
     const f = vi.fn(); vi.stubGlobal('fetch', f)
     const { POST } = await import('../route')
