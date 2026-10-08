@@ -58,3 +58,25 @@ export async function pageAllParallel<T>(
   }
   return out
 }
+
+/**
+ * Run `fn` over `items` with at most `limit` in flight at once, results in input order.
+ *
+ * Why this exists: the free database has two shared CPU cores and cancels any single statement that runs past its
+ * timeout (code 57014). Firing 8 description fetches or 10 upserts at once did not make them 8x faster, it made
+ * each of them slower until some crossed the timeout — measured 2026-10-09 on the profiles holding 5,000 matches.
+ * A small window keeps every statement short.
+ */
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => PromiseLike<R>): Promise<R[]> {
+  const out = new Array<R>(items.length)
+  let next = 0
+  const worker = async () => {
+    for (;;) {
+      const i = next++
+      if (i >= items.length) return
+      out[i] = await fn(items[i], i)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return out
+}

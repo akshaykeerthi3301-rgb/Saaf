@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { scoreRole, summarise, type ScoreBreakdown } from '@/match/score'
-import { chunk, pageAll } from '@/lib/paging'
+import { chunk, mapLimit, pageAll } from '@/lib/paging'
 import type { CandidateProfile, Credential, RequirementKind, TypedRequirement } from '@/gates/types'
 
 /**
@@ -41,7 +41,7 @@ export const MAX_ROLES_PER_CANDIDATE = 5000
 
 /** Roles fetched per request when reading descriptions by id, and how many of those requests run at once. */
 const ROLE_FETCH_CHUNK = 150
-const ROLE_FETCH_PARALLEL = 8
+const ROLE_FETCH_PARALLEL = 2
 
 /**
  * PostgREST reports an absent function as PGRST202 (no matching function in the
@@ -212,15 +212,25 @@ export async function scoreAgainstIndex(
       return { data: r.data as unknown as { id: string }[] | null, error: r.error }
     })
     const batches = chunk([...new Set(ranked.map((r) => r.id))], ROLE_FETCH_CHUNK)
-    for (let i = 0; i < batches.length; i += ROLE_FETCH_PARALLEL) {
-      const got = await Promise.all(
-        batches.slice(i, i + ROLE_FETCH_PARALLEL).map((part) => db.from('roles').select(COLUMNS).in('id', part).is('closed_at', null)),
-      )
-      for (const g of got) {
-        if (g.error) throw g.error
-        roles.push(...((g.data ?? []) as unknown as RoleRow[]))
+    // ⚠️ TWO SIMPLE QUERIES PER BATCH, NOT ONE WITH `role_requirements(*)` EMBEDDED. MEASURED 2026-10-09 on 1,800 roles:
+    // embedded 3.8 s, separate 1.1 s + 0.7 s — the database's join-and-aggregate was the cost, and on the free tier's
+    // shared CPU more parallelism made it slower, not faster (2 at a time 5 s, 6 at a time 18 s). Same rows either way.
+    const got = await mapLimit(batches, ROLE_FETCH_PARALLEL, async (part) => {
+      const [r, q] = await Promise.all([
+        db.from('roles').select('id, title, company_name, apply_url, description, location_raw, city, unread_experience_mention').in('id', part).is('closed_at', null),
+        db.from('role_requirements').select('*').in('role_id', part),
+      ])
+      if (r.error) throw r.error
+      if (q.error) throw q.error
+      const reqs = new Map<string, RoleRow['role_requirements']>()
+      for (const row of (q.data ?? []) as unknown as (NonNullable<RoleRow['role_requirements']>[number] & { role_id: string })[]) {
+        const list = (reqs.get(row.role_id) ?? []) as NonNullable<RoleRow['role_requirements']>
+        list.push(row)
+        reqs.set(row.role_id, list)
       }
-    }
+      return ((r.data ?? []) as unknown as RoleRow[]).map((role) => ({ ...role, role_requirements: reqs.get(role.id) ?? [] }))
+    })
+    for (const batch of got) roles.push(...batch)
   } catch (e) {
     // Migrations here are pasted into the Supabase SQL editor by hand, so there
     // is a real window where this code is deployed and the function is not.

@@ -19,16 +19,25 @@ import { pageAll } from './paging'
  * roughly 5,000 users this becomes incremental recompute against roles
  * changed since the last run.
  */
-/** Profiles rescored at once. Scoring a person now reads up to 3,000 roles (MAX_ROLES_PER_CANDIDATE), so two at a time (three at once hit the database's statement timeout, measured 2026-10-08). */
-const CONCURRENCY = 2
+/**
+ * Profiles rescored at once: ONE. The free database has two shared CPU cores and cancels any single statement that
+ * runs past its timeout, so more at once only made each statement slower until some were cancelled (measured
+ * 2026-10-08/09: three at once, then two, both lost profiles; one at a time with lighter queries lost none).
+ */
+const CONCURRENCY = 1
+
+export type RecomputeResult = { rescored: number; skipped: number; failed: number; total: number; nextFrom: number; day: number }
 
 /**
- * @param opts.budgetMs stop STARTING new profiles after this many ms. The cron route has a 60 s ceiling and one
- *   profile can take 5-8 s now (measured 2026-10-08: 0.4-7.4 s across 9 profiles), so the run must degrade into a
- *   partial night, loudly, rather than be killed mid-write. The CLI passes nothing and sweeps everyone.
- *   The start point rotates by day, so when a night is cut short it is not always the same people left waiting.
+ * @param opts.budgetMs stop STARTING new profiles after this many ms, so the run ends cleanly instead of being killed
+ *   mid-write. The CLI passes nothing and sweeps everyone.
+ * @param opts.from where in tonight's order to start. A run that stops at its budget reports `nextFrom`, and the cron
+ *   route starts a follow-up run there — so 20 people who need more than one 5-minute window are all rescored.
+ * @param opts.day the UTC day number that fixes tonight's rotation, passed along so a follow-up run that crosses
+ *   midnight still walks the same order. The start point rotates by day, so a night that is cut short is not always
+ *   the same people left waiting.
  */
-export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ rescored: number; skipped: number; failed: number }> {
+export async function recomputeAll(opts: { budgetMs?: number; from?: number; day?: number } = {}): Promise<RecomputeResult> {
   const db = createServiceClient()
 
   // Paged. PostgREST caps a response at 1,000 rows and does not say so, so the
@@ -38,17 +47,20 @@ export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ 
   const profiles = await pageAll<{ id: string }>((from, to) =>
     db.from('profiles').select('id').not('confirmed_at', 'is', null).order('id').range(from, to)
   )
-  if (!profiles.length) { console.log('  recompute: no confirmed profiles'); return { rescored: 0, skipped: 0, failed: 0 } }
+  const day = opts.day ?? Math.floor(Date.now() / 86_400_000)
+  if (!profiles.length) { console.log('  recompute: no confirmed profiles'); return { rescored: 0, skipped: 0, failed: 0, total: 0, nextFrom: 0, day } }
 
-  const start = Math.floor(Date.now() / 86_400_000) % profiles.length
+  const start = day % profiles.length
   const order = [...profiles.slice(start), ...profiles.slice(0, start)]
+  const from = Math.min(Math.max(0, opts.from ?? 0), order.length)
   const t0 = Date.now()
-  let rescored = 0, failed = 0, skipped = 0
+  let rescored = 0, failed = 0, skipped = 0, nextFrom = order.length
   const retry: { id: string }[] = []
-  for (let i = 0; i < order.length; i += CONCURRENCY) {
+  for (let i = from; i < order.length; i += CONCURRENCY) {
     if (opts.budgetMs !== undefined && Date.now() - t0 > opts.budgetMs) {
       skipped = order.length - i
-      console.warn(`  recompute: stopped at the ${opts.budgetMs} ms budget — ${skipped} of ${order.length} profiles NOT rescored tonight`)
+      nextFrom = i
+      console.warn(`  recompute: stopped at the ${opts.budgetMs} ms budget — ${skipped} of ${order.length} profiles still to rescore, from position ${i}`)
       break
     }
     await Promise.all(order.slice(i, i + CONCURRENCY).map(async (p) => {
@@ -68,5 +80,5 @@ export async function recomputeAll(opts: { budgetMs?: number } = {}): Promise<{ 
     try { const { written } = await evaluateUser(p.id); rescored++; console.log(`  recomputed ${written} results for one profile (retry)`) }
     catch (e) { failed++; console.error('  recompute failed again for one profile:', (e as Error).message) }
   }
-  return { rescored, skipped, failed }
+  return { rescored, skipped, failed, total: order.length, nextFrom, day }
 }

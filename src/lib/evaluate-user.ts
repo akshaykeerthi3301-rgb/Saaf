@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { scoreAgainstIndex } from '@/lib/score-candidate'
 import { candidateFromProfile } from '@/lib/candidate-profile'
-import { chunk } from '@/lib/paging'
+import { chunk, mapLimit } from '@/lib/paging'
 import type { CandidateProfile } from '@/gates/types'
 
 /**
@@ -20,6 +20,9 @@ import type { CandidateProfile } from '@/gates/types'
  * SUPABASE_SERVICE_ROLE_KEY, which is never exposed to the browser, and an
  * ESLint rule blocks src/app and src/components from importing it.
  */
+/** Upsert batches in flight at once — a small window, because the free database cancels statements that run long (see mapLimit). */
+const WRITE_PARALLEL = 3
+
 export async function evaluateUser(userId: string): Promise<{ written: number }> {
   const db = createServiceClient()
 
@@ -77,8 +80,8 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
 
   // Up to 3,000 rows now, so the 500-row batches go out together rather than one after another (6 round trips
   // in a row was most of the write time).
-  const writes = await Promise.all(
-    chunk(rows, 500).map((part) => db.from('gate_results').upsert(part, { onConflict: 'user_id,role_id' })),
+  const writes = await mapLimit(chunk(rows, 500), WRITE_PARALLEL, (part) =>
+    db.from('gate_results').upsert(part, { onConflict: 'user_id,role_id' }),
   )
   for (const w of writes) if (w.error) throw w.error
 
@@ -91,12 +94,10 @@ export async function evaluateUser(userId: string): Promise<{ written: number }>
   // their shortlist must never depend on this secondary bookkeeping table
   // succeeding — including the real window between this code deploying and
   // that migration actually being run.
-  const shown = await Promise.all(
-    chunk(rows, 500).map((part) =>
-      db.from('role_first_shown').upsert(
-        part.map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
-        { onConflict: 'user_id,role_id', ignoreDuplicates: true },
-      ),
+  const shown = await mapLimit(chunk(rows, 500), WRITE_PARALLEL, (part) =>
+    db.from('role_first_shown').upsert(
+      part.map((r) => ({ user_id: r.user_id, role_id: r.role_id })),
+      { onConflict: 'user_id,role_id', ignoreDuplicates: true },
     ),
   )
   for (const w of shown) if (w.error) console.error('role_first_shown upsert failed (non-fatal):', w.error.message)

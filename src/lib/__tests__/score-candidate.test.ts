@@ -76,8 +76,15 @@ describe('scoreAgainstIndex', () => {
       q.then = (res: (v: unknown) => unknown) => res({ data: part.map((id) => ({ id, title: 'Product Manager', company_name: 'Acme', apply_url: null, description: 'Own the roadmap.', location_raw: 'Bengaluru', city: 'Bengaluru', unread_experience_mention: false, role_requirements: [] })), error: null })
       return q
     }
+    const emptyQuery = () => {
+      const q: Record<string, unknown> = {}
+      q.select = () => q
+      q.in = () => q
+      q.then = (res: (v: unknown) => unknown) => res({ data: [], error: null })
+      return q
+    }
     let maxRows: unknown
-    const db = { rpc: (_n: string, args: { max_rows: number }) => { maxRows = args.max_rows; return rpcQuery() }, from: () => rolesQuery() } as unknown as Parameters<typeof scoreAgainstIndex>[0]
+    const db = { rpc: (_n: string, args: { max_rows: number }) => { maxRows = args.max_rows; return rpcQuery() }, from: (table: string) => (table === 'role_requirements' ? emptyQuery() : rolesQuery()) } as unknown as Parameters<typeof scoreAgainstIndex>[0]
     const out = await scoreAgainstIndex(db, { preferredRole: 'Product Manager', yearsExperience: 3 } as Parameters<typeof scoreAgainstIndex>[1], { openToAdjacent: false })
     expect(maxRows).toBe(MAX_ROLES_PER_CANDIDATE)
     expect(ranges).toEqual([[0, 999], [1000, 1999], [2000, 2999]])

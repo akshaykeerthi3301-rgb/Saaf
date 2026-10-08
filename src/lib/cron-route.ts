@@ -23,7 +23,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * exemption — `npm run ingest` calls ingest/run.ts directly and never touches
  * this route, so nothing legitimate needs the hole.
  */
-export function cronRoute(name: string, run: () => Promise<unknown>) {
+export function cronRoute(name: string, run: (request: NextRequest) => Promise<unknown>) {
   return async function GET(request: NextRequest) {
     const secret = process.env.CRON_SECRET
     if (!secret) {
@@ -38,7 +38,7 @@ export function cronRoute(name: string, run: () => Promise<unknown>) {
 
     const started = Date.now()
     try {
-      const result = await run()
+      const result = await run(request)
       return NextResponse.json({ ok: true, stage: name, ...(result as object), ms: Date.now() - started })
     } catch (e) {
       return NextResponse.json(
