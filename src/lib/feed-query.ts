@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CITIES, matchLocation, resolveCity } from '@/lib/taxonomy/locations'
 import { normaliseCompany } from '@/lib/company-name'
+import { isStaffingAgency } from '@/lib/taxonomy/agencies'
 
 /**
  * The feed's view: which pills are on, a text query, a city, and the drawer
@@ -71,6 +72,8 @@ const MAX_Q = 80
 export const MAX_PAY_LAKH = 500
 export const MAX_SKIP = 10
 export const MAX_SKIP_NAME = 40
+/** One entry of the leave-out list that stands for the whole curated staffing-agency list (src/lib/taxonomy/agencies.ts). */
+export const SKIP_AGENCIES = '@agencies'
 
 const pick = <T extends string>(list: readonly T[], v: string | undefined): T | '' =>
   list.includes(v as T) ? (v as T) : ''
@@ -235,6 +238,10 @@ export function parseFeedQuery(text: string): FeedView {
 
   // Employers to leave out come first, from the original text: a list needs its commas.
   let original = ` ${text} `
+  // "no agencies", "direct employers only", "exclude staffing agencies": the curated agency list, not an employer called "agencies".
+  const AGENCY_RE = /\b(?:(?:no|without|exclude|excluding|except|avoid|skip|not)\s+(?:the\s+)?(?:staffing\s+|recruiting\s+|recruitment\s+)?(?:agencies|agency|recruiters|consultancies)|direct\s+employers?\s+only|directly\s+from\s+(?:the\s+)?employers?)\b/i
+  const wantsNoAgencies = AGENCY_RE.test(original)
+  if (wantsNoAgencies) original = original.replace(AGENCY_RE, ' ')
   const skipHit = SKIP_RE.exec(original)
   if (skipHit) {
     // ⚠️ A COMMA ENDS AN EXCLUSION LIST ONLY IF WHAT FOLLOWS IS ANOTHER FILTER.
@@ -249,6 +256,8 @@ export function parseFeedQuery(text: string): FeedView {
     v.skip = cleanSkip(names.join(','))
     original = original.replace(SKIP_RE, ` ${handedBack.join(' ')} `)
   }
+
+  if (wantsNoAgencies) v.skip = cleanSkip(`${SKIP_AGENCIES},${v.skip}`)
 
   let s = ` ${original.toLowerCase().replace(/[,.;!?()]/g, ' ').replace(/\s+/g, ' ')} `
   const take = (re: RegExp) => { const hit = re.test(s); if (hit) s = s.replace(re, ' '); return hit }
@@ -543,6 +552,7 @@ function isSkipped(company: string, skip: string): boolean {
   const key = normaliseCompany(company)
   if (!key) return false
   return skip.split(',').some((name) => {
+    if (name.trim().toLowerCase() === SKIP_AGENCIES) return isStaffingAgency(company)
     const s = normaliseCompany(name)
     return s.length > 0 && (key === s || (s.length >= 4 && key.startsWith(s)))
   })

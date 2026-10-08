@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Dialog } from '@base-ui/react/dialog'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { SavedFilters } from '@/components/features/feed-controls'
-import { cleanSkip, viewToQuery, type FeedView, type JobType, type Level, type Mode, type PostedWindow } from '@/lib/feed-query'
+import { cleanSkip, SKIP_AGENCIES, viewToQuery, type FeedView, type JobType, type Level, type Mode, type PostedWindow } from '@/lib/feed-query'
 
 /**
  * "All filters" — a drawer from the right (redesign 2026-10-08, from the teardown's
@@ -76,7 +76,11 @@ export function AllFiltersDrawer({
   const [type, setType] = useState<JobType | ''>(view.type)
   const [mode, setMode] = useState<Mode | ''>(view.mode)
   const [pay, setPay] = useState(view.pay ? String(view.pay) : '')
-  const [skip, setSkip] = useState(view.skip.split(',').filter(Boolean).join(', '))
+  const hasAgencyToken = (list: string) => list.split(',').some((n) => n.trim().toLowerCase() === SKIP_AGENCIES)
+  const [agencies, setAgencies] = useState(hasAgencyToken(view.skip))
+  // The text box shows the employers the candidate typed; the agency switch is its own control.
+  const [skip, setSkip] = useState(view.skip.split(',').filter((n) => n && n.trim().toLowerCase() !== SKIP_AGENCIES).join(', '))
+  const composedSkip = () => cleanSkip([agencies ? SKIP_AGENCIES : '', skip].filter(Boolean).join(','))
   const [reach, setReach] = useState(withinReach)
 
   const go = (next: FeedView, reachOn: boolean) => {
@@ -119,7 +123,7 @@ export function AllFiltersDrawer({
               className="space-y-7"
               onSubmit={(e) => {
                 e.preventDefault()
-                go({ ...view, posted, level, type, mode, pay: Number(pay) || 0, skip: cleanSkip(skip) }, reach)
+                go({ ...view, posted, level, type, mode, pay: Number(pay) || 0, skip: composedSkip() }, reach)
               }}
             >
               <section>
@@ -180,6 +184,13 @@ export function AllFiltersDrawer({
 
               <section>
                 <p className={headClass}>Company</p>
+                <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-xl border border-input p-3 text-xs">
+                  <input type="checkbox" checked={agencies} onChange={(e) => setAgencies(e.target.checked)} className="mt-0.5 size-4 accent-accent" />
+                  <span>
+                    <span className="block font-semibold text-primary">Leave out staffing agencies</span>
+                    <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">A short list we keep by hand (Randstad, Adecco, Manpower, TeamLease, Apna and similar) — about 1 role in 85 in today’s index. Direct employers stay.</span>
+                  </span>
+                </label>
                 <label className="block text-xs font-semibold text-primary">
                   Leave out these employers
                   <input
@@ -213,7 +224,7 @@ export function AllFiltersDrawer({
               type="button"
               className="text-xs font-semibold text-muted-foreground hover:text-primary"
               onClick={() => {
-                setPosted(''); setLevel(''); setType(''); setMode(''); setPay(''); setSkip(''); setReach(false)
+                setPosted(''); setLevel(''); setType(''); setMode(''); setPay(''); setSkip(''); setAgencies(false); setReach(false)
                 go({ ...view, posted: '', level: '', type: '', mode: '', pay: 0, skip: '' }, false)
               }}
             >

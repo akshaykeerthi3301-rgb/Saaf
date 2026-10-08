@@ -9,6 +9,7 @@ import { RoleCard } from '@/components/features/role-card'
 import { repostChip } from '@/lib/repost'
 import { jobTypeFromStated, payFromRow } from '@/lib/role-facts'
 import { interestChip } from '@/lib/interest'
+import { stageChip } from '@/lib/company-stage'
 import { ShortlistViewed } from '@/components/features/shortlist-viewed'
 import { BreakdownEngaged } from '@/components/features/breakdown-engaged'
 import { functionGap } from '@/match/function-gap'
@@ -23,7 +24,7 @@ import { candidateSearch, MAX_ROLES_PER_CANDIDATE } from '@/lib/score-candidate'
 import { readFeedPrefs, readRoleText } from '@/lib/services/feed-prefs'
 import { connectionsByCompany } from '@/lib/services/network'
 import { normaliseCompany } from '@/lib/company-name'
-import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, type FeedView, type FilterKey, type JobType, type Mode } from '@/lib/feed-query'
+import { activeFilters, applyDrawerFilters, applyTextFilter, drawerParams, onlyFilter, promptChips, relaxations, soloCounts, viewFromParams, viewToQuery, withoutFilter, SKIP_AGENCIES, type FeedView, type FilterKey, type JobType, type Mode } from '@/lib/feed-query'
 import { FeedSearch, HideRole, SearchAnswer } from '@/components/features/feed-controls'
 import { currentAnswer } from '@/lib/search-history'
 import { readSearchHistory } from '@/lib/services/search-history'
@@ -229,7 +230,7 @@ export default async function TodayPage({
     if (k === 'type') return ({ fulltime: 'Full-time', intern: 'Internship', contract: 'Contract', parttime: 'Part-time' } as Record<string, string>)[v] ?? v
     if (k === 'mode') return ({ remote: 'Remote (stated)', hybrid: 'Hybrid', onsite: 'On-site' } as Record<string, string>)[v] ?? v
     if (k === 'pay') return `Pay ≥ ₹${v} L`
-    if (k === 'skip') return `Not ${v.split(',').join(', ')}`
+    if (k === 'skip') return `Not ${v.split(',').map((x) => (x.trim().toLowerCase() === SKIP_AGENCIES ? 'staffing agencies' : x)).join(', ')}`
     return `“${v}”`
   }
 
@@ -933,6 +934,7 @@ export default async function TodayPage({
                           postedAt={card.roles?.posted_at ?? undefined}
                           repost={repostChip(card.roles?.posted_at, reposts.get(card.role_id))}
                           interest={interestChip(interest.get(card.role_id))}
+                          stage={stageChip(displayEmployer(card.roles?.company_name))}
                           trackedStatus={tracked.get(card.role_id)}
                           hideControl={<HideRole roleId={card.role_id} hidden={showHidden} />}
                           statedPay={(providerFacts.facts.get(card.role_id) ? payFromRow(providerFacts.facts.get(card.role_id)!)?.text : null) ?? card.stated_pay}

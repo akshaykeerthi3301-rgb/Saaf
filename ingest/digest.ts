@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { pageAll } from './paging'
+import { DEFAULT_ALERTS, lookbackHours, sanitizeAlertSettings, shouldSendToday } from '../src/lib/alert-settings'
 
 /**
  * Where a digest link should point.
@@ -57,12 +58,20 @@ export async function sendDigests(): Promise<void> {
   const { data: audit } = await db
     .from('audit_daily').select('roles_indexed').order('day', { ascending: false }).limit(1).maybeSingle()
 
-  const since = new Date(Date.now() - 26 * 3600_000).toISOString()
+  const runAt = new Date()
 
   for (const p of profiles) {
     const { data: user } = await db.auth.admin.getUserById(p.id)
     const email = user?.user?.email
     if (!email || email.endsWith('.local')) continue // skip test fixtures
+
+    // The candidate's own alert settings (migration 0042), in a read of their own: the
+    // column may not exist yet, and a digest must not stop sending for that. No settings
+    // = the old behaviour exactly (daily, 75 and above, five roles).
+    const alertRes = await db.from('profiles').select('alert_settings').eq('id', p.id).maybeSingle()
+    const alerts = alertRes.error ? DEFAULT_ALERTS : sanitizeAlertSettings((alertRes.data as { alert_settings?: unknown } | null)?.alert_settings)
+    if (!shouldSendToday(alerts, runAt)) continue
+    const since = new Date(runAt.getTime() - lookbackHours(alerts) * 3600_000).toISOString()
 
     const { data: allRows } = await db
       .from('gate_results')
@@ -80,16 +89,16 @@ export async function sendDigests(): Promise<void> {
     // Nothing is withheld any more — the digest leads with the best-scoring
     // new roles instead of a cleared/withheld split. A strong match is 75+,
     // the same threshold the shortlist uses for its own arithmetic.
-    const ranked = [...(rows ?? [])].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    const ranked = [...(rows ?? [])].filter((r) => (r.score ?? 0) >= alerts.minScore).sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     const strong = ranked.filter((r) => (r.score ?? 0) >= 75)
 
-    const lines = ranked.slice(0, 5).map((r) => {
+    const lines = ranked.slice(0, alerts.maxJobs).map((r) => {
       const role = r.roles as unknown as { title: string; company_name: string | null; city: string | null } | null
       return `• ${role?.title ?? ''} — ${role?.company_name ?? ''}${role?.city ? `, ${role.city}` : ''}\n  ${r.score ?? ''} — ${r.reason}`
     })
 
     const body = ranked.length
-      ? `${audit?.roles_indexed ?? 0} roles indexed · ${ranked.length} new since yesterday · ${strong.length} scoring 75 or above.\n\n${lines.join('\n\n')}\n\nSee the full ranked list, with the working behind every score:\n${siteUrl()}/today`
+      ? `${audit?.roles_indexed ?? 0} roles indexed · ${ranked.length} new ${alerts.frequency === 'weekly' ? 'this week' : 'since yesterday'} · ${strong.length} scoring 75 or above.\n\n${lines.join('\n\n')}\n\nSee the full ranked list, with the working behind every score:\n${siteUrl()}/today`
       : `${audit?.roles_indexed ?? 0} roles indexed · nothing new matched your role today.\n\nThat's a thin day for our coverage, not a verdict on you. We'd rather tell you than stay quiet.\n\n${siteUrl()}/today`
 
     // The SDK RETURNS its errors, it does not throw them. A try/catch alone

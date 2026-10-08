@@ -488,3 +488,33 @@ describe('the drawer: mode and stated type', () => {
     expect(onlyFilter(v, 'mode')).toMatchObject({ mode: 'hybrid', remote: false })
   })
 })
+
+describe('staffing agencies (TASK-175)', () => {
+  const rows = ['a', 'b', 'c'].map((role_id) => ({ role_id }))
+  const text = new Map([
+    ['a', { title: 'Analyst', company: 'Randstad India Pvt Ltd', location: '' }],
+    ['b', { title: 'Analyst', company: 'Acme Payments', location: '' }],
+    ['c', { title: 'Analyst', company: 'Apna', location: '' }],
+  ])
+  it('the token leaves out the curated list — by name, so "Randstad India" meets "Randstad" — and nothing else', () => {
+    const kept = applyDrawerFilters(rows, { ...EMPTY_VIEW, skip: '@agencies' }, { text }).rows.map((r) => r.role_id)
+    expect(kept).toEqual(['b'])
+  })
+  it('works beside typed employers, and is not mistaken for a company called "agencies"', () => {
+    expect(cleanSkip('@agencies, Acme')).toBe('@agencies,Acme')
+    const kept = applyDrawerFilters(rows, { ...EMPTY_VIEW, skip: '@agencies,Acme' }, { text }).rows.map((r) => r.role_id)
+    expect(kept).toEqual([])
+  })
+  it.each([
+    'analyst jobs, no agencies', 'direct employers only', 'exclude staffing agencies', 'analyst without recruiters', 'avoid consultancies',
+  ])('reads "%s" as the agency switch', (t) => {
+    expect(parseFeedQuery(t).skip).toContain('@agencies')
+  })
+  it('still reads a named exclusion beside it', () => {
+    expect(parseFeedQuery('analyst, no agencies, excluding TCS').skip).toBe('@agencies,TCS')
+  })
+  it('round-trips through the URL', () => {
+    const v = { ...EMPTY_VIEW, skip: '@agencies,TCS' }
+    expect(viewFromParams(Object.fromEntries(new URLSearchParams(viewToQuery(v))))).toEqual(v)
+  })
+})
