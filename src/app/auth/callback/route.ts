@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { NEXT_COOKIE, postSignInPath } from '@/lib/next-path'
+import { REF_COOKIE } from '@/lib/credits'
+import { claimReferral } from '@/lib/services/credits'
 
 /**
  * Magic-link exchange. Routes to /start when the profile is unconfirmed and
@@ -20,6 +22,9 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.redirect(`${origin}/signin?error=no_session`)
 
+  // An invite link (/r/<code>) left a cookie; the database accepts it only for a new account.
+  await claimReferral(request.cookies.get(REF_COOKIE)?.value)
+
   const { data: profile } = await supabase
     .from('profiles').select('confirmed_at').eq('id', user.id).single()
 
@@ -28,5 +33,6 @@ export async function GET(request: NextRequest) {
   const target = postSignInPath(Boolean(profile?.confirmed_at), request.cookies.get(NEXT_COOKIE)?.value)
   const response = NextResponse.redirect(`${origin}${target}`)
   response.cookies.delete(NEXT_COOKIE)
+  response.cookies.delete(REF_COOKIE)
   return response
 }

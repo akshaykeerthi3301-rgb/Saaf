@@ -396,6 +396,24 @@ async function crossUserIsolation() {
       check('survey_answers: A cannot answer as B', forgeAnswer.status >= 400, `http ${forgeAnswer.status}`)
     }
 
+    // credits / referrals (0045): the ledger is read-only to its owner; every write is a definer function.
+    const forgeLedger = await asA('credit_ledger', { method: 'POST', body: JSON.stringify({ user_id: a.id, delta: 999, reason: 'grant', ref: '__rls_probe__' }) })
+    if (forgeLedger.status === 404) {
+      console.log('  – credit_ledger / promo_codes / referrals: not present, skipped (migration 0045 pending)')
+    } else {
+      check('credit_ledger: a candidate cannot write their own credits', forgeLedger.status >= 400, `http ${forgeLedger.status}`)
+      const seenLedger = await (await asA(`credit_ledger?user_id=eq.${b.id}&select=id`)).json()
+      check("credit_ledger: A cannot read B's", Array.isArray(seenLedger) && seenLedger.length === 0)
+      const readPromos = await (await asA('promo_codes?select=code')).json()
+      check('promo_codes: a candidate cannot list codes', Array.isArray(readPromos) && readPromos.length === 0)
+      const forgeRef = await asA('referrals', { method: 'POST', body: JSON.stringify({ referred_id: a.id, referrer_id: b.id }) })
+      check('referrals: a candidate cannot write one directly', forgeRef.status >= 400, `http ${forgeRef.status}`)
+      const selfClaim = await asA('rpc/claim_referral', { method: 'POST', body: JSON.stringify({ p_code: 'ZZZZZZZZ' }) })
+      check('claim_referral: an unknown code is refused, not an error', selfClaim.status < 400 && (await selfClaim.json()) === 'unknown', `http ${selfClaim.status}`)
+      const spendTooMuch = await asA('rpc/spend_credits', { method: 'POST', body: JSON.stringify({ p_amount: 5, p_ref: '__rls_probe__' }) })
+      check('spend_credits: cannot spend credits you do not have', spendTooMuch.status < 400 && (await spendTooMuch.json()) === false, `http ${spendTooMuch.status}`)
+    }
+
     // role_interest (0033) is SECURITY DEFINER — the one function here that reads
     // across users — so it is checked for what it must NOT return: who, or a count under 3.
     const interest = await asA('rpc/role_interest', { method: 'POST', body: JSON.stringify({ role_ids: [roleId] }) })

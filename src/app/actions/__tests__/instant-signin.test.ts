@@ -8,7 +8,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 const state = vi.hoisted(() => ({
   token: { tokenHash: 'h', type: 'signup', isNewAccount: true } as object,
   verified: 0,
+  refCookie: undefined as string | undefined,
+  claimed: [] as (string | undefined)[],
+  cleared: [] as string[],
 }))
+
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) => (name === 'saaf_ref' && state.refCookie ? { value: state.refCookie } : undefined),
+    delete: (name: string) => { state.cleared.push(name) },
+  }),
+}))
+vi.mock('@/lib/services/credits', () => ({ claimReferral: async (c: string | undefined) => { state.claimed.push(c); return 'ok' } }))
 
 vi.mock('@/lib/instant-signin', () => ({ generateSignInToken: async () => state.token }))
 vi.mock('@/lib/supabase/server', () => ({
@@ -23,7 +34,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 const { instantSignIn } = await import('../instant-signin')
 
-beforeEach(() => { state.verified = 0 })
+beforeEach(() => { state.verified = 0; state.refCookie = undefined; state.claimed = []; state.cleared = [] })
 
 describe('instantSignIn — an email may start an account, never open one', () => {
   it('refuses an existing account without using its token', async () => {
@@ -39,5 +50,20 @@ describe('instantSignIn — an email may start an account, never open one', () =
     const res = await instantSignIn('new@example.com')
     expect(res).toEqual({ ok: true, path: '/start' })
     expect(state.verified).toBe(1)
+  })
+
+  it('hands an invite cookie to the referral claim and clears it, only after the account exists', async () => {
+    state.token = { tokenHash: 'h', type: 'signup', isNewAccount: true }
+    state.refCookie = 'AB12CD34'
+    await instantSignIn('new@example.com')
+    expect(state.claimed).toEqual(['AB12CD34'])
+    expect(state.cleared).toEqual(['saaf_ref'])
+  })
+
+  it('does not claim anything when the sign-in is refused', async () => {
+    state.token = { tokenHash: 'h', type: 'magiclink', isNewAccount: false }
+    state.refCookie = 'AB12CD34'
+    await instantSignIn('someone@example.com')
+    expect(state.claimed).toEqual([])
   })
 })

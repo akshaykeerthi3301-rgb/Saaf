@@ -32,6 +32,9 @@ export type AccountExport = {
   /** What the candidate sent through "Send feedback", and their one-question survey answers (0044). Null when that update is missing. */
   feedback: Record<string, unknown>[] | null
   surveyAnswers: Record<string, unknown>[] | null
+  /** Credits granted and spent, and who invited whom (0045). Null when that update is missing. */
+  credits: Record<string, unknown>[] | null
+  referrals: Record<string, unknown>[] | null
   counts: { scoredRoles: number | null; connectionsUploaded: number | null }
   notes: string[]
 }
@@ -40,7 +43,7 @@ export async function readAccountExport(userId: string, email: string | null): P
   const supabase = await createClient()
   const notes: string[] = []
 
-  const [profile, apps, scored, connections, resumes, searches, reports, feedback, surveys] = await Promise.all([
+  const [profile, apps, scored, connections, resumes, searches, reports, feedback, surveys, ledger, referrals] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('applications').select('*').eq('user_id', userId),
     supabase.from('gate_results').select('id', { count: 'exact', head: true }).eq('user_id', userId),
@@ -53,6 +56,9 @@ export async function readAccountExport(userId: string, email: string | null): P
     supabase.from('job_reports').select('title, company, kind, note, created_at').eq('user_id', userId),
     supabase.from('feedback').select('kind, message, page, created_at').eq('user_id', userId),
     supabase.from('survey_answers').select('survey_id, answer, note, created_at').eq('user_id', userId),
+    supabase.from('credit_ledger').select('delta, reason, ref, note, created_at').eq('user_id', userId),
+    // RLS lets a candidate see a referral they are on either side of; the export lists only the ones where they invited or were invited, by date.
+    supabase.from('referrals').select('created_at, referrer_id, referred_id').or(`referrer_id.eq.${userId},referred_id.eq.${userId}`),
   ])
 
   if (apps.error) notes.push('Your applications could not be read for this file.')
@@ -61,6 +67,7 @@ export async function readAccountExport(userId: string, email: string | null): P
   if (searches.error) notes.push('Search history needs a database update that has not been applied yet.')
   if (reports.error) notes.push('Reports about postings need a database update that has not been applied yet.')
   if (feedback.error) notes.push('Feedback and survey answers need a database update that has not been applied yet.')
+  if (ledger.error || referrals.error) notes.push('Credits and invites need a database update that has not been applied yet.')
   if (connections === null) notes.push('Connections need a database update that has not been applied yet.')
   else notes.push('The names in your uploaded LinkedIn export are other people’s, so only their number is given here. They are deleted with your account.')
 
@@ -77,6 +84,8 @@ export async function readAccountExport(userId: string, email: string | null): P
     jobReports: reports.error ? null : ((reports.data ?? []) as Record<string, unknown>[]),
     feedback: feedback.error ? null : ((feedback.data ?? []) as Record<string, unknown>[]),
     surveyAnswers: surveys.error ? null : ((surveys.data ?? []) as Record<string, unknown>[]),
+    credits: ledger.error ? null : ((ledger.data ?? []) as Record<string, unknown>[]),
+    referrals: referrals.error ? null : ((referrals.data ?? []) as Record<string, unknown>[]),
     counts: { scoredRoles: scored.error ? null : scored.count ?? 0, connectionsUploaded: connections },
     notes,
   }

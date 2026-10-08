@@ -10,6 +10,8 @@ import { ConnectionsImport } from '@/components/features/connections-import'
 import { SelfIdAnswers } from '@/components/features/self-id-answers'
 import { AlertSettingsPanel } from '@/components/features/alert-settings-panel'
 import { readAlertSettings } from '@/lib/services/alert-settings'
+import { WalletAndInvites } from '@/components/features/wallet-and-invites'
+import { readInvites, readWallet } from '@/lib/services/credits'
 import { readSelfId } from '@/lib/services/self-id'
 
 export default async function ProfilePage() {
@@ -39,7 +41,7 @@ export default async function ProfilePage() {
   if (!profile) redirect('/start')
 
   const initials = (user.email ?? 'you').slice(0, 2).toUpperCase()
-  const [prefs, connections, selfId, alerts] = await Promise.all([readPreferences(user.id), connectionCounts(user.id), readSelfId(user.id), readAlertSettings(user.id)])
+  const [prefs, connections, selfId, alerts, wallet, invites] = await Promise.all([readPreferences(user.id), connectionCounts(user.id), readSelfId(user.id), readAlertSettings(user.id), readWallet(), readInvites(user.id)])
   const health = profileHealth({
     currentTitle: profile.current_title, employer: profile.employer,
     yearsExperience: profile.years_experience === null ? null : Number(profile.years_experience),
@@ -77,7 +79,7 @@ export default async function ProfilePage() {
         }}
           email={user.email ?? ''}
           applyExtras={<SelfIdAnswers initial={selfId.answers} stored={selfId.stored} />}
-          accountExtras={<><AlertSettingsPanel initial={alerts.settings} stored={alerts.stored} /><ConnectionsImport counts={connections ?? { linkedin: 0, google: 0, manual: 0, sourced: false }} stored={connections !== null} /></>}
+          accountExtras={<><AlertSettingsPanel initial={alerts.settings} stored={alerts.stored} /><ConnectionsImport counts={connections ?? { linkedin: 0, google: 0, manual: 0, sourced: false }} stored={connections !== null} /><WalletAndInvites stored={wallet.stored} balance={wallet.balance} rows={wallet.rows} code={invites.code} joined={invites.joined} invitesStored={invites.stored} /></>}
         />
       </div>
     </AppShell>

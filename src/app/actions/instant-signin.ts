@@ -1,8 +1,11 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { generateSignInToken } from '@/lib/instant-signin'
+import { REF_COOKIE } from '@/lib/credits'
+import { claimReferral } from '@/lib/services/credits'
 
 const schema = z.string().email('Enter a valid email address.')
 
@@ -59,6 +62,11 @@ export async function instantSignIn(email: string): Promise<InstantSignInRespons
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'Could not sign you in. Try again in a moment.' }
+
+  // An invite link (/r/<code>) left a cookie; only a brand-new account reaches here, which is what the database wants.
+  const jar = await cookies()
+  await claimReferral(jar.get(REF_COOKIE)?.value)
+  jar.delete(REF_COOKIE)
 
   const { data: profile } = await supabase
     .from('profiles').select('confirmed_at').eq('id', user.id).single()

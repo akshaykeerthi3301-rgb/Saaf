@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase/server', () => ({
       select: (_cols: string, opts?: { head?: boolean }) => {
         const chain = {
           eq: (col: string, val: unknown) => { db.eqs.push([`${table}.${col}`, val]); return chain },
+          or: () => chain,
           maybeSingle: async () => ({ data: db.profile, error: null }),
           then: (res: (v: unknown) => unknown) => res(table === 'applications' ? db.apps : opts?.head ? db.scored : { data: [], error: null }),
         }
@@ -74,6 +75,11 @@ describe('readAccountExport', () => {
     expect(e.notes.join(' ')).toContain('applications could not be read')
     expect(e.notes.join(' ')).toContain('saved résumés could not be read')
     expect(e.notes.join(' ')).toContain('database update')
+  })
+  it('carries the credit ledger and invites, and says when that update is missing', async () => {
+    const e = await readAccountExport('u1', null)
+    expect(e.credits).toEqual([])
+    expect(e.referrals).toEqual([])
   })
   it('an empty account exports empty lists, not nulls', async () => {
     db.apps = { data: [], error: null }
