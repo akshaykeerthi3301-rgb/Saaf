@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { readAccountSummary } from '@/lib/services/workspace'
 import { exploreIndex } from '@/lib/services/explore'
+import { readReposts } from '@/lib/services/shortlist'
+import { repostChip } from '@/lib/repost'
 import { parseFeedQuery, viewFromParams } from '@/lib/feed-query'
 import { describeView } from '@/lib/search-history'
 import { EXPLORE_SCAN } from '@/lib/explore'
@@ -41,6 +43,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     readAccountSummary(user.id, user.email ?? ''),
   ])
   if (result.kind === 'unconfirmed') redirect('/start/confirm')
+  // The same evidence-only chip as /today: drawn where the ingest recorded an earlier copy at least a week older.
+  const reposts = result.kind === 'ok' ? await readReposts(result.shown.map((r) => r.roleId)) : new Map()
 
   return (
     <AppShell title="Search all roles" eyebrow="Beyond your matches" initials={account.initials}>
@@ -110,6 +114,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                       reason={r.reason}
                       applyUrl={r.applyUrl ?? undefined}
                       postedAt={r.postedAt ?? undefined}
+                      repost={repostChip(r.postedAt, reposts.get(r.roleId))}
                       statedPay={r.statedPay}
                       gist={r.gist}
                     />
