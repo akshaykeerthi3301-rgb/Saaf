@@ -16,7 +16,7 @@ import { Check, ChevronDown } from 'lucide-react'
 export type PillOption = { label: string; href: string; selected: boolean }
 
 export function PillMenu({
-  label, active = false, options, align = 'left',
+  label, active = false, options, align = 'left', quietOnPhone = false,
 }: {
   /** What the pill says: the name, or the chosen value once something is chosen. */
   label: string
@@ -24,6 +24,8 @@ export function PillMenu({
   active?: boolean
   options: PillOption[]
   align?: 'left' | 'right'
+  /** On a phone, leave this pill out unless it is active — the same filter is in All filters (TASK-165). */
+  quietOnPhone?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -38,7 +40,7 @@ export function PillMenu({
   }, [open])
 
   return (
-    <div ref={box} className="relative">
+    <div ref={box} className={`relative ${quietOnPhone && !active ? 'hidden sm:block' : ''}`}>
       <button
         type="button"
         aria-haspopup="menu"

@@ -107,3 +107,13 @@ describe('the role card keeps to its budget', () => {
     expect(gapped).toContain('Check first:')
   })
 })
+
+describe('on a phone (TASK-165)', () => {
+  it('the three score bars wait for the detail sheet, and the reason line stays in full', () => {
+    const h = html()
+    const bars = h.slice(h.indexOf('aria-label="Score parts"') - 120, h.indexOf('aria-label="Score parts"'))
+    expect(bars).toMatch(/hidden[^"]*sm:flex/)
+    expect(h).toContain('Why this matches')
+    expect(h).toContain('Mentions 1 of your skills: SQL.')
+  })
+})

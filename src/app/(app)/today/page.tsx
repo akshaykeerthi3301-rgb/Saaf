@@ -613,6 +613,7 @@ export default async function TodayPage({
             <PillMenu
               label={view.level ? `Experience: ${LEVEL_NAME[view.level]}` : 'Experience'}
               active={Boolean(view.level)}
+              quietOnPhone
               options={[
                 { label: 'Any', href: hrefFor({ ...view, level: '' }), selected: !view.level },
                 { label: 'Entry — asks up to 2 years', href: hrefFor({ ...view, level: 'entry' }), selected: view.level === 'entry' },
@@ -623,6 +624,7 @@ export default async function TodayPage({
             <PillMenu
               label={view.type ? TYPE_NAME[view.type] : 'Job type'}
               active={Boolean(view.type)}
+              quietOnPhone
               options={[
                 { label: 'Any', href: hrefFor({ ...view, type: '' }), selected: !view.type },
                 ...(['fulltime', 'intern', 'contract', 'parttime'] as const).map((t) => ({ label: TYPE_NAME[t], href: hrefFor({ ...view, type: t }), selected: view.type === t })),
@@ -638,7 +640,7 @@ export default async function TodayPage({
                 href={hrefFor({ ...view, [key]: !view[key] })}
                 title={title}
                 aria-pressed={view[key]}
-                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                className={`items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${key === 'remote' && !view[key] ? 'hidden sm:inline-flex' : 'inline-flex'} ${
                   view[key] ? 'border-accent/60 bg-accent/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
                 }`}
               >
@@ -649,7 +651,7 @@ export default async function TodayPage({
               href={hrefFor(view, !clearsOnly)}
               title="Roles whose stated experience bar is no more than a stretch above your years"
               aria-pressed={clearsOnly}
-              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${clearsOnly ? 'inline-flex' : 'hidden sm:inline-flex'} ${
                 clearsOnly ? 'border-accent/60 bg-accent/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-accent/60 hover:text-primary'
               }`}
             >

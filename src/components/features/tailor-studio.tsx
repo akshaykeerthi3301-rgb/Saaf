@@ -270,6 +270,10 @@ export function TailorStudio({
 
   return (
     <div>
+      {/* Phone (TASK-165): a note, never a gate — the studio works at this width, it is just roomier on a computer. */}
+      <p className="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-xs leading-5 text-muted-foreground sm:hidden print:hidden">
+        Editing a résumé is roomier on a computer. Everything here still works on your phone — you read each change and accept it one at a time.
+      </p>
       {/* The control bar. */}
       <div className="glass sticky top-16 z-10 -mx-5 mb-5 flex flex-wrap items-center gap-2 border-b border-border px-5 py-3 sm:-mx-8 sm:px-8 print:hidden">
         {!res ? (

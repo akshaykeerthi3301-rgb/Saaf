@@ -145,7 +145,8 @@ export function RoleCard({
           </p>
 
           {bars.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2" aria-label="Score parts">
+            // Phone: the three bars live in the detail sheet one tap away (TASK-165); the reason line stays in full.
+            <div className="mt-3 hidden flex-wrap gap-x-6 gap-y-2 sm:flex" aria-label="Score parts">
               {bars.map((b) => {
                 const tone = b.share >= 0.7 ? 'high' : b.share >= 0.5 ? 'mid' : 'low'
                 return (
