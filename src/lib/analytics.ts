@@ -19,6 +19,8 @@ export type SaafEvent =
   // the union so historical PostHog data stays typed and readable.
   | 'withheld_section_engaged'
   | 'refusal_reported'
+  // An experiment variant was actually shown (src/lib/experiments.ts). Fired once per page view per experiment.
+  | 'experiment_exposed'
 
 type Posthog = {
   init: (k: string, o: Record<string, unknown>) => void
