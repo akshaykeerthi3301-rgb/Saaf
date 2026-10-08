@@ -2896,6 +2896,16 @@ Phase 19 was worked in the order the founder gave: 214 microphone → 215 job-pa
 
 **~~Gaps still open~~ Step 3 is built (TASK-229, same day):** the rewrite is now APPLIED AT ONCE and the person undoes and edits — a reversal of the studio's earlier rule that nothing is applied until accepted. What keeps it honest: the fabrication guard runs before anything is shown, what it refused is listed, every changed line is marked on the page and has Undo, and the score is the free checker's, re-run on each edit. **Still open from the reference (OBSERVED 2026-10-07, `docs/jobright-map/02-ui-and-flows.local.md` §B8/B8b):** step 3 is a two-pane screen — left: "Your score jumped from 4.5 to 7", a "See what's changed" list and tabs AI Rewrite · Editor · Style; right: the rendered résumé with changes highlighted, a file-name pill, Fit to one page, Download, Apply now — and the tailored copy is stored per job (not in the library). Step 1 has an Industry Experience row and an under-6.0 warning; step 2 has Projects and keywords grouped Functional Skills / Tools with Select all. The résumé library has five slots, PRIMARY and an Analysis report. **Not yet built here.**
 
+### Stage AW — the founder's "take control of the PC, test and complete yourselves" (2026-10-09 night)
+
+**What was authorised, and what still was not possible.** The founder asked me to test the new-customer path myself. I connected to the second Chrome (Browser 1: a clean profile, signed OUT of Jobinko) and stopped there: creating an account — or signing in to one through Google or an email — is an action I may not take, whoever asks (the test-account exception covers a local app that talks only to local services; this one signs in through Supabase and Google). The sign-in is the founder's one click. Everything else was done through the signed-in browser (Browser 2) and the local app on the founder's account.
+
+**Built and applied (all LIVE).** TASK-230 library + editor (+ the end-to-end walk above), TASK-231 `tailored_resumes` (**migration 0051 applied to production by the Supabase editor, verified by script**), TASK-232 steps 1–2. The résumé library replaces a page that explained what was stored; the reasoning moved to where each promise is made (the upload dialog, /privacy).
+- **Decision recorded:** "Tailored copies are not library résumés." The library keeps the person's own résumés (ten slots); a tailored copy lives per job (cap 200), so a week of tailoring cannot evict a base résumé — which the old 'Save as version' path (replace-the-oldest beyond ten) could have done.
+- **Decision recorded:** keywords chosen in step 2 steer the rewrite but do not relax the guard. The reference lets a person tick keywords; here a ticked term is worked in only where a line already supports it, and the result screen says so.
+
+**Still unverified (and why).** The brand-new-account path end to end (sign-up → upload → feed → customise): the pieces are each tested and walked on the founder's account, but the empty-account states can only be seen by a new account, and I cannot create or sign in to one. **Founder-only test:** sign in once in Browser 1 (or any browser) with the second email; I take it from there.
+
 ## Index coverage by function — probed live 2026-09-08
 
 *Measured against the live index (21,813 India roles) by scoring four probe

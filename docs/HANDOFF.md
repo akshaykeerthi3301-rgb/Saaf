@@ -2,6 +2,12 @@
 
 ---
 
+## ✅🔶 2026-10-09 (late night) — résumé library, per-job résumés and the step 1–2 details are LIVE; one sign-in needed from you
+
+**Live (`dpl_FbrMMRp3P19GHdpnWhiTpzJv4CCB`):** the **Résumé** page is now a library (Add résumé works on the page, row menu, an editor behind each row with Save / Export / Analyze / Delete); the résumé you tailor for a job is **kept with that job** and offered back as "Continue where I left off"; step 1 has an Industry row and step 2 lets you tick missing keywords and (if you have projects) Projects. **I applied database update 0051 myself** in your Supabase tab (checked: the file's fingerprint matched before I pressed Run; afterwards a script confirmed the table exists, an anonymous visitor reads nothing and cannot write). I walked the library on your account — upload a test file, edit, save, analyse, delete — and left your two résumés exactly as they were. One tailored résumé I generated while testing is stored for the G2 "Customer Success Manager" job on your account (harmless; it is what "Continue where I left off" shows there).
+
+**The one thing I could not do, and need from you (10 seconds):** I may not create an account or sign in to one. The second Chrome I control (Browser 1) is signed out. **Sign in there once with your NEW account's Google (or email)** — I will then do the whole customer walk myself: feed → customise → edit → export → library — and fix whatever breaks. If you would rather not, the same test is: sign in with the new account anywhere, open a job, press Customize your résumé, upload your résumé in the box.
+
 ## ✅🔶 2026-10-09 (night) — the résumé dead end is fixed, the styling drawer and the new tailor result screen are LIVE (`dpl_H9U9nyMLQFFhdeDhNxWXTrME7RLx`)
 
 **Live:** (1) the résumé you upload at sign-up is now kept (its text, not the file) and made your primary résumé; with none saved, "Customize your résumé" shows an upload box in place and carries on to step 1 for the same job — nobody is sent to the ATS checker. (2) **Export résumé** (`dpl_EFdewEWqAWgafnLLPEBTnW5Lwbwo`): template cards, page size, accent colour, fonts and sizes, date format, bullet, divider, alignment, education order, skills layout, spacing sliders, justify, reset, a live page with a page count, Word and PDF. I opened it on the live site on your tailored résumé; I did not download a file.
