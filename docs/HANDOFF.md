@@ -2,6 +2,15 @@
 
 ---
 
+## ✅🔶 2026-10-09 (night) — the résumé dead end is fixed and the styling drawer is LIVE; the rest of the Jobright tailor screen is next
+
+**Live:** (1) the résumé you upload at sign-up is now kept (its text, not the file) and made your primary résumé; with none saved, "Customize your résumé" shows an upload box in place and carries on to step 1 for the same job — nobody is sent to the ATS checker. (2) **Export résumé** (`dpl_EFdewEWqAWgafnLLPEBTnW5Lwbwo`): template cards, page size, accent colour, fonts and sizes, date format, bullet, divider, alignment, education order, skills layout, spacing sliders, justify, reset, a live page with a page count, Word and PDF. I opened it on the live site on your tailored résumé; I did not download a file.
+
+**Only you can do:**
+1. **Open your NEW account on jobinko.in, open a job, press Customize your résumé.** You should see an upload box, not the ATS checker. Upload your résumé there and carry on to the end; tell me the first thing that breaks. (Your new account signed up before this fix, so it has no saved résumé yet.)
+2. **Decide: a direct PDF download.** Today "Download PDF" opens the browser's print box ("Save as PDF"), which keeps real selectable text and every character. A one-click download needs a PDF library added to the project — say yes and I add it (about a day's work, with a font that can print ₹).
+3. **If a résumé that was saved BEFORE today shows a company as the job title** (yours does, "ICICI Bank … Private Banking Manager" as a bullet): upload it once more in the Customize drawer or on the Résumé page. The reader was fixed today; saved ones are not rewritten behind your back.
+
 ## 🔶 2026-10-09 (later) — the new first run is LIVE (`dpl_3yEtrsrV2YWBmTcCCzNrXqu3VVxh`) but nobody has walked it with a new account
 
 **Live and seen in your Chrome:** `/start` is now the one-screen upload (like the Jobright one you sent); `/today?welcome=1` shows the "We found 4,602 roles that fit you" card; "Skip for now" closes it and saves nothing. **Not seen by me: the whole run** — upload a résumé, watch it scan, land on the feed. I could not create a test account (tooling refused, correctly), so that run is yours.
