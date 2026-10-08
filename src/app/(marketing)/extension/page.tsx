@@ -30,6 +30,14 @@ export default function ExtensionPage() {
         </p>
       </div>
 
+      {process.env.NEXT_PUBLIC_EXTENSION_URL ? (
+        <p className="mt-6"><a href={process.env.NEXT_PUBLIC_EXTENSION_URL} className="bg-brand-gradient inline-flex rounded-xl px-4 py-2 text-sm font-semibold">Add to Chrome</a></p>
+      ) : (
+        <p role="note" className="mt-6 max-w-[65ch] rounded-xl border border-border bg-card px-4 py-3 text-xs leading-5 text-muted-foreground">
+          The extension is not in the Chrome Web Store yet, so there is nothing to install from this page today. What follows describes it as it is built.
+        </p>
+      )}
+
       <h2 className="mb-3 mt-10 text-lg font-semibold tracking-[-0.03em] text-primary">Site by site</h2>
       <p className="mb-4 max-w-[65ch] text-sm leading-6 text-muted-foreground">
         The same code runs on every site below, so what differs is how well it has been checked and the shape of the employer’s

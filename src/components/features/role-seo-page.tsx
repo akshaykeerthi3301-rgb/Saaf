@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Lock, MapPin, Sparkles, Zap } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { PublicJobList } from '@/components/features/public-job-list'
 import type { RolePageData } from '@/lib/services/public-jobs'
 import { cityFromSlug, citySlug, isIndexable, MIN_ROLES_TO_INDEX, roleSlug } from '@/lib/seo-pages'
 import type { City } from '@/lib/taxonomy/locations'
@@ -61,27 +62,7 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
         {data.latest.length ? (
           <section className="mt-8" aria-label={`Newest ${role} roles`}>
             <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Newest {role} roles</h2>
-            <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-card">
-              {data.latest.map((r) => {
-                const posted = postedAgo(r.postedAt ?? r.firstSeenAt)
-                return (
-                  <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-4 sm:px-5">
-                    <div className="min-w-0 flex-1">
-                      <Link href={`/jobs/${r.id}`} className="block text-base font-semibold leading-snug tracking-[-0.02em] text-primary hover:underline">{r.title}</Link>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                        <span className="font-medium text-primary/90">{r.company}</span>
-                        {r.city ? <span className="inline-flex items-center gap-1"><MapPin className="size-3" aria-hidden="true" />{r.city}</span> : null}
-                        {posted ? <span>{posted}</span> : null}
-                        {r.easyApply ? <span className="inline-flex items-center gap-1"><Zap className="size-3" aria-hidden="true" />Easy apply</span> : null}
-                      </p>
-                    </div>
-                    <Link href="/signin" title="Sign in free to see how well this role fits your résumé" className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-accent/60 hover:text-primary">
-                      <Lock className="size-3" aria-hidden="true" /> Your match — sign in
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
+            <div className="mt-3"><PublicJobList rows={data.latest} /></div>
             <p className="mt-3 text-xs text-muted-foreground"><Link href={`/jobs?q=${encodeURIComponent(role)}${city ? `&city=${encodeURIComponent(city.name)}` : ''}`} className="font-semibold text-primary underline underline-offset-4">Search these roles</Link> for more.</p>
           </section>
         ) : null}

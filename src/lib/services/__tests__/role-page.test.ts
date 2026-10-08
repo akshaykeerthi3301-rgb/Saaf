@@ -11,7 +11,7 @@ vi.mock('@/lib/supabase/service', () => ({
   },
 }))
 
-const { readRolePage, listSeoPagesForSitemap } = await import('../public-jobs')
+const { readRolePage, readRemoteHub, listSeoPagesForSitemap } = await import('../public-jobs')
 const { cityFromSlug } = await import('@/lib/seo-pages')
 const row = (i: number, company: string, city: string, title = 'Product Manager') => ({ id: `id${i}`, title, company_name: company, city, apply_url: 'https://x.test', posted_at: null, first_seen_at: '2026-10-08T00:00:00Z' })
 const called = (m: string) => h.calls.filter(([n]) => n === m).map(([, a]) => a)
@@ -47,5 +47,20 @@ describe('listSeoPagesForSitemap', () => {
     const { roles, pairs } = await listSeoPagesForSitemap()
     expect(roles).toContain('product-manager')
     expect(pairs).toEqual([{ role: 'product-manager', city: 'bengaluru' }]) // 2 in Pune is below the threshold
+  })
+})
+
+describe('readRemoteHub', () => {
+  it('uses the posting\'s own location words — the same rule as the feed\'s Remote filter — and nothing else', async () => {
+    await readRemoteHub()
+    expect(called('or')[0][0]).toBe('location_raw.ilike.%remote%,location_raw.ilike.%anywhere%,location_raw.ilike.%work from home%')
+    expect(called('ilike')).toEqual([]) // no role or city narrowing
+  })
+  it('counts the role mix of the sample with Saaf\'s own role phrases', async () => {
+    h.count = 9
+    h.rows = [row(1, 'A', 'India', 'Product Manager'), row(2, 'B', 'India', 'Senior Product Manager'), row(3, 'C', 'India', 'Data Analyst'), row(4, 'C', 'India', 'Chef')]
+    const d = await readRemoteHub()
+    expect(d.total).toBe(9)
+    expect(d.roles).toEqual([{ role: 'Product Manager', n: 2 }, { role: 'Data Analyst', n: 1 }])
   })
 })

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { FileSearch, Target } from 'lucide-react'
+import { FileSearch, ListChecks, Target } from 'lucide-react'
 import { ToolPage } from '@/components/features/tool-page'
 
 /**
@@ -45,18 +45,25 @@ const TOOLS = [
     what: 'Paste any job description and your résumé, and get a match score broken into its parts — with the sentences from the posting each part came from.',
     note: 'The same scorer the signed-in shortlist uses.',
   },
+  {
+    href: '/tools/resume-keywords',
+    icon: ListChecks,
+    name: 'Résumé keywords by role',
+    what: 'For each role, the words its real job postings use most and the share of postings that contain each — counted, not guessed.',
+    note: 'Measured across the postings Saaf reads.',
+  },
 ]
 
 export default function ToolsHubPage() {
   return (
     <ToolPage
       eyebrow="Free tools"
-      title="Two free tools. No account needed."
-      standfirst="Both run without a sign-up, store nothing, and cost ₹0. They are the same machinery the product runs on — not a demo of it."
+      title="Three free tools. No account needed."
+      standfirst="None needs a sign-up; none stores what you paste; all cost ₹0. They are the same machinery the product runs on — not a demo of it."
       promises={
         <>
           <li>No sign-up, no email, ₹0.</li>
-          <li>Nothing you paste is stored, on either tool.</li>
+          <li>Nothing you paste is stored, on any tool.</li>
           <li>Every number opens to show where it came from.</li>
         </>
       }

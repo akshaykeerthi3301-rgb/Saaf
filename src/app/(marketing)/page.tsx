@@ -359,6 +359,11 @@ export default async function Landing() {
             <Link href="/audit" className="transition-colors hover:text-foreground">Index audit, updated daily</Link>
             <Link href="/tools/ats-checker" className="transition-colors hover:text-foreground">Free ATS checker</Link>
             <Link href="/tools/paste-jd" className="transition-colors hover:text-foreground">Should I apply?</Link>
+            <Link href="/jobs" className="transition-colors hover:text-foreground">Search jobs</Link>
+            <Link href="/roles" className="transition-colors hover:text-foreground">Jobs by role</Link>
+            <Link href="/remote" className="transition-colors hover:text-foreground">Remote jobs</Link>
+            <Link href="/blog" className="transition-colors hover:text-foreground">Data blog</Link>
+            <Link href="/compare" className="transition-colors hover:text-foreground">How Saaf compares</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">How we handle your data</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/profile" className="transition-colors hover:text-foreground">Delete your account</Link>

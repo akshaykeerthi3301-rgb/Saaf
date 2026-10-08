@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
-import { Lock, MapPin, Search, Sparkles, Zap } from 'lucide-react'
+import { Search, Sparkles } from 'lucide-react'
+import { PublicJobList } from '@/components/features/public-job-list'
 import { searchPublicJobs } from '@/lib/services/public-jobs'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { cleanPage, searchTokens } from '@/lib/public-search'
-import { postedAgo } from '@/lib/day'
 
 /**
  * Public job search (F-1202, TASK-202) — anyone can look; the score is the reason to sign in.
@@ -89,27 +89,7 @@ export default async function PublicJobsPage({ searchParams }: Props) {
         ) : (
           <>
             <p className="mt-8 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{searching ? 'Matches, newest first' : 'Newest roles'}</p>
-            <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-card">
-              {rows.map((r) => {
-                const posted = postedAgo(r.postedAt ?? r.firstSeenAt)
-                return (
-                  <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-4 sm:px-5">
-                    <div className="min-w-0 flex-1">
-                      <Link href={`/jobs/${r.id}`} className="block text-base font-semibold leading-snug tracking-[-0.02em] text-primary hover:underline">{r.title}</Link>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                        <span className="font-medium text-primary/90">{r.company}</span>
-                        {r.city ? <span className="inline-flex items-center gap-1"><MapPin className="size-3" aria-hidden="true" />{r.city}</span> : null}
-                        {posted ? <span>{posted}</span> : null}
-                        {r.easyApply ? <span className="inline-flex items-center gap-1"><Zap className="size-3" aria-hidden="true" />Easy apply</span> : null}
-                      </p>
-                    </div>
-                    <Link href="/signin" title="Sign in free to see how well this role fits your résumé" className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-accent/60 hover:text-primary">
-                      <Lock className="size-3" aria-hidden="true" /> Your match — sign in
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
+            <div className="mt-3"><PublicJobList rows={rows} /></div>
             <nav className="mt-4 flex items-center justify-between text-sm" aria-label="Pages">
               {page > 1 ? <Link href={link(page - 1)} className="font-semibold text-primary underline underline-offset-4">← Newer</Link> : <span />}
               {more ? <Link href={link(page + 1)} className="font-semibold text-primary underline underline-offset-4">Older →</Link> : <span />}

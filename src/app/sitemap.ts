@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/site'
 import { listPublicJobsForSitemap, listSeoPagesForSitemap } from '@/lib/services/public-jobs'
+import { keywordRoleSlug, KEYWORD_ROLES } from '@/lib/role-keywords'
+import { COMPARISONS } from '@/lib/compare'
+import { POSTS } from '@/lib/blog'
 
 /**
  * Every public URL, and nothing else.
@@ -47,6 +50,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/extension`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${base}/tools/resume-keywords`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    ...KEYWORD_ROLES.map((r) => ({ url: `${base}/tools/resume-keywords/${keywordRoleSlug(r)}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 })),
+    { url: `${base}/compare`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    ...COMPARISONS.map((c) => ({ url: `${base}/compare/${c.slug}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 })),
+    { url: `${base}/blog`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    ...POSTS.map((p) => ({ url: `${base}/blog/${p.slug}`, lastModified: new Date(p.date), changeFrequency: 'yearly' as const, priority: 0.5 })),
+    { url: `${base}/remote`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${base}/roles`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     ...seo.roles.map((r) => ({ url: `${base}/roles/${r}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.7 })),
     ...seo.pairs.map((p) => ({ url: `${base}/roles/${p.role}/${p.city}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.6 })),

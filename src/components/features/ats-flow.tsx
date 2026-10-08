@@ -124,6 +124,14 @@ export function AtsFlow() {
   const [resumeText, setResumeText] = useState('')
   const [pastedFallback, setPastedFallback] = useState(false)
   const [targetRole, setTargetRole] = useState('')
+  // A link from a role's keyword page (/tools/resume-keywords/<role>) arrives as ?role=<name>; only one of our own roles is taken.
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get('role')
+    if (!r || !ROLES.includes(r)) return
+    let alive = true
+    void Promise.resolve().then(() => { if (alive) setTargetRole((cur) => cur || r) })
+    return () => { alive = false }
+  }, [])
   const [jdText, setJdText] = useState('')
   const [showJd, setShowJd] = useState(false)
 

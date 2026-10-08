@@ -238,12 +238,29 @@ export type RolePageData = {
  * employer and city breakdowns are of the newest 300 roles and are labelled that way.
  */
 export async function readRolePage(role: string, city: City | null): Promise<RolePageData> {
+  return readListing({ role, city })
+}
+
+/** The words that make a posting's location "remote" — the feed's own rule (src/gates/extract.ts isRemoteLocation). */
+const REMOTE_LOCATION = 'location_raw.ilike.%remote%,location_raw.ilike.%anywhere%,location_raw.ilike.%work from home%'
+
+/**
+ * The remote hub (F-1205): roles whose location says remote, with the role mix of the newest 300 (counted by
+ * Saaf's own role phrases). Same containment as the role pages.
+ */
+export async function readRemoteHub(): Promise<RolePageData & { roles: { role: string; n: number }[] }> {
+  const d = await readListing({ remote: true, titles: true })
+  return d
+}
+
+async function readListing(o: { role?: string; city?: City | null; remote?: boolean; titles?: boolean }): Promise<RolePageData & { roles: { role: string; n: number }[] }> {
   const db = createServiceClient()
-  const patterns = city ? cityPatterns(city) : []
+  const patterns = o.city ? cityPatterns(o.city) : []
   const scope = <T extends { ilike: (c: string, p: string) => T; or: (f: string) => T }>(q: T): T => {
     let out = q
-    out = out.ilike('title', `%${rolePhrase(role)}%`)
+    if (o.role) out = out.ilike('title', `%${rolePhrase(o.role)}%`)
     if (patterns.length) out = out.or(patterns.map((p) => `city.ilike.%${p}%`).join(','))
+    if (o.remote) out = out.or(REMOTE_LOCATION)
     return out
   }
   const [count, sample] = await Promise.all([
@@ -251,16 +268,17 @@ export async function readRolePage(role: string, city: City | null): Promise<Rol
     scope(db.from('roles').select('id, title, company_name, city, apply_url, posted_at, first_seen_at').eq('in_india', true)).order('posted_at', { ascending: false, nullsFirst: false }).order('first_seen_at', { ascending: false }).order('id').limit(300),
   ])
   const rows = (sample.error ? [] : (sample.data ?? [])) as unknown as { id: string; title: string; company_name: string | null; city: string | null; apply_url: string; posted_at: string | null; first_seen_at: string }[]
-  const tally = (key: (r: (typeof rows)[number]) => string) => {
+  const tally = (keys: (r: (typeof rows)[number]) => string[]) => {
     const m = new Map<string, number>()
-    for (const r of rows) { const k = key(r); if (k) m.set(k, (m.get(k) ?? 0) + 1) }
+    for (const r of rows) for (const k of keys(r)) if (k) m.set(k, (m.get(k) ?? 0) + 1)
     return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8)
   }
   return {
     total: count.error ? rows.length : (count.count ?? rows.length),
     latest: rows.slice(0, 20).map((r) => ({ id: r.id, title: r.title, company: displayEmployer(r.company_name), city: displayCity(r.city) || null, postedAt: r.posted_at, firstSeenAt: r.first_seen_at, easyApply: isEasyApply(r.apply_url) })),
-    employers: tally((r) => displayEmployer(r.company_name)).map(([company, n]) => ({ company, n })),
-    cities: tally((r) => resolveCity(r.city)?.name ?? '').map(([city, n]) => ({ city, n })),
+    employers: tally((r) => [displayEmployer(r.company_name)]).map(([company, n]) => ({ company, n })),
+    cities: tally((r) => [resolveCity(r.city)?.name ?? '']).map(([city, n]) => ({ city, n })),
+    roles: o.titles ? tally((r) => ALL_ROLES.filter((role) => titleIsRole(r.title, role))).map(([role, n]) => ({ role, n })) : [],
     sampled: rows.length,
   }
 }
