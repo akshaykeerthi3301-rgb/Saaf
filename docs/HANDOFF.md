@@ -2,6 +2,18 @@
 
 ---
 
+## ✅🔶 2026-10-08 (night) — jobinko.in is LIVE as the main address; email sign-in still needs you
+
+**Live and checked** (`dpl_C5BRhVSXKGHguNwRCHrGQF6sezX8`): https://jobinko.in serves the site over HTTPS; `www.jobinko.in` redirects to it; `http` redirects to `https`; page addresses, sitemap and robots all say `jobinko.in`; the old `saaf-ten.vercel.app` still works. Hostinger DNS `A @` now points at Vercel (76.76.21.21). Supabase sign-in settings accept the new address (Site URL = `https://jobinko.in`).
+
+**Only you can do:**
+1. **Sign in to Resend** in the Chrome tab I left open at resend.com/login, then say "signed in". I add `jobinko.in` there, put the DNS records into Hostinger, verify, and point Supabase's email sender at it (TASK-075). Until then sign-in emails reach only you.
+2. **Do one real sign-in at https://jobinko.in/signin** (Google, one click) so we know it works end to end — I did not sign in for you. Unverified until then.
+3. **Answer: is the product being renamed?** Every screen, email and file still says "Saaf"; the domain says "jobinko". I changed no wording.
+4. Later: the browser extension still talks to `saaf-ten.vercel.app` (nobody has loaded it yet); I'll move it when you load 0.7.0.
+
+---
+
 ## 🔶 2026-10-08 — parity audit done: 50 of 109 match, 24 partial, 3 gaps, 21 could not be checked
 
 ~~**Written, not shipped.** Nothing was changed on the site.~~ **CORRECTED 2026-10-08 (late): the fixes are LIVE** at https://saaf-ten.vercel.app — latest deploy `dpl_GDMaDXVVGnVKeAPrkYZdkCkxB4Ts`. Live and re-measured on production: voice input (TASK-214), job-page markup for Google (215), the error-report tunnel `/api/monitoring` (216 — live, not confirmed, see below), "Search all roles" beyond your matches at `/today/explore` (217), a one-line gist of the job on every card (218), the wider filters (219), and the Reposted chip on that search page (220). **Not pushed:** `main` is ahead of both GitLab and GitHub (as of 2026-10-08 evening, 16 commits) — say "push main to gitlab and github" and I will. Result and evidence: ROADMAP Phase 19 (TASK-214–221) and PROJECT-STATE Stage AQ; the full row-by-row table is the local file `docs/jobright-map/20-parity-audit.local.md` (never published).

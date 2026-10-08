@@ -194,7 +194,7 @@ After the first deploy, set the Supabase **Site URL** to the deployed origin and
 add `https://<project>.vercel.app/**` to Redirect URLs, or the magic link will
 bounce back to localhost.
 
-**⚠️ ONE PROJECT, ONE DOMAIN — `saaf` → `https://saaf-ten.vercel.app`.**
+**⚠️ ONE PROJECT, ONE DOMAIN — `saaf` → ~~`https://saaf-ten.vercel.app`~~ main address `https://jobinko.in` since 2026-10-08 (DNS at Hostinger; `saaf-ten.vercel.app` still answers).**
 On 2026-09-07 a second Vercel project, `saaf-i9`, was found serving the v0
 design export under the Saaf name. It had no `/signin` and no `/start`, and it
 answered `/today`, `/applications` and `/profile` with **200 to anonymous
