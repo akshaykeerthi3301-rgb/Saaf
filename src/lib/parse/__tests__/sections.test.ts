@@ -263,3 +263,33 @@ Jul 2023 - Present | Bengaluru
     expect(out).toContain('Software Engineer II at Razorpay')
   })
 })
+
+describe('company-first headers', () => {
+  const text = `Summary
+Client-facing professional across private banking and HR operations, with six years of work in client retention.
+
+Experience
+ICICI Bank   Jun 2025 - Jul 2026
+Private Banking Manager (Relationship Manager)   Bangalore, India
+Managed 150+ CXO, HNI and UHNI relationships as primary relationship manager.
+Amazon   Apr 2022 - Jan 2023
+HR Associate   Hyderabad, India
+Managed 300-400 complex employee-relations cases monthly for a global workforce.
+Scaleup Mission   Apr 2024 - May 2024
+HR Operations Intern   Remote
+Ran full-cycle recruiting for 15+ roles across early-stage startups.`
+
+  it('reads the job title as the title and the company as the employer', () => {
+    const roles = parseSections(text).experience
+    expect(roles.map((r) => [r.title, r.employer])).toEqual([
+      ['Private Banking Manager (Relationship Manager)', 'ICICI Bank'],
+      ['HR Associate', 'Amazon'],
+      ['HR Operations Intern', 'Scaleup Mission'],
+    ])
+  })
+
+  it('leaves a title-first header as it was', () => {
+    const roles = parseSections('Experience\nProduct Manager at Paytm\nMar 2021 - Present\nOwned the merchant payments funnel end to end.').experience
+    expect([roles[0].title, roles[0].employer]).toEqual(['Product Manager', 'Paytm'])
+  })
+})

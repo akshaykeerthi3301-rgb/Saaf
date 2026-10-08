@@ -266,8 +266,13 @@ function startsEntry(line: string): boolean {
   return ENTRY_SEPARATOR.test(t) && /[A-Z]/.test(t) && t.split(/\s+/).length <= 10
 }
 
+/** Nouns that name a kind of job. Used only to tell a company from a title in a two-part header. */
+const ROLE_WORD =
+  /\b(manager|associate|analyst|engineer|developer|intern|internship|executive|lead|director|officer|specialist|consultant|head|founder|co-founder|scientist|designer|architect|coordinator|representative|administrator|assistant|advisor|adviser|president|partner|owner|trainee|strategist|recruiter|writer|editor|accountant|auditor|teacher|lecturer|researcher|technician|supervisor|apprentice|fellow|agent|generalist|programmer|tester|planner)\b/i
+
 function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
-  const joined = lines.join(' · ')
+  // A tab or a run of spaces is how a two-column header ("ICICI Bank        Jun 2025 - Jul 2026") reaches us.
+  const joined = lines.map((l) => l.trim().replace(/\t+|\s{3,}/g, ' | ')).join(' · ')
   const { rest, dates } = splitDates(joined)
   const parts = rest
     .split(HEADER_SPLIT)
@@ -298,12 +303,37 @@ function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
   const cityAt = parts.findIndex((p) => isCity(p))
   const location = cityAt > 0 ? parts.splice(cityAt, 1)[0] : undefined
 
+  /**
+   * ⚠️ COMPANY-FIRST HEADERS. Many résumés run "ICICI Bank   Jun 2025 - Jul 2026" over
+   * "Private Banking Manager   Bangalore", so the employer arrives first and the positional rule above reads
+   * the company as the job title. When the first part names no kind of role and the second does, they are
+   * the other way round. Only that exact pattern swaps: a role word in the first part, or in neither, is left
+   * as it was.
+   */
+  if (parts.length >= 2 && !ROLE_WORD.test(parts[0]) && ROLE_WORD.test(parts[1])) parts.splice(0, 2, parts[1], parts[0])
+
   return {
     title: parts[0] ?? null,
     employer: parts[1] ?? null,
     location: location ?? parts[2] ?? null,
     dates,
   }
+}
+
+/**
+ * The second line of a company-first header: "Private Banking Manager        Bangalore, India". It names a role,
+ * is short, is written in Title Case and does not end like a sentence — which is what separates it from an
+ * unglyphed bullet, the only other thing that can sit directly under a header.
+ */
+function looksLikeTitleLine(line: string): boolean {
+  const t = line.trim()
+  if (t.length === 0 || t.length > 90 || /[.!?;:]$/.test(t)) return false
+  const [role, place] = t.split(/\t+|\s{3,}|\s+[|·]\s+/)
+  const words = role.split(/\s+/)
+  // A role noun, or — for "Go-to-Market & Client Growth        Bangalore" — a place in the second column.
+  const placed = place !== undefined && (/^remote$/i.test(place.trim()) || isCity(place.split(',')[0].trim()))
+  if (words.length > 8 || !(ROLE_WORD.test(role) || placed)) return false
+  return words.every((w) => /^[A-Z(&]/.test(w) || /^(of|and|the|in|for|to|at|&)$/i.test(w))
 }
 
 function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplaced: number } {
@@ -365,6 +395,11 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
      * sentence AND this one does not start one. Anything else stays separate,
      * because merging two real bullets is worse than splitting one.
      */
+    if (header.length === 1 && bullets.length === 0 && dateRange().test(header[0]) && !dateRange().test(line) && looksLikeTitleLine(line)) {
+      header.push(line)
+      continue
+    }
+
     if (header.length > 0) {
       const prev = bullets[bullets.length - 1]
       const continues =
