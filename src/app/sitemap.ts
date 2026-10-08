@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     // Updated by the daily cron, so it genuinely changes daily — unlike the rest.
     { url: `${base}/audit`, lastModified: now, changeFrequency: 'daily', priority: 0.5 },
+    { url: `${base}/jobs`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${base}/extension`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },

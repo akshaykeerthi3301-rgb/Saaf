@@ -5,6 +5,7 @@ import { cultureTags, formatDescription, isEasyApply, titleSeniority, type JdBlo
 import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay, type StatedPay } from '@/lib/stated-pay'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
+import { MAX_PAGE, PAGE_SIZE, searchTokens } from '@/lib/public-search'
 
 /**
  * Public job pages — one indexed role, readable without an account.
@@ -160,4 +161,57 @@ export async function listPublicJobsForSitemap(limit = 5000): Promise<{ id: stri
     if (rows.length < 1000) break
   }
   return out
+}
+
+export type PublicSearchRow = { id: string; title: string; company: string; city: string | null; postedAt: string | null; firstSeenAt: string; easyApply: boolean }
+
+/**
+ * The public job search (F-1202). ⚠️ SERVICE CLIENT, CONTAINED BY SHAPE like the rest of this file:
+ * it reads `roles` only, returns a fixed set of display fields, and the query is first reduced to a few
+ * plain word-tokens (src/lib/public-search.ts), so nothing a stranger types can widen what is read. At
+ * most PAGE_SIZE rows a page and MAX_PAGE pages. No score is read or computed: a score belongs to a
+ * signed-in candidate, which is why the page shows it locked.
+ */
+export async function searchPublicJobs(input: { q?: string; city?: string; page?: number }): Promise<{ rows: PublicSearchRow[]; more: boolean }> {
+  const page = Math.min(Math.max(Math.floor(input.page ?? 1), 1), MAX_PAGE)
+  const db = createServiceClient()
+  let query = db
+    .from('roles')
+    .select('id, title, company_name, city, apply_url, posted_at, first_seen_at')
+    .eq('in_india', true)
+  for (const t of searchTokens(input.q)) query = query.or(`title.ilike.%${t}%,company_name.ilike.%${t}%`)
+  const city = searchTokens(input.city)
+  if (city.length) query = query.ilike('city', `%${city.join(' ')}%`)
+  const from = (page - 1) * PAGE_SIZE
+  // One extra row says whether there is a next page without a count.
+  const { data, error } = await query.order('first_seen_at', { ascending: false }).order('id').range(from, from + PAGE_SIZE)
+  if (error || !data) return { rows: [], more: false }
+  const rows = (data as unknown as { id: string; title: string; company_name: string | null; city: string | null; apply_url: string; posted_at: string | null; first_seen_at: string }[])
+  return {
+    rows: rows.slice(0, PAGE_SIZE).map((r) => ({
+      id: r.id, title: r.title, company: displayEmployer(r.company_name), city: displayCity(r.city) || null,
+      postedAt: r.posted_at, firstSeenAt: r.first_seen_at, easyApply: isEasyApply(r.apply_url),
+    })),
+    more: rows.length > PAGE_SIZE && page < MAX_PAGE,
+  }
+}
+
+/** For the landing page's ticker: real counts and the newest postings, nothing estimated. Null on any failure. */
+export async function readTicker(): Promise<{ last24h: number; latest: { id: string; title: string; company: string; city: string | null }[] } | null> {
+  try {
+    const db = createServiceClient()
+    const since = new Date(Date.now() - 24 * 3_600_000).toISOString()
+    const [recent, latest] = await Promise.all([
+      db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).gte('first_seen_at', since),
+      db.from('roles').select('id, title, company_name, city').eq('in_india', true).order('first_seen_at', { ascending: false }).limit(6),
+    ])
+    if (recent.error || latest.error || !latest.data?.length) return null
+    return {
+      last24h: recent.count ?? 0,
+      latest: (latest.data as unknown as { id: string; title: string; company_name: string | null; city: string | null }[])
+        .map((r) => ({ id: r.id, title: r.title, company: displayEmployer(r.company_name), city: displayCity(r.city) || null })),
+    }
+  } catch {
+    return null
+  }
 }

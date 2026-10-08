@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { ArrowUpRight, Check, FileUp, Sparkles } from 'lucide-react'
 import { AuthFragmentNotice } from '@/components/features/auth-fragment-notice'
+import { LandingTicker } from '@/components/features/landing-ticker'
+import { readTicker } from '@/lib/services/public-jobs'
+
+/** The ticker's numbers are refreshed every ten minutes; a failed read just leaves the line out. */
+export const revalidate = 600
 
 /**
  * ⚠️ THE LABEL NAMES THE OUTCOME, NOT THE MECHANIC. It read "Upload Résumé &
@@ -85,7 +90,8 @@ function Rows({ items, numbered = false }: { items: string[][]; numbered?: boole
   )
 }
 
-export default function Landing() {
+export default async function Landing() {
+  const ticker = await readTicker()
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-6 sm:px-8 lg:px-10">
@@ -268,6 +274,10 @@ export default function Landing() {
             </p>
           </article>
         </div>
+
+        {/* ONE QUIET LINE of live, checkable numbers (F-1201, TASK-202) — not the audit strip's old
+            section, which the founder cut for a minimal page. Omitted entirely when it cannot be read. */}
+        {ticker ? <LandingTicker data={ticker} /> : null}
 
         {/* ⚠️ <AuditStrip /> WAS REMOVED HERE, 2026-09-15, on a founder call to
             keep the page minimal. Worth knowing what went: it was the page's
