@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
 import { ArrowUp, FileDown, Loader2, Pencil, Save, ShieldCheck, Sparkles, Undo2, X } from 'lucide-react'
 import { rewriteStudioLine, rewriteStudioLines, scoreDraft, tailorSavedResume, type TailorStudioResult } from '@/app/actions/tailor-studio'
-import { downloadOptimisedResume } from '@/app/actions/resume-download'
+import { downloadWordFile } from '@/lib/download-word'
 import { saveResumeToAccount } from '@/app/actions/resume-documents'
 import type { ResumeSections } from '@/lib/parse/sections'
 import { DEFAULT_STYLE, type ResumeStyle } from '@/lib/resume-style'
@@ -147,16 +147,8 @@ export function TailorStudio({
   function exportWord() {
     setNote(undefined)
     startBusy(async () => {
-      const r = await downloadOptimisedResume({ sections: working, targetRole: roleTitle, style: effective, company: company || undefined })
-        .catch(() => ({ ok: false as const, error: 'Check your connection and try again.' }))
-      if (!r.ok) { setNote(r.error); return }
-      const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0))
-      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }))
-      const a = document.createElement('a')
-      a.href = url
-      a.download = fileBase ? `${fileName}.docx` : r.filename
-      a.click()
-      URL.revokeObjectURL(url)
+      const r = await downloadWordFile({ sections: working, targetRole: roleTitle, style: effective, company: company || undefined }, fileBase ? fileName : undefined)
+      if (!r.ok) setNote(r.error)
     })
   }
 

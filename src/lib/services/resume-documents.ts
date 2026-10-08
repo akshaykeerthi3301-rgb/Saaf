@@ -28,6 +28,7 @@ export type SavedResume = {
   targetRole: string | null
   score: number | null
   updatedAt: string
+  createdAt: string
   /** True for the candidate's main résumé. Undefined when migration 0034 is not applied. */
   isPrimary?: boolean
 }
@@ -44,12 +45,13 @@ type Row = {
   target_role: string | null
   score: number | null
   updated_at: string
+  created_at: string
   is_primary?: boolean
   sections?: unknown
   body?: string
 }
 
-const LIST_COLUMNS = 'id, label, target_role, score, updated_at'
+const LIST_COLUMNS = 'id, label, target_role, score, updated_at, created_at'
 
 export async function listResumes(userId: string): Promise<SavedResume[]> {
   const supabase = await createClient()
@@ -172,5 +174,39 @@ function toSaved(row: Row): SavedResume {
     targetRole: row.target_role,
     score: row.score,
     updatedAt: row.updated_at,
+    createdAt: row.created_at,
   }
+}
+
+/**
+ * Change one saved résumé in place — its sections, and optionally its name.
+ *
+ * ⚠️ BY ID, NOT BY LABEL. saveResume() replaces by label so a person who fixes and saves again gets one document; the
+ * editor needs the opposite — renaming a résumé must not leave the old one behind and create a second. Returns false
+ * when the row is not the caller's (RLS and the user_id filter agree) or the write failed.
+ */
+export async function updateResume(input: {
+  userId: string
+  id: string
+  label?: string
+  sections: ResumeSections
+  body: string
+  score: number | null
+}): Promise<boolean> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('resume_documents')
+    .update({
+      ...(input.label ? { label: input.label } : {}),
+      sections: input.sections,
+      body: input.body,
+      score: input.score,
+      score_model: 'v2' as const,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', input.userId)
+    .eq('id', input.id)
+    .select('id')
+    .maybeSingle()
+  return !error && Boolean(data)
 }

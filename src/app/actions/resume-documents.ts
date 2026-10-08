@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
-import { saveResume, deleteResume, setPrimaryResume, type SavedResume } from '@/lib/services/resume-documents'
+import { saveResume, deleteResume, setPrimaryResume, updateResume, type SavedResume } from '@/lib/services/resume-documents'
 import { sectionsToText, type ResumeSections } from '@/lib/parse/sections'
 import { checkResume } from '@/lib/ats-check'
 
@@ -123,6 +123,37 @@ export async function saveResumeToAccount(
   } catch {
     return { ok: false, error: 'We could not save it just now. Your résumé is still on this page.' }
   }
+}
+
+const updateSchema = z.object({
+  id: z.string().uuid(),
+  sections: sectionsSchema,
+  label: z.string().trim().min(1).max(120).optional(),
+})
+
+export type UpdateResumeResponse = { ok: true; score: number | null } | { ok: false; error: string }
+
+/**
+ * Save the résumé editor's changes to ONE saved résumé, by id. The score is recomputed here, never taken from the
+ * browser (see saveResumeToAccount). Renaming changes the label of the same row — it does not create a second.
+ */
+export async function updateSavedResume(input: z.input<typeof updateSchema>): Promise<UpdateResumeResponse> {
+  const parsed = updateSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'There is nothing to save yet.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Sign in to save changes.' }
+
+  const sections: ResumeSections = { ...parsed.data.sections, order: [] }
+  const body = sectionsToText(sections)
+  let score: number | null = null
+  try { score = checkResume(body).readability.score } catch { /* too short to assess — still saved */ }
+
+  const ok = await updateResume({ userId: user.id, id: parsed.data.id, label: parsed.data.label, sections, body, score }).catch(() => false)
+  if (!ok) return { ok: false, error: 'We could not save that just now. Your changes are still on this page.' }
+  revalidatePath('/resume')
+  return { ok: true, score }
 }
 
 export type DeleteResumeResponse = { ok: true } | { ok: false; error: string }
