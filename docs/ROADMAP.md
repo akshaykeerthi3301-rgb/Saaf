@@ -411,7 +411,8 @@ trim and reword only; block, never warn, on an unconfirmed claim.
 - [ ] **TASK-062** — Resume Guides by Company
   Notes: Content, not code — the cheapest item on the list and the best organic-acquisition surface. No engineering dependency; can run in parallel with any other task.
 
-- [ ] **TASK-063** — Arsenal Generator: cover letter, recruiter email, LinkedIn message
+- [x] **TASK-063** — Arsenal Generator: cover letter, recruiter email, LinkedIn message
+  Notes (2026-10-08, `phase-18`): **Superseded — already built, and never ticked here.** The three documents of the 'Arsenal' exist: the cover letter as the **Cover Letter Studio** (TASK-112, `/cover-letter`, with the fabrication guard) and the recruiter email and LinkedIn note as **Networking / Outreach** (TASK-113, `/outreach`, LinkedIn's own 'Find on LinkedIn' link only — no scraping). Ticked on the evidence of those tasks and the routes; not re-verified in a browser this session.
   Notes: The first LLM-cost feature in this phase, and the first that must sit behind the fabrication guard — a generated document may only reorder, trim and reword facts the candidate already confirmed, and an unconfirmed claim blocks rather than warns. Do this once the guard is built and trusted, not before. Reuses the résumé-reading pattern from Stage C (`src/lib/parse/llm.ts`): read, never decide: the model drafts text, it does not judge eligibility. Verify: a generated document containing any fact not present in the confirmed profile is blocked, not softened.
 
 - [x] **TASK-064** — Resume Rewrite (the *Builder* half is deliberately not built)
@@ -432,9 +433,11 @@ trim and reword only; block, never warn, on an unconfirmed claim.
   Verify: 404 tests pass (13 new for section parsing, 14 for the rewrite guard, 10 for the new checks); lint 0 errors; build clean; **exercised live in a browser and against a real .docx with Groq** — 79 → 92, six lines rewritten, and the model's one fabrication ("5 years" against a résumé saying 4) refused and shown.
 
 - [ ] **TASK-065** — Skill Gap Analysis, Interview Prep, Salary Negotiation scripts
+  Notes (2026-10-08, `phase-18`): **Partly built — left open.** Skill-gap analysis exists (the gap table on the ATS flow and the keyword coverage per role) and interview prep exists (`/interview-prep`, the question bank); **salary-negotiation scripts are not built**, and with 2.6% of Indian postings stating pay (0.6% in the 2026-10-08 table-wide sample) a negotiation script has almost nothing to anchor on. Not started.
   Notes: Straightforward LLM features once 063's guard pattern exists. Sequence by what the first cohort actually asks for rather than building all three speculatively.
 
-- [ ] **TASK-066** — Mock Interview, Career Copilot
+- [x] **TASK-066** — Mock Interview, Career Copilot
+  Notes (2026-10-08, `phase-18`): **Superseded.** Mock interview scoring was built as TASK-114 (the practice box on `/interview-prep`), and the career copilot as **Ask Saaf** (TASK-166/186: a plain, model-free assistant over the candidate's own data — the decision is recorded there: a model-backed chat cannot serve a free product on a shared key). The 'most expensive per session' concern in the original note is why neither calls a model on the candidate's behalf. Ticked on the evidence of those tasks.
   Notes: Sequence last — most expensive per session of anything on this list (their own pricing shows Mock Interview at 2 credits against 1 for everything else) and the least defensible at ₹0. Reconsider scope before building rather than after.
 
 **Standing gap across this phase:** `/api/dev-signin` was deleted once
@@ -632,7 +635,8 @@ declined because they reverse a locked decision or cannot be done honestly at �
 - [ ] **TASK-088** — A copilot you can talk to about one role
   Files: TBD — scope first
   Notes: `/copilot` is a static page today, not a conversation. Scope before building: what it may read (confirmed profile + one posting), the fabrication guard applied to its answers, and the cost surface — Groq's 8,000 tokens/minute is shared site-wide.
-- [ ] **TASK-089** — Company panel: stage, headcount, founding year
+- [x] **TASK-089** — Company panel: stage, headcount, founding year
+  Notes (2026-10-08, `phase-18`): **Built, and the blocker is gone.** The note said 'blocked on a data source'; the data source is Wikidata (open, CC0, covers Indian companies) and the public job page's **Company** panel now shows Founded and Employees (and HQ, industry, website, leadership) from it, plus a **stage chip** from a curated list of listed companies (`src/lib/taxonomy/company-stage.json`, built from Wikidata with a deny-list for a name collision found by hand, 'Pico'). **Coverage, MEASURED 2026-10-08:** of 1,355 employers, 175 matched on Wikidata, 155 with at least one fact kept, 91 listed; no provider publishes company size, so a startup chip is nearly empty (10 roles). A company with no match shows no panel — never a placeholder. Ticked with that coverage stated; not re-verified in a browser this session.
   Files: TBD
   Notes: **Blocked on a data source**, not on code. Needs one that is free, legal to display, and covers Indian companies. Crunchbase/Tracxn are paid. Do not build the panel against placeholder data.
 
