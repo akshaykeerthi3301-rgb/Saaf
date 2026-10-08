@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-09 (later) — the new first run is LIVE (`dpl_3yEtrsrV2YWBmTcCCzNrXqu3VVxh`) but nobody has walked it with a new account
+
+**Live and seen in your Chrome:** `/start` is now the one-screen upload (like the Jobright one you sent); `/today?welcome=1` shows the "We found 4,602 roles that fit you" card; "Skip for now" closes it and saves nothing. **Not seen by me: the whole run** — upload a résumé, watch it scan, land on the feed. I could not create a test account (tooling refused, correctly), so that run is yours.
+
+**Only you can do:**
+1. **Sign up at https://jobinko.in/signin with a second email (a spare Gmail), upload any résumé, and time it.** Expect about 10 s reading plus about 30 s scoring (I measured 27 s for the scoring alone). Tell me: did it reach the card, how long it took, and if anything looked wrong. If it takes over 60 s or errors, that is a platform time limit and I fix it first. This is also your "second-inbox sign-in" check.
+2. Decide whether I may **refresh your own profile from your résumé** (it would replace the stale "icici bank · 2 yrs" — your data, so I did not).
+
 ## ✅ 2026-10-09 — the new landing, the Jobright-style Jobs feed and résumé fonts/colours are LIVE (`dpl_3DD18NHAguFEog8uKcdgHBdLKirS`)
 
 **Live and checked in your Chrome:** the landing is short; `/tools`, `/tools/paste-jd`, `/tools/resume-keywords` are gone (404); `/tools/ats-checker` stays. `/today` is the new layout: one top bar, one row of filters, flat cards with a score on the right, a quiet sidebar; click a job and it opens in the middle with **Customize your résumé / Build a cover letter / Analyze how well you fit** on the right. Résumé styles now have a font and a colour.
