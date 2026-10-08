@@ -224,10 +224,12 @@ export function rewriteFailure(
   original: string,
   me: CandidateFacts,
   role: RoleFacts,
+  /** A bullet is one line; a professional summary is allowed a short paragraph. */
+  maxLength = 320,
 ): string | null {
   const trimmed = next.trim()
   if (trimmed.length < 15) return 'came back too short to use'
-  if (trimmed.length > 320) return 'came back longer than a résumé line should be'
+  if (trimmed.length > maxLength) return `came back longer than a ${maxLength > 320 ? 'summary' : 'résumé line'} should be`
 
   const invented = figuresAreOriginal(trimmed, original)
   if (invented) return invented
@@ -572,7 +574,7 @@ export async function rewriteOneBullet(
     return null
   }
 
-  const fail = rewriteFailure(line, original, me, role)
+  const fail = rewriteFailure(line, original, me, role, opts.summary ? 600 : 320)
   // Shown, not hidden: a refusal is evidence the filter is real.
   return fail ? { refused: fail } : { text: line, provider: answer.provider }
 }

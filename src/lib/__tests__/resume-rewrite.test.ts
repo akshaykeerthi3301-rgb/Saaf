@@ -156,3 +156,21 @@ describe('a word the model re-inflected', () => {
     expect(rewriteFailure(next, original, ME, ROLE)).toMatch(/Flipkart/)
   })
 })
+
+describe('length: a bullet is one line, a summary is a short paragraph', () => {
+  const sentence = 'Analyst who owns reporting and experimentation for a payments funnel using SQL and Python. '
+  const summary = `${sentence}${sentence}${sentence}`.trim() // ~270 chars, then pad past 320
+  const long = `${summary} ${sentence}`.trim()
+
+  it('refuses a 350-character bullet but keeps the same text as a summary', () => {
+    expect(long.length).toBeGreaterThan(320)
+    expect(long.length).toBeLessThan(600)
+    expect(rewriteFailure(long, long, ME, ROLE)).toContain('longer than a résumé line')
+    expect(rewriteFailure(long, long, ME, ROLE, 600)).toBeNull()
+  })
+
+  it('still refuses a summary past its own limit', () => {
+    const huge = `${long} ${long}`
+    expect(rewriteFailure(huge, huge, ME, ROLE, 600)).toContain('longer than a summary')
+  })
+})
