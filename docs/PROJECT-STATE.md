@@ -2805,6 +2805,20 @@ The tasks below, one commit each (TASK-197/198 share one because they share one 
 
 ---
 
+### Stage AP — the first ingest after the updates, and what it showed (2026-10-08, branch `phase-18`)
+
+**What ran, on production, at the founder's instruction:** the daily ingest (`runIngest`, 45-minute budget so every board was swept) then the recompute (`recomputeAll`, nine confirmed profiles; 500-result batches). Not `npm run ingest` — that also sends the audit and the email digests.
+
+| Measured 2026-10-08 | Before | After |
+|---|---|---|
+| Boards fetched OK | — | 1,295 of 1,306 (11 returned HTTP 404 — probably retired boards, registry clean-up candidates; not yet checked one by one) |
+| Roles stored (India) | 27,882 | 28,751 (+869 net, 2,938 pruned) |
+| Fields filled that were empty before the updates | 0 | reposted 1,998 · work mode 3,005 · contract type 7,619 · pay 146 · **closed 7,014** |
+
+**The finding worth keeping:** 24% of stored roles were taken down by their employer and nothing in the app knew. It is *not* one bad board (859 of 1,348 boards have some; median 23% per large board; 3 boards fully closed). Likely cause (INFERRED, not tested): the cron rotates through boards inside a 52-second budget, so a board can go days unvisited and its stored roles go stale; today's run swept every board at once. Public pages and the candidate match-finder counted them as open. Fixed in TASK-212 (see ROADMAP) — **~~"ingest deletes closed roles"~~ was the assumption in `readPublicJob`'s own comment; in fact the prune deletes 30 days after last seen, so closed roles sat in the index for up to a month.**
+
+**Correction to an earlier number:** pay stated in postings measured **0.6%** on 4,000 sampled postings today against 2.6% earlier; the two samples differ and have not been reconciled — do not quote either as the Indian-market figure.
+
 ## Index coverage by function — probed live 2026-09-08
 
 *Measured against the live index (21,813 India roles) by scoring four probe

@@ -78,7 +78,7 @@ export async function readShortlist(userId: string): Promise<Shortlist> {
       .select('id, role_id, score, location:score_breakdown->>location, experience:score_breakdown->>experience')
       .eq('user_id', userId)
       .order('score', { ascending: false, nullsFirst: false }),
-    supabase.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true),
+    supabase.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).is('closed_at', null),
     // Insert-once, survives gate_results being deleted and recreated by the
     // sweep in evaluate-user.ts. See supabase/migrations/0007_role_first_shown.sql.
     supabase.from('role_first_shown').select('role_id, first_shown_at').eq('user_id', userId),

@@ -127,6 +127,7 @@ export async function coverageByFunction(): Promise<FunctionCoverage[]> {
         .select('*', { count: 'exact', head: true })
         .eq('function', fn)
         .eq('in_india', true)
+        .is('closed_at', null)
       return count ?? 0
     }),
   )

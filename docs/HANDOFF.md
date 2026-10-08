@@ -2,6 +2,16 @@
 
 ---
 
+## 🔶 2026-10-08 — the ingest and recompute have RUN on production; a fix for "taken-down jobs counted as open" is WRITTEN, NOT LIVE
+
+**Live now:** the daily ingest and the recompute both ran against production today. Roles 27,882 → 28,751; the new fields (reposted, work mode, contract type, pay, "posting closed") are now filled; every confirmed profile was rescored. **11 boards returned "not found"** (probably retired — I have not checked them one by one; worth looking at when you next tidy the registry).
+
+**Found, fixed in code, NOT deployed:** 7,014 of the 28,751 stored roles (24%) had been taken down by their employer, and the live site still counts them — e.g. the Product Manager page says 352, the truth is 257; the remote hub says 1,070, the truth is 865; and the candidate's matches can include them. The fix (TASK-212) is committed on `phase-18`, tested, and **checked against production data**, but it is not on the website until a deploy. **After that deploy, run the recompute once more** so each candidate's stored list drops them (the daily cron does it by itself within a day if you would rather wait).
+
+**Needs you:** say "deploy" (then I run the recompute again), and say whether to also apply one more small database update that stops the match-finder wasting slots on closed roles (only matters for very broad searches; I have not written or applied it).
+
+---
+
 ## ✅ 2026-10-08 — ALL DATABASE UPDATES (0029–0049) ARE APPLIED ON PRODUCTION
 
 **Done, and checked against the database itself.** Applied through the Supabase SQL editor in your signed-in Chrome, each file loaded by script and **checksummed against the file in the repo before Run** (the editor's own paste had cut `0034` short). State when I started: 0029, 0030, 0032, 0033 applied; **0031 half-applied** (only its first block, `connections`, existed — the rest was added); 0034–0049 not applied. **One real gap found and fixed:** 0033 had been applied without its last lines, so anonymous visitors could call `role_interest` (a counts-only function that reads across candidates) — the `revoke … from public, anon` and `grant … to authenticated` were run, plus two missing column descriptions on 0030 and 0032.

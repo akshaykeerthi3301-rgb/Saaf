@@ -8,6 +8,7 @@ const db = vi.hoisted(() => ({
   counts: {} as Record<string, number>,
   failFor: new Set<string>(),
   asked: [] as string[],
+  openOnly: [] as unknown[][],
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -15,11 +16,14 @@ vi.mock('@/lib/supabase/server', () => ({
     from: () => ({
       select: () => ({
         eq: () => ({
-          textSearch: async (_col: string, q: string) => {
-            db.asked.push(q)
-            // Postgres full-text search ignores case; so does this fake.
-            return db.failFor.has(q) ? { count: null, error: { message: 'boom' } } : { count: db.counts[q.toLowerCase()] ?? 0, error: null }
-          },
+          is: (...a: unknown[]) => ({
+            textSearch: async (_col: string, q: string) => {
+              db.asked.push(q)
+              db.openOnly.push(a)
+              // Postgres full-text search ignores case; so does this fake.
+              return db.failFor.has(q) ? { count: null, error: { message: 'boom' } } : { count: db.counts[q.toLowerCase()] ?? 0, error: null }
+            },
+          }),
         }),
       }),
     }),
@@ -28,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 const { checkRoleTitle } = await import('../role-catalogue')
 
-beforeEach(() => { db.counts = {}; db.failFor = new Set(); db.asked = [] })
+beforeEach(() => { db.counts = {}; db.failFor = new Set(); db.asked = []; db.openOnly = [] })
 
 describe('checkRoleTitle', () => {
   it('returns the live count for the title as typed, and the closest roles with their own counts', async () => {
@@ -37,6 +41,12 @@ describe('checkRoleTitle', () => {
     expect(r.count).toBe(0)
     expect(db.asked).toContain('Founders Office') // the matcher's own query, on the raw title
     for (const s of r.suggestions) expect(s.count).toBe(db.counts[s.role.toLowerCase()] ?? 0)
+  })
+
+  it('counts only roles the employer still lists — a taken-down posting is not "a live role"', async () => {
+    await checkRoleTitle('Chief of Staff')
+    expect(db.openOnly.length).toBeGreaterThan(0)
+    for (const a of db.openOnly) expect(a).toEqual(['closed_at', null])
   })
 
   it('a title with postings says how many, and does not suggest itself', async () => {

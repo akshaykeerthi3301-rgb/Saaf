@@ -5,7 +5,7 @@ const h = vi.hoisted(() => ({ calls: [] as [string, unknown[]][], rows: [] as un
 vi.mock('@/lib/supabase/service', () => ({
   createServiceClient: () => {
     const chain: Record<string, unknown> = {}
-    for (const m of ['select', 'eq', 'or', 'ilike', 'order', 'range', 'gte', 'limit']) chain[m] = (...a: unknown[]) => { h.calls.push([m, a]); return chain }
+    for (const m of ['select', 'eq', 'is', 'or', 'ilike', 'order', 'range', 'gte', 'limit']) chain[m] = (...a: unknown[]) => { h.calls.push([m, a]); return chain }
     chain.then = (res: (v: unknown) => unknown) => res({ data: h.rows, error: null, count: h.count })
     return { from: (t: string) => { h.calls.push(['from', [t]]); return chain } }
   },
@@ -25,6 +25,10 @@ describe('readRolePage', () => {
     expect(called('or')[0][0]).toContain('city.ilike.%bengaluru%')
     expect(called('or')[0][0]).toContain('city.ilike.%bangalore%')
     expect(called('eq')).toContainEqual(['in_india', true])
+  })
+  it('counts and lists only roles the employer still lists — the total and the sample both skip closed postings', async () => {
+    await readRolePage('Product Manager', null)
+    expect(called('is')).toEqual([['closed_at', null], ['closed_at', null]])
   })
   it('reports the exact total, twenty newest, and the top employers and cities of the sample', async () => {
     h.count = 36

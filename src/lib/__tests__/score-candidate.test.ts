@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { candidateSearch } from '../score-candidate'
+import { candidateSearch, scoreAgainstIndex } from '../score-candidate'
 
 /**
  * The search the scorer scopes the index by. The shortlist's "of N" count asks
@@ -38,5 +38,18 @@ describe('candidateSearch', () => {
     const s = candidateSearch({ preferredRole: 'Recruiter' }, true)!
     expect(s.adjacent).toBe(false)
     expect(s.searches).toEqual(['Recruiter'])
+  })
+})
+
+describe('scoreAgainstIndex', () => {
+  it('asks the database only for roles the employer still lists, never a taken-down posting', async () => {
+    const calls: unknown[][] = []
+    const q: Record<string, unknown> = {}
+    q.select = () => q
+    q.is = (...a: unknown[]) => { calls.push(a); return q }
+    q.then = (res: (v: unknown) => unknown) => res({ data: [], error: null })
+    const db = { rpc: () => q } as unknown as Parameters<typeof scoreAgainstIndex>[0]
+    await scoreAgainstIndex(db, { preferredRole: 'Product Manager' } as Parameters<typeof scoreAgainstIndex>[1], { openToAdjacent: false })
+    expect(calls).toEqual([['closed_at', null]])
   })
 })

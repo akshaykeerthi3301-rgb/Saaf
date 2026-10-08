@@ -43,6 +43,7 @@ async function countQuery(
     .from('roles')
     .select('id', { count: 'exact', head: true })
     .eq('in_india', true)
+    .is('closed_at', null)
     .textSearch('title_tsv', websearch, { type: 'websearch', config: 'english' })
   return error ? -1 : count ?? 0
 }

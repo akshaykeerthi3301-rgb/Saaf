@@ -135,6 +135,7 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
         .select('city, function, first_seen_at', { count: 'exact' })
         .eq('company_name', companyName)
         .eq('in_india', true)
+        .is('closed_at', null)
         .order('first_seen_at', { ascending: false })
         .limit(200)
     : { data: [], count: 0 }

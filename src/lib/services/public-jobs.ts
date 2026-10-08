@@ -93,10 +93,11 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
   const db = createServiceClient()
   const { data } = await db
     .from('roles')
-    .select('id, title, company_name, description, city, location_raw, in_india, apply_url, posted_at, first_seen_at')
+    .select('id, title, company_name, description, city, location_raw, in_india, apply_url, posted_at, first_seen_at, closed_at')
     .eq('id', id)
     .maybeSingle()
-  if (!data) return null
+  // Taken down by the employer (the ingest stamps closed_at, migration 0035): not served, as the doc above says.
+  if (!data || (data as unknown as { closed_at: string | null }).closed_at) return null
   const r = data as unknown as RoleRow
 
   const companyName = r.company_name ?? ''
@@ -106,6 +107,7 @@ export const readPublicJob = cache(async (id: string): Promise<PublicJob | null>
         .select('id, title, city', { count: 'exact' })
         .eq('company_name', companyName)
         .eq('in_india', true)
+        .is('closed_at', null)
         .order('first_seen_at', { ascending: false })
         .limit(200)
     : { data: [], count: 0 }
@@ -156,6 +158,7 @@ export async function listPublicJobsForSitemap(limit = 5000): Promise<{ id: stri
       .from('roles')
       .select('id, last_seen_at')
       .eq('in_india', true)
+      .is('closed_at', null)
       .order('first_seen_at', { ascending: false })
       .order('id')
       .range(from, Math.min(from + 999, cap - 1))
@@ -184,6 +187,7 @@ export async function searchPublicJobs(input: { q?: string; city?: string; page?
     .from('roles')
     .select('id, title, company_name, city, apply_url, posted_at, first_seen_at')
     .eq('in_india', true)
+    .is('closed_at', null)
   for (const t of searchTokens(input.q)) query = query.or(`title.ilike.%${t}%,company_name.ilike.%${t}%`)
   const city = searchTokens(input.city)
   if (city.length) query = query.ilike('city', `%${city.join(' ')}%`)
@@ -207,8 +211,8 @@ export async function readTicker(): Promise<{ last24h: number; latest: { id: str
     const db = createServiceClient()
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString()
     const [recent, latest] = await Promise.all([
-      db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).gte('first_seen_at', since),
-      db.from('roles').select('id, title, company_name, city').eq('in_india', true).order('posted_at', { ascending: false, nullsFirst: false }).limit(6),
+      db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).is('closed_at', null).gte('first_seen_at', since),
+      db.from('roles').select('id, title, company_name, city').eq('in_india', true).is('closed_at', null).order('posted_at', { ascending: false, nullsFirst: false }).limit(6),
     ])
     if (recent.error || latest.error || !latest.data?.length) return null
     return {
@@ -264,8 +268,8 @@ async function readListing(o: { role?: string; city?: City | null; remote?: bool
     return out
   }
   const [count, sample] = await Promise.all([
-    scope(db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true)),
-    scope(db.from('roles').select('id, title, company_name, city, apply_url, posted_at, first_seen_at').eq('in_india', true)).order('posted_at', { ascending: false, nullsFirst: false }).order('first_seen_at', { ascending: false }).order('id').limit(300),
+    scope(db.from('roles').select('id', { count: 'exact', head: true }).eq('in_india', true).is('closed_at', null)),
+    scope(db.from('roles').select('id, title, company_name, city, apply_url, posted_at, first_seen_at').eq('in_india', true).is('closed_at', null)).order('posted_at', { ascending: false, nullsFirst: false }).order('first_seen_at', { ascending: false }).order('id').limit(300),
   ])
   const rows = (sample.error ? [] : (sample.data ?? [])) as unknown as { id: string; title: string; company_name: string | null; city: string | null; apply_url: string; posted_at: string | null; first_seen_at: string }[]
   const tally = (keys: (r: (typeof rows)[number]) => string[]) => {
@@ -292,7 +296,7 @@ export async function listSeoPagesForSitemap(): Promise<{ roles: string[]; pairs
   const db = createServiceClient()
   const rows: { title: string; city: string | null }[] = []
   for (let from = 0; from < 5000; from += 1000) {
-    const { data, error } = await db.from('roles').select('title, city').eq('in_india', true).order('first_seen_at', { ascending: false }).order('id').range(from, from + 999)
+    const { data, error } = await db.from('roles').select('title, city').eq('in_india', true).is('closed_at', null).order('first_seen_at', { ascending: false }).order('id').range(from, from + 999)
     if (error || !data) break
     rows.push(...(data as unknown as { title: string; city: string | null }[]))
     if (data.length < 1000) break

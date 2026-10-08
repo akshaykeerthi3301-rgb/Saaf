@@ -191,6 +191,9 @@ export async function scoreAgainstIndex(
       max_rows: cap,
     })
     .select(COLUMNS)
+    // A role the employer has taken down (ingest stamps closed_at, 0035) is not an opportunity. Filtered after the
+    // ranking, so a closed role still takes a slot of the cap until roles_for_candidates() learns to skip it.
+    .is('closed_at', null)
 
   // The RPC's returned shape is a union of row and row[] as far as the client's
   // static inference goes — it cannot know a SETOF function returns many. One
@@ -215,6 +218,7 @@ export async function scoreAgainstIndex(
             max_rows: cap,
           })
           .select(COLUMNS)
+          .is('closed_at', null)
       }),
     )
 
@@ -241,7 +245,7 @@ export async function scoreAgainstIndex(
       'once the index exceeds the cap.',
     )
 
-    const query = db.from('roles').select(COLUMNS).eq('in_india', true)
+    const query = db.from('roles').select(COLUMNS).eq('in_india', true).is('closed_at', null)
     // The ternary picks the tsquery SHAPE only. Ordering and the cap are
     // applied to whichever branch wins, deliberately outside it: they used to
     // chain off the else-expression alone, so an `open_to_adjacent` candidate

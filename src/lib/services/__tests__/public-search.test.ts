@@ -6,7 +6,7 @@ const h = vi.hoisted(() => ({ calls: [] as [string, unknown[]][], rows: [] as un
 vi.mock('@/lib/supabase/service', () => ({
   createServiceClient: () => {
     const chain: Record<string, unknown> = {}
-    for (const m of ['select', 'eq', 'or', 'ilike', 'order', 'range', 'gte', 'limit']) {
+    for (const m of ['select', 'eq', 'is', 'or', 'ilike', 'order', 'range', 'gte', 'limit']) {
       chain[m] = (...a: unknown[]) => { h.calls.push([m, a]); return chain }
     }
     chain.then = (res: (v: unknown) => unknown) => res({ data: h.rows, error: h.error, count: h.count })
@@ -27,6 +27,10 @@ describe('searchPublicJobs', () => {
     expect(called('eq')).toContainEqual(['in_india', true])
     expect(called('or')).toEqual([['title.ilike.%product%,company_name.ilike.%product%'], ['title.ilike.%analyst%,company_name.ilike.%analyst%']])
     expect(called('ilike')).toEqual([['city', '%pune%']])
+  })
+  it('never returns a posting the employer has taken down', async () => {
+    await searchPublicJobs({ q: 'analyst' })
+    expect(called('is')).toEqual([['closed_at', null]])
   })
   it('never lets typed punctuation into a filter', async () => {
     await searchPublicJobs({ q: 'x),title.ilike.%,id.eq.1' })
@@ -58,5 +62,10 @@ describe('readTicker', () => {
   it('is null when nothing could be read, so the landing page simply omits it', async () => {
     h.rows = []
     expect(await readTicker()).toBeNull()
+  })
+  it('counts and lists only roles the employer still lists', async () => {
+    h.rows = [row(1)]
+    await readTicker()
+    expect(called('is')).toEqual([['closed_at', null], ['closed_at', null]])
   })
 })
