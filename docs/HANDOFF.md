@@ -2,9 +2,15 @@
 
 ---
 
-## ✅🔶 2026-10-09 (night) — the résumé dead end is fixed and the styling drawer is LIVE; the rest of the Jobright tailor screen is next
+## ✅🔶 2026-10-09 (night) — the résumé dead end is fixed, the styling drawer and the new tailor result screen are LIVE (`dpl_H9U9nyMLQFFhdeDhNxWXTrME7RLx`)
 
 **Live:** (1) the résumé you upload at sign-up is now kept (its text, not the file) and made your primary résumé; with none saved, "Customize your résumé" shows an upload box in place and carries on to step 1 for the same job — nobody is sent to the ATS checker. (2) **Export résumé** (`dpl_EFdewEWqAWgafnLLPEBTnW5Lwbwo`): template cards, page size, accent colour, fonts and sizes, date format, bullet, divider, alignment, education order, skills layout, spacing sliders, justify, reset, a live page with a page count, Word and PDF. I opened it on the live site on your tailored résumé; I did not download a file.
+
+**Also live (TASK-229): the tailor result screen is the Jobright one** — score gauge and "your score jumped from X to Y", "See what's changed", tabs AI Rewrite / Editor / Style, and your résumé as a page with the changed lines marked, a file-name box, Fit to one page, Save, Download résumé, Apply now. I ran it end to end on the live site in your Chrome.
+
+**BLOCKERS — things I cannot fix by writing code:**
+- **The AI writer is on free tiers and is intermittently busy.** On the live site one request answered "the writing model is busy right now" a few minutes after another succeeded; the logs show the providers returning errors during a full rewrite. Jobright shows "Unlimited". To match it you need a paid key for one AI provider (I will measure the cost per tailor first — say which provider you prefer, or "choose for me").
+- **I cannot sign in as a new customer.** So the new-customer path (sign-up → upload → feed → customise) is verified by reading the code and by tests, not by walking it. You are the only tester for it.
 
 **Only you can do:**
 1. **Open your NEW account on jobinko.in, open a job, press Customize your résumé.** You should see an upload box, not the ATS checker. Upload your résumé there and carry on to the end; tell me the first thing that breaks. (Your new account signed up before this fix, so it has no saved résumé yet.)
