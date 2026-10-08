@@ -6,6 +6,7 @@ import {
   afterDone, afterReplay, afterShown, afterSnooze, chooseNudge, parseNudgeState, type NudgeSpec, type NudgeState,
 } from '@/lib/nudges'
 import { FeedTour } from '@/components/features/feed-tour'
+import { InstallAppCard, InstallExtensionCard } from '@/components/features/install-nudges'
 
 /**
  * Mounts the popup governor (src/lib/nudges.ts) for the signed-in app and owns the
@@ -19,7 +20,23 @@ import { FeedTour } from '@/components/features/feed-tour'
  * decides for itself that it may appear.
  */
 
-export const NUDGES: NudgeSpec[] = [{ id: 'tour:feed', priority: 1, paths: /^\/today(\/|$)/, requires: ['search', 'card'] }]
+/** Where the extension can be installed from. Unset until it is published — the nudge then never appears. */
+export const EXTENSION_URL = process.env.NEXT_PUBLIC_EXTENSION_URL ?? ''
+/** Set by the extension bridge when the extension answered, so the nudge is not shown to someone who has it. */
+export const EXTENSION_SEEN_KEY = 'saaf.extension.seen'
+
+/** The browser's own "this site can be installed" event, kept until the nudge uses it. */
+let installEvent: (Event & { prompt: () => Promise<void> }) | null = null
+const installed = () => window.matchMedia?.('(display-mode: standalone)').matches === true
+const extensionSeen = () => { try { return !!window.localStorage.getItem(EXTENSION_SEEN_KEY) } catch { return true } }
+
+export const NUDGES: NudgeSpec[] = [
+  { id: 'tour:feed', priority: 1, paths: /^\/today(\/|$)/, requires: ['search', 'card'] },
+  // After the tour, never with it (the governor shows one at a time, 12 hours apart). Dormant until an install URL exists.
+  { id: 'install:extension', priority: 2, paths: /^\/(today|applications)(\/|$)/, snoozeHours: 72, when: () => !!EXTENSION_URL && !extensionSeen() },
+  // Only when the browser itself says the site is installable and it is not already installed.
+  { id: 'install:app', priority: 3, paths: /^\/(today|applications)(\/|$)/, snoozeHours: 72, when: () => installEvent !== null && !installed() },
+]
 
 /** How long to wait for the page a nudge points at to finish drawing. */
 const READY_POLL_MS = 400
@@ -76,6 +93,13 @@ export function NudgeHost() {
   }, [path, show])
 
   useEffect(() => {
+    // The browser fires this when the site is installable; hold it so the nudge can use it, and look again.
+    const onPrompt = (e: Event) => { e.preventDefault(); installEvent = e as typeof installEvent; window.dispatchEvent(new Event(NUDGE_EVENT)) }
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+  }, [])
+
+  useEffect(() => {
     // A short delay, then wait for the page itself.
     const t = setTimeout(evaluate, 800)
     window.addEventListener(NUDGE_EVENT, evaluate)
@@ -95,5 +119,14 @@ export function NudgeHost() {
   }
 
   if (active === 'tour:feed') return <FeedTour onDone={() => finish('tour:feed')} onLater={() => later('tour:feed')} />
+  if (active === 'install:extension') return <InstallExtensionCard href={EXTENSION_URL} onLater={() => later('install:extension')} onNever={() => finish('install:extension')} />
+  if (active === 'install:app') {
+    return (
+      <InstallAppCard
+        onInstall={async () => { const ev = installEvent; installEvent = null; finish('install:app'); try { await ev?.prompt() } catch { /* the browser declined to show it */ } }}
+        onLater={() => later('install:app')} onNever={() => finish('install:app')}
+      />
+    )
+  }
   return null
 }

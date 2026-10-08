@@ -32,6 +32,8 @@ export function ExtensionBridge() {
       try {
         const hello = await ask<{ ok: boolean }>({ type: 'saaf:hello' })
         if (!hello?.ok) return
+        // Remembered on this device so the install nudge never asks someone who already has it.
+        try { window.localStorage.setItem('saaf.extension.seen', String(Date.now())) } catch { /* no storage: the nudge stays off too */ }
 
         const queued = await ask<{ ok: boolean; items: Queued[] }>({ type: 'saaf:drain' })
         if (queued?.ok && queued.items.length) {

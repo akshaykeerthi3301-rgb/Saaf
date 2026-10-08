@@ -32,6 +32,12 @@ export type NudgeSpec = {
   requires?: string[]
   /** Pause after "Not now". Default 24 hours. */
   snoozeHours?: number
+  /**
+   * A condition of the moment the host can evaluate and the pure rules cannot (the browser
+   * says the app is installable; the extension was not seen). Evaluated only when everything
+   * else already allows the nudge. Absent = no extra condition.
+   */
+  when?: () => boolean
 }
 
 export type NudgeState = {
@@ -76,7 +82,7 @@ export function parseNudgeState(raw: string | null): NudgeState {
 export function chooseNudge(specs: NudgeSpec[], state: NudgeState, now: number, path: string): NudgeSpec | null {
   if (state.lastShownAt !== null && now - state.lastShownAt < QUIET_MS) return null
   const open = specs
-    .filter((s) => s.paths.test(path) && !state.done[s.id] && (state.snoozedUntil[s.id] ?? 0) <= now)
+    .filter((s) => s.paths.test(path) && !state.done[s.id] && (state.snoozedUntil[s.id] ?? 0) <= now && (s.when?.() ?? true))
     .sort((a, b) => a.priority - b.priority)
   return open[0] ?? null
 }

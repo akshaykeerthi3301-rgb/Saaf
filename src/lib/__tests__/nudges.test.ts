@@ -113,3 +113,23 @@ describe('parseNudgeState — storage is untrusted', () => {
     expect(p.lastShownAt).toBeNull()
   })
 })
+
+describe('a nudge with a condition of the moment (TASK-201)', () => {
+  const now = 1_000_000_000_000
+  const spec = (when: () => boolean): NudgeSpec => ({ id: 'install:app', priority: 3, paths: /^\/today/, when })
+  it('is offered only while its condition holds', () => {
+    expect(chooseNudge([spec(() => false)], EMPTY_NUDGE_STATE, now, '/today')).toBeNull()
+    expect(chooseNudge([spec(() => true)], EMPTY_NUDGE_STATE, now, '/today')?.id).toBe('install:app')
+  })
+  it('falls through to the next nudge when the first one\'s condition fails', () => {
+    const a = { ...spec(() => false), id: 'a', priority: 1 }
+    const b = { ...spec(() => true), id: 'b', priority: 2 }
+    expect(chooseNudge([a, b], EMPTY_NUDGE_STATE, now, '/today')?.id).toBe('b')
+  })
+  it('is never evaluated for a nudge that is already done — no side effects for a settled question', () => {
+    let calls = 0
+    const s = spec(() => { calls++; return true })
+    chooseNudge([s], { ...EMPTY_NUDGE_STATE, done: { [s.id]: now } }, now, '/today')
+    expect(calls).toBe(0)
+  })
+})

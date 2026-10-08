@@ -86,3 +86,19 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
     OG_SIZE,
   )
 }
+
+/**
+ * The installable app's home-screen icon (src/app/icons/[size]/route.tsx), drawn here —
+ * the one satori file allowed to hold literal colours — so no binary has to be checked in
+ * and no route file carries a hex. The gradient is the brand's own indigo → violet.
+ */
+export function appIcon(size: number) {
+  return new ImageResponse(
+    (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+        <div style={{ color: '#FFFFFF', fontSize: size * 0.62, fontWeight: 800, fontFamily: 'sans-serif', lineHeight: 1 }}>S</div>
+      </div>
+    ),
+    { width: size, height: size },
+  )
+}
