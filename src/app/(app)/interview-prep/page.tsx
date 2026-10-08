@@ -154,7 +154,7 @@ export default async function InterviewPrepPage({
           <PrepBody me={ctx.context.me} role={ctx.context.role} roleId={selected.id} />
         )}
         {selected.company ? (
-          <QuestionBank company={displayEmployer(selected.company)} roleTitle={selected.title} questions={bank.questions} stored={bank.stored} />
+          <QuestionBank company={displayEmployer(selected.company)} roleTitle={selected.title} questions={bank.questions} stored={bank.stored} locked={'locked' in bank && bank.locked === true} />
         ) : null}
       </div>
     </AppShell>

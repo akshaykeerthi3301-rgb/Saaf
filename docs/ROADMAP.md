@@ -984,7 +984,8 @@ From `docs/jobright-map/11-saaf-comparison.local.md`: the claimable MISSING/PART
 - [ ] **TASK-194** — Partner-style questionnaire for custom ATS questions · F-705
 
 ### 18e — Interview and coaching
-- [ ] **TASK-195** — Interview access rules · F-1003 · free by default; per-company and trial passes configurable once plans exist.
+- [x] **TASK-195** — Interview access rules · F-1003 · free by default; per-company and trial passes configurable once plans exist.
+  Notes (2026-10-08, `phase-18`, not deployed): built as the rules, enforced nowhere — because nothing is for sale. `src/lib/entitlements.ts` says who may open an employer's interview questions: **today the shipped rule is 'all' and every candidate is 'free', so no one is ever turned away** (the locked decision 'never gate users out' still holds, and a test pins that the default is open). It also holds, tested with hypothetical rules, the three ways in once the default is flipped to 'plan': a plan that includes the bank; a company the founder has opened to everyone (matched by the normalised name, exactly — 'Razorpay Payments Labs' is not 'Razorpay'); and a time-boxed trial pass that ends exactly when it says and reads as no pass at all if its date is malformed. The question-bank service now asks `interviewAccess` before it lists, and the screen has the sentence ready for a locked company ('part of a plan, or a pass — you can still add the questions you were asked'); `userPlan` answers 'free' for everyone until TASK-170 decides what a plan is. Per-company and trial rules are configuration, not code, so turning them on is one line. **Verified:** 5 tests; typecheck. **Not verified:** a locked screen in the browser (no rule locks anything).
 - [ ] **TASK-196** — Coaching: own booking, availability, webinars · F-1004, F-1005, F-1006 · ⚑ the founder adds coaches and hosts sessions.
 
 ### 18f — Money and growth (all after TASK-170's decision)

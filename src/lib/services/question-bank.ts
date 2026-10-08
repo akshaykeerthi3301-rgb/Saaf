@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { normaliseCompany } from '@/lib/company-name'
+import { interviewAccess, type Plan } from '@/lib/entitlements'
 
 /**
  * Interview questions candidates report being asked (migration 0031). Jobright
@@ -12,10 +13,20 @@ export type BankQuestion = { id: string; question: string; kind: string; roleTit
 export const QUESTION_KINDS = ['behavioural', 'technical', 'case', 'hr', 'other'] as const
 export type QuestionKind = (typeof QUESTION_KINDS)[number]
 
-/** Questions reported for this company, newest first. `stored: false` when 0031 is not applied. */
-export async function listCompanyQuestions(userId: string, company: string): Promise<{ questions: BankQuestion[]; stored: boolean }> {
+/**
+ * Which plan a candidate is on. Nobody is on a paid plan because none exists (TASK-170),
+ * so everyone is 'free' — and with the shipped rules ('all') that gates nothing.
+ */
+export async function userPlan(userId: string): Promise<{ plan: Plan; trialUntil: string | null }> {
+  void userId
+  return { plan: 'free', trialUntil: null }
+}
+
+/** Questions reported for this company, newest first. `stored: false` when 0031 is not applied; `locked` when the access rules say no. */
+export async function listCompanyQuestions(userId: string, company: string): Promise<{ questions: BankQuestion[]; stored: boolean; locked?: boolean }> {
   const norm = normaliseCompany(company)
   if (!norm) return { questions: [], stored: true }
+  if (!interviewAccess(await userPlan(userId), company).allowed) return { questions: [], stored: true, locked: true }
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('interview_questions')

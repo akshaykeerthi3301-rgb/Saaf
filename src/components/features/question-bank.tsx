@@ -9,7 +9,7 @@ import type { BankQuestion } from '@/lib/services/question-bank'
 const KINDS: [string, string][] = [['behavioural', 'Behavioural'], ['technical', 'Technical'], ['case', 'Case'], ['hr', 'HR'], ['other', 'Other']]
 
 /** Questions other candidates reported being asked at this company, and a form to add yours. */
-export function QuestionBank({ company, roleTitle, questions, stored }: { company: string; roleTitle: string; questions: BankQuestion[]; stored: boolean }) {
+export function QuestionBank({ company, roleTitle, questions, stored, locked = false }: { company: string; roleTitle: string; questions: BankQuestion[]; stored: boolean; locked?: boolean }) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [open, setOpen] = useState(false)
@@ -48,6 +48,7 @@ export function QuestionBank({ company, roleTitle, questions, stored }: { compan
         </p>
       )}
       {!stored ? <p className="mt-2 text-xs text-muted-foreground">The question bank needs a database update (0031) that has not been applied yet.</p> : null}
+      {locked ? <p role="note" className="mt-2 text-xs leading-5 text-muted-foreground">The questions for {company} are part of a plan, or a pass. You can still add the questions you were asked.</p> : null}
 
       {!open ? (
         <button type="button" onClick={() => setOpen(true)} className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
