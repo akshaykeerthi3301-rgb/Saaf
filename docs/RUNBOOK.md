@@ -50,6 +50,17 @@ to `/` — which looks like the app is broken rather than misconfigured.
 
 ---
 
+## Applying database updates
+
+Migrations are applied by hand. **Use `scripts/apply-migrations.sh`, not the dashboard's SQL editor** — on 2026-10-08 the editor sent only the first part of `0034` and failed with "unterminated dollar-quoted string" although the file is valid (tested: all 48 files apply, in order, to an empty Postgres 16).
+
+```bash
+DATABASE_URL='postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres' \
+  scripts/apply-migrations.sh 0034 0049     # first and (optionally) last number
+```
+
+Use Supabase → Connect → **Session pooler** (not Transaction). The URL holds the database password: type it into your own terminal only. Each file runs in one transaction; the first error stops the run and leaves that file unapplied. Running a file that is already applied stops at the first object that exists (most use `if not exists`; the policies do not). Then `npm run verify:rls`.
+
 ## Vercel
 
 Deployed with the **CLI**, not the GitHub integration — this GitHub account
