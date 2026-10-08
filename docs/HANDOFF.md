@@ -2,6 +2,17 @@
 
 ---
 
+## ✅ 2026-10-09 — the new landing, the Jobright-style Jobs feed and résumé fonts/colours are LIVE (`dpl_3DD18NHAguFEog8uKcdgHBdLKirS`)
+
+**Live and checked in your Chrome:** the landing is short; `/tools`, `/tools/paste-jd`, `/tools/resume-keywords` are gone (404); `/tools/ats-checker` stays. `/today` is the new layout: one top bar, one row of filters, flat cards with a score on the right, a quiet sidebar; click a job and it opens in the middle with **Customize your résumé / Build a cover letter / Analyze how well you fit** on the right. Résumé styles now have a font and a colour.
+
+**Not checked by me on the live site:** the cover-letter and fit panels (seen on my machine only), the phone layout (my machine only), and a downloaded Word/PDF file (the content is covered by a test; I did not open one).
+
+**Only you can do:**
+1. **Look at `/today`, one job, and the three tools, and tell me the first thing that is still not Jobright.** I will fix from your list; the known gaps are in ROADMAP TASK-224 ("Not done").
+2. **Update your profile (`/profile`)** — it still says "icici bank · 2 yrs", which is why cover letters say "As manager at icici bank, I have spent 2 years" and why the Skills bar reads 0%. It is your data, so I did not change it.
+3. The earlier open items are unchanged: do one real email sign-in from a second inbox; brand Google's consent screen; decide the four held SmartRecruiters boards and the paid database plan; load extension 0.7.0.
+
 ## ✅🔶 2026-10-08 (night) — jobinko.in is LIVE as the main address; email sign-in still needs you
 
 **Live and checked** (`dpl_C5BRhVSXKGHguNwRCHrGQF6sezX8`): https://jobinko.in serves the site over HTTPS; `www.jobinko.in` redirects to it; `http` redirects to `https`; page addresses, sitemap and robots all say `jobinko.in`; the old `saaf-ten.vercel.app` still works. Hostinger DNS `A @` now points at Vercel (76.76.21.21). Supabase sign-in settings accept the new address (Site URL = `https://jobinko.in`).
