@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, Loader2 } from 'lucide-react'
 import { getCompanyFacts, type CompanyFactsResult } from '@/app/actions/company-facts'
-import type { CompanyFacts, CompanyNews } from '@/lib/services/company-facts'
+import { formatRevenue, type CompanyFacts, type CompanyNews } from '@/lib/services/company-facts'
 
 /**
  * Company facts from open data (Wikidata) and news that mentions the company
@@ -25,7 +25,11 @@ export function CompanyFactsView({ facts, news }: { facts: CompanyFacts | null; 
     ['Employees', facts.employees ? facts.employees.toLocaleString('en-IN') : ''],
     ['Industry', facts.industries.join(', ')],
     ['CEO', facts.ceo ?? ''],
-    ['Stock market', facts.publiclyListed ? 'Publicly listed' : ''],
+    ['Chair', facts.chair ?? ''],
+    ['Founders', facts.founders.join(', ')],
+    ['Part of', facts.parent ?? ''],
+    ['Revenue', facts.revenue ? `${formatRevenue(facts.revenue)}${facts.revenue.year ? ` (${facts.revenue.year})` : ''}` : ''],
+    ['Stock market', facts.publiclyListed ? (facts.exchange ? `Listed on ${facts.exchange}` : 'Publicly listed') : ''],
   ].filter(([, v]) => v) as [string, string][]
   return (
     <div className="mt-4 rounded-xl border border-border bg-background/40 p-3">
@@ -68,7 +72,7 @@ export function CompanyFactsView({ facts, news }: { facts: CompanyFacts | null; 
         </div>
       ) : null}
       <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
-        Facts from <a href={facts.wikidataUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Wikidata</a>, the open, community-edited database behind Wikipedia — check the link if something looks out of date.{news.length ? ' News via GDELT.' : ''} Funding is not shown: no free source carries it reliably.
+        Facts from <a href={facts.wikidataUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Wikidata</a>, the open, community-edited database behind Wikipedia — check the link if something looks out of date.{news.length ? ' News via GDELT.' : ''} Funding rounds, investors and employee ratings are not shown: no free source carries them reliably.
       </p>
     </div>
   )

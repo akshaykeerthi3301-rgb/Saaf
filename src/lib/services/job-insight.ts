@@ -7,6 +7,7 @@ import { displayCity, displayEmployer } from '@/lib/display-names'
 import { findStatedPay } from '@/lib/stated-pay'
 import { payFromRow, ROLE_FACT_COLUMNS, type RoleFactsRow } from '@/lib/role-facts'
 import { structureJob, SECTION_LABEL, type SectionKey } from '@/lib/job-sections'
+import { hiringSignals } from '@/lib/hiring-signals'
 import type { ScoreBreakdown } from '@/match/score'
 
 /**
@@ -26,6 +27,10 @@ export type CompanySnapshot = {
   name: string
   openRoles: number
   cities: string[]
+  /** Roles this employer's board first showed us in the last 30 days — first-party, counted by us. `atLeast` when the sample was capped. */
+  newLast30: { count: number; atLeast: boolean }
+  /** The functions it is hiring for, from the (up to 200) most recent roles we hold. */
+  functions: { name: string; count: number }[]
   /** The applicant-tracking system the posting lives on, from its URL. */
   ats: string | null
   culture: { tag: string; evidence: string }[]
@@ -124,14 +129,17 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
   const { data: siblings, count } = companyName
     ? await supabase
         .from('roles')
-        .select('city', { count: 'exact' })
+        .select('city, function, first_seen_at', { count: 'exact' })
         .eq('company_name', companyName)
         .eq('in_india', true)
+        .order('first_seen_at', { ascending: false })
         .limit(200)
     : { data: [], count: 0 }
+  const siblingRows = (siblings ?? []) as { city: string | null; function: string | null; first_seen_at: string }[]
   const cities = [
-    ...new Set(((siblings ?? []) as { city: string | null }[]).map((s) => displayCity(s.city)).filter(Boolean)),
+    ...new Set(siblingRows.map((s) => displayCity(s.city)).filter(Boolean)),
   ].slice(0, 6) as string[]
+  const hiring = hiringSignals(siblingRows)
 
   const analysis = analyseFit({
     skills: p?.skills ?? [],
@@ -190,6 +198,8 @@ export async function readJobInsight(userId: string, roleId: string): Promise<Jo
       name: displayEmployer(r.company_name),
       openRoles: count ?? 0,
       cities,
+      newLast30: hiring.newLast30,
+      functions: hiring.functions,
       ats: atsOf(r.apply_url),
       culture: cultureTags(r.description ?? ''),
     },

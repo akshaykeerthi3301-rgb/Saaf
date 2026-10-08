@@ -301,6 +301,16 @@ function CompanyTab({ j }: { j: JobInsight }) {
             Hiring in <span className="text-primary">{j.snapshot.cities.join(', ')}</span>
           </p>
         ) : null}
+        <p className="mt-1 text-xs leading-5 text-muted-foreground" data-testid="hiring-signals">
+          {j.snapshot.newLast30.count > 0 ? (
+            <>
+              <span className="text-primary">{j.snapshot.newLast30.atLeast ? 'At least ' : ''}{j.snapshot.newLast30.count.toLocaleString('en-IN')}</span> of its roles first appeared in the last 30 days
+            </>
+          ) : (
+            'No new roles in the last 30 days'
+          )}
+          {j.snapshot.functions.length ? <> · mostly <span className="text-primary">{j.snapshot.functions.map((f) => `${f.name} (${f.count})`).join(', ')}</span></> : null}.
+        </p>
         {j.snapshot.culture.length ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {j.snapshot.culture.map((c) => (

@@ -41,6 +41,14 @@ export type CompanyFacts = {
   ceo: string | null
   publiclyListed: boolean
   logoUrl: string | null
+  /** The stock exchange it is listed on, when it is (Wikidata P414). */
+  exchange: string | null
+  founders: string[]
+  chair: string | null
+  /** Parent organisation, when it is part of a larger group. */
+  parent: string | null
+  /** The latest annual revenue Wikidata holds, with its year. USD, EUR, GBP or INR only. */
+  revenue: { amount: number; currency: 'USD' | 'EUR' | 'GBP' | 'INR'; year: number | null } | null
 }
 
 export type CompanyNews = { title: string; url: string; source: string; date: string }[]
@@ -76,6 +84,46 @@ async function getJson<T>(url: string): Promise<T | null> {
 }
 
 const values = (e: Entity, p: string): unknown[] => (e.claims?.[p] ?? []).filter((c) => c.rank !== 'deprecated').map((c) => c.mainsnak?.datavalue?.value).filter((v) => v !== undefined)
+
+/** Wikidata's currency items for the four currencies a card can state honestly. */
+const CURRENCY_ITEMS: Record<string, 'USD' | 'EUR' | 'GBP' | 'INR'> = { Q4917: 'USD', Q4916: 'EUR', Q25224: 'GBP', Q80524: 'INR' }
+
+/**
+ * The most recent annual revenue claim, or null. Each claim carries an amount, a
+ * unit (the currency item) and a "point in time" qualifier (P585); the latest
+ * dated one wins, and a claim in any other currency, or with no date at all when
+ * a dated one exists, is not used. A figure with no year is shown without one.
+ * Exported for tests.
+ */
+export function latestRevenue(claims: Claim[] | undefined): CompanyFacts['revenue'] {
+  type Quantity = { amount?: string; unit?: string }
+  type Time = { time?: string }
+  const rows = (claims ?? [])
+    .filter((c) => c.rank !== 'deprecated')
+    .map((c) => {
+      const v = c.mainsnak?.datavalue?.value as Quantity | undefined
+      const unit = v?.unit?.split('/').pop() ?? ''
+      const when = ((c.qualifiers as Record<string, { datavalue?: { value?: Time } }[]> | undefined)?.P585?.[0]?.datavalue?.value?.time) ?? ''
+      const year = when ? Number(when.slice(1, 5)) : null
+      const amount = Number(v?.amount)
+      return { amount, currency: CURRENCY_ITEMS[unit], year: year && Number.isFinite(year) ? year : null }
+    })
+    .filter((r): r is { amount: number; currency: 'USD' | 'EUR' | 'GBP' | 'INR'; year: number | null } => Number.isFinite(r.amount) && r.amount > 0 && !!r.currency)
+  if (!rows.length) return null
+  return rows.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0]
+}
+
+/** ₹1,200 crore / $4.5B / €900M — the way each currency is actually written. */
+export function formatRevenue(r: NonNullable<CompanyFacts['revenue']>): string {
+  const { amount, currency } = r
+  const short = (n: number, units: [number, string][]) => {
+    for (const [size, label] of units) if (n >= size) return `${(n / size).toFixed(n / size >= 100 ? 0 : 1).replace(/\.0$/, '')}${label}`
+    return String(Math.round(n))
+  }
+  if (currency === 'INR') return amount >= 1e7 ? `₹${short(amount, [[1e7, ' crore']])}` : `₹${Math.round(amount).toLocaleString('en-IN')}`
+  const sym = { USD: '$', EUR: '€', GBP: '£' }[currency]
+  return `${sym}${short(amount, [[1e9, 'B'], [1e6, 'M'], [1e3, 'K']])}`
+}
 
 /**
  * The CURRENT value of a property that changes over time (CEO, headquarters,
@@ -149,7 +197,11 @@ export async function readCompanyFacts(name: string): Promise<CompanyFacts | nul
   // One more call for the labels of the things the facts point at.
   const hq = currentId(e, 'P159')
   const ceo = currentId(e, 'P169')
-  const refs = [...(hq ? [hq] : []), ...ids(e, 'P452').slice(0, 3), ...(ceo ? [ceo] : [])]
+  const chair = currentId(e, 'P488')
+  const parent = currentId(e, 'P749')
+  const exchange = ids(e, 'P414')[0]
+  const founders = ids(e, 'P112').slice(0, 3)
+  const refs = [...new Set([...(hq ? [hq] : []), ...ids(e, 'P452').slice(0, 3), ...(ceo ? [ceo] : []), ...(chair ? [chair] : []), ...(parent ? [parent] : []), ...(exchange ? [exchange] : []), ...founders])]
   const labels = refs.length
     ? await getJson<{ entities?: Record<string, Entity> }>(
         `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${refs.join('|')}&props=labels&languages=en|mul&format=json`,
@@ -176,6 +228,11 @@ export async function readCompanyFacts(name: string): Promise<CompanyFacts | nul
     ceo: label(ceo),
     publiclyListed: (e.claims?.P414 ?? []).length > 0,
     logoUrl: logo ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logo)}?width=96` : null,
+    exchange: label(exchange),
+    founders: founders.map(label).filter((x): x is string => Boolean(x)),
+    chair: label(chair),
+    parent: label(parent),
+    revenue: latestRevenue(e.claims?.P2139),
   }
 }
 

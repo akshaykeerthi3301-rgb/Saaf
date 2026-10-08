@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isBusiness, normaliseCompany, pickCompany } from '../company-facts'
+import { formatRevenue, isBusiness, latestRevenue, normaliseCompany, pickCompany } from '../company-facts'
 
 const ent = (id: string, label: string, p31: string[], extra: Record<string, unknown[]> = {}, aliases: string[] = [], links = 0) => ({
   id,
@@ -63,5 +63,28 @@ describe('normaliseCompany', () => {
   it('drops suffixes, punctuation and case', () => {
     expect(normaliseCompany('Tata Consultancy Services Ltd.')).toBe('tataconsultancyservices')
     expect(normaliseCompany('Groww India Pvt Ltd')).toBe('groww')
+  })
+})
+
+describe('latestRevenue', () => {
+  const claim = (amount: string, unit: string, year?: number, rank: 'normal' | 'deprecated' = 'normal') => ({
+    rank,
+    mainsnak: { datavalue: { value: { amount, unit: `http://www.wikidata.org/entity/${unit}` } } },
+    qualifiers: year ? { P585: [{ datavalue: { value: { time: `+${year}-12-31T00:00:00Z` } } }] } : undefined,
+  })
+  it('takes the most recent dated figure, in a currency we can state', () => {
+    expect(latestRevenue([claim('+3000000000', 'Q4917', 2022), claim('+4500000000', 'Q4917', 2024), claim('+4000000000', 'Q4917', 2023)])).toEqual({ amount: 4_500_000_000, currency: 'USD', year: 2024 })
+  })
+  it('ignores a deprecated claim, another currency, a zero and junk', () => {
+    expect(latestRevenue([claim('+9000000000', 'Q4917', 2025, 'deprecated'), claim('+5', 'Q99999', 2024), claim('+0', 'Q4917', 2024), claim('x', 'Q4917', 2024)])).toBeNull()
+  })
+  it('says nothing for nothing', () => {
+    expect(latestRevenue(undefined)).toBeNull()
+    expect(latestRevenue([])).toBeNull()
+  })
+  it('writes each currency the way it is written', () => {
+    expect(formatRevenue({ amount: 4_500_000_000, currency: 'USD', year: 2024 })).toBe('$4.5B')
+    expect(formatRevenue({ amount: 900_000_000, currency: 'EUR', year: null })).toBe('€900M')
+    expect(formatRevenue({ amount: 12_000_000_000, currency: 'INR', year: 2024 })).toBe('₹1200 crore')
   })
 })
