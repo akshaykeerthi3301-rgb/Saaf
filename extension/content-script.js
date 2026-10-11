@@ -820,7 +820,18 @@ async function openAutofillModal(root, state, tab = 'personal') {
   const close = () => ov.remove()
   $('.afm-x').addEventListener('click', close)
   ov.addEventListener('mousedown', (e) => { if (e.target === ov) close() })
-  update.addEventListener('click', async () => { if (!update.disabled && onUpdate) await onUpdate() })
+  // While a save is under way the form is locked and the button says so: after a save the pane is redrawn from the account, and
+  // anything typed in that window would be lost.
+  update.addEventListener('click', async () => {
+    if (update.disabled || !onUpdate) return
+    const label = update.textContent
+    update.disabled = true; update.textContent = 'Saving…'
+    pane.style.pointerEvents = 'none'; pane.style.opacity = '0.6'
+    try { await onUpdate() } finally {
+      pane.style.pointerEvents = ''; pane.style.opacity = ''
+      update.textContent = label
+    }
+  })
 
   const store = await chrome.storage.local.get(['profile', 'accountPassword', 'accountEmail', 'accountAutoAgree'])
   const profile = store.profile || {}

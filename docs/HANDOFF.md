@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 (last) — extension 0.18.2 is already in your extension folder
+
+I copied the 0.18.2 files into `~/Downloads/jobinko-extension 2` (the folder your browser loads). **One click left for you:** open the extensions page, find Jobinko, press the round **reload ↻** arrow (or restart the browser). I cannot press it — my desktop tool can only look at browsers, and I do not get around that.
+Then, on the Alteryx job: press **Autofill** → the centred pop-up appears → **Sign-up Information** → save your password (you type it) → **Update** → press **Account creation & Autofill**. Creating the account and typing the password are yours; send me a screenshot of what the page does after.
+
+---
+
 ## 🔶 2026-10-12 (fix) — extension 0.18.1: the pop-ups were drawn off-screen; fixed
 
 **What was wrong:** since 0.16.0 every pop-up (Your autofill information, résumé picker, cover letter) opened as a narrow strip pushed off the left edge — my error: a style rule gave them the panel's width. **Fixed in 0.18.1.** Measured against the screen with the panel on the right and on the left, at two screen sizes, and on the real Alteryx Create Account page; screenshots read.
