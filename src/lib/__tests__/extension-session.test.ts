@@ -33,7 +33,7 @@ describe('the extension id', () => {
 describe('requireExtensionUser', () => {
   it('refuses a web page: wrong or missing Origin, or no extension header — even with a signed-in cookie', async () => {
     auth.user = { id: 'u1', email: 'a@b.c' }
-    const refused = [
+    const refused: Record<string, string>[] = [
       {}, { 'x-jobinko-extension': '1' }, { origin: EXTENSION_ORIGIN },
       { origin: 'https://evil.example', 'x-jobinko-extension': '1' },
       { origin: 'chrome-extension://someotherextensionidxxxxxxxxxxxx', 'x-jobinko-extension': '1' },
