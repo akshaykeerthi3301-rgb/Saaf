@@ -34,6 +34,8 @@ export const extrasSchema = z.object({
   authorisedToWork: yesNo,
   needsSponsorship: yesNo,
   willingToRelocate: yesNo,
+  /** "Anything else we should know?" — the person's own notes, kept for them to paste into free-text answers. Never filled on its own. */
+  anythingElse: text(1000).default(''),
   githubUrl: text(300).default(''),
   otherUrl: text(300).default(''),
   languages: list(12, 40).default([]),

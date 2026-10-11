@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-12 (final) — extension 0.18.0: editable pop-up, cover letters
+
+**New:** **Your autofill information** — every tab is now editable with its own **Update**: Personal, Education (add / remove, GPA, major), Work Experience (job type, summary), Skills (chips), Equal Employment (tap to pick / Decline), Preference (pay, and **Anything else we should know?**). Saves go to the same place the Profile page saves. **Cover letter** row under Résumé: **✦ Generate cover letter** writes one from the job on screen (checked against your profile); read it, change it, fill any [Blank], press **Use this letter**. From then on Autofill types it into a cover-letter box or attaches it to a cover-letter upload on that application. **Download** gives a Word file.
+**Verified in a real Chromium:** 24 checks on editing and cover letters (your real data loaded; saves stubbed so your profile was not changed), plus every earlier scenario. **Not verified:** the saves against your real account, a real employer's cover-letter box, your own browser.
+**You need to:** download 0.18.0 and reload it; try one edit in the pop-up (e.g. add your phone type) and check it on the Jobinko Profile page; generate a cover letter on a real job and tell me if a real form's cover-letter box misbehaves.
+
+---
+
 ## 🔶 2026-10-12 (very last) — extension 0.17.0: the Jobright audit, and what now matches
 
 **New in 0.17.0:** ⚙ opens **Settings** (Autofill After Page Turn — Automatically is the default — and Default Plugin View); the **Résumé** row opens **View & Select Your Resume** (your résumés, PRIMARY badge, Apply without resume, preview, Download, Continue); **Your autofill information** now shows your real Education, Work Experience and Skills and lets you save expected/current pay; later steps of an application (Workday's My Information → My Experience → …) are filled by themselves.

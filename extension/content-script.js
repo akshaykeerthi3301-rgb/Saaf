@@ -358,6 +358,10 @@ function mountActions(root, job, state) {
       <div id="rrow" role="button" tabindex="0" title="Choose which résumé to attach" style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;cursor:pointer"><b>Résumé</b><span class="muted" id="rname" style="flex:1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><span aria-hidden="true">›</span></div>
       <button class="btn" id="tailor" style="margin-top:8px">✦ Tailor résumé for this job</button>
     </div>
+    <div class="box" id="coverrow" style="margin-top:8px">
+      <div id="crow" role="button" tabindex="0" title="Write or edit a cover letter for this job" style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;cursor:pointer"><b>Cover letter</b><span class="muted" id="cname" style="flex:1;text-align:right"></span><span aria-hidden="true">›</span></div>
+      <button class="btn" id="cover" style="margin-top:8px">✦ Generate cover letter</button>
+    </div>
     <button class="btn" id="save" style="margin-top:8px">Save job</button>
     <div class="note" id="savenote"></div>`
   const go = root.getElementById('go')
@@ -399,6 +403,24 @@ function mountActions(root, job, state) {
   // "Your autofill information": the pop-up (below) — what the filler will type, and the sign-up password.
   state.openInfo = (tab) => openAutofillModal(root, state, tab)
   root.getElementById('rrow').addEventListener('click', () => openResumePicker(root, state))
+  // Cover letter: written from this posting on request, read and edited by the person, and used by Autofill only after they
+  // press "Use this letter" — attached to a cover-letter upload box, or typed into a cover-letter text box.
+  const cname = root.getElementById('cname'); const coverBtn = root.getElementById('cover')
+  state.drawCover = async () => {
+    const { coverFor = {} } = await chrome.storage.local.get('coverFor')
+    const c = coverFor[pk]
+    cname.textContent = c ? 'Ready ✓' : 'none yet'
+    coverBtn.textContent = c ? '✎ Edit cover letter' : '✦ Generate cover letter'
+  }
+  state.drawCover()
+  // "Anything else we should know?" — the person's own notes, offered (never filled by itself) beside free-text questions.
+  const loadNotes = async () => { state.notes = ((await chrome.storage.local.get('profile')).profile || {}).anythingElse || '' }
+  loadNotes()
+  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.profile) loadNotes() })
+  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.coverFor) state.drawCover() })
+  const openCover = () => openCoverLetter(root, state, job, pk)
+  coverBtn.addEventListener('click', openCover)
+  root.getElementById('crow').addEventListener('click', openCover)
   root.getElementById('info').addEventListener('click', () => state.openInfo('personal'))
 
   // Save job — straight onto the tracker; falls back to a queue when signed out.
@@ -501,7 +523,7 @@ function mountActions(root, job, state) {
     askEl.innerHTML = `<div class="box"><h3>Questions for you</h3>
       <div class="muted">This form asks ${qs.length === 1 ? 'this' : 'these'} and Jobinko has no saved answer. Answer once — it is filled in here and remembered for the next form.</div>
       ${qs.map((q, i) => `<div class="qa" data-i="${i}"><div class="qt">${esc(q.question)}</div>
-        ${q.kind === 'text' ? `<div style="display:flex;gap:6px"><input data-q="${i}" placeholder="Your answer"><button class="opt" data-save="${i}">Save</button></div>`
+        ${q.kind === 'text' ? `<div style="display:flex;gap:6px"><input data-q="${i}" placeholder="Your answer"><button class="opt" data-save="${i}">Save</button></div>${state.notes ? `<a href="#" data-notes="${i}" class="muted" style="display:inline-block;margin-top:4px">Insert my notes</a>` : ''}`
           : `<div class="opts">${q.options.map((o, n) => `<button class="opt" data-pick="${i}" data-n="${n}">${esc(o)}</button>`).join('')}</div>`}</div>`).join('')}
       <div class="note" id="asknote"></div></div>`
     const submitAnswer = async (q, value) => {
@@ -518,6 +540,7 @@ function mountActions(root, job, state) {
       if (v.trim()) submitAnswer(qs[i], v)
     }))
     askEl.querySelectorAll('input[data-q]').forEach((inp) => inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') askEl.querySelector(`[data-save="${inp.dataset.q}"]`).click() }))
+    askEl.querySelectorAll('[data-notes]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); const inp = askEl.querySelector(`input[data-q="${a.dataset.notes}"]`); inp.value = state.notes.slice(0, 1000); inp.focus() }))
     askEl.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { const q = qs[Number(b.dataset.pick)]; submitAnswer(q, q.options[Number(b.dataset.n)]) }))
     return qs
   }
@@ -532,7 +555,7 @@ function mountActions(root, job, state) {
     // Bring the profile, answers and résumé file up to date from the account, then fill.
     const conn = await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pk }).catch(() => null)
     if (conn) { state.signedIn = conn.signedIn; state.account = conn.account; state.resumeFile = conn.resumeFile; renderAccount(root, state); state.drawResume() }
-    const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
+    const { profile, resumeFile, coverFor = {} } = await chrome.storage.local.get(['profile', 'resumeFile', 'coverFor'])
     if (!profile || !profile.fullName) {
       state.running = false
       report.innerHTML = '<div class="box report">We have no details to fill with yet. Sign in to Jobinko and finish your profile — or open Jobinko once while signed in and they sync.</div>'
@@ -544,7 +567,7 @@ function mountActions(root, job, state) {
     const tick = setInterval(drawDashboard, 150)
     let res
     try {
-      res = await A.fillForm(profile, doc, { resumeFile, replaceResumeNamed: state.attachedName, shouldStop: () => state.cancel })
+      res = await A.fillForm(profile, doc, { resumeFile, coverLetter: coverFor[pk] || null, replaceResumeNamed: state.attachedName, shouldStop: () => state.cancel })
     } finally {
       clearInterval(tick)
       state.running = false
@@ -802,52 +825,37 @@ async function openAutofillModal(root, state, tab = 'personal') {
   const libraryData = async () => { const r = await chrome.runtime.sendMessage({ type: 'jx:library', view: 'profile' }).catch(() => null); return r?.ok ? r : null }
   const link = `<a href="${SITE}/profile" target="_blank" rel="noopener">Edit on Jobinko</a>`
 
+  // The six editable tabs are drawn by profile-editor.js, from what the account holds (the "editor" view), and saved through the
+  // same server actions the Profile page uses. `ed` is fetched once and again after every save, so positions stay right.
+  let ed = null
+  let current = null
+  const loadEd = async () => { const r = await chrome.runtime.sendMessage({ type: 'jx:library', view: 'editor' }).catch(() => null); return r?.ok ? r : null }
+  const write = (op, input, refresh = true) => chrome.runtime.sendMessage({ type: 'jx:profile-write', op, input, refresh }).then((r) => r || { ok: false, error: 'Could not reach Jobinko.' }).catch(() => ({ ok: false, error: 'Could not reach Jobinko.' }))
+  const editorPane = async (key) => {
+    pane.innerHTML = '<p class="afm-sub">Loading…</p>'
+    if (!ed) ed = await loadEd()
+    if (current !== key) return
+    if (!ed) { pane.innerHTML = '<h3>Sign in</h3><p class="afm-sub">Sign in to Jobinko to see and edit this.</p>'; return }
+    globalThis.SaafEditor.render(key, pane, {
+      ed, profile, dirty, write,
+      async saved(message) {
+        await chrome.runtime.sendMessage({ type: 'jx:profile-refresh' }).catch(() => null)
+        ed = await loadEd()
+        Object.assign(profile, (await chrome.storage.local.get('profile')).profile || {})
+        if (current !== key) return
+        dirty(false)
+        if (ed) globalThis.SaafEditor.render(key, pane, { ed, profile, dirty, write, saved: this.saved })
+        const m = pane.querySelector('#ed-msg'); if (m && message) m.textContent = message
+      },
+    })
+  }
   const panes = {
-    personal() {
-      pane.innerHTML = `<h3>Personal</h3><p class="afm-sub">What Jobinko types into name, contact and address boxes. ${link}.</p><div class="afm-grid">${AFM_FIELDS.map(([l, f]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(f(profile) || '')}" placeholder="—"></div>`).join('')}</div>`
-    },
-    async education() {
-      pane.innerHTML = `<h3>Education</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
-      const d = await libraryData()
-      const box = pane.querySelector('#afm-data'); if (!box) return
-      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.education.length ? d.education.map((e, i) => `<div class="afm-card2"><h4>Education ${i + 1}</h4><div class="afm-grid">${[['School Name', e.school], ['Accreditation', e.degree], ['Major', e.major], ['GPA', e.gpa], ['Dates', e.dates]].map(([l, v]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(v)}" placeholder="—"></div>`).join('')}</div></div>`).join('') : 'No education on your résumé yet.'
-    },
-    async work() {
-      pane.innerHTML = `<h3>Work Experience</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
-      const d = await libraryData()
-      const box = pane.querySelector('#afm-data'); if (!box) return
-      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.experience.length ? d.experience.map((e, i) => `<div class="afm-card2"><h4>Work Experience ${i + 1}</h4><div class="afm-grid">${[['Company', e.company], ['Job Title', e.title], ['Location', e.location], ['Job Type', e.type], ['Dates', e.dates]].map(([l, v]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(v)}" placeholder="—"></div>`).join('')}</div>${e.summary ? `<label class="afm-l" style="margin-top:12px">Experience Summary</label><div class="afm-sub" style="margin:0">${esc(e.summary)}</div>` : ''}</div>`).join('') : 'No work experience on your résumé yet.'
-    },
-    async skill() {
-      pane.innerHTML = `<h3>Skills</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
-      const d = await libraryData()
-      const box = pane.querySelector('#afm-data'); if (!box) return
-      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.skills.length ? `<div class="afm-chips">${d.skills.map((k) => `<span>${esc(k)}</span>`).join('')}</div>` : 'No skills on your résumé yet.'
-    },
-    equal() {
-      const self = profile.selfId || {}
-      const val = (k) => { const v = profile[k] ?? self[k]; return v === 'decline' ? 'Decline to state' : v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v || '' }
-      pane.innerHTML = `<h3>Equal Employment</h3><p class="afm-sub">Only what you answered yourself is ever filled; “Decline to state” and unanswered are left blank. ${link}.</p><div class="afm-grid">${AFM_EQUAL.map(([l, k]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(val(k))}" placeholder="—"></div>`).join('')}</div>`
-    },
-    pref() {
-      pane.innerHTML = `<h3>Preference</h3><p class="afm-sub">Filled into salary and start-date questions. Pay figures are yours — Jobinko never guesses one.</p>
-        <label class="afm-l" for="pf-exp">What is your expected annual salary? (lakhs)</label><input class="afm-in" id="pf-exp" inputmode="decimal" placeholder="e.g. 18">
-        <label class="afm-l" for="pf-cur">What is your current annual salary? (lakhs)</label><input class="afm-in" id="pf-cur" inputmode="decimal" placeholder="e.g. 12">
-        <label class="afm-l">When can you start your next job?</label><input class="afm-in" readonly value="${esc(profile.noticePeriod || '')}" placeholder="—"><div class="afm-note">Notice period comes from your Jobinko profile. ${link}.</div><div class="afm-note" id="pf-msg"></div>`
-      const exp = pane.querySelector('#pf-exp'); const cur = pane.querySelector('#pf-cur')
-      exp.value = profile.expectedCtcLakhs || ''; cur.value = profile.currentCtcLakhs || ''
-      const was = { exp: exp.value, cur: cur.value }
-      const ok = (v) => v === '' || /^\d+(\.\d+)?$/.test(v.trim())
-      const check = () => { const bad = !ok(exp.value) || !ok(cur.value); pane.querySelector('#pf-msg').textContent = bad ? 'Numbers only, in lakhs.' : ''; dirty(!bad && (exp.value !== was.exp || cur.value !== was.cur), save) }
-      const save = async () => {
-        const { profile: p = {} } = await chrome.storage.local.get('profile')
-        p.expectedCtcLakhs = exp.value.trim(); p.currentCtcLakhs = cur.value.trim()
-        await chrome.storage.local.set({ profile: p })
-        profile.expectedCtcLakhs = p.expectedCtcLakhs; profile.currentCtcLakhs = p.currentCtcLakhs
-        was.exp = exp.value; was.cur = cur.value; pane.querySelector('#pf-msg').textContent = 'Saved.'; dirty(false)
-      }
-      ;[exp, cur].forEach((i) => i.addEventListener('input', check))
-    },
+    personal: () => editorPane('personal'),
+    education: () => editorPane('education'),
+    work: () => editorPane('work'),
+    skill: () => editorPane('skill'),
+    equal: () => editorPane('equal'),
+    pref: () => editorPane('pref'),
     signup() {
       pane.innerHTML = `<h3>Sign-up Information</h3>
         <p class="afm-sub"><b>Workday sites</b> require an account to apply. Save your credentials here and we’ll fill them in automatically.</p><hr>
@@ -892,11 +900,79 @@ async function openAutofillModal(root, state, tab = 'personal') {
   }
   const show = (key) => {
     nav.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === key))
-    dirty(false, null); panes[key]()
+    current = key; dirty(false, null); panes[key]()
   }
   nav.innerHTML = AFM_TABS.map(([k, l]) => `<button data-k="${k}">${esc(l)}</button>`).join('')
   nav.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.k) })
   show(tab)
+}
+
+/**
+ * "Cover letter" — Generate / read / edit / use. The letter is written server-side from the posting and the person's own
+ * profile (the website's writer, with its honesty check). It is only ever PROPOSED: nothing reaches a form until the person
+ * presses "Use this letter", and the text box is theirs to rewrite. Stored per page, in this browser.
+ */
+const COVER_TONES = ['Professional', 'Direct', 'Consultative', 'High-Impact']
+async function openCoverLetter(root, state, job, pk) {
+  root.getElementById('afm')?.remove()
+  const ov = document.createElement('div')
+  ov.id = 'afm'; ov.className = 'afm'
+  ov.innerHTML = `<div class="afm-card" role="dialog" aria-label="Cover letter" style="height:min(720px,92vh)">
+    <div class="afm-head"><h2>Cover letter${job.company ? ` — ${esc(job.company)}` : ''}</h2><button class="afm-x" aria-label="Close">✕</button></div>
+    <div class="afm-banner"><span class="afm-i">i</span><div><b>Written from your profile and this posting only</b><span>Every sentence is checked against your profile. Read it and change what you like — it goes into the application only after you press Use this letter.</span></div></div>
+    <div class="afm-pane" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px;align-items:center"><label class="afm-l" style="margin:0">Tone</label><select class="afm-in" id="cl-tone" style="width:auto">${COVER_TONES.map((t) => `<option>${t}</option>`).join('')}</select><button class="afm-ghost" id="cl-regen" style="padding:8px 16px;font-size:13px">↻ Write again</button><span class="muted" id="cl-note" style="flex:1"></span></div>
+      <textarea class="afm-in" id="cl-text" style="flex:1;min-height:260px;resize:none;line-height:1.55" placeholder="Writing your letter…"></textarea>
+    </div>
+    <div class="afm-foot2"><button class="afm-ghost" id="cl-dl">⭳ Download</button><button class="afm-ghost" id="cl-rm">Remove</button><button class="afm-update" id="cl-use" disabled>Use this letter</button></div></div>`
+  root.appendChild(ov)
+  const $ = (sel) => ov.querySelector(sel)
+  const close = () => ov.remove()
+  $('.afm-x').addEventListener('click', close)
+  ov.addEventListener('mousedown', (e) => { if (e.target === ov) close() })
+  const text = $('#cl-text'); const note = $('#cl-note'); const use = $('#cl-use')
+  const { coverFor: all = {} } = await chrome.storage.local.get('coverFor')
+  let saved = all[pk] || null
+  // A [Bracketed blank] is something the person must fill — a letter that still has one is never put into an application.
+  const blanks = () => [...new Set([...text.value.matchAll(/\[([^\]\n]{1,40})\]/g)].map((m) => m[1]))]
+  const sync = () => {
+    const open = blanks()
+    use.disabled = !text.value.trim() || open.length > 0 || !!(saved && saved.text === text.value)
+    if (open.length) note.textContent = `Fill in ${open.map((b) => `[${b}]`).join(', ')} first — then you can use the letter.`
+  }
+  const generate = async () => {
+    text.disabled = true; $('#cl-regen').disabled = true; note.textContent = 'Writing — about 15 seconds…'; use.disabled = true
+    const r = await chrome.runtime.sendMessage({ type: 'jx:cover-letter', jdText: job.description, jdTitle: job.title, company: job.company, tone: $('#cl-tone').value }).catch(() => null)
+    text.disabled = false; $('#cl-regen').disabled = false
+    if (r?.signedIn === false) { note.textContent = 'Sign in to Jobinko first.'; return }
+    if (!r?.ok) { note.textContent = r?.error || 'Could not write it just now — you can write your own here.'; return }
+    text.value = r.text
+    note.textContent = r.dropped ? `A draft${r.providerLabel ? ` (${r.providerLabel})` : ''}. ${r.dropped} sentence${r.dropped === 1 ? '' : 's'} left out because your profile does not support ${r.dropped === 1 ? 'it' : 'them'}.` : `A draft${r.providerLabel ? ` (${r.providerLabel})` : ''} — edit freely.`
+    sync()
+  }
+  text.addEventListener('input', sync)
+  $('#cl-regen').addEventListener('click', generate)
+  $('#cl-dl').addEventListener('click', async () => {
+    if (!text.value.trim()) return
+    const f = await chrome.runtime.sendMessage({ type: 'jx:cover-file', text: text.value, company: job.company }).catch(() => null)
+    if (!f?.ok) { note.textContent = 'Could not make the file just now.'; return }
+    const bytes = Uint8Array.from(atob(f.base64), (c) => c.charCodeAt(0))
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: f.type })); a.download = f.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+  })
+  $('#cl-rm').addEventListener('click', async () => {
+    const { coverFor = {} } = await chrome.storage.local.get('coverFor'); delete coverFor[pk]
+    await chrome.storage.local.set({ coverFor }); saved = null; text.value = ''; note.textContent = 'Removed — nothing will be filled.'; sync()
+  })
+  use.addEventListener('click', async () => {
+    use.disabled = true; use.textContent = 'Saving…'
+    const f = await chrome.runtime.sendMessage({ type: 'jx:cover-file', text: text.value, company: job.company }).catch(() => null)
+    const { coverFor = {} } = await chrome.storage.local.get('coverFor')
+    coverFor[pk] = { text: text.value, company: job.company || '', at: Date.now(), file: f?.ok ? { name: f.name, type: f.type, base64: f.base64 } : null }
+    const keep = Object.entries(coverFor).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).slice(0, 20)
+    await chrome.storage.local.set({ coverFor: Object.fromEntries(keep) })
+    close()
+  })
+  if (saved) { text.value = saved.text; note.textContent = 'Your saved letter for this job.'; sync() } else generate()
 }
 
 /**

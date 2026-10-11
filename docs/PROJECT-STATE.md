@@ -3263,3 +3263,11 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Corrections (struck through).** ~~'0.16.0 has Jobright's UI'~~ — it had the Sign-up screen only; the Settings, résumé picker and data tabs were not there until 0.17.0. **Lesson:** I asserted parity from one screen. Parity is a table of screens, and only the observed ones count.
 
 **Built:** see TASK-247.
+
+### Stage BH — the pop-up becomes editable; cover letters (2026-10-12)
+
+**Parity table, updated (from Stage BG):** ~~Personal/Education/Work/Skill/Equal Employment VIEW-only~~ → **editable** (0.18.0). ~~Cover letter NOT built~~ → **built**: Generate / edit / Download / Use, filled into a cover-letter box or attached to a cover-letter upload. ~~'Anything else we should know?' NOT built~~ → **built** (notes the person can insert beside free-text questions; deliberately not auto-filled — a free-text answer is the person's, and an auto-pasted note would be the 'pre-filled why do you want to work here' failure the filler exists to avoid). **Still not the same as Jobright:** the 'Automatically update Autofill information' toggle, 'Choose version', credits/upgrade, Feedback button, 'Add This Job In One Click' as one button, insider connections, match chips — and what Jobright's account button does after it is pressed (never pressed).
+
+**Decisions.** (1) The extension edits through a GATE in front of the website's actions, not new write logic — one set of rules; a bug fixed on the Profile page is fixed in the pop-up. (2) A letter with an unfilled [Blank] is never usable: the panel names the blank and keeps 'Use this letter' off. (3) A letter reaches a form only after the person pressed 'Use this letter' for that page; an unapproved draft never does. (4) The pop-up's saves were not exercised against the real database in testing (the founder's profile is the real one) — they were stubbed and the exact requests asserted; the actions behind them are the website's. **Lesson:** the first cover-letter draft had `[Role]` and `[Company]` in it — the writer's fallback is a template for a person to fill, and only running it showed that the extension, which knows those facts, has to fill them.
+
+**Built:** see TASK-248.

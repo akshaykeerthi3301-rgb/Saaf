@@ -36,7 +36,7 @@ const SYNCED_FIELDS = [
   'fullName', 'email', 'phone', 'city', 'currentTitle', 'currentEmployer',
   'yearsExperience', 'noticePeriod', 'linkedin', 'portfolio', 'workAuth', 'preferredLocations',
   'middleName', 'phoneType', 'address', 'postalCode', 'country', 'state', 'county',
-  'authorisedToWork', 'needsSponsorship', 'willingToRelocate', 'gpa',
+  'authorisedToWork', 'needsSponsorship', 'willingToRelocate', 'gpa', 'anythingElse',
 ]
 const RANK = { saved: 0, applying: 1, applied: 2 }
 
@@ -183,7 +183,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   // The résumé picker and the autofill pop-up: read-only lists from the person's account (library route), and their choice.
   if (msg?.type === 'jx:library') {
     ;(async () => {
-      const view = ['list', 'preview', 'profile'].includes(msg.view) ? msg.view : null
+      const view = ['list', 'preview', 'profile', 'editor'].includes(msg.view) ? msg.view : null
       if (!view) { sendResponse({ ok: false }); return }
       try {
         const res = await api(`/api/extension/library?view=${view}${view === 'preview' ? `&id=${encodeURIComponent(String(msg.id || ''))}` : ''}`)
@@ -193,6 +193,48 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     })()
     return true
   }
+  // Saving from the pop-up: the website's own save actions, behind the signed-in gate. After the last write the local copy of the
+  // profile is pulled again, so what the filler types is what was just saved.
+  if (msg?.type === 'jx:profile-write') {
+    ;(async () => {
+      if (!['personal', 'entry', 'deleteEntry', 'skills', 'selfId', 'extras'].includes(msg.op)) { sendResponse({ ok: false, error: 'Unknown change.' }); return }
+      try {
+        const res = await api('/api/extension/profile', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ op: msg.op, input: msg.input }) })
+        if (res.status === 401) { sendResponse({ ok: false, signedIn: false, error: 'Sign in to Jobinko first.' }); return }
+        const data = await res.json().catch(() => null)
+        if (data?.ok && msg.refresh !== false) await connectAccount().catch(() => null)
+        sendResponse(data && typeof data.ok === 'boolean' ? data : { ok: false, error: 'We could not save that just now.' })
+      } catch { sendResponse({ ok: false, error: 'Could not reach Jobinko.' }) }
+    })()
+    return true
+  }
+  if (msg?.type === 'jx:profile-refresh') { ;(async () => { await connectAccount().catch(() => null); sendResponse({ ok: true }) })(); return true }
+
+  // Cover letter: written from the posting on screen (same writer and honesty checks as the website), and turned into a Word file.
+  if (msg?.type === 'jx:cover-letter') {
+    ;(async () => {
+      const jdText = String(msg.jdText || '').slice(0, 20000)
+      if (jdText.length < 120) { sendResponse({ ok: false, error: 'This posting is too short to write a letter for.' }); return }
+      try {
+        const res = await api('/api/extension/cover-letter', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jdText, jdTitle: String(msg.jdTitle || '').slice(0, 200) || undefined, company: String(msg.company || '').slice(0, 200) || undefined, tone: msg.tone || undefined }) })
+        if (res.status === 401) { sendResponse({ ok: false, signedIn: false, error: 'Sign in to Jobinko first.' }); return }
+        const data = await res.json().catch(() => null)
+        sendResponse(res.ok && data?.ok ? data : { ok: false, error: res.status === 429 ? 'You have written a few letters in a short while. Try again in a few minutes.' : data?.error || 'Could not write it just now.' })
+      } catch { sendResponse({ ok: false, error: 'Could not reach Jobinko.' }) }
+    })()
+    return true
+  }
+  if (msg?.type === 'jx:cover-file') {
+    ;(async () => {
+      try {
+        const res = await api('/api/extension/cover-letter-file', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: String(msg.text || '').slice(0, 8000), company: String(msg.company || '').slice(0, 200) || undefined }) })
+        if (!res.ok) { sendResponse({ ok: false }); return }
+        sendResponse({ ok: true, name: res.headers.get('x-filename') || 'Cover-Letter.docx', type: res.headers.get('content-type') || 'application/octet-stream', base64: toBase64(await res.arrayBuffer()) })
+      } catch { sendResponse({ ok: false }) }
+    })()
+    return true
+  }
+
   // "Continue" in the picker. A manual upload from the settings page would otherwise win, so it is dropped: the person has just chosen.
   if (msg?.type === 'jx:resume-choose') {
     ;(async () => {
@@ -359,7 +401,7 @@ async function applySync(msg) {
   const { profile = {} } = await chrome.storage.local.get('profile')
   for (const f of SYNCED_FIELDS) {
     const v = msg.profile?.[f]
-    if (typeof v === 'string' && v.trim()) profile[f] = v.trim().slice(0, 500)
+    if (typeof v === 'string' && v.trim()) profile[f] = v.trim().slice(0, f === 'anythingElse' ? 1000 : 500)
   }
   // The candidate's own typed answers to demographic questions. REPLACED, not
   // merged: clearing an answer on the web must remove it here, or a question

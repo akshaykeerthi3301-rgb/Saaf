@@ -657,6 +657,14 @@
       // ---- files: only a résumé upload, only with a stored résumé file.
       if (tag === 'input' && type === 'file') {
         const signals = signalsFor(el, doc)
+        // A cover-letter upload gets the letter the person wrote or approved in the panel — and nothing else, ever.
+        if (/cover\s*letter/i.test(signals)) {
+          if (opts.coverLetter?.file && !(el.files && el.files.length)) {
+            if (attachFile(el, opts.coverLetter.file)) out.filled.push({ key: 'coverLetter', value: opts.coverLetter.file.name, how: 'attached' })
+            else refuse('cover-letter upload that does not accept your file type — left for you')
+          } else out.skipped++
+          continue
+        }
         if (!RESUME_UPLOAD.test(signals) || /cover/i.test(signals)) { out.skipped++; continue }
         // A file already there stays — unless it is the one this extension attached earlier (a re-run after tailoring).
         if (el.files && el.files.length && el.files[0].name !== opts.replaceResumeNamed) { out.skipped++; continue }
@@ -669,6 +677,13 @@
       if (!isFillable(el)) continue
       const signals = signalsFor(el, doc)
       const verdict = classify(signals, profile.selfId)
+
+      // ---- a cover-letter box, when the person has written/approved a letter for THIS page: their own words go in.
+      if (isTextBox(el) && opts.coverLetter?.text && /cover\s*letter/i.test(signals) && !(el.value && el.value.trim())) {
+        setNativeValue(el, opts.coverLetter.text)
+        out.filled.push({ key: 'coverLetter', value: 'your cover letter', how: 'typed' })
+        continue
+      }
 
       // ---- a dropdown the candidate has already answered once: their own saved words pick the option.
       if (tag === 'select' && profile.answerBank && !neverFromBank(signals)) {

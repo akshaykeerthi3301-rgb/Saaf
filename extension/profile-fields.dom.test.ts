@@ -97,3 +97,29 @@ describe('GPA, and a declined answer', () => {
     expect(radio('g', 'm') || radio('g', 'f')).toBe(false)
   })
 })
+
+describe('a cover letter the person approved', () => {
+  const LETTER = { text: 'Dear hiring team,\n\nI would like to join Acme.', file: { name: 'Priya-Iyer-Cover-Letter-Acme.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', base64: btoa('PK-test') } }
+  const RESUME = { name: 'Priya-Iyer-Resume.docx', type: LETTER.file.type, base64: btoa('PK-resume') }
+  const file = (sel: string) => (document.querySelector(sel) as HTMLInputElement).files?.[0]?.name ?? null
+
+  it('goes into a cover-letter upload — and the résumé into the résumé upload, never the other way round', async () => {
+    page('<label for="r">Resume/CV</label><input id="r" type="file"><label for="c">Cover Letter</label><input id="c" type="file">')
+    const res = await A.fillForm(BASE, document, { resumeFile: RESUME, coverLetter: LETTER })
+    expect(file('#r')).toBe('Priya-Iyer-Resume.docx')
+    expect(file('#c')).toBe('Priya-Iyer-Cover-Letter-Acme.docx')
+    expect(res.filled).toContainEqual({ key: 'coverLetter', value: 'Priya-Iyer-Cover-Letter-Acme.docx', how: 'attached' })
+  })
+  it('is typed into a cover-letter text box, once, and an existing draft is left alone', async () => {
+    page('<label for="t">Cover letter</label><textarea id="t"></textarea><label for="u">Cover letter (optional)</label><textarea id="u">my own words</textarea>')
+    await A.fillForm(BASE, document, { coverLetter: LETTER })
+    expect(val('#t')).toBe(LETTER.text)
+    expect(val('#u')).toBe('my own words')
+  })
+  it('with no approved letter, a cover-letter box is still never written by the extension', async () => {
+    page('<label for="t">Cover letter</label><textarea id="t"></textarea><label for="c">Cover Letter</label><input id="c" type="file">')
+    await A.fillForm(BASE, document, { resumeFile: RESUME })
+    expect(val('#t')).toBe('')
+    expect(file('#c')).toBeNull()
+  })
+})

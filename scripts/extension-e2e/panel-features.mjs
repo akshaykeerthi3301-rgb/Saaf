@@ -67,11 +67,6 @@ await SR(f, 'r.querySelector(".afm-nav button[data-k=work]").click()'); await f.
 check('Work Experience tab lists the companies', /ICICI Bank/.test(await fields(f)), (await fields(f)).slice(0, 120))
 await SR(f, 'r.querySelector(".afm-nav button[data-k=skill]").click()'); await f.waitForTimeout(2500)
 check('Skill tab shows chips', (await SR(f, 'return r.querySelectorAll(".afm-chips span").length')) > 3)
-await SR(f, 'r.querySelector(".afm-nav button[data-k=pref]").click()'); await f.waitForTimeout(500)
-await SR(f, 'const i=r.querySelector("#pf-exp"); i.value="18"; i.dispatchEvent(new Event("input",{bubbles:true}))'); await f.waitForTimeout(200)
-check('Preference: a salary enables Update', !(await SR(f, 'return r.querySelector(".afm-update").disabled')))
-await click(f, '.afm-update'); await f.waitForTimeout(600)
-check('…and is stored for autofill', (await store('profile'))?.expectedCtcLakhs === '18')
 
 log(fails ? `\n${fails} FAILED` : '\nALL PASSED')
 await context.close(); srv.close()

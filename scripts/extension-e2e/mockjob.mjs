@@ -51,6 +51,9 @@ const stepsJob = `${head('Customer Success Manager – Acme (steps)')}<h1>Custom
 <label for="fn">Full name *</label><input id="fn" name="name" required>
 <label for="em">Email *</label><input id="em" type="email" name="email" required>
 <button id="next" type="button" onclick="document.getElementById('stepbox').innerHTML='<h2>My Experience</h2><label for=ph>Current company *</label><input id=ph name=org required><label for=li>Current job title *</label><input id=li name=title required><button type=button>Save and Continue</button>'">Save and Continue</button></div></form></body></html>`
+// An easy form that also has a cover-letter text box and a cover-letter upload.
+const ldJson = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'JobPosting', title: 'Customer Success Manager', description: para, hiringOrganization: { '@type': 'Organization', name: 'Acme Robotics' }, jobLocation: { '@type': 'Place', address: { addressLocality: 'Bengaluru', addressCountry: 'IN' } } })}</script>`
+const coverJob = easyJob.replace('</head>', ldJson + '</head>').replace('<button type="submit">', '<label for="cl">Cover Letter</label><textarea id="cl" name="cl"></textarea><label for="clf">Cover Letter (file)</label><input id="clf" type="file" name="clfile"><button type="submit">')
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
@@ -69,6 +72,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/cover/job' ? coverJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

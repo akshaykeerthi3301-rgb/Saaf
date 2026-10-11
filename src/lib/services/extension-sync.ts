@@ -45,6 +45,8 @@ export type ExtensionProfile = {
   willingToRelocate: string
   /** From the first education entry of the primary résumé, as the person wrote it. */
   gpa: string
+  /** The person's own notes ("Anything else we should know?"), offered — never filled by itself — beside free-text questions. */
+  anythingElse: string
 }
 
 export type ExtensionSync = {
@@ -132,6 +134,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       needsSponsorship: extras.needsSponsorship,
       willingToRelocate: extras.willingToRelocate,
       gpa: primaryResume?.resume.sections.education.find((e) => e.gpa)?.gpa ?? '',
+      anythingElse: extras.anythingElse,
     },
     // A declined question is the person's own "leave it blank": the extension never holds it, so it can never be filled.
     selfId: Object.fromEntries(Object.entries(selfId).filter(([, v]) => v !== DECLINED)) as SelfIdAnswers,
