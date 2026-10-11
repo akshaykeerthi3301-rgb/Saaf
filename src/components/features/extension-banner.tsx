@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Copy, Download, Puzzle } from 'lucide-react'
 import { EditDrawer } from '@/components/features/profile-ui'
-import { EXTENSION_FILE_NAME, EXTENSION_VERSION, EXTENSION_ZIP } from '@/lib/extension-package'
+import { askExtension } from '@/lib/extension-client'
+import { EXTENSION_FILE_NAME, EXTENSION_VERSION, EXTENSION_ZIP, compareVersions } from '@/lib/extension-package'
 
 /**
  * "Add the Jobinko extension" — the banner at the top of the profile, as in the reference product's.
@@ -24,6 +25,15 @@ const STEPS: { text: string; copy?: string }[] = [
 export function ExtensionBanner({ storeUrl }: { storeUrl: string }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  // What this browser has: undefined while asking, null when the extension is not installed, else its version.
+  const [installed, setInstalled] = useState<string | null | undefined>(undefined)
+  useEffect(() => {
+    let live = true
+    askExtension<{ ok: boolean; version?: string }>({ type: 'saaf:hello' }).then((r) => { if (live) setInstalled(r?.ok ? (r.version ?? '0.0.0') : null) })
+    return () => { live = false }
+  }, [])
+  const current = typeof installed === 'string' && compareVersions(installed, EXTENSION_VERSION) >= 0
+  const outdated = typeof installed === 'string' && !current
 
   async function copy(text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch { /* the text is on screen to select */ }
@@ -32,14 +42,22 @@ export function ExtensionBanner({ storeUrl }: { storeUrl: string }) {
   return (
     <section className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm" aria-label="Browser extension">
       <div className="min-w-0 flex-1">
-        <h2 className="text-lg font-semibold tracking-[-0.02em] text-primary">Add the Jobinko extension to fill in your applications</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.02em] text-primary">
+          {current ? 'The Jobinko extension is installed' : outdated ? 'Update the Jobinko extension' : 'Add the Jobinko extension to fill in your applications'}
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          It scores any job posting against your résumé and fills the application form from this profile.
-          {storeUrl ? '' : <> <span className="font-semibold text-primary">Test version {EXTENSION_VERSION}</span> — not in the Chrome Web Store yet.</>}
+          {current ? (
+            <><span className="mr-1.5 inline-block size-2 rounded-full bg-score-high align-middle" aria-hidden="true" /><span className="font-semibold text-primary">Connected · version {installed}.</span> Open any job posting and the Jobinko panel appears on the right: match, autofill, save, tailor your résumé.</>
+          ) : outdated ? (
+            <>You have version {installed}; the current test build is <span className="font-semibold text-primary">{EXTENSION_VERSION}</span>. Download it, replace the folder, then press the reload arrow on chrome://extensions.</>
+          ) : (
+            <>It scores any job posting against your résumé, fills the application form from this profile, attaches your résumé and saves the job to your tracker.
+              {storeUrl ? '' : <> <span className="font-semibold text-primary">Test version {EXTENSION_VERSION}</span> — not in the Chrome Web Store yet.</>}</>
+          )}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        {storeUrl ? (
+        {current ? null : storeUrl ? (
           <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
             <Puzzle className="size-4" aria-hidden="true" /> Add Extension
           </a>

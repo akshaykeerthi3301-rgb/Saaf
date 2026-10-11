@@ -2,6 +2,16 @@
 
 ---
 
+## 🔶 2026-10-11 (late night) — extension 0.8.0: a side panel that uses your Jobinko account
+
+**What changed, in plain words.** The first version could not use your Jobinko login, so it couldn't save a job to your tracker or fetch your résumé, and you had to upload a PDF into it by hand. Version 0.8.0 uses your Jobinko login (the same browser), shows a **side panel** on job pages (match, Autofill, Save job, Tailor résumé, a completion bar and a list of what the form still needs), **attaches your résumé automatically**, and can **tailor your résumé for the job on the page and attach that one**. It is our own code; I did not copy Jobright's.
+
+**How I checked:** I ran the real extension in a test browser on my side, against a mock job form, signed in as you: it connected, scored, filled, attached your résumé, saved the job to your tracker (as "Applying"), tailored a résumé and attached it. I then removed everything the test created. **What I could not check:** a real company's form, Jobright's own panel for comparison (I cannot see an extension's panel), and the live site's use of the new routes.
+
+**You need to do:** (1) On the Profile page, **download the extension again** (the banner now says "Update") and replace the folder, then press the reload arrow on chrome://extensions. (2) Keep jobinko.in signed in in that browser. (3) Open a real posting (Greenhouse/Lever/Workable/Ashby) and try Autofill, Save job and Tailor résumé — and tell me what looks different from Jobright's panel (a screen recording of Jobright's panel on the same kind of page is the single most useful thing you can send).
+
+---
+
 ## ✅🔶 2026-10-11 (night) — testers can now download the Jobinko extension from the Profile page
 
 **Live once the deploy line below says so.** Profile (all three views) now opens with an "Add the Jobinko extension" banner: **Download extension** and **How to install** (six steps; Chrome makes you load it by hand because it is not in the Chrome Web Store). It is **our own extension, version 0.7.0** — I did not copy or rebrand the reference product's extension: that is their copyrighted code, and we already have a working one.

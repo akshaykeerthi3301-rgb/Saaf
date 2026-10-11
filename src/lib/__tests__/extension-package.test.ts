@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { EXTENSION_VERSION, EXTENSION_ZIP } from '@/lib/extension-package'
+import { EXTENSION_VERSION, EXTENSION_ZIP, compareVersions } from '@/lib/extension-package'
 
 const root = join(__dirname, '..', '..', '..')
 const manifest = JSON.parse(readFileSync(join(root, 'extension', 'manifest.json'), 'utf8')) as {
@@ -35,5 +35,14 @@ describe('the downloadable extension', () => {
     const needed = [manifest.background.service_worker, manifest.action.default_popup, ...manifest.content_scripts.flatMap((c) => c.js), 'manifest.json', 'INSTALL.txt']
     for (const n of needed) expect(files, n).toContain(n)
     expect(files.some((n) => /\.test\./.test(n))).toBe(false)
+  })
+})
+
+describe('compareVersions', () => {
+  it('orders by number, not by text', () => {
+    expect(compareVersions('0.7.0', '0.8.0')).toBe(-1)
+    expect(compareVersions('0.10.0', '0.9.0')).toBe(1)
+    expect(compareVersions('1.0', '1.0.0')).toBe(0)
+    expect(compareVersions('0.8.0', '0.8.0')).toBe(0)
   })
 })

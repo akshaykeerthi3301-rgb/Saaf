@@ -20,18 +20,21 @@
 </style>
 
 <h1>Jobinko</h1>
-<p>Everything below stays on this machine, in the browser's own extension storage. Only your résumé text is sent, to score a posting, and it is not kept at the other end.</p>
+<div class="acct" id="acct" style="margin:8px 0 10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:12px">Connecting to your Jobinko account…</div>
+<p>The extension uses your Jobinko account: it fills forms from your profile, attaches your résumé, saves jobs to your tracker and tailors your résumé for a posting. What you type in the boxes below (salary, yes/no answers) stays in this browser.</p>
 <div class="sync" id="sync"></div>
 
 <h2>This site</h2>
 <p id="siteMsg"></p>
 <button id="siteAsk" hidden style="margin-top:0"></button>
 
-<h2>Your résumé</h2>
-<p>Text scores the posting you are looking at. The file is attached to résumé uploads when you press “Fill this application”.</p>
+<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:12px">Use a different résumé (optional)</summary>
+<p>Your résumé comes from your Jobinko account automatically. Only fill this in to override it: the text scores postings, and an uploaded file is attached to résumé uploads instead of your account's.</p>
 <textarea id="resume" placeholder="Paste your résumé text…"></textarea>
 <label for="resumeFile">Résumé file (PDF or Word, up to 4 MB)</label><input id="resumeFile" type="file" accept=".pdf,.doc,.docx" />
 <div class="sync" id="fileName"></div>
+
+</details>
 
 <h2>For filling forms</h2>
 <label for="fullName">Full name</label><input id="fullName" />

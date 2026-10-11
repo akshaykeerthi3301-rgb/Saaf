@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { EXTENSION_ID } from '@/lib/extension-client'
 
 /**
  * The gate for the extension's SIGNED-IN endpoints (/api/extension/me, /save, /resume, /tailor).
@@ -29,7 +30,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
  */
 
 /** Derived from the `key` in extension/manifest.json (src/lib/__tests__/extension-session.test.ts recomputes it and fails on drift). */
-export const EXTENSION_ID = 'idbookligbjgjhnohmgpklloakhoecpd'
+export { EXTENSION_ID }
 export const EXTENSION_ORIGIN = `chrome-extension://${EXTENSION_ID}`
 
 export type ExtensionUser = { userId: string; email: string }

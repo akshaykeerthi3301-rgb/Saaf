@@ -14,6 +14,21 @@ const FIELDS = [
 ]
 const MAX_FILE_BYTES = 4 * 1024 * 1024
 const $ = (id) => document.getElementById(id)
+const SITE = 'https://jobinko.in'
+
+/** Who the extension is acting for — the account, or a way to sign in. */
+chrome.runtime.sendMessage({ type: 'jx:connect' }).then((r) => {
+  const el = $('acct')
+  if (r?.signedIn) {
+    const who = r.account?.name || r.account?.email || 'your account'
+    const file = r.resumeFile ? `Attaching <b>${r.resumeFile.name.replace(/[<>&"]/g, '')}</b>` : `No résumé yet — <a href="${SITE}/resume" target="_blank">add one</a>`
+    el.innerHTML = `<b>${who.replace(/[<>&"]/g, '')}</b> · connected<br><span style="color:var(--muted)">${file}</span>`
+  } else if (r?.signedIn === false) {
+    el.innerHTML = `<b>Not signed in</b><br><span style="color:var(--muted)">Sign in to Jobinko in this browser, then reopen this popup.</span><br><a href="${SITE}/signin" target="_blank">Sign in to Jobinko</a>`
+  } else {
+    el.textContent = r?.error || 'Could not reach Jobinko.'
+  }
+}).catch(() => { $('acct').textContent = 'Could not reach Jobinko.' })
 
 chrome.storage.local.get(['resumeText', 'profile', 'resumeFile', 'syncedAt']).then(({ resumeText, profile, resumeFile, syncedAt }) => {
   if (resumeText) $('resume').value = resumeText
@@ -40,7 +55,10 @@ function readFile(file) {
 }
 
 $('save').addEventListener('click', async () => {
-  const profile = {}
+  // Start from what is stored: selfId and answerBank are synced from the account and have no boxes here, so building a
+  // fresh object would silently erase them.
+  const { profile: stored = {} } = await chrome.storage.local.get('profile')
+  const profile = { ...stored }
   for (const f of FIELDS) profile[f] = $(f).value.trim()
   const lakhs = (v) => v === '' || /^\d+(\.\d+)?$/.test(v)
   if (!lakhs(profile.currentCtcLakhs) || !lakhs(profile.expectedCtcLakhs)) {

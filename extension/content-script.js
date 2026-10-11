@@ -1,94 +1,132 @@
 /**
- * Jobinko extension — reads the posting on screen and renders the score.
+ * Jobinko extension — the side panel on a job page: match, autofill, save, tailor.
  *
- * ⚠️ IT TOUCHES THE NETWORK NEVER, AND THE PAGE'S DATA ONLY. It reads the
- * active document (extractor.js), hands the text to the service worker, and
- * draws the result. The only writes to the page are the form fills the
- * candidate asks for (autofill.js). No submitting, no navigating.
+ * ⚠️ THE PANEL ACTS ON THE PERSON'S OWN ACCOUNT, AND ONLY WHEN THEY ASK. It reads the page (extractor.js), asks the
+ * service worker to score it and to talk to Jobinko with the person's login, and draws the result. The only writes to
+ * the host page are the form fills the person asks for (autofill.js). No submitting, no navigating.
  *
- * ⚠️ THE OVERLAY LIVES IN A SHADOW ROOT, AND THAT IS NOT OPTIONAL. It renders
- * on sites with arbitrary CSS; style bleeding in either direction is both the
- * commonest cause of a broken-looking overlay and the commonest cause of a
- * store review rejection. `:host { all: initial }` resets anything inherited.
+ * ⚠️ THE PANEL LIVES IN A SHADOW ROOT, AND THAT IS NOT OPTIONAL. It renders on sites with arbitrary CSS; style bleeding
+ * in either direction is both the commonest cause of a broken-looking panel and of a store-review rejection.
+ * `:host { all: initial }` resets anything inherited.
  *
- * ⚠️ EVERY STRING FROM THE PAGE OR THE SERVER IS ESCAPED BEFORE innerHTML. The
- * quote shown under the score is text read out of the host page; written raw,
- * a posting containing markup would render it inside our card, on their page.
+ * ⚠️ EVERY STRING FROM THE PAGE OR THE SERVER IS ESCAPED BEFORE innerHTML. A posting containing markup would otherwise
+ * render inside our panel, on their page.
  */
 const SITE = 'https://jobinko.in'
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
-/** Same page, ignoring query and hash — how the tracker and this card agree a job is "this one". */
+/** Same page, ignoring query and hash — how the tracker and this panel agree a job is "this one". */
 const pageKey = (u) => { try { const x = new URL(u); return x.origin + x.pathname.replace(/\/+$/, '') } catch { return u } }
 
 const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', rejected: 'Rejected', closed: 'Archived' }
 
 /**
- * The palette is copied from the app's `.dark` block in src/app/globals.css
- * (2026-09-25). An extension cannot load the app's stylesheet, so these are the
- * one place those tokens are restated — change them together. Score bands
- * follow src/lib/score-bands.ts: green from 75 (HIGH_PRECISION_MIN), amber from
- * 60, red below.
+ * The palette is copied from the app's `.dark` block in src/app/globals.css. An extension cannot load the app's
+ * stylesheet, so these are the one place those tokens are restated — change them together. Score bands follow
+ * src/lib/score-bands.ts: green from 75, amber from 60, red below.
  */
 const STYLE = `
   :host { all: initial }
-  .card { --bg: oklch(0.21 0.006 285.885 / 0.86); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
+  * { box-sizing: border-box }
+  .panel { --bg: oklch(0.205 0.006 285.885); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
     --line: oklch(1 0 0 / 10%); --chip: oklch(0.274 0.006 286.033); --brand: oklch(0.585 0.233 277.117);
     --brand-2: oklch(0.558 0.288 302.321); --accent: oklch(0.673 0.182 276.935);
     --high: oklch(0.765 0.177 163.223); --mid: oklch(0.828 0.189 84.429); --low: oklch(0.704 0.191 22.216);
-    width: 320px; box-sizing: border-box; font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: var(--fg); background: var(--bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
-    box-shadow: 0 12px 40px oklch(0 0 0 / 45%), 0 0 0 1px oklch(0.585 0.233 277.117 / 18%) }
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px }
-  .brand { font-weight: 700; letter-spacing: .01em; background: linear-gradient(135deg, var(--accent), var(--brand-2));
+    position: fixed; top: 0; right: 0; height: 100vh; width: 380px; max-width: 94vw; display: flex; flex-direction: column;
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg); background: var(--bg);
+    border-left: 1px solid var(--line); box-shadow: -12px 0 40px oklch(0 0 0 / 40%) }
+  .panel[hidden] { display: none }
+  header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line) }
+  .brand { font-weight: 700; font-size: 15px; background: linear-gradient(135deg, var(--accent), var(--brand-2));
     -webkit-background-clip: text; background-clip: text; color: transparent }
   .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--muted) }
-  .x { all: unset; cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; padding: 2px 4px }
-  .head { display: flex; gap: 12px; align-items: center; margin-top: 10px }
+  .grow { flex: 1 }
+  .x { all: unset; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 6px }
+  .x:hover { background: var(--chip); color: var(--fg) }
+  .scroll { flex: 1; overflow-y: auto; padding: 12px 14px 20px }
+  section { margin-bottom: 12px }
+  .box { background: var(--chip); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px }
+  .muted { color: var(--muted); font-size: 11px }
+  .bar { height: 6px; border-radius: 999px; background: var(--chip); overflow: hidden }
+  .bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .3s }
+  .support { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    background: oklch(0.765 0.177 163.223 / 14%); color: var(--high) }
+  .support.off { background: var(--chip); color: var(--muted); font-weight: 500 }
+  .dot { width: 8px; height: 8px; border-radius: 99px; background: currentColor; flex: none }
+  .head { display: flex; gap: 12px; align-items: center }
   .ring { width: 58px; height: 58px; flex: none; position: relative }
   .ring svg { transform: rotate(-90deg) }
   .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 17px; font-variant-numeric: tabular-nums }
   .job { min-width: 0 }
-  .job .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-  .muted { color: var(--muted); font-size: 11px }
-  .status { margin-top: 8px; font-size: 11px; color: var(--accent) }
-  .comp { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--muted) }
-  .comp span:last-child { color: var(--fg); font-variant-numeric: tabular-nums }
-  .kw { margin-top: 10px; font-size: 10px; line-height: 1.8 }
+  .job .t { font-weight: 600; font-size: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical }
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px }
+  .chip { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; text-align: center }
+  .chip b { display: block; font-size: 13px; font-variant-numeric: tabular-nums }
+  .chip span { font-size: 10px; color: var(--muted) }
+  .kw { margin-top: 10px; font-size: 10px; line-height: 1.9 }
   .kw b { font-weight: 600; margin-right: 2px }
-  .tag { display: inline-block; padding: 1px 7px; margin: 1px 3px 1px 0; border-radius: 6px; background: var(--chip); color: var(--fg) }
+  .tag { display: inline-block; padding: 1px 7px; margin: 1px 3px 1px 0; border-radius: 6px; background: var(--bg); color: var(--fg) }
   .tag.have { box-shadow: inset 0 0 0 1px oklch(0.765 0.177 163.223 / 45%) }
   .tag.miss { box-shadow: inset 0 0 0 1px oklch(0.828 0.189 84.429 / 55%) }
-  .q { margin-top: 10px; padding: 7px 9px; background: var(--chip); border-radius: 8px; font-size: 11px; color: var(--muted); max-height: 82px; overflow: auto }
-  .actions { display: flex; gap: 8px; margin-top: 12px }
-  .primary { all: unset; cursor: pointer; flex: 1; text-align: center; padding: 8px 10px; border-radius: 10px; font-weight: 600; font-size: 12px;
-    color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 18px oklch(0.585 0.233 277.117 / 40%) }
-  .primary:hover { box-shadow: 0 0 26px oklch(0.585 0.233 277.117 / 60%) }
-  .ghost { all: unset; cursor: pointer; padding: 8px 10px; border-radius: 10px; font-size: 12px; color: var(--fg); background: var(--chip) }
-  .primary[disabled], .ghost[disabled] { opacity: .55; cursor: default; box-shadow: none }
-  .report { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 11px }
+  .btn { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; text-align: center; padding: 10px 12px; border-radius: 12px; font-weight: 600; font-size: 13px; background: var(--chip); color: var(--fg); border: 1px solid var(--line) }
+  .btn:hover { border-color: var(--accent) }
+  .btn.primary { color: #fff; border: 0; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 18px oklch(0.585 0.233 277.117 / 35%) }
+  .btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: default; box-shadow: none }
+  .row { display: flex; gap: 8px; margin-top: 8px }
+  .row .btn { flex: 1 }
+  h3 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .02em }
+  .list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 220px; overflow: auto }
+  .list li { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; font-size: 12px; border-top: 1px solid var(--line); cursor: pointer }
+  .list li:first-child { border-top: 0 }
+  .tick { width: 16px; height: 16px; border-radius: 99px; flex: none; margin-top: 1px; display: grid; place-items: center; font-size: 10px; border: 1.5px solid var(--muted); color: transparent }
+  .done .tick { background: var(--high); border-color: var(--high); color: #04130c }
+  .pct { font-weight: 700; font-variant-numeric: tabular-nums }
   .report ul { margin: 4px 0 0; padding-left: 16px; color: var(--muted) }
   .report li { margin: 2px 0 }
   .report .ok { color: var(--fg) }
+  .note { font-size: 11px; color: var(--muted); margin-top: 6px }
   a { color: var(--accent); text-decoration: none }
+  .tab { all: unset; cursor: pointer; position: fixed; right: 0; top: 40%; z-index: 1; padding: 12px 8px; border-radius: 12px 0 0 12px; writing-mode: vertical-rl;
+    font: 700 12px -apple-system, sans-serif; color: #fff; background: linear-gradient(135deg, oklch(0.585 0.233 277.117), oklch(0.558 0.288 302.321)); box-shadow: -4px 0 18px oklch(0 0 0 / 35%) }
+  .tab[hidden] { display: none }
 `
 
 function mount() {
   const host = document.createElement('div')
   host.id = 'saaf-overlay-host'
-  host.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647'
+  host.style.cssText = 'all:initial;position:fixed;top:0;right:0;z-index:2147483647'
   document.documentElement.appendChild(host)
   const root = host.attachShadow({ mode: 'open' })
   root.innerHTML = `<style>${STYLE}</style>
-    <div class="card">
-      <div class="top"><span class="brand">Jobinko</span><span id="ats"></span><button class="x" id="close" aria-label="Close">×</button></div>
-      <div id="body"><div class="muted" style="margin-top:8px">Scoring this posting…</div></div>
-      <div id="status"></div>
-      <div id="fill"></div>
-    </div>`
-  root.getElementById('close').addEventListener('click', () => host.remove())
+    <button class="tab" id="tab" hidden aria-label="Open Jobinko">Jobinko</button>
+    <aside class="panel" id="panel" aria-label="Jobinko">
+      <header><span class="brand">Jobinko</span><span id="ats"></span><span class="grow"></span><button class="x" id="collapse" aria-label="Collapse Jobinko panel" title="Collapse">›</button></header>
+      <div class="scroll">
+        <section id="account"></section>
+        <section id="support"></section>
+        <section id="match"><div class="muted">Scoring this posting…</div></section>
+        <section id="actions"></section>
+        <section id="tailored"></section>
+        <section id="dash"></section>
+        <section id="report"></section>
+      </div>
+    </aside>`
+  const panel = root.getElementById('panel')
+  const tab = root.getElementById('tab')
+  /**
+   * The panel makes room instead of covering the form: the page gets a right margin the width of the panel while it is
+   * open, and gives it back when collapsed. (Narrow windows keep the panel on top: a squeezed form is worse than a covered one.)
+   */
+  const PANEL_W = 380
+  const room = (open) => {
+    const wide = window.innerWidth >= 900
+    document.documentElement.style.transition = 'margin-right .2s'
+    document.documentElement.style.marginRight = open && wide ? `${PANEL_W}px` : ''
+  }
+  room(true)
+  root.getElementById('collapse').addEventListener('click', () => { panel.hidden = true; tab.hidden = false; room(false) })
+  tab.addEventListener('click', () => { panel.hidden = false; tab.hidden = true; room(true) })
   return root
 }
 
@@ -96,143 +134,216 @@ function ring(score) {
   const color = score >= 75 ? 'var(--high)' : score >= 60 ? 'var(--mid)' : 'var(--low)'
   const r = 25, c = 2 * Math.PI * r, dash = (Math.max(0, Math.min(100, score)) / 100) * c
   return `<div class="ring"><svg width="58" height="58" viewBox="0 0 58 58">
-    <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--chip)" stroke-width="5"/>
+    <circle cx="29" cy="29" r="${r}" fill="none" stroke="var(--bg)" stroke-width="5"/>
     <circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
       stroke-dasharray="${dash} ${c}"/></svg><b>${esc(score)}</b></div>`
 }
 
-function render(root, job, data) {
-  const body = root.getElementById('body')
+/** Who is connected: the signed-in account and the résumé that will be attached, or a way to sign in. */
+function renderAccount(root, state) {
+  const el = root.getElementById('account')
+  if (state.signedIn === true) {
+    const resume = state.resumeFile
+      ? `${state.resumeFile.tailored ? 'Attaching your <b>tailored</b> résumé' : 'Attaching'} <b>${esc(state.resumeFile.name)}</b>`
+      : 'No résumé on Jobinko yet — <a href="' + SITE + '/resume" target="_blank" rel="noopener">add one</a>'
+    el.innerHTML = `<div class="box"><div><b>${esc(state.account?.name || state.account?.email || 'Signed in')}</b> <span class="muted">· connected</span></div><div class="muted" style="margin-top:2px">${resume}</div></div>`
+  } else if (state.signedIn === false) {
+    el.innerHTML = `<div class="box"><div><b>Sign in to Jobinko</b></div>
+      <div class="muted" style="margin:2px 0 8px">To autofill, save jobs and attach your résumé, the extension uses your Jobinko account.</div>
+      <a class="btn primary" id="signin" href="${SITE}/signin" target="_blank" rel="noopener">Sign in to Jobinko</a>
+      <button class="btn" id="recheck" style="margin-top:8px">I’ve signed in — reconnect</button></div>`
+    root.getElementById('recheck').addEventListener('click', () => state.reconnect())
+  } else {
+    el.innerHTML = `<div class="box muted">${esc(state.error || 'Connecting to your Jobinko account…')}</div>`
+  }
+}
+
+function renderMatch(root, job, data) {
+  const el = root.getElementById('match')
   if (job.atsPlatform) root.getElementById('ats').innerHTML = `<span class="badge">${esc(job.atsPlatform)}</span>`
   if (!data?.ok) {
-    body.innerHTML = `<div style="margin-top:8px">${esc(data?.error ?? 'Could not score this posting.')}</div>`
+    el.innerHTML = `<div class="box">${esc(data?.error ?? 'Could not score this posting.')}</div>`
     return
   }
-  // ⚠️ NO COMPONENT COUNT IN THIS COPY. This path omits work mode, so it is
-  // five components and not seven, and a stated number goes stale the next time
-  // the scorer changes shape.
-  const comps = (data.components ?? [])
-    .map((c) => `<div class="comp"><span>${esc(c.label)}</span><span>${esc(c.points)}/${esc(c.max)}</span></div>`)
-    .join('')
-  const quote = (data.requirements ?? []).find((r) => r.sourceQuote)?.sourceQuote
-
+  // ⚠️ NO COMPONENT COUNT IN THIS COPY. This path omits work mode, so it is five components and not seven, and a stated
+  // number goes stale the next time the scorer changes shape.
+  const chips = (data.components ?? []).slice(0, 6).map((c) => {
+    const pct = c.max ? Math.round((c.points / c.max) * 100) : 0
+    const color = pct >= 75 ? 'var(--high)' : pct >= 50 ? 'var(--mid)' : 'var(--low)'
+    return `<div class="chip"><b style="color:${color}">${esc(c.points)}/${esc(c.max)}</b><span>${esc(c.label)}</span></div>`
+  }).join('')
   /**
-   * Missing keywords. Ours come from a vocabulary mined out of our own index,
-   * so a term is listed only because at least twelve distinct employers name
-   * it. That is what stops it saying your résumé is missing "synergy".
+   * Missing keywords. Ours come from a vocabulary mined out of our own index, so a term is listed only because at least
+   * twelve distinct employers name it. That is what stops it saying your résumé is missing "synergy".
    */
   const tags = (list, cls) => list.slice(0, 8).map((t) => `<span class="tag ${cls}">${esc(t)}</span>`).join('')
   const kw = []
   if (data.matched?.length) kw.push(`<div><b>You have</b> ${tags(data.matched, 'have')}</div>`)
   if (data.missing?.length) kw.push(`<div><b>Not on your résumé</b> ${tags(data.missing, 'miss')}</div>`)
-
-  body.innerHTML = `
+  el.innerHTML = `<div class="box">
     <div class="head">${ring(data.total)}
       <div class="job"><div class="t">${esc(job.title || 'This posting')}</div>
-        <div class="muted">${esc([job.company, job.location].filter(Boolean).join(' · ') || 'out of 100')}</div></div></div>
-    ${comps}
-    ${kw.length ? `<div class="kw">${kw.join('')}</div>` : ''}
-    ${quote ? `<div class="q">Read from the posting: “${esc(quote.slice(0, 180))}”</div>` : ''}`
+        <div class="muted">${esc([job.company, job.location].filter(Boolean).join(' · ') || 'match out of 100')}</div></div></div>
+    <div class="chips">${chips}</div>
+    ${kw.length ? `<div class="kw">${kw.join('')}</div>` : ''}</div>`
 }
 
-/**
- * Tracker state for this page, from what the web app last synced. Re-renders
- * on every storage change, so moving the card in Jobinko shows here at once.
- */
-async function renderStatus(root, job) {
-  const { tracked = [], pendingTrack = [] } = await chrome.storage.local.get(['tracked', 'pendingTrack'])
-  const key = pageKey(job.pageUrl)
-  const onBoard = tracked.find((t) => pageKey(t.url) === key)
-  const queued = pendingTrack.find((t) => pageKey(t.url) === key)
-  const el = root.getElementById('status')
-  if (onBoard) el.innerHTML = `<div class="status">On your Jobinko tracker · ${esc(STAGE_LABEL[onBoard.status] ?? onBoard.status)}</div>`
-  else if (queued) el.innerHTML = `<div class="status">Goes on your tracker as ${esc(STAGE_LABEL[queued.status])} next time Jobinko is open · <a href="${SITE}/applications" target="_blank" rel="noopener">Open Jobinko</a></div>`
-  else el.innerHTML = ''
-}
-
-const queue = (job, status) => chrome.runtime.sendMessage({
-  type: 'saaf:queue',
+const save = (job, status) => chrome.runtime.sendMessage({
+  type: 'jx:save',
   item: { url: job.pageUrl, title: job.title || 'Untitled role', company: job.company || new URL(job.pageUrl).hostname, ats: job.atsPlatform, status },
 })
 
-/**
- * The autofill control.
- *
- * ⚠️ IT IS A BUTTON, AND IT IS NEVER AUTOMATIC. Filling a stranger's form on
- * page load is both surprising and the shape of the auto-apply behaviour this
- * product refuses. The candidate asks; we fill; they read it and press Submit
- * themselves. Nothing here submits or navigates.
- *
- * ⚠️ THE REFUSALS AND THE PICKS ARE RENDERED, NOT SWALLOWED. A filler that
- * silently leaves gaps looks broken; one that silently picks a dropdown option
- * is worse. Every choice made is listed for the candidate to check.
- */
-function mountActions(root, job) {
+/** "Autofill" button, the completion bar and the required list — the panel's working half. */
+function mountActions(root, job, state) {
   const doc = document
-  const wrap = root.getElementById('fill')
+  const A = globalThis.SaafAutofill
+  const actions = root.getElementById('actions')
+  const dash = root.getElementById('dash')
+  const report = root.getElementById('report')
   /**
-   * ⚠️ THE FORM OFTEN ARRIVES AFTER THE CARD. Greenhouse renders the
-   * application below the description, Lever puts it on a separate /apply URL,
-   * and several ATS front ends mount it client-side a beat later. So the fill
-   * button appears when a form does, and the observer stops after 15 s — one
-   * left running for the life of the tab is a cost every page pays forever.
+   * ⚠️ THE FORM OFTEN ARRIVES AFTER THE PANEL. Greenhouse renders the application below the description, Lever puts it
+   * on a separate /apply URL, and several ATS front ends mount it client-side a beat later. So the Autofill button
+   * enables when a form does, and the observer stops after 15 s — one left running for the life of the tab is a cost
+   * every page pays forever.
    */
   const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form select'
-  wrap.innerHTML = `<div class="actions"><button class="ghost" id="save">Save to tracker</button><button class="ghost" id="tailor">Tailor my résumé</button></div>`
-  // Opens Jobinko's tailoring tool with this posting (and the résumé stored here) already in its boxes.
-  root.getElementById('tailor').addEventListener('click', async (e) => {
-    const b = e.currentTarget
-    b.disabled = true
-    const r = await chrome.runtime.sendMessage({ type: 'saaf:tailor-open', jdText: job.description, jdTitle: job.title, jdLocation: job.location }).catch(() => null)
-    b.textContent = r?.ok ? 'Opened in a new tab' : 'Could not open it'
-    setTimeout(() => { b.textContent = 'Tailor my résumé'; b.disabled = false }, 4000)
-  })
-  root.getElementById('save').addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true
-    await queue(job, 'saved')
-  })
+  const hasForm = () => !!doc.querySelector(FORM_SELECTOR)
 
-  const addFill = () => {
-    if (root.getElementById('go')) return
-    const btn = doc.createElement('button')
-    btn.className = 'primary'
-    btn.id = 'go'
-    btn.textContent = '⚡ Fill this application'
-    wrap.querySelector('.actions').prepend(btn)
-    btn.addEventListener('click', async () => {
-      btn.disabled = true
-      btn.textContent = 'Filling…'
-      const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
-      if (!profile || !profile.fullName) {
-        wrap.insertAdjacentHTML('beforeend', '<div class="report">Add your details in the Jobinko extension first — or open Jobinko once while signed in and they sync.</div>')
-        btn.textContent = '⚡ Fill this application'
-        btn.disabled = false
-        return
-      }
-      const res = await globalThis.SaafAutofill.fillForm(profile, doc, { resumeFile })
-      if (res.unanswered.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: res.unanswered })
-      const how = { typed: 'Typed', chose: 'Chose', ticked: 'Ticked', attached: 'Attached' }
-      const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
-      const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
-      root.querySelector('.report')?.remove()
-      wrap.insertAdjacentHTML('beforeend', `<div class="report">
-        <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
-        ${picks ? `<ul>${picks}</ul>` : ''}
-        ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
-        ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Open Jobinko → Profile → Apply details, write it once, and it is filled next time the same question is asked.</div>` : ''}</div>`)
-      btn.textContent = 'Fill again'
-      btn.disabled = false
-      // Filling a form is the candidate applying, so the role goes on the
-      // tracker as Applying. It never reaches Applied from here: we cannot see
-      // whether they pressed Submit, and saying they did would be a guess.
-      if (res.filled.length) await queue(job, 'applying')
+  actions.innerHTML = `
+    <button class="btn primary" id="go" disabled>⚡ Autofill</button>
+    <div class="note" id="gonote"></div>
+    <div class="row"><button class="btn" id="save">Save job</button><button class="btn" id="tailor">Tailor résumé</button></div>
+    <div class="note" id="savenote"></div>`
+  const go = root.getElementById('go')
+  const gonote = root.getElementById('gonote')
+  const supportEl = root.getElementById('support')
+
+  const setSupport = () => {
+    const ok = hasForm()
+    supportEl.innerHTML = `<div class="support ${ok ? '' : 'off'}"><span class="dot"></span>${ok ? `Autofill supported${job.atsPlatform ? ' · ' + esc(job.atsPlatform) : ''}` : 'No application form on this page yet — press Apply on the posting'}</div>`
+    go.disabled = !ok
+    gonote.textContent = ok ? '' : ''
+  }
+  setSupport()
+
+  // Save job — straight onto the tracker; falls back to a queue when signed out.
+  const saveBtn = root.getElementById('save')
+  const saveNote = root.getElementById('savenote')
+  async function showSaved() {
+    const { tracked = [], pendingTrack = [] } = await chrome.storage.local.get(['tracked', 'pendingTrack'])
+    const key = pageKey(job.pageUrl)
+    const on = tracked.find((t) => pageKey(t.url) === key)
+    const queued = pendingTrack.find((t) => pageKey(t.url) === key)
+    if (on) { saveBtn.textContent = `✓ ${STAGE_LABEL[on.status] ?? on.status}`; saveNote.innerHTML = `On your Jobinko tracker · <a href="${SITE}/applications" target="_blank" rel="noopener">open it</a>` }
+    else if (queued) { saveBtn.textContent = '✓ Saved'; saveNote.innerHTML = `Not signed in — it goes on your tracker next time Jobinko is open. <a href="${SITE}/applications" target="_blank" rel="noopener">Open Jobinko</a>` }
+    else { saveBtn.textContent = 'Save job'; saveNote.textContent = '' }
+  }
+  saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true
+    saveBtn.textContent = 'Saving…'
+    const r = await save(job, 'saved').catch(() => null)
+    saveBtn.disabled = false
+    if (!r?.ok) { saveBtn.textContent = 'Save job'; saveNote.textContent = r?.error || 'Could not save it just now.'; return }
+    await showSaved()
+  })
+  showSaved()
+  chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && (changes.tracked || changes.pendingTrack)) showSaved() })
+
+  // Tailor — rewrites your résumé for THIS posting on Jobinko (same engine and honesty guard as the website), keeps it as a
+  // saved résumé, and attaches exactly that file on this application.
+  const tailorBtn = root.getElementById('tailor')
+  const tailored = root.getElementById('tailored')
+  const pk = pageKey(job.pageUrl)
+  function drawTailored(t) {
+    if (!t) { tailored.innerHTML = ''; return }
+    const sc = t.scores?.before != null && t.scores?.after != null ? `Match ${esc(t.scores.before)} → <b>${esc(t.scores.after)}</b> · ` : ''
+    tailored.innerHTML = `<div class="box"><h3>Tailored résumé</h3>
+      <div>${sc}${esc(t.changed ?? 0)} line${t.changed === 1 ? '' : 's'} reworded for this role</div>
+      <div class="muted" style="margin-top:2px">Every line is checked against your own original; anything it could not support was left as you wrote it.</div>
+      <div class="row"><a class="btn" href="${SITE}/resume/edit/${esc(t.id)}" target="_blank" rel="noopener">View &amp; edit</a><button class="btn" id="untailor">Use my main résumé</button></div>
+      <div class="note">${hasForm() ? 'Press <b>Autofill again</b> to attach it to this application.' : 'It will be attached when you press Autofill.'}</div></div>`
+    root.getElementById('untailor').addEventListener('click', async () => {
+      await chrome.runtime.sendMessage({ type: 'jx:untailor', pageKey: pk })
+      await state.reconnect()
+      drawTailored(null)
     })
   }
-
-  if (doc.querySelector(FORM_SELECTOR)) { addFill(); return }
-  const obs = new MutationObserver(() => {
-    if (doc.querySelector(FORM_SELECTOR)) { obs.disconnect(); addFill() }
+  state.drawTailored = drawTailored
+  tailorBtn.addEventListener('click', async () => {
+    tailorBtn.disabled = true
+    tailorBtn.textContent = 'Tailoring…'
+    saveNote.textContent = 'Rewriting your résumé for this posting — this takes about 20 seconds.'
+    const r = await chrome.runtime.sendMessage({ type: 'jx:tailor', pageKey: pk, jdText: job.description, jdTitle: job.title, company: job.company }).catch(() => null)
+    tailorBtn.disabled = false
+    tailorBtn.textContent = 'Tailor résumé'
+    showSaved()
+    if (r?.signedIn === false) { state.signedIn = false; renderAccount(root, state); return }
+    if (!r?.ok) { tailored.innerHTML = `<div class="box">${esc(r?.error || 'Could not tailor it just now.')}</div>`; return }
+    state.resumeFile = r.file ? { name: r.file.name, tailored: true } : state.resumeFile
+    renderAccount(root, state)
+    drawTailored(r)
   })
+
+  // The completion bar and the required list, drawn from the page's own marks.
+  function drawDashboard() {
+    const c = A.checklist(doc)
+    if (!c.items.length) { dash.innerHTML = ''; return c }
+    const pct = c.required ? Math.round((c.done / c.required) * 100) : 0
+    const rows = c.counted.map((i, n) => `<li class="${i.done ? 'done' : ''}" data-n="${n}"><span class="tick">✓</span><span>${esc(i.label)}</span></li>`).join('')
+    dash.innerHTML = `<div class="box"><h3>Application dashboard</h3>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span class="muted">Completion</span><span class="pct">${pct}%</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="muted" style="margin-top:10px">${c.counted.some((i) => i.required) ? 'Required' : 'Fields'} · ${c.done} of ${c.required} done</div>
+      <ul class="list">${rows}</ul></div>`
+    dash.querySelectorAll('li').forEach((li) => li.addEventListener('click', () => {
+      const el = c.counted[Number(li.dataset.n)]?.el
+      if (!el) return
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      try { el.focus({ preventScroll: true }) } catch { /* not focusable */ }
+    }))
+    return c
+  }
+  const refreshDashboard = () => { if (hasForm()) drawDashboard(); else dash.innerHTML = '' }
+  refreshDashboard()
+  // The person types answers themselves too; keep the bar honest (cheap: only while a form exists).
+  doc.addEventListener('input', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
+  doc.addEventListener('change', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
+
+  go.addEventListener('click', async () => {
+    go.disabled = true
+    go.textContent = 'Autofilling…'
+    report.innerHTML = ''
+    // Bring the profile, answers and résumé file up to date from the account, then fill.
+    const conn = await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pk }).catch(() => null)
+    if (conn) { state.signedIn = conn.signedIn; state.account = conn.account; state.resumeFile = conn.resumeFile; renderAccount(root, state) }
+    const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
+    if (!profile || !profile.fullName) {
+      report.innerHTML = '<div class="box report">We have no details to fill with yet. Sign in to Jobinko and finish your profile — or open Jobinko once while signed in and they sync.</div>'
+      go.textContent = '⚡ Autofill'; go.disabled = !hasForm()
+      return
+    }
+    const res = await A.fillForm(profile, doc, { resumeFile, replaceResumeNamed: state.attachedName })
+    const att = res.filled.find((f) => f.how === 'attached')
+    if (att) state.attachedName = att.value
+    if (res.unanswered.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: res.unanswered })
+    const how = { typed: 'Typed', chose: 'Chose', ticked: 'Ticked', attached: 'Attached' }
+    const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
+    const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
+    report.innerHTML = `<div class="box report">
+      <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
+      ${picks ? `<ul>${picks}</ul>` : ''}
+      ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
+      ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Write ${res.unanswered.length === 1 ? 'it' : 'each'} once in Jobinko → Profile → Templates, and it is filled next time it is asked.</div>` : ''}</div>`
+    go.textContent = 'Autofill again'
+    go.disabled = false
+    drawDashboard()
+    // Filling a form is the candidate applying, so the role goes on the tracker as Applying. It never reaches Applied
+    // from here: we cannot see whether they pressed Submit, and saying they did would be a guess.
+    if (res.filled.length) { await save(job, 'applying'); showSaved() }
+  })
+
+  if (hasForm()) return
+  const obs = new MutationObserver(() => { if (hasForm()) { setSupport(); refreshDashboard() } })
   obs.observe(doc.body, { childList: true, subtree: true })
   setTimeout(() => obs.disconnect(), 15000)
 }
@@ -277,13 +388,25 @@ async function autoApplyIfAssigned() {
   const job = globalThis.SaafExtract.extractJob(document, location)
   if (job.description.length < globalThis.SaafExtract.MIN_JD_CHARS) return
   const root = mount()
-  mountActions(root, job)
-  renderStatus(root, job)
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && (changes.tracked || changes.pendingTrack)) renderStatus(root, job)
-  })
+  const state = {
+    signedIn: null, account: null, resumeFile: null, error: '',
+    async reconnect() {
+      state.signedIn = null; state.error = ''; renderAccount(root, state)
+      const r = await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pageKey(job.pageUrl) }).catch(() => null)
+      state.signedIn = r?.signedIn ?? null
+      state.account = r?.account ?? null
+      state.resumeFile = r?.resumeFile ?? null
+      state.drawTailored?.(r?.tailored ?? null)
+      state.error = r?.error || (r ? '' : 'Could not reach Jobinko.')
+      renderAccount(root, state)
+    },
+  }
+  renderAccount(root, state)
+  mountActions(root, job, state)
+  // Connect first so the score below uses the account's current résumé.
+  await state.reconnect()
   chrome.runtime.sendMessage(
     { type: 'saaf:score', jdText: job.description, jdTitle: job.title, jdLocation: job.location },
-    (data) => render(root, job, data),
+    (data) => renderMatch(root, job, data),
   )
 })()

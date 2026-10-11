@@ -612,7 +612,8 @@
       if (tag === 'input' && type === 'file') {
         const signals = signalsFor(el, doc)
         if (!RESUME_UPLOAD.test(signals) || /cover/i.test(signals)) { out.skipped++; continue }
-        if (el.files && el.files.length) { out.skipped++; continue }
+        // A file already there stays — unless it is the one this extension attached earlier (a re-run after tailoring).
+        if (el.files && el.files.length && el.files[0].name !== opts.replaceResumeNamed) { out.skipped++; continue }
         if (!opts.resumeFile) { refuse('résumé upload — add your résumé PDF in the extension to attach it'); continue }
         if (attachFile(el, opts.resumeFile)) out.filled.push({ key: 'resume', value: opts.resumeFile.name, how: 'attached' })
         else refuse('résumé upload that does not accept your file type — left for you')
@@ -739,8 +740,71 @@
     return out
   }
 
+
+  // ------------------------------------------------------------- checklist --
+
+  /**
+   * What the page asks, and how much of it is answered — the panel's "Completion" bar and "Required" list.
+   *
+   * Returns { items: [{ label, required, done, el }], required, done }:
+   *  • one item per text/select/textarea/file box, and ONE per radio or tick-box group;
+   *  • `required` from the page's own marks (the `required` attribute or aria-required) — nothing is guessed;
+   *  • `done` = has a value (a chosen non-placeholder option, a ticked box, an attached file);
+   *  • hidden, disabled, password and button inputs are not part of the form the person sees.
+   * Counted over the required items when the page marks any, over every item when it marks none.
+   * Read-only: it never writes to the page.
+   */
+  function checklist(doc) {
+    const items = []
+    const groups = new Map()
+    const visible = (el) => {
+      if (!el.isConnected) return false
+      const style = el.ownerDocument.defaultView?.getComputedStyle?.(el)
+      if (style && (style.display === 'none' || style.visibility === 'hidden')) return false
+      return true
+    }
+    for (const el of doc.querySelectorAll('input, textarea, select')) {
+      if (el.disabled || !visible(el)) continue
+      const tag = (el.tagName || '').toLowerCase()
+      const type = (el.type || 'text').toLowerCase()
+      if (tag === 'input' && ['hidden', 'submit', 'button', 'image', 'reset', 'password', 'search'].includes(type)) continue
+      if (el.getAttribute('aria-hidden') === 'true') continue
+
+      if (tag === 'input' && (type === 'radio' || type === 'checkbox')) {
+        const name = el.getAttribute('name') || el.id || `__${groups.size}`
+        const key = `${type}:${name}`
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key).push(el)
+        continue
+      }
+      let label = questionLabel(el, doc)
+      if (!label) label = tidy(el.getAttribute?.('name') || el.id || '')
+      if (!label) continue
+      let done
+      if (tag === 'input' && type === 'file') done = !!(el.files && el.files.length)
+      else if (tag === 'select') done = !!el.value && !isPlaceholder(el.options?.[el.selectedIndex]?.text, el.value)
+      else done = !!String(el.value || '').trim()
+      items.push({ label: label.replace(/\s*\*\s*$/, '').slice(0, 120), required: isRequiredEl(el), done, el })
+    }
+    for (const els of groups.values()) {
+      const first = els[0]
+      // The visible question (legend / group label), not the machine name questionFor also searches.
+      const fs = first.closest ? first.closest('fieldset') : null
+      const grp = first.closest ? first.closest('[role="radiogroup"], [role="group"]') : null
+      const by = grp?.getAttribute('aria-labelledby')
+      const visibleQ = tidy([textOf(fs?.querySelector('legend')), grp?.getAttribute('aria-label') || '', by && doc ? by.split(/\s+/).map((id) => textOf(doc.getElementById?.(id))).join(' ') : ''].join(' '))
+      const label = (visibleQ || questionFor(first, doc)).replace(/\s*\*\s*$/, '').slice(0, 120)
+      if (!label) continue
+      items.push({ label, required: els.some(isRequiredEl), done: els.some((e) => e.checked), el: first })
+    }
+    // Document order, so the list reads like the form.
+    items.sort((a, b) => (a.el.compareDocumentPosition(b.el) & 4 ? -1 : 1))
+    const counted = items.some((i) => i.required) ? items.filter((i) => i.required) : items
+    return { items, required: counted.length, done: counted.filter((i) => i.done).length, counted: counted.length ? counted : [] }
+  }
+
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

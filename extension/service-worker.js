@@ -38,6 +38,64 @@ const SYNCED_FIELDS = [
 ]
 const RANK = { saved: 0, applying: 1, applied: 2 }
 
+// ------------------------------------------------------------ The person's own account
+/**
+ * The extension acts on the person's own Jobinko account, using the site's login cookie (host_permissions on jobinko.in
+ * let this background context send it — measured 2026-10-11). It holds no password and no token of its own: signed out
+ * of Jobinko means signed out here, and every call answers `signed-out` and the panel says so.
+ *
+ * The server refuses anything that is not this extension (src/lib/extension-session.ts): Origin or Sec-Fetch-Site, plus
+ * the header below, which a web page cannot send.
+ */
+const SITE_ORIGIN = new URL(ENDPOINT).origin
+const api = (path, init = {}) =>
+  fetch(SITE_ORIGIN + path, { credentials: 'include', ...init, headers: { 'x-jobinko-extension': '1', ...(init.headers || {}) } })
+
+function toBase64(buf) {
+  const bytes = new Uint8Array(buf)
+  let bin = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(bin)
+}
+
+/** Pull the profile, answers, résumé text and tracker from the account into storage. */
+async function connectAccount() {
+  try {
+    const res = await api('/api/extension/me')
+    if (res.status === 401) { await chrome.storage.local.set({ account: null }); return { ok: false, signedIn: false } }
+    if (!res.ok) return { ok: false, signedIn: null, error: 'Could not reach Jobinko.' }
+    const data = await res.json()
+    await applySync(data)
+    const account = { email: String(data.profile?.email || '').slice(0, 200), name: String(data.profile?.fullName || '').slice(0, 120), resume: data.resume ?? null, at: new Date().toISOString() }
+    await chrome.storage.local.set({ account })
+    return { ok: true, signedIn: true, account }
+  } catch {
+    return { ok: false, signedIn: null, error: 'Could not reach Jobinko.' }
+  }
+}
+
+/**
+ * The résumé to attach: the account's primary résumé as a Word file, kept in storage as `resumeFile` (the shape autofill
+ * already attaches). Re-fetched when the résumé changed on Jobinko; a file the person uploaded by hand in the popup is
+ * left alone.
+ */
+async function ensureAccountResume(meta) {
+  const { resumeFile } = await chrome.storage.local.get('resumeFile')
+  if (resumeFile && resumeFile.source !== 'account') return { ok: true, name: resumeFile.name, from: 'uploaded' }
+  if (resumeFile?.source === 'account' && meta && resumeFile.id === meta.id && resumeFile.updatedAt === meta.updatedAt) return { ok: true, name: resumeFile.name, from: 'account' }
+  try {
+    const res = await api('/api/extension/resume' + (meta?.id ? `?id=${encodeURIComponent(meta.id)}` : ''))
+    if (res.status === 401) return { ok: false, signedIn: false }
+    if (!res.ok) return { ok: false, error: res.status === 404 ? 'no-resume' : 'Could not fetch your résumé.' }
+    const name = res.headers.get('x-filename') || 'Resume.docx'
+    const file = { name, type: res.headers.get('content-type') || 'application/octet-stream', base64: toBase64(await res.arrayBuffer()), source: 'account', id: meta?.id ?? null, updatedAt: meta?.updatedAt ?? null }
+    await chrome.storage.local.set({ resumeFile: file })
+    return { ok: true, name, from: 'account' }
+  } catch {
+    return { ok: false, error: 'Could not reach Jobinko.' }
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   // A role the candidate saved or filled on a job site. Held here until the
   // Jobinko web app, open and signed in, collects it (saaf:drain below) — the
@@ -93,6 +151,99 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
 
+  // The panel opened: connect to the account (profile, answers, résumé, tracker) and get the résumé file ready to attach.
+  if (msg?.type === 'jx:connect') {
+    ;(async () => {
+      const r = await connectAccount()
+      if (r.ok) {
+        // A résumé tailored for THIS page wins over the primary one; everywhere else the primary is attached.
+        const { tailoredFor = {} } = await chrome.storage.local.get('tailoredFor')
+        const mine = msg.pageKey ? tailoredFor[msg.pageKey] : null
+        const file = await ensureAccountResume(mine ? { id: mine.id, updatedAt: mine.at } : r.account.resume)
+        r.resumeFile = file.ok ? { name: file.name, from: file.from, tailored: !!mine } : null
+        r.tailored = mine ? { label: mine.label, scores: mine.scores, changed: mine.changed, id: mine.id } : null
+      }
+      sendResponse(r)
+    })()
+    return true
+  }
+
+  // "Tailor résumé": the server rewrites the primary résumé against this posting (same engine and honesty guard as the
+  // website), keeps it as a saved résumé, and the extension fetches that file to attach.
+  if (msg?.type === 'jx:tailor') {
+    ;(async () => {
+      const jdText = String(msg.jdText || '').slice(0, 20000)
+      if (jdText.length < 120 || !msg.pageKey) { sendResponse({ ok: false, error: 'This posting is too short to tailor against.' }); return }
+      try {
+        const res = await api('/api/extension/tailor', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ jdText, jdTitle: String(msg.jdTitle || '').slice(0, 200) || undefined, company: String(msg.company || '').slice(0, 200) || undefined }),
+        })
+        if (res.status === 401) { sendResponse({ ok: false, signedIn: false }); return }
+        const data = await res.json().catch(() => null)
+        if (!res.ok || !data?.ok) {
+          sendResponse({ ok: false, error: data?.error === 'no-resume' ? 'Add a résumé to Jobinko first.' : (data?.error === 'slow-down' ? 'You have tailored a few résumés in a short while. Try again in a few minutes.' : data?.error || 'Could not tailor it just now.') })
+          return
+        }
+        const at = new Date().toISOString()
+        const { tailoredFor = {} } = await chrome.storage.local.get('tailoredFor')
+        tailoredFor[msg.pageKey] = { id: data.resumeId, label: data.label, scores: data.scores, changed: data.changed, at }
+        // Keep the map small: the 30 most recent pages.
+        const keep = Object.entries(tailoredFor).sort((a, b) => String(b[1].at).localeCompare(String(a[1].at))).slice(0, 30)
+        await chrome.storage.local.set({ tailoredFor: Object.fromEntries(keep) })
+        const file = await ensureAccountResume({ id: data.resumeId, updatedAt: at })
+        sendResponse({ ok: true, id: data.resumeId, label: data.label, scores: data.scores, changed: data.changed, file: file.ok ? { name: file.name } : null })
+      } catch {
+        sendResponse({ ok: false, error: 'Could not reach Jobinko.' })
+      }
+    })()
+    return true
+  }
+
+  // Back to the main résumé for this page.
+  if (msg?.type === 'jx:untailor') {
+    ;(async () => {
+      const { tailoredFor = {} } = await chrome.storage.local.get('tailoredFor')
+      delete tailoredFor[msg.pageKey]
+      await chrome.storage.local.set({ tailoredFor })
+      sendResponse({ ok: true })
+    })()
+    return true
+  }
+
+  // "Save job": straight onto the person's tracker. Signed out → it is queued as before and filed when Jobinko is next opened.
+  if (msg?.type === 'jx:save') {
+    ;(async () => {
+      const item = msg.item || {}
+      if (!/^https?:\/\//.test(item.url || '') || !RANK.hasOwnProperty(item.status)) { sendResponse({ ok: false }); return }
+      try {
+        const res = await api('/api/extension/save', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url: String(item.url).slice(0, 2000), title: String(item.title || 'Untitled role').slice(0, 300), company: String(item.company || 'Unknown company').slice(0, 200), status: item.status }),
+        })
+        if (res.ok) {
+          const { tracked = [] } = await chrome.storage.local.get('tracked')
+          const i = tracked.findIndex((t) => t.url === item.url)
+          if (i === -1) tracked.push({ url: item.url, status: item.status })
+          else if (RANK[item.status] > (RANK[tracked[i].status] ?? 9)) tracked[i] = { url: item.url, status: item.status }
+          await chrome.storage.local.set({ tracked })
+          sendResponse({ ok: true, via: 'account' })
+          return
+        }
+        if (res.status !== 401) { sendResponse({ ok: false, error: 'Could not save it just now.' }); return }
+      } catch { /* offline: fall through to the queue */ }
+      // Signed out or unreachable: hold it here until the web app collects it.
+      const { pendingTrack = [] } = await chrome.storage.local.get('pendingTrack')
+      const i = pendingTrack.findIndex((p) => p.url === item.url)
+      const row = { url: String(item.url).slice(0, 2000), title: String(item.title || '').slice(0, 300), company: String(item.company || '').slice(0, 200), status: item.status, at: new Date().toISOString() }
+      if (i === -1) pendingTrack.push(row)
+      else if (RANK[row.status] > RANK[pendingTrack[i].status]) pendingTrack[i] = row
+      await chrome.storage.local.set({ pendingTrack: pendingTrack.slice(-50) })
+      sendResponse({ ok: true, via: 'queued' })
+    })()
+    return true
+  }
+
   if (msg?.type !== 'saaf:score') return false
 
   ;(async () => {
@@ -129,6 +280,55 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 })
 
 /**
+ * Apply a profile/résumé/tracker snapshot to storage. The same snapshot arrives two ways: pushed by the signed-in web
+ * app (saaf:sync below) or pulled by the extension itself with the person's login (connectAccount).
+ *
+ * ⚠️ SYNC FILLS, IT DOES NOT ERASE. See the note above the bridge.
+ */
+async function applySync(msg) {
+  const { profile = {} } = await chrome.storage.local.get('profile')
+  for (const f of SYNCED_FIELDS) {
+    const v = msg.profile?.[f]
+    if (typeof v === 'string' && v.trim()) profile[f] = v.trim().slice(0, 500)
+  }
+  // The candidate's own typed answers to demographic questions. REPLACED, not
+  // merged: clearing an answer on the web must remove it here, or a question
+  // they took back would still be answered. Whitelisted keys, short strings only.
+  if (msg.selfId && typeof msg.selfId === 'object') {
+    const KEYS = ['gender', 'pronouns', 'ethnicity', 'disability', 'veteran', 'orientation', 'caste', 'religion', 'marital']
+    const next = {}
+    for (const k of KEYS) {
+      const v = msg.selfId[k]
+      if (typeof v === 'string' && v.trim()) next[k] = v.trim().slice(0, 60)
+    }
+    profile.selfId = next
+  }
+  // The candidate's own saved answers to custom questions, keyed by the question
+  // (autofill.js questionKey). REPLACED, like selfId: deleting one on the web must
+  // stop it being filled here. Capped so a bad message cannot fill storage.
+  if (Array.isArray(msg.answerBank)) {
+    const bank = {}
+    for (const e of msg.answerBank.slice(0, 60)) {
+      if (typeof e?.key === 'string' && typeof e?.a === 'string' && e.key && e.a.trim()) {
+        bank[e.key.slice(0, 200)] = { a: e.a.trim().slice(0, 1500), auto: e.auto === true }
+      }
+    }
+    profile.answerBank = bank
+  }
+  const patch = { profile, syncedAt: new Date().toISOString() }
+  if (typeof msg.resumeText === 'string' && msg.resumeText.trim().length >= 120) {
+    patch.resumeText = msg.resumeText.slice(0, 40000)
+  }
+  if (Array.isArray(msg.tracked)) {
+    patch.tracked = msg.tracked
+      .filter((t) => t && typeof t.url === 'string' && typeof t.status === 'string')
+      .slice(0, 500)
+      .map((t) => ({ url: t.url.slice(0, 2000), status: t.status }))
+  }
+  await chrome.storage.local.set(patch)
+}
+
+/**
  * The web app ↔ extension bridge. Only Jobinko's own pages reach this.
  *
  *  saaf:hello  → is the extension installed, and which version
@@ -156,46 +356,7 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
       return
     }
     if (msg?.type === 'saaf:sync') {
-      const { profile = {} } = await chrome.storage.local.get('profile')
-      for (const f of SYNCED_FIELDS) {
-        const v = msg.profile?.[f]
-        if (typeof v === 'string' && v.trim()) profile[f] = v.trim().slice(0, 500)
-      }
-      // The candidate's own typed answers to demographic questions. REPLACED, not
-      // merged: clearing an answer on the web must remove it here, or a question
-      // they took back would still be answered. Whitelisted keys, short strings only.
-      if (msg.selfId && typeof msg.selfId === 'object') {
-        const KEYS = ['gender', 'pronouns', 'ethnicity', 'disability', 'veteran', 'orientation', 'caste', 'religion', 'marital']
-        const next = {}
-        for (const k of KEYS) {
-          const v = msg.selfId[k]
-          if (typeof v === 'string' && v.trim()) next[k] = v.trim().slice(0, 60)
-        }
-        profile.selfId = next
-      }
-      // The candidate's own saved answers to custom questions, keyed by the question
-      // (autofill.js questionKey). REPLACED, like selfId: deleting one on the web must
-      // stop it being filled here. Capped so a bad message cannot fill storage.
-      if (Array.isArray(msg.answerBank)) {
-        const bank = {}
-        for (const e of msg.answerBank.slice(0, 60)) {
-          if (typeof e?.key === 'string' && typeof e?.a === 'string' && e.key && e.a.trim()) {
-            bank[e.key.slice(0, 200)] = { a: e.a.trim().slice(0, 1500), auto: e.auto === true }
-          }
-        }
-        profile.answerBank = bank
-      }
-      const patch = { profile, syncedAt: new Date().toISOString() }
-      if (typeof msg.resumeText === 'string' && msg.resumeText.trim().length >= 120) {
-        patch.resumeText = msg.resumeText.slice(0, 40000)
-      }
-      if (Array.isArray(msg.tracked)) {
-        patch.tracked = msg.tracked
-          .filter((t) => t && typeof t.url === 'string' && typeof t.status === 'string')
-          .slice(0, 500)
-          .map((t) => ({ url: t.url.slice(0, 2000), status: t.status }))
-      }
-      await chrome.storage.local.set(patch)
+      await applySync(msg)
       sendResponse({ ok: true })
       return
     }
