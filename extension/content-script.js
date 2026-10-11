@@ -29,7 +29,7 @@ const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', 
 const STYLE = `
   :host { all: initial }
   * { box-sizing: border-box }
-  .panel { --bg: oklch(0.205 0.006 285.885); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
+  .panel, .afm { --bg: oklch(0.205 0.006 285.885); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
     --line: oklch(1 0 0 / 10%); --chip: oklch(0.274 0.006 286.033); --brand: oklch(0.585 0.233 277.117);
     --brand-2: oklch(0.558 0.288 302.321); --accent: oklch(0.673 0.182 276.935);
     --high: oklch(0.765 0.177 163.223); --mid: oklch(0.828 0.189 84.429); --low: oklch(0.704 0.191 22.216);
@@ -37,6 +37,53 @@ const STYLE = `
     font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg); background: var(--bg);
     border-left: 1px solid var(--line); box-shadow: -12px 0 40px oklch(0 0 0 / 40%) }
   .panel[hidden] { display: none }
+  /* The "Your Autofill information" pop-up — the same layout as Jobright's (section list left, pane right, Update below),
+     drawn with Jobinko's colours. */
+  .afm { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: oklch(0 0 0 / 60%);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg) }
+  .afm-card { width: min(1056px, 94vw); height: min(672px, 92vh); display: flex; flex-direction: column; border-radius: 24px; background: var(--bg);
+    border: 1px solid var(--line); box-shadow: 0 24px 80px oklch(0 0 0 / 55%); overflow: hidden }
+  .afm-head { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px 14px }
+  .afm-head h2 { margin: 0; font-size: 20px; font-weight: 700 }
+  .afm-x { all: unset; cursor: pointer; color: var(--muted); font-size: 20px; padding: 4px 8px; border-radius: 8px }
+  .afm-x:hover { background: var(--chip); color: var(--fg) }
+  .afm-banner { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 0; padding: 14px 28px; background: var(--chip); font-size: 13px }
+  .afm-banner b { display: block; font-size: 14px }
+  .afm-banner span { color: var(--muted) }
+  .afm-i { flex: none; width: 18px; height: 18px; border-radius: 99px; background: var(--fg); color: var(--bg); font-size: 12px; font-weight: 700; display: grid; place-items: center; margin-top: 2px }
+  .afm-body { flex: 1; min-height: 0; display: flex }
+  .afm-nav { width: 270px; flex: none; padding: 22px 22px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid var(--line); overflow-y: auto }
+  .afm-nav button { all: unset; cursor: pointer; padding: 11px 14px; border-radius: 14px; font-size: 15px; font-weight: 600; color: var(--fg); border: 1px solid transparent }
+  .afm-nav button:hover { background: var(--chip) }
+  .afm-nav button.on { background: var(--chip); border-color: oklch(0.673 0.182 276.935 / 55%) }
+  .afm-pane { flex: 1; min-width: 0; padding: 22px 32px; overflow-y: auto }
+  .afm-pane h3 { margin: 0 0 6px; font-size: 24px; font-weight: 700 }
+  .afm-sub { margin: 0 0 14px; color: var(--muted); font-size: 14px }
+  .afm-sub b { color: var(--fg) }
+  .afm-pane hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0 }
+  .afm-pane label.afm-l { display: block; margin: 14px 0 6px; font-weight: 600; font-size: 14px }
+  .afm-in { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--chip); color: var(--fg); font: inherit; outline: none }
+  .afm-in:focus { border-color: var(--accent) }
+  .afm-in[readonly] { color: var(--muted) }
+  .afm-pw { position: relative }
+  .afm-pw .afm-in { padding-right: 44px }
+  .afm-eye { all: unset; cursor: pointer; position: absolute; right: 12px; top: 11px; color: var(--muted); font-size: 16px }
+  .afm-rules { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; font-size: 14px }
+  .afm-rules li { display: flex; align-items: center; gap: 10px }
+  .afm-rules i { width: 16px; height: 16px; border-radius: 99px; border: 1.5px solid var(--muted); flex: none; display: grid; place-items: center; font-style: normal; font-size: 10px; color: transparent }
+  .afm-rules li.ok i { background: var(--high); border-color: var(--high); color: var(--bg) }
+  .afm-green { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-radius: 12px; background: oklch(0.765 0.177 163.223 / 14%); color: var(--fg); font-size: 14px }
+  .afm-row { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 0 0 14px }
+  .afm-row input { margin-top: 4px }
+  .afm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px 18px }
+  .afm-grid .afm-l { margin: 0 0 6px }
+  .afm-foot { padding: 14px 28px 20px; border-top: 1px solid var(--line); display: flex; justify-content: center }
+  .afm-update { all: unset; cursor: pointer; width: 240px; text-align: center; padding: 13px 0; border-radius: 999px; font-weight: 700; font-size: 16px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff }
+  .afm-update[disabled] { cursor: default; background: var(--chip); color: var(--muted) }
+  .afm-note { margin-top: 12px; font-size: 13px; color: var(--muted) }
+  .afm-pane a { color: var(--accent) }
+
   .panel.left { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--line); box-shadow: 12px 0 40px oklch(0 0 0 / 40%) }
   header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line) }
   .brand { font-weight: 700; font-size: 15px; background: linear-gradient(135deg, var(--accent), var(--brand-2));
@@ -258,7 +305,7 @@ function mountActions(root, job, state) {
     <button class="btn" id="apply" style="margin-top:8px" disabled>Apply on this page</button>
     <div id="applybox"></div>
     <div id="submitbox"></div>
-    <details class="box info" id="info" style="margin-top:10px"><summary>Your autofill information</summary><div id="infobody" class="muted"></div></details>
+    <button class="box info" id="info" style="margin-top:10px;width:100%;display:flex;justify-content:space-between;align-items:center;font:inherit;color:inherit;cursor:pointer;text-align:left"><span>Your autofill information</span><span aria-hidden="true">›</span></button>
     <div class="box" id="resumerow" style="margin-top:8px">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Résumé</b><span class="muted" id="rname"></span></div>
       <button class="btn" id="tailor" style="margin-top:8px">✦ Tailor résumé for this job</button>
@@ -288,18 +335,20 @@ function mountActions(root, job, state) {
   }
   setSupport()
 
+  // The one button, as Jobright names it: with a sign-up password saved it also does the account step.
+  const goLabel = () => (state.hasPw ? '⚡ Account creation & Autofill' : '⚡ Autofill')
+  state.hasPw = false
+  const refreshPw = async () => { const { accountPassword } = await chrome.storage.local.get('accountPassword'); state.hasPw = !!accountPassword; if (!state.running) go.textContent = goLabel() }
+  chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c.accountPassword) refreshPw() })
+  refreshPw()
+
   // Résumé row: which file will be attached.
   state.drawResume = () => { root.getElementById('rname').textContent = state.resumeFile ? `${state.resumeFile.tailored ? 'Tailored · ' : ''}${state.resumeFile.name}` : 'none yet' }
   state.drawResume()
 
-  // "Your autofill information": exactly what the filler will type, so nothing is a surprise.
-  const LABELS = { fullName: 'Full name', email: 'Email', phone: 'Phone', city: 'City', currentTitle: 'Current title', currentEmployer: 'Current employer', yearsExperience: 'Years of experience', noticePeriod: 'Notice period', workAuth: 'Work authorisation', linkedin: 'LinkedIn', portfolio: 'Portfolio' }
-  root.getElementById('info').addEventListener('toggle', async (e) => {
-    if (!e.currentTarget.open) return
-    const { profile = {} } = await chrome.storage.local.get('profile')
-    const rows = Object.entries(LABELS).map(([k, label]) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--line)"><span>${label}</span><span style="color:var(--fg);text-align:right;overflow-wrap:anywhere">${esc(profile[k]) || '—'}</span></div>`).join('')
-    root.getElementById('infobody').innerHTML = `<div style="margin-top:6px">${rows}</div><div class="note">Kept in this browser; synced from your Jobinko profile. <a href="${SITE}/profile" target="_blank" rel="noopener">Edit on Jobinko</a></div>`
-  })
+  // "Your autofill information": the pop-up (below) — what the filler will type, and the sign-up password.
+  state.openInfo = (tab) => openAutofillModal(root, state, tab)
+  root.getElementById('info').addEventListener('click', () => state.openInfo('personal'))
 
   // Save job — straight onto the tracker; falls back to a queue when signed out.
   async function showSaved() {
@@ -436,7 +485,7 @@ function mountActions(root, job, state) {
     if (!profile || !profile.fullName) {
       state.running = false
       report.innerHTML = '<div class="box report">We have no details to fill with yet. Sign in to Jobinko and finish your profile — or open Jobinko once while signed in and they sync.</div>'
-      go.textContent = '⚡ Autofill'; setSupport()
+      go.textContent = goLabel(); setSupport()
       return
     }
     // Live progress: redraw the lists from the page's own state while the filler works.
@@ -509,6 +558,18 @@ function mountActions(root, job, state) {
    */
   async function startAutofill() {
     if (state.running) return
+    // An account wall comes first: create the account / sign in with the saved password, then carry on at the next page.
+    const wallKind = globalThis.SaafAccount?.kind(doc)
+    if (wallKind) {
+      state.running = true; go.textContent = 'Creating your account…'
+      const r = await accountStep(state, wallKind)
+      state.running = false; go.textContent = goLabel()
+      if (r.needsPassword) { openAutofillModal(root, state, 'signup'); return }
+      const n = root.getElementById('wallnote')
+      if (n) n.textContent = r.text
+      report.innerHTML = `<div class="box report ${r.done ? '' : 'muted'}">${esc(r.text)}</div>`
+      return
+    }
     if (!hasForm()) {
       const entry = A2.findApplyEntry(doc)
       if (!entry) { report.innerHTML = '<div class="box report">I could not find an Apply button on this page. Open the application form and press Autofill.</div>'; return }
@@ -529,7 +590,7 @@ function mountActions(root, job, state) {
       state.running = false
       if (!appeared) {
         // The page is navigating, or the application opened elsewhere: that page's panel takes over from the note.
-        go.textContent = '⚡ Autofill'
+        go.textContent = goLabel()
         setSupport()
         report.innerHTML = '<div class="box report muted">Opening the application… the form will be filled as soon as it appears (on this page or in a new tab).</div>'
         return
@@ -639,66 +700,153 @@ function renderApplyResult(root, out) {
 }
 
 /**
- * The account wall (account.js): a sign-in or create-account form. The person sets ONE password in the panel, once; after that
- * one click fills their email and that password and presses the site's own Create account / Sign in button. The password lives
- * in this browser's extension storage only (`chrome.storage.local`) — never sent to Jobinko — and Remove deletes it. A site's
- * agreement box is never ticked for them: it is outlined, and the same button is pressed again once they have ticked it.
+ * "Your Autofill information" — the pop-up Jobright opens from its panel (observed 2026-10-12): a section list on the left
+ * (Personal, Education, Work Experience, Skill, Equal Employment, Preference, Sign-up Information), the section on the right,
+ * an Update button below. Same layout here, Jobinko's colours and Jobinko's own code.
+ *
+ * Sign-up Information is fully live: registration email, password with a show/hide eye and a live five-rule list, and the
+ * note that it stays in this browser's local storage (`chrome.storage.local`, never `sync`, never sent anywhere). The other
+ * sections show what Jobinko will type, read-only — the profile on Jobinko is where they are edited.
  */
-function renderWall(root, state) {
+const AFM_TABS = [['personal', 'Personal'], ['education', 'Education'], ['work', 'Work Experience'], ['skill', 'Skill'], ['equal', 'Equal Employment'], ['pref', 'Preference'], ['signup', 'Sign-up Information']]
+const AFM_FIELDS = [['First Name', (p) => (p.fullName || '').trim().split(/\s+/)[0]], ['Middle Name', (p) => p.middleName], ['Last Name', (p) => (p.fullName || '').trim().split(/\s+/).slice(1).join(' ')],
+  ['Email Address', (p) => p.email], ['Phone Type', (p) => p.phoneType], ['Phone', (p) => p.phone], ['Address Line', (p) => p.address], ['Country/Region', (p) => p.country],
+  ['State/Province', (p) => p.state], ['City', (p) => p.city], ['County', (p) => p.county], ['Postal Code', (p) => p.postalCode], ['LinkedIn URL', (p) => p.linkedin], ['Portfolio URL', (p) => p.portfolio]]
+const AFM_EQUAL = [['Are you legally authorised to work in India?', 'authorisedToWork'], ['Will you now or in the future require sponsorship for an employment visa?', 'needsSponsorship'],
+  ['What is your gender?', 'gender'], ['Do you have a disability?', 'disability'], ['Are you a veteran?', 'veteran'], ['How would you identify your race?', 'ethnicity'],
+  ['Are you Hispanic or Latino?', 'hispanic'], ['Do you identify as LGBTQ+?', 'lgbtq'], ['How would you describe your sexual orientation?', 'orientation'], ['What are your pronouns?', 'pronouns']]
+
+async function openAutofillModal(root, state, tab = 'personal') {
+  const K = globalThis.SaafAccount
+  root.getElementById('afm')?.remove()
+  const ov = document.createElement('div')
+  ov.id = 'afm'; ov.className = 'afm'
+  ov.innerHTML = `<div class="afm-card" role="dialog" aria-label="Your Autofill information">
+    <div class="afm-head"><h2>Your Autofill information</h2><button class="afm-x" aria-label="Close">✕</button></div>
+    <div class="afm-banner"><span class="afm-i">i</span><div><b>Your autofill information stays in sync</b><span>It is read from your Jobinko profile, and answers you give on an application form are remembered for the next one.</span></div></div>
+    <div class="afm-body"><nav class="afm-nav"></nav><div class="afm-pane"></div></div>
+    <div class="afm-foot"><button class="afm-update" disabled>Update</button></div></div>`
+  root.appendChild(ov)
+  const $ = (sel) => ov.querySelector(sel)
+  const nav = $('.afm-nav'); const pane = $('.afm-pane'); const update = $('.afm-update')
+  let onUpdate = null
+  const dirty = (on, fn) => { update.disabled = !on; if (fn) onUpdate = fn }
+  const close = () => ov.remove()
+  $('.afm-x').addEventListener('click', close)
+  ov.addEventListener('mousedown', (e) => { if (e.target === ov) close() })
+  update.addEventListener('click', async () => { if (!update.disabled && onUpdate) await onUpdate() })
+
+  const store = await chrome.storage.local.get(['profile', 'accountPassword', 'accountEmail', 'accountAutoAgree'])
+  const profile = store.profile || {}
+  const link = `<a href="${SITE}/profile" target="_blank" rel="noopener">Edit on Jobinko</a>`
+
+  const panes = {
+    personal() {
+      pane.innerHTML = `<h3>Personal</h3><p class="afm-sub">What Jobinko types into name, contact and address boxes. ${link}.</p><div class="afm-grid">${AFM_FIELDS.map(([l, f]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(f(profile) || '')}" placeholder="—"></div>`).join('')}</div>`
+    },
+    education() { pane.innerHTML = `<h3>Education</h3><p class="afm-sub">Your schools, degrees, majors and GPA come from your résumé on Jobinko. ${link}.</p>` },
+    work() { pane.innerHTML = `<h3>Work Experience</h3><p class="afm-sub">Your roles, companies, job types and summaries come from your résumé on Jobinko. ${link}.</p>` },
+    skill() { pane.innerHTML = `<h3>Skill</h3><p class="afm-sub">Your skills come from your profile on Jobinko. ${link}.</p>` },
+    equal() {
+      const self = profile.selfId || {}
+      const val = (k) => { const v = profile[k] ?? self[k]; return v === 'decline' ? 'Decline to state' : v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v || '' }
+      pane.innerHTML = `<h3>Equal Employment</h3><p class="afm-sub">Only what you answered yourself is ever filled; “Decline to state” and unanswered are left blank. ${link}.</p><div class="afm-grid">${AFM_EQUAL.map(([l, k]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(val(k))}" placeholder="—"></div>`).join('')}</div>`
+    },
+    pref() { pane.innerHTML = `<h3>Preference</h3><p class="afm-sub">Notice period, expected pay and the places you would work are in your profile on Jobinko. ${link}.</p>` },
+    signup() {
+      pane.innerHTML = `<h3>Sign-up Information</h3>
+        <p class="afm-sub"><b>Workday sites</b> require an account to apply. Save your credentials here and we’ll fill them in automatically.</p><hr>
+        <label class="afm-l" for="su-email">Registration Email</label><input class="afm-in" id="su-email" type="email" autocomplete="off">
+        <label class="afm-l" for="su-pw">Password</label>
+        <div class="afm-pw"><input class="afm-in" id="su-pw" type="password" autocomplete="new-password" placeholder="Enter the password"><button type="button" class="afm-eye" aria-label="Show password">👁</button></div>
+        <ul class="afm-rules"></ul><hr>
+        <label class="afm-row"><input type="checkbox" id="su-agree"><span>Also tick the site’s “I agree to the terms” box for me when I create the account.<br><span class="muted">Off by default — otherwise I outline the box and you tick it. Never a marketing or newsletter box.</span></span></label>
+        <div class="afm-green">🛡&nbsp;<span>Your password is stored in <b>your browser’s local storage</b>. Jobinko never saves or shares it with anyone.</span></div>
+        <div class="afm-note"><a href="#" id="su-remove" ${store.accountPassword ? '' : 'hidden'}>Remove the saved password</a> <span id="su-msg"></span></div>`
+      const email = pane.querySelector('#su-email'); const pw = pane.querySelector('#su-pw'); const agree = pane.querySelector('#su-agree'); const rules = pane.querySelector('.afm-rules'); const msg = pane.querySelector('#su-msg')
+      const was = { email: store.accountEmail || profile.email || state.account?.email || '', pw: store.accountPassword || '', agree: store.accountAutoAgree === true }
+      email.value = was.email; pw.value = was.pw; agree.checked = was.agree
+      const draw = () => { rules.innerHTML = K.passwordRules(pw.value).map((r) => `<li class="${r.ok ? 'ok' : ''}"><i>✓</i>${esc(r.label)}</li>`).join('') }
+      const check = () => {
+        draw()
+        const changed = email.value.trim() !== was.email || pw.value !== was.pw || agree.checked !== was.agree
+        dirty(changed && !!email.value.trim() && !K.passwordProblem(pw.value), save)
+        msg.textContent = changed && pw.value && K.passwordProblem(pw.value) ? K.passwordProblem(pw.value) : ''
+      }
+      const save = async () => {
+        await chrome.storage.local.set({ accountPassword: pw.value, accountEmail: email.value.trim(), accountAutoAgree: agree.checked })
+        was.email = email.value.trim(); was.pw = pw.value; was.agree = agree.checked
+        store.accountPassword = pw.value
+        msg.textContent = 'Saved.'; dirty(false)
+        pane.querySelector('#su-remove').hidden = false
+        state.afterAccountChange?.()
+      }
+      ;[email, pw].forEach((i) => i.addEventListener('input', check)); agree.addEventListener('change', check)
+      pw.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !update.disabled) update.click() })
+      pane.querySelector('.afm-eye').addEventListener('click', () => { pw.type = pw.type === 'password' ? 'text' : 'password' })
+      pane.querySelector('#su-remove').addEventListener('click', async (e) => {
+        e.preventDefault()
+        await chrome.storage.local.remove(['accountPassword', 'accountEmail', 'accountAutoAgree'])
+        store.accountPassword = ''
+        was.pw = ''; pw.value = ''; agree.checked = false; was.agree = false; e.target.hidden = true
+        msg.textContent = 'Removed.'; draw(); dirty(false)
+        state.afterAccountChange?.()
+      })
+      draw(); dirty(false)
+    },
+  }
+  const show = (key) => {
+    nav.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.k === key))
+    dirty(false, null); panes[key]()
+  }
+  nav.innerHTML = AFM_TABS.map(([k, l]) => `<button data-k="${k}">${esc(l)}</button>`).join('')
+  nav.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.k) })
+  show(tab)
+}
+
+/**
+ * ONE CLICK: fill the registration email and the saved password, tick the agreement box ONLY if the person switched that on,
+ * and press the site's own Create account / Sign in button. A note is left in storage first, so the page that follows picks the
+ * application up where this one left off (the same note Autofill uses). Returns a sentence for the panel.
+ */
+async function accountStep(state, kind) {
+  const K = globalThis.SaafAccount
+  const { accountPassword, accountEmail, accountAutoAgree, profile } = await chrome.storage.local.get(['accountPassword', 'accountEmail', 'accountAutoAgree', 'profile'])
+  if (!accountPassword) return { done: false, needsPassword: true, text: 'Save your sign-up password first (Your autofill information → Sign-up Information).' }
+  const email = accountEmail || profile?.email || state.account?.email
+  if (!email) return { done: false, text: 'No email on file — sign in to Jobinko first.' }
+  const e = K.fillEmail(document, email)
+  K.fillPassword(document, accountPassword, kind)
+  if (!e.hadEmailBox) return { done: false, text: 'Could not find the email box on this form — fill it yourself; the password is in.' }
+  await new Promise((r) => setTimeout(r, 400)) // a beat for the page's own scripts to notice the new values
+  await chrome.storage.local.set({ autofillPending: { at: Date.now() } })
+  const out = K.proceed(document, kind, { tickAgreement: accountAutoAgree === true })
+  if (out.waitingOn.length) return { done: false, text: 'Email and password are in. Tick the site’s agreement box (outlined) — that part is yours — then press the button again. (Sign-up Information can tick it for you.)' }
+  if (!out.pressed) return { done: false, text: 'Email and password are in. I could not find the site’s own button — press it yourself.' }
+  return { done: true, text: kind === 'signup' ? 'Account form sent. If the site asks you to verify your email, do that; Autofill carries on at the next page.' : 'Signing in… Autofill carries on at the next page.' }
+}
+
+/** The account wall: a sign-in or create-account form is on this page. */
+async function renderWall(root, state) {
   const el = root.getElementById('wall')
   const K = globalThis.SaafAccount
   const kind = K?.kind(document)
   if (!kind) { el.innerHTML = ''; el.dataset.key = ''; return }
-  return chrome.storage.local.get('accountPassword').then(({ accountPassword }) => {
-    const has = typeof accountPassword === 'string' && accountPassword.length > 0
-    const key = `${kind}:${has}`
-    // The panel is redrawn as the page changes; never redraw a form the person is typing in.
-    if (el.dataset.key === key) return
-    el.dataset.key = key
-    const title = kind === 'signup' ? 'This site wants you to create an account' : 'This site wants you to sign in'
-    const verb = kind === 'signup' ? 'Create my account' : 'Sign in'
-    el.innerHTML = has
-      ? `<div class="box"><h3>${title}</h3>
-          <div class="muted">Jobinko fills your email and your saved password, then presses the site’s own button — one click.</div>
-          <button class="btn" id="wallgo" style="margin-top:8px">${verb}</button>
-          <div class="note" id="wallnote"></div>
-          <div class="note"><a href="#" id="wallchange">Change password</a> · <a href="#" id="wallremove">Remove it</a></div></div>`
-      : `<div class="box"><h3>${title}</h3>
-          <div class="muted">Set one password for the accounts Jobinko creates for you. Once. It stays in this browser — it is never sent to Jobinko or anyone else — and from then on this is one click. Use a password you use nowhere else: if one employer’s site leaked it, it would work on all of them.</div>
-          <input id="wallpw" type="password" autocomplete="new-password" placeholder="Choose a password (10+ characters)" style="width:100%;margin-top:8px;box-sizing:border-box">
-          <button class="btn" id="wallgo" style="margin-top:8px">Save it and ${verb.toLowerCase()}</button>
-          <div class="note" id="wallnote"></div></div>`
-    const note = () => root.getElementById('wallnote')
-
-    root.getElementById('wallchange')?.addEventListener('click', async (e) => { e.preventDefault(); await chrome.storage.local.remove('accountPassword'); el.dataset.key = ''; renderWall(root, state) })
-    root.getElementById('wallremove')?.addEventListener('click', async (e) => { e.preventDefault(); await chrome.storage.local.remove('accountPassword'); el.dataset.key = ''; renderWall(root, state) })
-
-    root.getElementById('wallgo').addEventListener('click', async () => {
-      let pw = accountPassword
-      if (!has) {
-        pw = root.getElementById('wallpw').value
-        const problem = K.passwordProblem(pw)
-        if (problem) { note().textContent = problem; return }
-        await chrome.storage.local.set({ accountPassword: pw })
-      }
-      const { profile } = await chrome.storage.local.get('profile')
-      const email = profile?.email || state.account?.email
-      if (!email) { note().textContent = 'No email on file — sign in to Jobinko first.'; return }
-      const e = K.fillEmail(document, email)
-      K.fillPassword(document, pw, kind)
-      if (!e.hadEmailBox) { note().textContent = 'Could not find the email box on this form — fill it yourself; the password is in.'; return }
-      // A beat for the page's own scripts to notice the new values before its button is pressed.
-      await new Promise((r) => setTimeout(r, 400))
-      const out = K.proceed(document, kind)
-      const msg = out.waitingOn.length
-        ? 'Email and password are in. Tick the site’s agreement box (outlined) — that part is yours — then press this button again.'
-        : out.pressed
-          ? (kind === 'signup' ? 'Done — account form sent. If the site asks you to verify your email, do that; then press Autofill on the next page.' : 'Signing in… press Autofill once the next page loads.')
-          : 'Email and password are in. I could not find the site’s own button — press it yourself.'
-      // First time: the panel now shows the "saved" form, so redraw it before writing the result into its note.
-      if (!has) { el.dataset.key = ''; await renderWall(root, state) }
-      const n = root.getElementById('wallnote'); if (n) n.textContent = msg
-    })
+  const { accountPassword } = await chrome.storage.local.get('accountPassword')
+  const has = typeof accountPassword === 'string' && accountPassword.length > 0
+  const key = `${kind}:${has}`
+  if (el.dataset.key === key) return
+  el.dataset.key = key
+  const title = kind === 'signup' ? 'This site wants you to create an account' : 'This site wants you to sign in'
+  el.innerHTML = `<div class="box"><h3>${title}</h3>
+    <div class="muted">${has ? 'Jobinko fills your email and your saved password, then presses the site’s own button — one click.' : 'Workday and similar sites need an account. Save your sign-up password once; after that it is one click.'}</div>
+    <button class="btn primary" id="wallgo" style="margin-top:8px">${has ? (kind === 'signup' ? 'Create my account' : 'Sign in') : 'Add my sign-up password'}</button>
+    <div class="note" id="wallnote"></div></div>`
+  state.afterAccountChange = () => { el.dataset.key = ''; renderWall(root, state) }
+  root.getElementById('wallgo').addEventListener('click', async () => {
+    if (!has) { openAutofillModal(root, state, 'signup'); return }
+    const r = await accountStep(state, kind)
+    const n = root.getElementById('wallnote'); if (n) n.textContent = r.text
   })
 }
 

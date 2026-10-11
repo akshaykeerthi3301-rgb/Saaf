@@ -12,9 +12,15 @@
  *     presses the site's own Create account button.
  *   - On a sign-in page it writes them and presses Sign in.
  *
- * WHAT IT STILL NEVER DOES. It never ticks a site's agreement box: if one is unticked it is outlined and the button waits
- * — the person ticks it (accepting terms is theirs) and presses the panel button again. It never reads a password the
+ * THE AGREEMENT BOX. By default the extension never ticks a site's "I agree to the terms" box: it is outlined and the button
+ * waits — the person ticks it and presses again. The person may switch ON, once, in Sign-up information, "tick the site's
+ * agreement box for me"; that is their own advance, visible, revocable choice, and only boxes that are REQUIRED or that say
+ * agree / acknowledge / terms / privacy are ever ticked — never a marketing or newsletter box. It never reads a password the
  * person typed or the browser saved. A "verify your email" step and any CAPTCHA are the person's.
+ *
+ * OBSERVED 2026-10-12 (founder's browser, Jobright's pop-up, nothing typed or pressed): Jobright asks for the password in a
+ * "Sign-up Information" section BEFORE any site — registration email, password with a show/hide eye, a live checklist (12+
+ * characters, upper, lower, number, special) and the note "stored in your browser's local storage". Jobinko now does the same.
  *
  * ⚠️ ONE PASSWORD ON MANY SITES is what makes this one click — and what makes it worth guarding: a leak at one employer's
  * site would expose it everywhere it was used. The panel says so where the password is set, and asks for a password used
@@ -67,15 +73,21 @@
    * Why a password cannot be saved, or null. Most sites (Workday among them) demand upper and lower case, a digit and a
    * symbol; a password that fails there would leave the person stuck on the first form, so it is refused up front.
    */
-  function passwordProblem(pw) {
+  /** The five rules, each with whether this password meets it — drawn as a live tick-list while the person types. */
+  function passwordRules(pw) {
     const p = String(pw || '')
-    if (p.length < 10) return 'Use at least 10 characters.'
-    const missing = []
-    if (!/[a-z]/.test(p)) missing.push('a lower-case letter')
-    if (!/[A-Z]/.test(p)) missing.push('an upper-case letter')
-    if (!/\d/.test(p)) missing.push('a number')
-    if (!/[^A-Za-z0-9]/.test(p)) missing.push('a symbol')
-    return missing.length ? `Add ${missing.join(', ')} — most sites require all four.` : null
+    return [
+      { ok: p.length >= 12, label: 'At least 12 characters' },
+      { ok: /[A-Z]/.test(p), label: 'Uppercase letter' },
+      { ok: /[a-z]/.test(p), label: 'Lowercase letter' },
+      { ok: /\d/.test(p), label: 'Number' },
+      { ok: /[^A-Za-z0-9]/.test(p), label: 'Special character' },
+    ]
+  }
+
+  function passwordProblem(pw) {
+    const bad = passwordRules(pw).filter((r) => !r.ok)
+    return bad.length ? `Still needed: ${bad.map((r) => r.label.toLowerCase()).join(', ')}.` : null
   }
 
   /**
@@ -111,13 +123,15 @@
    * Unticked agreement boxes on the form ("I agree to the terms", "I acknowledge the privacy notice", any required one).
    * These are the person's to tick: accepting a site's terms is never done on their behalf.
    */
+  const NOT_AN_AGREEMENT = /newsletter|marketing|promotion|offers|subscribe|email me|e-mail me|contact me|text me|sms|share my|talent community|job alerts?/i
   function agreementBoxes(doc) {
     const pw = passwordBoxes(doc)[0]
     if (!pw) return []
     return [...scopeOf(doc, pw).querySelectorAll('input[type="checkbox"], [role="checkbox"]')].filter((c) => {
       if (!visible(c)) return false
       const ticked = c.checked === true || c.getAttribute?.('aria-checked') === 'true'
-      return !ticked && (c.required || c.getAttribute?.('aria-required') === 'true' || /agree|acknowledg|terms|privacy|consent|accept|policy/i.test(labelOf(c)))
+      const label = labelOf(c)
+      return !ticked && !NOT_AN_AGREEMENT.test(label) && (c.required || c.getAttribute?.('aria-required') === 'true' || /agree|acknowledg|terms|privacy|consent|accept|policy/i.test(label))
     })
   }
 
@@ -145,25 +159,30 @@
 
   /**
    * Press the site's button — unless an agreement box is still unticked. Then nothing is pressed, the box is outlined and
-   * scrolled to, and the caller says so: the person ticks it and presses the panel button again.
-   * Returns { pressed, waitingOn: [boxes], hadButton }.
+   * scrolled to, and the caller says so: the person ticks it and presses the panel button again. With
+   * `{ tickAgreement: true }` — the person's own advance choice — the agreement boxes are ticked first.
+   * Returns { pressed, waitingOn: [boxes], hadButton, ticked }.
    */
-  function proceed(doc, which) {
+  function proceed(doc, which, opts = {}) {
+    let ticked = 0
     if (which === 'signup') {
+      if (opts.tickAgreement) {
+        for (const c of agreementBoxes(doc)) { try { c.click(); ticked++ } catch { /* not clickable */ } }
+      }
       const open = agreementBoxes(doc)
       if (open.length) {
         for (const c of open) {
           try { c.style.outline = '3px solid #f59e0b'; c.style.outlineOffset = '2px' } catch { /* not styleable */ }
         }
         try { open[0].scrollIntoView({ block: 'center', behavior: 'smooth' }) } catch { /* no layout */ }
-        return { pressed: false, waitingOn: open, hadButton: !!submitButton(doc, which) }
+        return { pressed: false, waitingOn: open, hadButton: !!submitButton(doc, which), ticked }
       }
     }
     const btn = submitButton(doc, which)
-    if (!btn) return { pressed: false, waitingOn: [], hadButton: false }
+    if (!btn) return { pressed: false, waitingOn: [], hadButton: false, ticked }
     btn.click()
-    return { pressed: true, waitingOn: [], hadButton: true }
+    return { pressed: true, waitingOn: [], hadButton: true, ticked }
   }
 
-  root.SaafAccount = { kind, emailBox, passwordBoxes, fillEmail, passwordProblem, fillPassword, agreementBoxes, submitButton, proceed }
+  root.SaafAccount = { kind, emailBox, passwordBoxes, fillEmail, passwordRules, passwordProblem, fillPassword, agreementBoxes, submitButton, proceed }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

@@ -2,6 +2,15 @@
 
 ---
 
+## 🔶 2026-10-12 (night, last of all) — extension 0.16.0: Jobright's pop-up and one button, 'Account creation & Autofill'
+
+**What I saw in your browser:** Jobright asks for your sign-up password BEFORE any site, in 'Your Autofill information → Sign-up Information' (email, password with an eye, a live 5-rule list, 'stored in your browser'), and gives you ONE button on the job page, 'Account Creation & Autofill'. Jobinko now has the same: click **Your autofill information** in the panel → **Sign-up Information**, save the password (12+ characters, upper, lower, number, special — the list ticks as you type), press **Update**. The main button then reads **⚡ Account creation & Autofill**.
+**One switch you decide:** 'Also tick the site's I-agree box for me' — OFF by default (the box is outlined and the button waits). Turn it on to make Workday truly one click; it only ever ticks an agreement/terms box, never a marketing one.
+**Verified:** a real Chromium on a test sign-up page (20 checks) and a dry run on the REAL Workday Create Account page (it finds the email box, both password boxes, Workday's agreement box and its Create Account button; nothing was typed or pressed). **Not verified:** the real press of Workday's button; later steps; your Chrome.
+**You need to:** download 0.16.0, replace the folder, reload on chrome://extensions. Open the Alteryx job, open Sign-up Information, save a password (+ the switch if you want), press the main button. Tell me exactly what the page does after the press — that is the one thing I could not test.
+
+---
+
 ## 🔶 2026-10-12 (night, final) — extension 0.15.0: one saved password, one-click create account / sign in
 
 **Now:** on a create-account or sign-in page the Jobinko panel asks you ONCE for a password (10+ characters; upper, lower, number, symbol). After that, one button fills your email and that password and presses the site's own Create Account / Sign in. The site's own 'I agree' box is never ticked for you — it is outlined; you tick it and press the same button again. The password stays in this browser only and is never sent to Jobinko; 'Change password' / 'Remove it' are in the panel. **Risk you chose:** the same password on many employer sites — use one you use nowhere else.

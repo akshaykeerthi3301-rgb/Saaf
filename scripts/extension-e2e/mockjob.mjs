@@ -54,7 +54,8 @@ const signup = (consent) => `${head('Create account – Acme Careers')}<h1>Creat
 <form><label for="se">Email *</label><input id="se" type="email" name="email">
 <label for="sp">Password *</label><input id="sp" type="password" name="password"><label for="sc">Verify new password *</label><input id="sc" type="password" name="confirm">
 ${consent ? '<label><input id="agree" type="checkbox" style="width:auto"> I acknowledge the terms and the privacy notice</label>' : ''}
-<a id="already" href="/login">Already have an account? Sign in</a><button id="create" type="button" onclick="location.href='/thanks'">Create Account</button></form></body></html>`
+<label><input id="promo" type="checkbox" style="width:auto"> Send me job alerts and marketing email</label>
+<a id="already" href="/login">Already have an account? Sign in</a><button id="create" type="button" onclick="localStorage.agreed=String(document.getElementById('agree')?.checked ?? 'none');localStorage.promo=String(document.getElementById('promo').checked);location.href='/thanks'">Create Account</button></form></body></html>`
 // A posting page that has NO form: Apply is a link to the form page (same tab), a link that opens a new tab, or a button that reveals the form.
 const post = (apply) => `${head('Customer Success Manager – Acme')}<h1>Customer Success Manager</h1><p>Acme Robotics · Bengaluru</p><p>${para}</p>${apply}</body></html>`
 const leverJob = post('<a class="postings-btn" href="/lever/job/apply">Apply for this job</a>')

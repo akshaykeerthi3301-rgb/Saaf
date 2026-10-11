@@ -3221,3 +3221,17 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Not verified:** Workday's real Create Account button (it is drawn as a div with role=button; the code finds that shape and is tested on one, but no real account was created); the steps after sign-in.
 
 **Built:** see TASK-245.
+
+### Stage BF — account creation, rebuilt from what Jobright was seen to do (2026-10-12)
+
+**What the founder asked (critical, 'last chance'):** access his browser tab with the Jobright extension, take screenshots, recreate ours accordingly, 'use the exact UI as Jobright's'.
+
+**Method and limits.** Black-box only: his browser, screenshots, clicking the panel and pop-up open and reading them. No reading of Jobright's scripts (its terms forbid reverse-engineering), no pressing 'Account Creation & Autofill' (that would create a real account — I do not create accounts), nothing typed into Jobright's password box. So what is KNOWN is the screens above; what is INFERRED is that its one button then fills and presses the site's own button. The founder's own tab (a Create Account page) was not in the set of tabs I can drive; an equivalent tab on the same job was used and the founder's screenshot of his tab was read.
+
+**Corrections (struck through, not deleted).** ~~'0.15.0 asks for a password once on the Create Account page and fills it'~~ — that shipped and still left him stuck: the first-time form was cramped, the rules were one line of small text, and 11 characters failed a 12-character rule silently-ish. ~~Rule: 10+ characters~~ → 12+, matching what Jobright showed. ~~'Never ticks an agreement box'~~ → off by default, on only by the person's own switch.
+
+**Decisions.** (1) Pop-up not panel box: the password is set where Jobright puts it, before the site. (2) The agreement-box tick is an advance, visible, revocable choice, limited to boxes that are required or say agree/acknowledge/terms/privacy — a marketing box is never ticked or waited on. (3) Everything else in the one-click path is unchanged: local storage only, never `sync`, never sent anywhere (a test watches every request).
+
+**Lesson.** Twice I built the smaller thing the checker would allow instead of the thing described, and once I guessed the flow instead of looking at the competitor. When a screen is the spec, look at the screen first.
+
+**Built:** see TASK-246.

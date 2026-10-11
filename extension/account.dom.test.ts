@@ -13,8 +13,9 @@ type Account = {
   kind: (d: Document) => string | null
   fillEmail: (d: Document, e: string) => { filled: boolean; hadEmailBox: boolean }
   passwordProblem: (p: string) => string | null
+  passwordRules: (p: string) => { ok: boolean; label: string }[]
   fillPassword: (d: Document, p: string, k: string) => number
-  proceed: (d: Document, k: string) => { pressed: boolean; waitingOn: HTMLElement[]; hadButton: boolean }
+  proceed: (d: Document, k: string, o?: { tickAgreement?: boolean }) => { pressed: boolean; waitingOn: HTMLElement[]; hadButton: boolean }
 }
 let K: Account
 beforeAll(() => { K = (globalThis as unknown as { SaafAccount: Account }).SaafAccount })
@@ -56,11 +57,15 @@ describe('the email', () => {
 })
 
 describe('the saved password', () => {
-  it('is refused up front when most sites would refuse it', () => {
-    expect(K.passwordProblem('short1A!')).toMatch(/10 characters/)
-    expect(K.passwordProblem('alllowercase1!')).toMatch(/upper-case/)
-    expect(K.passwordProblem('NoDigitsHere!!')).toMatch(/number/)
-    expect(K.passwordProblem('NoSymbols12345')).toMatch(/symbol/)
+  it('shows Jobright’s five rules, each ticked as it is met', () => {
+    expect(K.passwordRules('').map((r) => r.label)).toEqual(['At least 12 characters', 'Uppercase letter', 'Lowercase letter', 'Number', 'Special character'])
+    expect(K.passwordRules('abcdefghijkl').map((r) => r.ok)).toEqual([true, false, true, false, false])
+    expect(K.passwordRules(TEST_PW).every((r) => r.ok)).toBe(true)
+  })
+  it('is refused up front when a site would refuse it, saying exactly what is missing', () => {
+    expect(K.passwordProblem('Short1!')).toMatch(/at least 12 characters/)
+    expect(K.passwordProblem('alllowercase')).toMatch(/uppercase letter, number, special character/)
+    expect(K.passwordProblem('NoSymbols123456')).toMatch(/special character/)
     expect(K.passwordProblem(TEST_PW)).toBeNull()
   })
   it('fills the password AND confirm boxes on a create-account form, only the first on a sign-in form', () => {
@@ -125,6 +130,26 @@ describe('pressing the site’s own button', () => {
 
   it('also finds a button the site draws as a div with role=button (Workday does)', () => {
     page('<form><input type="email"><input type="password"><input type="password"><div id="create" role="button" aria-label="Create Account">Create Account</div></form>')
+    const create = presses('#create')
+    expect(K.proceed(document, 'signup').pressed).toBe(true)
+    expect(create.n).toBe(1)
+  })
+
+  it('ticks the agreement box ONLY when the person switched that on — and only an agreement, never a marketing box', () => {
+    const FORM = '<form><input type="email"><input type="password"><input type="password"><label><input id="agree" type="checkbox"> By checking this box, I acknowledge that I have read and agree to the terms and conditions</label><label><input id="promo" type="checkbox"> Send me job alerts and marketing email</label><button id="create" type="button">Create Account</button></form>'
+    page(FORM)
+    const create = presses('#create')
+    expect(K.proceed(document, 'signup').pressed).toBe(false) // default: waits
+    expect($('#agree').checked).toBe(false)
+    expect(create.n).toBe(0)
+    expect(K.proceed(document, 'signup', { tickAgreement: true })).toMatchObject({ pressed: true, ticked: 1 })
+    expect($('#agree').checked).toBe(true)
+    expect($('#promo').checked).toBe(false)
+    expect(create.n).toBe(1)
+  })
+
+  it('an unticked marketing box never blocks the button', () => {
+    page('<form><input type="email"><input type="password"><input type="password"><label><input id="promo" type="checkbox"> Send me newsletter and marketing email</label><button id="create" type="button">Create Account</button></form>')
     const create = presses('#create')
     expect(K.proceed(document, 'signup').pressed).toBe(true)
     expect(create.n).toBe(1)
