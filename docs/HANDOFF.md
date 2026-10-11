@@ -4,7 +4,7 @@
 
 ## 🔶 2026-10-11 — the new Profile page: one database update to apply
 
-**Built and verified locally on your account; deployed only if the line below says so.** The Profile page now has the reference's layout: your name and headline on the left with Profile / Personal Info / Job Preferences, and a card for each section on the right, each with its own edit panel. Everything from before (alerts, wallet, saved answers, delete account) is under **"Account, alerts & all settings"** at the foot of the left column.
+**LIVE on jobinko.in since 2026-10-11 (`dpl_DxTkdBA9tRcHxXZJE7dsLH1bqwYt`); opened on production after the deploy and the layout renders.** The Profile page now has the reference's layout: your name and headline on the left with Profile / Personal Info / Job Preferences, and a card for each section on the right, each with its own edit panel. Everything from before (alerts, wallet, saved answers, delete account) is under **"Account, alerts & all settings"** at the foot of the left column.
 
 **You need to do one thing for it to be complete:** apply `supabase/migrations/0052_profile_extras.sql` (one new column). Until then the page works but GitHub, other link, languages, address, birthday and some preferences show empty and say they cannot save. Say **"apply 0052"** and I will paste it into the Supabase editor the same way as 0051.
 
