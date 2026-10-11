@@ -502,6 +502,24 @@ function parseEducation(lines: string[]): EducationEntry[] {
      * entry, because there is nothing above it to belong to.
      */
     const hasYear = /\b(19|20)\d{2}\b/.test(line)
+
+    /**
+     * The school-first layout — "IIM Sambalpur (Indian Institute of Management)    2023 - 2025", then
+     * "MBA, General Management    Sambalpur, India". The first line opened an entry with the SCHOOL in the qualification
+     * slot (it names no degree, and the first line of a section always opens one); the degree line then opened a second
+     * entry, so one degree read as two and the school and degree ended up in each other's places. A degree line that follows
+     * a line which names a school but no degree is that school's degree: the school moves to its own slot, the degree takes
+     * the line (without the city after the tab or the run of spaces), and the dates stay with the entry.
+     */
+    if (prev && DEGREE.test(line) && prev.institution === null && !DEGREE.test(prev.qualification) && INSTITUTION.test(prev.qualification)) {
+      const degree = line.split(/\t+|\s{3,}/)[0].replace(/[\s|·•—–,-]+$/, '').trim()
+      const cont = splitDates(degree)
+      prev.institution = prev.qualification
+      prev.qualification = cont.rest || degree
+      prev.dates = prev.dates ?? cont.dates
+      continue
+    }
+
     if (prev && !DEGREE.test(line) && !hasYear) {
       if (prev.institution === null) prev.institution = line.replace(/[\s|·—–,-]+$/, '').trim()
       continue

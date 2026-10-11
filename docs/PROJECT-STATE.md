@@ -3201,3 +3201,7 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Found, not fixed:** the résumé reader stored the founder's education with school and degree swapped ('MBA' as the school name). Tracked as a separate task.
 
 **Built:** see TASK-243.
+
+### Stage BD — the school/degree swap (2026-10-12)
+
+**MEASURED on the founder's own résumé (`Akshay_Keerthi_Resume_Common.docx`):** lines are 'IIM Sambalpur (…)<tab>2023 - 2025' then 'MBA, General Management<tab>Sambalpur, India'. Before the fix the reader returned 4 entries (qualification = the school, institution null; then qualification 'MBA', institution 'General Management<tab>Sambalpur'). After: 2 entries — MBA, General Management @ IIM Sambalpur (2023 - 2025); B.Tech, Mechanical Engineering @ College of Engineering Muttathara (2017 - 2021). The ATS benchmark (26 documents, mean 82.4) is unchanged. **Why it was missed:** the existing education tests all use degree-first lines; the school-first layout is the common Indian one and had no fixture. **Not changed:** already-saved résumés are not re-read — a saved résumé keeps its entries until it is re-uploaded or edited. See TASK-244.

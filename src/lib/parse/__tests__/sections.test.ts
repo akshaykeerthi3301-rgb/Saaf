@@ -303,3 +303,34 @@ Ran full-cycle recruiting for 15+ roles across early-stage startups.`
     ])
   })
 })
+
+describe('education — the school-first layout', () => {
+  // A real shape (the founder's résumé): school and dates on one line, "Degree, Major" and the city on the next, tab-separated.
+  const text = [
+    'EDUCATION', '',
+    'IIM Sambalpur (Indian Institute of Management)\t2023 - 2025',
+    'MBA, General Management\tSambalpur, India',
+    'Placement Committee member; coordinated placement outcomes for 16 cohort members.',
+    '',
+    'College of Engineering Muttathara\t2017 - 2021',
+    'B.Tech, Mechanical Engineering\tKerala, India',
+    '', 'SKILLS', '', 'Excel, Power BI',
+  ].join('\n')
+
+  it('reads each school and its degree as ONE entry, the right way round', () => {
+    expect(parseSections(text).education).toEqual([
+      { qualification: 'MBA, General Management', institution: 'IIM Sambalpur (Indian Institute of Management)', dates: '2023 - 2025' },
+      { qualification: 'B.Tech, Mechanical Engineering', institution: 'College of Engineering Muttathara', dates: '2017 - 2021' },
+    ])
+  })
+
+  it('leaves the degree-first and wrapped layouts as they were: one entry, degree first', () => {
+    for (const t of ['EDUCATION\n\nB.Tech Computer Science, NIT Trichy, 2019\n', 'EDUCATION\n\nB.Tech Computer Science\nNIT Trichy, 2019\n']) {
+      const [e, ...rest] = parseSections(t).education
+      expect(rest).toEqual([])
+      expect(e.qualification).toBe('B.Tech Computer Science')
+      expect(e.institution).toContain('NIT Trichy')
+      expect(e.dates).toBe('2019')
+    }
+  })
+})
