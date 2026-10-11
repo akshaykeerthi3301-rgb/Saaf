@@ -10,7 +10,7 @@
  * Keys mirror `SELF_ID` in extension/autofill.js. Date of birth, age and
  * pregnancy are deliberately not here: no answer is ever filled for them.
  */
-export type SelfIdKey = 'gender' | 'pronouns' | 'ethnicity' | 'disability' | 'veteran' | 'orientation' | 'caste' | 'religion' | 'marital'
+export type SelfIdKey = 'gender' | 'pronouns' | 'ethnicity' | 'disability' | 'veteran' | 'orientation' | 'lgbtq' | 'hispanic' | 'caste' | 'religion' | 'marital'
 
 export type SelfIdField = {
   key: SelfIdKey
@@ -18,19 +18,27 @@ export type SelfIdField = {
   kind: 'text' | 'yesno'
   /** Suggestions only — the candidate may type anything. */
   suggestions?: string[]
+  /** The choices shown as tap-to-pick chips. "Prefer not to say" is always the last chip and clears the answer. */
+  options?: string[]
   hint?: string
 }
 
 export const SELF_ID_FIELDS: SelfIdField[] = [
-  { key: 'gender', label: 'Gender', kind: 'text', suggestions: ['Male', 'Female', 'Non-binary'] },
-  { key: 'pronouns', label: 'Pronouns', kind: 'text', suggestions: ['he/him', 'she/her', 'they/them'] },
-  { key: 'disability', label: 'Disability', kind: 'yesno', hint: 'Answers “Do you have a disability?” with Yes or No.' },
-  { key: 'veteran', label: 'Veteran status', kind: 'yesno', hint: 'Mostly asked on US forms.' },
-  { key: 'ethnicity', label: 'Race / ethnicity', kind: 'text', hint: 'Matched only when a form offers exactly these words.' },
-  { key: 'caste', label: 'Caste / category', kind: 'text', suggestions: ['General', 'OBC', 'SC', 'ST'], hint: 'Asked on some Indian forms.' },
+  { key: 'gender', label: 'What is your gender?', kind: 'text', options: ['Male', 'Female', 'Non-Binary'] },
+  { key: 'pronouns', label: 'What are your pronouns?', kind: 'text', options: ['He/Him', 'She/Her', 'They/Them', 'Other'] },
+  { key: 'disability', label: 'Do you have a disability?', kind: 'yesno', hint: 'Answers “Do you have a disability?” with Yes or No.' },
+  { key: 'veteran', label: 'Are you a veteran?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
+  {
+    key: 'ethnicity', label: 'How would you identify your race?', kind: 'text',
+    options: ['American Indian or Alaskan Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'White', 'Native Hawaiian or Other Pacific Islander', 'Two or More Races'],
+    hint: 'Matched only when a form offers exactly these words.',
+  },
+  { key: 'hispanic', label: 'Are you Hispanic or Latino?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
+  { key: 'lgbtq', label: 'Do you identify as LGBTQ+?', kind: 'yesno' },
+  { key: 'orientation', label: 'How would you describe your sexual orientation?', kind: 'text', options: ['Asexual', 'Bisexual', 'Gay', 'Heterosexual', 'Lesbian', 'Pansexual', 'Queer', 'I prefer to self-describe'] },
+  { key: 'caste', label: 'Caste / category', kind: 'text', options: ['General', 'OBC', 'SC', 'ST', 'EWS'], hint: 'Asked on some Indian forms.' },
   { key: 'religion', label: 'Religion', kind: 'text' },
-  { key: 'marital', label: 'Marital status', kind: 'text', suggestions: ['Single', 'Married'] },
-  { key: 'orientation', label: 'Sexual orientation', kind: 'text' },
+  { key: 'marital', label: 'Marital status', kind: 'text', options: ['Single', 'Married'] },
 ]
 
 export type SelfIdAnswers = Partial<Record<SelfIdKey, string>>

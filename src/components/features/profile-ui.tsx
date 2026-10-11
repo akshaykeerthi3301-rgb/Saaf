@@ -211,3 +211,31 @@ export function PickEditor({ options, value, onChange, max }: { options: readonl
     </div>
   )
 }
+
+export type Choice = { value: string; label: string }
+export const plainChoices = (xs: readonly string[]): Choice[] => xs.map((x) => ({ value: x, label: x }))
+export const YES_NO_CHOICES: Choice[] = [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]
+
+/**
+ * Pick one by tapping — the pop-up replacement for a dropdown. `clearLabel` adds a last chip ("Decline to state") that
+ * empties the answer; tapping the chosen chip again does the same. A stored value that is not on the list (an answer
+ * typed before the list existed) still shows, selected, so nothing the person said is hidden.
+ */
+export function ChoiceChips({ options, value, onChange, label, clearLabel }: {
+  options: readonly Choice[]
+  value: string
+  onChange: (v: string) => void
+  label: string
+  clearLabel?: string
+}) {
+  const shown = value && !options.some((o) => o.value === value) ? [...options, { value, label: value }] : options
+  const chip = (on: boolean) => `rounded-full border px-3.5 py-1.5 text-sm transition-colors ${on ? 'border-accent bg-accent/10 font-semibold text-primary' : 'border-border bg-card text-muted-foreground hover:text-primary'}`
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-2">
+      {shown.map((o) => (
+        <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(value === o.value ? '' : o.value)} className={chip(value === o.value)}>{o.label}</button>
+      ))}
+      {clearLabel ? <button type="button" aria-pressed={!value} onClick={() => onChange('')} className={chip(!value)}>{clearLabel}</button> : null}
+    </div>
+  )
+}

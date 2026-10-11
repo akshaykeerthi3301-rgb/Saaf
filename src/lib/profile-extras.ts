@@ -12,16 +12,28 @@ import { z } from 'zod'
 
 const text = (max: number) => z.string().trim().max(max)
 const list = (max: number, each: number) => z.array(z.string().trim().min(1).max(each)).max(max)
+const yesNo = z.enum(['', 'yes', 'no']).default('')
+
+export const PHONE_TYPES = ['Home', 'Mobile', 'Work', 'Other'] as const
 
 export const extrasSchema = z.object({
   preferredName: text(60).default(''),
   suffixName: text(30).default(''),
+  middleName: text(60).default(''),
+  phoneType: z.enum(['', ...PHONE_TYPES]).default(''),
   /** YYYY-MM-DD, or empty. */
   birthday: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).default(''),
   address1: text(160).default(''),
   address2: text(160).default(''),
   address3: text(160).default(''),
   postalCode: text(20).default(''),
+  country: text(60).default(''),
+  state: text(60).default(''),
+  county: text(60).default(''),
+  /** The three yes/no answers forms ask in every country. Authorised-to-work and sponsorship are about INDIA. */
+  authorisedToWork: yesNo,
+  needsSponsorship: yesNo,
+  willingToRelocate: yesNo,
   githubUrl: text(300).default(''),
   otherUrl: text(300).default(''),
   languages: list(12, 40).default([]),

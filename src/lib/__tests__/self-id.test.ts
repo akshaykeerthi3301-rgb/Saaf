@@ -31,6 +31,20 @@ describe('sanitizeSelfId — only what the candidate typed survives', () => {
   })
 
   it('the form asks exactly the questions the extension recognises', () => {
-    expect(SELF_ID_FIELDS.map((f) => f.key).sort()).toEqual(['caste', 'disability', 'ethnicity', 'gender', 'marital', 'orientation', 'pronouns', 'religion', 'veteran'])
+    expect(SELF_ID_FIELDS.map((f) => f.key).sort()).toEqual(['caste', 'disability', 'ethnicity', 'gender', 'hispanic', 'lgbtq', 'marital', 'orientation', 'pronouns', 'religion', 'veteran'])
+  })
+
+  it('offers the same choices Jobright lists, so a candidate can tap instead of type', () => {
+    const f = (k: string) => SELF_ID_FIELDS.find((x) => x.key === k)!
+    expect(f('gender').options).toEqual(['Male', 'Female', 'Non-Binary'])
+    expect(f('pronouns').options).toEqual(['He/Him', 'She/Her', 'They/Them', 'Other'])
+    expect(f('ethnicity').options).toHaveLength(7)
+    expect(f('orientation').options).toHaveLength(8)
+    expect(['disability', 'veteran', 'hispanic', 'lgbtq'].every((k) => f(k).kind === 'yesno')).toBe(true)
+  })
+
+  it('keeps the two new yes/no answers and drops anything else for them', () => {
+    expect(sanitizeSelfId({ lgbtq: 'No', hispanic: 'yes' })).toEqual({ lgbtq: 'no', hispanic: 'yes' })
+    expect(sanitizeSelfId({ lgbtq: 'sometimes' })).toEqual({})
   })
 })

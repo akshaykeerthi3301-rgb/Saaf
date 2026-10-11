@@ -50,10 +50,10 @@ export function SelfIdAnswers({ initial, stored }: { initial: SelfIdAnswers; sto
               <>
                 <input
                   id={`${id}-${f.key}`} value={a[f.key] ?? ''} maxLength={60} placeholder="Prefer not to say"
-                  list={f.suggestions ? `${id}-${f.key}-list` : undefined}
+                  list={f.suggestions || f.options ? `${id}-${f.key}-list` : undefined}
                   onChange={(e) => setA({ ...a, [f.key]: e.target.value })} className={input}
                 />
-                {f.suggestions ? <datalist id={`${id}-${f.key}-list`}>{f.suggestions.map((s) => <option key={s} value={s} />)}</datalist> : null}
+                {f.suggestions || f.options ? <datalist id={`${id}-${f.key}-list`}>{(f.suggestions ?? f.options ?? []).map((s) => <option key={s} value={s} />)}</datalist> : null}
               </>
             )}
             {f.hint ? <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{f.hint}</p> : null}

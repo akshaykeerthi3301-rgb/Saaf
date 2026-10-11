@@ -3,6 +3,7 @@ import { readSelfId } from '@/lib/services/self-id'
 import type { SelfIdAnswers } from '@/lib/self-id'
 import { readAnswerBank } from '@/lib/services/answer-bank'
 import { forExtension } from '@/lib/answer-bank'
+import { readProfileExtras } from '@/lib/services/profile-cards'
 
 /**
  * The web app's half of the extension bridge (2026-09-25, Jobright parity).
@@ -31,6 +32,17 @@ export type ExtensionProfile = {
   workAuth: string
   linkedin: string
   portfolio: string
+  middleName: string
+  phoneType: string
+  address: string
+  postalCode: string
+  country: string
+  state: string
+  county: string
+  /** 'yes' | 'no' | '' — about India (see autofill.js `countryOk`). */
+  authorisedToWork: string
+  needsSponsorship: string
+  willingToRelocate: string
 }
 
 export type ExtensionSync = {
@@ -88,6 +100,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
     supabase.from('applications').select('apply_url, status').not('apply_url', 'is', null).limit(500),
   ])
   const { answers: selfId } = await readSelfId(userId)
+  const { extras } = await readProfileExtras(userId)
   const { bank } = await readAnswerBank(userId)
   const row = (p as unknown as ProfileRow | null)
   const s = (v: string | number | null | undefined) => (v == null ? '' : String(v))
@@ -105,6 +118,16 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       workAuth: s(row?.work_authorisation),
       linkedin: s(row?.linkedin_url),
       portfolio: s(row?.portfolio_url),
+      middleName: extras.middleName,
+      phoneType: extras.phoneType,
+      address: extras.address1,
+      postalCode: extras.postalCode,
+      country: extras.country,
+      state: extras.state,
+      county: extras.county,
+      authorisedToWork: extras.authorisedToWork,
+      needsSponsorship: extras.needsSponsorship,
+      willingToRelocate: extras.willingToRelocate,
     },
     selfId,
     answerBank: forExtension(bank),

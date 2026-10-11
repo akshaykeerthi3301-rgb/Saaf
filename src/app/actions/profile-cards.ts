@@ -198,6 +198,11 @@ const personalSchema = z.object({
   address2: z.string().trim().max(160),
   address3: z.string().trim().max(160),
   postalCode: z.string().trim().max(20),
+  middleName: z.string().trim().max(60),
+  phoneType: extrasSchema.shape.phoneType,
+  country: z.string().trim().max(60),
+  state: z.string().trim().max(60),
+  county: z.string().trim().max(60),
 })
 
 export async function saveProfilePersonal(input: z.input<typeof personalSchema>): Promise<{ ok: true; note?: string } | Fail> {

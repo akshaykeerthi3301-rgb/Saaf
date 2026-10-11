@@ -35,6 +35,8 @@ const isSaaf = (sender) => {
 const SYNCED_FIELDS = [
   'fullName', 'email', 'phone', 'city', 'currentTitle', 'currentEmployer',
   'yearsExperience', 'noticePeriod', 'linkedin', 'portfolio', 'workAuth', 'preferredLocations',
+  'middleName', 'phoneType', 'address', 'postalCode', 'country', 'state', 'county',
+  'authorisedToWork', 'needsSponsorship', 'willingToRelocate',
 ]
 const RANK = { saved: 0, applying: 1, applied: 2 }
 
@@ -316,7 +318,7 @@ async function applySync(msg) {
   // merged: clearing an answer on the web must remove it here, or a question
   // they took back would still be answered. Whitelisted keys, short strings only.
   if (msg.selfId && typeof msg.selfId === 'object') {
-    const KEYS = ['gender', 'pronouns', 'ethnicity', 'disability', 'veteran', 'orientation', 'caste', 'religion', 'marital']
+    const KEYS = ['gender', 'pronouns', 'ethnicity', 'disability', 'veteran', 'orientation', 'lgbtq', 'hispanic', 'caste', 'religion', 'marital']
     const next = {}
     for (const k of KEYS) {
       const v = msg.selfId[k]

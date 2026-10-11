@@ -70,7 +70,7 @@
     // ⚠️ STEMS NEED NO TRAILING \b. `\bdisab\b` never matched "Disability" —
     // the boundary requires a non-word character and the word continues. Caught
     // by the test, which is the entire reason a form filler has one.
-    { re: /\b(gender|sex|sexual|race|ethnic|ethnicity|veteran|disabilit|disabled|orientation|pronoun|caste|religion|marital|pregnan|date\s*of\s*birth|\bdob\b|age\b)/i,
+    { re: /\b(gender|sex|sexual|race|ethnic|ethnicity|veteran|disabilit|disabled|orientation|pronoun|caste|religion|marital|lgbt|hispanic|latino|pregnan|date\s*of\s*birth|\bdob\b|age\b)/i,
       reason: 'a demographic question — yours alone to answer', selfId: true },
     { re: /\b(why\s*(do\s*)?you|cover\s*letter|motivation|tell\s*us|describe|essay|what\s*interests|in\s*your\s*own\s*words)\b/i,
       reason: 'free text the employer asked you — not us', written: true },
@@ -93,13 +93,15 @@
     { key: 'disability', re: /\b(disabilit|disabled)/i },
     { key: 'veteran', re: /\bveteran/i },
     { key: 'orientation', re: /\b(sexual|orientation)/i },
+    { key: 'lgbtq', re: /\blgbt/i },
+    { key: 'hispanic', re: /\b(hispanic|latino)/i },
     { key: 'caste', re: /\bcaste\b/i },
     { key: 'religion', re: /\breligio/i },
     { key: 'marital', re: /\bmarital/i },
   ]
   /** Never answered, for anyone, whatever is stored — and a label that mentions one is refused whole. */
   const NEVER_ANSWERED = /\b(pregnan|date\s*of\s*birth|dob\b|age\b)/i
-  const SELF_ID_YES_NO = new Set(['selfId:disability', 'selfId:veteran'])
+  const SELF_ID_YES_NO = new Set(['selfId:disability', 'selfId:veteran', 'selfId:lgbtq', 'selfId:hispanic'])
   /** Accepted option texts for a stored gender: forms say Man/Woman as often as Male/Female. */
   const GENDER_WORDS = { male: ['male', 'man'], female: ['female', 'woman'], 'non binary': ['non binary', 'nonbinary'] }
 
@@ -133,6 +135,19 @@
   ]
 
   /**
+   * Work-permit answers are about INDIA — that is what the person is asked to state on their profile. A form asking about
+   * another country ("authorised to work in the US?") must not get the Indian answer, so it is left unfilled and shows up
+   * under "Questions for you", where the person's own answer is saved against that exact wording.
+   * Case-sensitive on purpose for US/UK/EU: lower-case "us" is the pronoun.
+   */
+  const COUNTRY_SCOPED = new Set(['authorisedToWork', 'needsSponsorship'])
+  function otherCountry(signals) {
+    if (/\bindia\b/i.test(signals)) return false
+    return /\b(U\.?S\.?A?|U\.?K\.?|E\.?U\.?)(?=\W|$)/.test(signals)
+      || /\b(united\s*states|america|united\s*kingdom|britain|england|canada|australia|new\s*zealand|europe|european|germany|france|netherlands|ireland|singapore|japan|uae|emirates|dubai|saudi|china|brazil|mexico|philippines|poland|spain|italy|sweden|switzerland)\b/i.test(signals)
+  }
+
+  /**
    * Field patterns, MOST SPECIFIC FIRST, because the loop takes the first hit.
    * "current employer" has to beat "employer"; "full name" has to beat "name",
    * and "first name" has to beat both or everyone is called by their full name
@@ -143,7 +158,16 @@
     { key: 'lastName',        re: /\b(last\s*name|surname|family\s*name|lname)\b/i },
     { key: 'fullName',        re: /\b(full\s*name|your\s*name|candidate\s*name|^name$|applicant\s*name)\b/i },
     { key: 'email',           re: /\b(e-?mail|email\s*address)\b/i },
+    { key: 'middleName',      re: /\b(middle\s*(name|initial))\b/i },
+    // Before `phone`: "Phone type" contains "phone".
+    { key: 'phoneType',       re: /\b(phone|mobile|telephone)\s*(device\s*)?type\b/i },
     { key: 'phone',           re: /\b(phone|mobile|contact\s*number|telephone|cell)\b/i },
+    { key: 'postalCode',      re: /\b(postal\s*code|post\s*code|zip(\s*code)?|pin\s*code|pincode)\b/i },
+    // Line 1 only: "Address line 2/3" is left for the person, so the street is never typed into the wrong box.
+    { key: 'address',         re: /^(?!.*\b(address|addr|line|street)\s*(line\s*)?[23]\b).*\b(address|street|addr)\b/is },
+    { key: 'country',         re: /\bcountr(y|ies)\b(?!\s*(code|dial))/i },
+    { key: 'state',           re: /\b(state|province)\b/i },
+    { key: 'county',          re: /\bcounty\b/i },
     { key: 'linkedin',        re: /\b(linked-?in)\b/i },
     { key: 'portfolio',       re: /\b(portfolio|website|personal\s*site|github|behance|dribbble)\b/i },
     { key: 'currentTitle',    re: /\b(current\s*(job\s*)?title|current\s*role|present\s*designation|job\s*title|designation)\b/i },
@@ -329,7 +353,7 @@
     }
     if (MONEY.test(signals)) return { key: EXPECTED.test(signals) ? 'expectedCtc' : 'currentCtc' }
     const answer = ANSWERS.find((a) => a.re.test(signals))
-    if (answer) return { key: answer.key }
+    if (answer) return COUNTRY_SCOPED.has(answer.key) && otherCountry(signals) ? null : { key: answer.key }
     const field = FIELDS.find((f) => f.re.test(signals))
     if (!field) return null
     // A question wins over the field match, except where the question IS the
@@ -363,6 +387,7 @@
       case 'yearsExperience': return p.yearsExperience
       case 'noticePeriod': return p.noticePeriod
       case 'city': return p.city
+      case 'middleName': case 'phoneType': case 'address': case 'postalCode': case 'country': case 'state': case 'county': return p[key]
       case 'preferredLocations': return p.preferredLocations
       case 'workAuth': return p.workAuth
       case 'currentCtc': return p.currentCtcLakhs

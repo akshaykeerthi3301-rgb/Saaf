@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-12 (night, later) — profile: everything Jobright collects, in tap-to-pick pop-ups · extension 0.13.0
+
+**Now:** Profile → Personal Info has middle name, phone type, country, state, county; the Employment pop-up is rows of tap-to-pick chips with Jobright's own choices (gender, pronouns, race, sexual orientation, Yes/No questions, 'Decline to state'), plus 'legally authorised to work in India', 'sponsorship' and 'relocate'. The extension (0.13.0) fills the new fields; it will not give your Indian work-permit answer to a form asking about the US or UK — those appear under 'Questions for you'. **Not added:** GPA and Experience Summary (they change the résumé itself — say if you want them).
+**Verified:** the screens open and show your stored answers (local browser); tests; the extension flows in a real Chromium. **Not verified:** pressing Update/Save (I did not change your real data); your own Chrome with 0.13.0.
+**You need to:** after the deploy, open Profile → Personal Info, tap Employment's pencil, set the three work questions and anything you want filled, press Update. Then download 0.13.0 from the Profile banner and reload it on chrome://extensions.
+
+---
+
 ## 🔶 2026-10-12 (night) — extension 0.12.0: it asks you the questions it cannot answer; Workday gets further
 
 **Now:** when a form has required questions Jobinko has no answer for (a typed answer, yes/no, a dropdown), the panel lists them under **Questions for you**. Answer once: it goes into the form and into your Jobinko answers, and the next form asking the same thing is filled for you. It never asks gender, caste, disability, passwords, consent boxes or files. On Workday the Apply button is now found and pressed, including 'Apply Manually', and it stops at Create Account without asking you to submit.
