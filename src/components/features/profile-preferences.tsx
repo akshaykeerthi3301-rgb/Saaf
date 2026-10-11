@@ -2,14 +2,14 @@
 
 import { useState, type ReactNode } from 'react'
 import { Briefcase, Building2, Compass, Heart, MapPin, SlidersHorizontal, Target, Wallet, Zap } from 'lucide-react'
-import { saveProfileExtras, saveProfileRoles } from '@/app/actions/profile-cards'
+import { saveProfileExtras, saveProfileKeywords, saveProfileRoles } from '@/app/actions/profile-cards'
 import { savePreferences, setSearchStatus } from '@/app/actions/workspace'
 import { SkillsDrawer } from '@/components/features/profile-main'
-import { ExtraRolesField } from '@/components/features/extra-roles-field'
-import { RoleInput } from '@/components/features/role-input'
+import { RolesEditor } from '@/components/features/roles-editor'
 import {
   Chip, ChipEditor, EditButton, EditDrawer, Field, Label, PickEditor, ProfileCard, inputClass,
 } from '@/components/features/profile-ui'
+import { splitRoles } from '@/lib/role-list'
 import {
   COMPANY_SIZES, EMPLOYMENT_TYPES, INDUSTRIES, VALUE_OPTIONS, type Extras,
 } from '@/lib/profile-extras'
@@ -31,6 +31,7 @@ export type PreferencesData = {
   extraRoles: string[]
   skills: string[]
   favourites: string[]
+  keywords: string[]
   status: SearchStatus
   city: string
 }
@@ -48,7 +49,7 @@ const STATUSES: { key: SearchStatus; label: string; note: string }[] = [
   { key: 'closed', label: 'Not looking', note: 'Pausing the search' },
 ]
 
-type Panel = null | 'roles' | 'where' | 'type' | 'skills' | 'salary' | 'status'
+type Panel = null | 'keywords' | 'roles' | 'where' | 'type' | 'skills' | 'salary' | 'status'
 
 export function ProfilePreferences({ data }: { data: PreferencesData }) {
   const [panel, setPanel] = useState<Panel>(null)
@@ -102,6 +103,11 @@ export function ProfilePreferences({ data }: { data: PreferencesData }) {
         ) : none}
       </ProfileCard>
 
+      <ProfileCard title="What words matter to you?" action={<EditButton label="Edit keywords" onClick={() => setPanel('keywords')} />}>
+        <p className="mt-3 text-sm text-muted-foreground">A product area, an industry, a tool. A job that names them ranks higher — nothing is hidden, and a job matching none still appears.</p>
+        {chips(data.keywords)}
+      </ProfileCard>
+
       <ExtrasQuestion title="Are there any skills you don't want to work with?" icon={<Zap className="size-5" />} field="skillsAvoid" mode="chips" options={[]} max={20} value={x.skillsAvoid} placeholder="Add a skill" />
 
       <ProfileCard title="What is your minimum expected salary?" action={<EditButton label="Edit salary" onClick={() => setPanel('salary')} />}>
@@ -116,6 +122,7 @@ export function ProfilePreferences({ data }: { data: PreferencesData }) {
       <ExtrasQuestion title="What companies do you want to hide from your job search?" icon={<Briefcase className="size-5" />} field="hiddenCompanies" mode="chips" options={[]} max={30} value={x.hiddenCompanies} placeholder="Add a company"
         note="Saved with your profile. Hiding a company from your feed is not switched on yet — until it is, use Hide on a job card." />
 
+      {panel === 'keywords' ? <KeywordsDrawer keywords={data.keywords} onClose={() => setPanel(null)} /> : null}
       {panel === 'roles' ? <RolesDrawer primary={data.primaryRole} extras={data.extraRoles} onClose={() => setPanel(null)} /> : null}
       {panel === 'where' ? <WhereDrawer data={data} onClose={() => setPanel(null)} /> : null}
       {panel === 'type' ? <TypeDrawer data={data} onClose={() => setPanel(null)} /> : null}
@@ -160,20 +167,28 @@ function ExtrasQuestion({ title, hint, icon, field, mode, options, max, value, p
   )
 }
 
+function KeywordsDrawer({ keywords, onClose }: { keywords: string[]; onClose: () => void }) {
+  const [list, setList] = useState(keywords)
+  return (
+    <EditDrawer
+      open onOpenChange={(o) => { if (!o) onClose() }} title="Edit Keywords" icon={<Heart className="size-5" />}
+      onSave={async () => { const r = await saveProfileKeywords({ keywords: list }); return r.ok ? null : r.error }}
+      note={<p className="rounded-xl border border-border bg-secondary/50 p-4 text-sm text-muted-foreground">Saving re-ranks your list so jobs that name these words come first. It never hides a job.</p>}
+    >
+      <ChipEditor label="Keywords" value={list} onChange={setList} max={20} placeholder="payments, fintech, B2B SaaS… then press Enter" />
+    </EditDrawer>
+  )
+}
+
 function RolesDrawer({ primary, extras, onClose }: { primary: string; extras: string[]; onClose: () => void }) {
-  const [main, setMain] = useState(primary)
-  const [more, setMore] = useState(extras)
+  const [roles, setRoles] = useState([primary, ...extras].filter(Boolean))
   return (
     <EditDrawer
       open onOpenChange={(o) => { if (!o) onClose() }} title="Edit Roles" icon={<Target className="size-5" />}
-      onSave={async () => { const r = await saveProfileRoles({ primary: main, extras: more }); return r.ok ? null : r.error }}
-      note={<p className="rounded-xl border border-border bg-secondary/50 p-4 text-sm text-muted-foreground">Your main role decides which jobs you are scored against, so saving rebuilds your matches.</p>}
+      onSave={async () => { const r = await saveProfileRoles(splitRoles(roles)); return r.ok ? null : r.error }}
+      note={<p className="rounded-xl border border-border bg-secondary/50 p-4 text-sm text-muted-foreground">Choose up to five roles. The first is your main one and decides which jobs you are scored against; saving rebuilds your matches.</p>}
     >
-      <RoleInput label="The role you are looking for" value={main} onChange={setMain} />
-      <div>
-        <p className="mb-1.5 text-sm font-semibold text-primary">Other roles you would take</p>
-        <ExtraRolesField roles={more} onChange={setMore} />
-      </div>
+      <RolesEditor roles={roles} onChange={setRoles} />
     </EditDrawer>
   )
 }

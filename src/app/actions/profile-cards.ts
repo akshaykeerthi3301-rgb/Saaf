@@ -9,7 +9,7 @@ import { checkResume } from '@/lib/ats-check'
 import { sectionsToText } from '@/lib/parse/sections'
 import { saveResume, setPrimaryResume, updateResume } from '@/lib/services/resume-documents'
 import {
-  readPrimaryResume, writeProfileExtras, writeProfileLinks, writeProfilePersonal, writeProfileRoles, writeProfileSkills,
+  readPrimaryResume, writeProfileExtras, writeProfileKeywords, writeProfileLinks, writeProfilePersonal, writeProfileRoles, writeProfileSkills,
 } from '@/lib/services/profile-cards'
 import { dateProblem, emptySections, formatRange, removeEntry, textToBullets, upsertEntry } from '@/lib/profile-entries'
 import { extrasSchema } from '@/lib/profile-extras'
@@ -154,6 +154,19 @@ export async function saveProfileSkills(input: { skills: string[]; favourites: s
   if (!userId) return NOT_SIGNED_IN
   const skills = [...new Set(parsed.data.skills)]
   if (!(await writeProfileSkills(userId, skills, parsed.data.favourites)).ok) return CONNECTION
+  await evaluateUser(userId).catch(() => undefined)
+  revalidatePath('/profile')
+  return { ok: true }
+}
+
+/** Their own words for what they care about. A role naming them ranks higher; nothing is hidden. Re-ranks the list. */
+export async function saveProfileKeywords(input: { keywords: string[] }): Promise<{ ok: true } | Fail> {
+  const parsed = z.object({ keywords: z.array(z.string().trim().min(1).max(40)).max(20) }).safeParse(input)
+  if (!parsed.success) return { ok: false, error: 'Keywords can be up to 40 characters each, 20 in all.' }
+  const userId = await whoAmI()
+  if (!userId) return NOT_SIGNED_IN
+  const keywords = [...new Map(parsed.data.keywords.map((k) => [k.toLowerCase(), k])).values()]
+  if (!(await writeProfileKeywords(userId, keywords)).ok) return { ok: false, error: 'Keywords need a database update that has not been applied yet, so they could not be saved.' }
   await evaluateUser(userId).catch(() => undefined)
   revalidatePath('/profile')
   return { ok: true }

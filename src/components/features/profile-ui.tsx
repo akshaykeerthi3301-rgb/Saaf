@@ -156,7 +156,7 @@ export function ChipEditor({ value, onChange, max, placeholder, suggestions = []
     <div>
       <div className="flex gap-2">
         <input
-          value={text} onChange={(e) => setText(e.target.value)} aria-label={label} placeholder={placeholder} className={inputClass}
+          value={text} onChange={(e) => setText(e.target.value)} onBlur={() => add(text)} aria-label={label} placeholder={placeholder} className={inputClass}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(text) } }}
         />
         <button type="button" onClick={() => add(text)} aria-label={`Add to ${label}`} className="rounded-xl border border-border px-3 text-muted-foreground hover:text-primary"><Plus className="size-4" /></button>

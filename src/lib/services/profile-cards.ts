@@ -42,6 +42,13 @@ export async function writeProfileLinks(userId: string, links: { linkedinUrl: st
  * Write the skills and which of them are hearted. Hearts live in `keywords` (migration 0022), written as a second,
  * best-effort update exactly as confirmProfile does — a database without 0022 still saves the skills.
  */
+/** The candidate's own keywords (migration 0022) — a ranking boost, never a filter. False when the column is missing. */
+export async function writeProfileKeywords(userId: string, keywords: string[]): Promise<{ ok: boolean }> {
+  const supabase = await createClient()
+  const { error } = await supabase.from('profiles').update({ keywords, updated_at: new Date().toISOString() }).eq('id', userId)
+  return { ok: !error }
+}
+
 export async function writeProfileSkills(userId: string, skills: string[], favourites: string[]): Promise<{ ok: boolean }> {
   const supabase = await createClient()
   const { data } = await supabase.from('profiles').select('skills, keywords').eq('id', userId).maybeSingle()

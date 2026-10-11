@@ -91,7 +91,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     body = (
       <ProfilePreferences data={{
         extras: extrasRead.extras, prefs, workMode: profile.work_mode_preference ?? 'no_preference',
-        primaryRole: profile.preferred_role ?? '', extraRoles, skills, favourites, status: account.status, city: profile.city ?? '',
+        primaryRole: profile.preferred_role ?? '', extraRoles, skills, favourites, keywords: profile.keywords ?? [], status: account.status, city: profile.city ?? '',
       }} />
     )
   } else if (view === 'settings') {

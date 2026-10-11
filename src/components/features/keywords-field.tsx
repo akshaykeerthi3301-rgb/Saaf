@@ -77,6 +77,8 @@ export function KeywordsField({
           placeholder="payments, fintech, B2B SaaS…"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          // A word typed and left behind (the next click is Save) used to vanish: it was never added.
+          onBlur={add}
           onKeyDown={(e) => {
             // Enter must not submit the surrounding form — this is one field in
             // a longer profile, and losing the rest to a stray keystroke is a
