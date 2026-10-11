@@ -9,7 +9,7 @@ version=$(python3 -c "import json;print(json.load(open('extension/manifest.json'
 work=$(mktemp -d)
 dir="$work/jobinko-extension"
 mkdir -p "$dir" public/downloads
-cp extension/manifest.json extension/popup.html "$dir"/
+cp extension/manifest.json extension/popup.html extension/options.html "$dir"/
 for f in extension/*.js; do cp "$f" "$dir"/; done
 cat > "$dir/INSTALL.txt" <<TXT
 Jobinko browser extension — test version $version

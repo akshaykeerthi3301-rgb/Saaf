@@ -10,6 +10,7 @@ const manifest = JSON.parse(readFileSync(join(root, 'extension', 'manifest.json'
   background: { service_worker: string }
   content_scripts: { js: string[] }[]
   action: { default_popup: string }
+  options_ui?: { page: string }
 }
 const zip = join(root, 'public', EXTENSION_ZIP)
 const inZip = (name: string) => execFileSync('unzip', ['-p', zip, `jobinko-extension/${name}`], { encoding: 'utf8', maxBuffer: 10_000_000 })
@@ -32,7 +33,7 @@ describe('the downloadable extension', () => {
 
   it('carries every file the manifest loads, and no test files', () => {
     const files = listing().map((n) => n.replace('jobinko-extension/', ''))
-    const needed = [manifest.background.service_worker, manifest.action.default_popup, ...manifest.content_scripts.flatMap((c) => c.js), 'manifest.json', 'INSTALL.txt']
+    const needed = [manifest.background.service_worker, manifest.action.default_popup, ...(manifest.options_ui ? [manifest.options_ui.page] : []), ...manifest.content_scripts.flatMap((c) => c.js), 'manifest.json', 'INSTALL.txt']
     for (const n of needed) expect(files, n).toContain(n)
     expect(files.some((n) => /\.test\./.test(n))).toBe(false)
   })

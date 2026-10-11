@@ -145,7 +145,7 @@
     }
     if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'The employer asks for a CAPTCHA — that one is yours', filled: [] }
 
-    const res = await root.SaafAutofill.fillForm(profile, doc, { resumeFile: opts.resumeFile, waitMs: opts.waitMs, mode: 'auto' })
+    const res = await root.SaafAutofill.fillForm(profile, doc, { resumeFile: opts.resumeFile, waitMs: opts.waitMs, mode: opts.mode ?? 'auto' })
     await sleep(opts.settleMs ?? 400)
     if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled: res.filled, coverage: coverage(doc) }
 

@@ -103,7 +103,7 @@ function mount() {
   root.innerHTML = `<style>${STYLE}</style>
     <button class="tab" id="tab" hidden aria-label="Open Jobinko">Jobinko</button>
     <aside class="panel" id="panel" aria-label="Jobinko">
-      <header><span class="brand">Jobinko</span><span id="ats"></span><span class="grow"></span><button class="x" id="collapse" aria-label="Collapse Jobinko panel" title="Collapse">›</button></header>
+      <header><span class="brand">Jobinko</span><span id="ats"></span><span class="grow"></span><button class="x" id="gear" aria-label="Jobinko settings" title="Settings">⚙</button><button class="x" id="collapse" aria-label="Collapse Jobinko panel" title="Collapse">›</button></header>
       <div class="scroll">
         <section id="account"></section>
         <section id="support"></section>
@@ -127,8 +127,19 @@ function mount() {
     document.documentElement.style.marginRight = open && wide ? `${PANEL_W}px` : ''
   }
   room(true)
-  root.getElementById('collapse').addEventListener('click', () => { panel.hidden = true; tab.hidden = false; room(false) })
-  tab.addEventListener('click', () => { panel.hidden = false; tab.hidden = true; room(true) })
+  const setOpen = (open) => { panel.hidden = !open; tab.hidden = open; room(open) }
+  root.getElementById('collapse').addEventListener('click', () => setOpen(false))
+  tab.addEventListener('click', () => setOpen(true))
+  root.getElementById('gear').addEventListener('click', () => chrome.runtime.sendMessage({ type: 'jx:open-options' }))
+  // The toolbar icon: opens the panel if it is collapsed, collapses it if it is open (service-worker.js, "The toolbar icon").
+  chrome.runtime.onMessage.addListener((msg, _s, sendResponse) => {
+    if (msg?.type !== 'jx:toggle') return false
+    setOpen(panel.hidden)
+    sendResponse({ ok: true })
+    return false
+  })
+  // Tell the worker the panel runs here, so the icon toggles it instead of dropping a menu down.
+  chrome.runtime.sendMessage({ type: 'jx:ready' }).catch(() => {})
   return root
 }
 

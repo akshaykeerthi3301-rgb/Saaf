@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8" />
+<!-- Palette restated from src/app/globals.css `.dark` (see content-script.js STYLE). -->
+<style>
+  :root{--bg:oklch(0.141 0.005 285.823);--card:oklch(0.21 0.006 285.885);--fg:oklch(0.985 0 0);--muted:oklch(0.705 0.015 286.067);
+    --line:oklch(1 0 0 / 12%);--brand:oklch(0.585 0.233 277.117);--brand-2:oklch(0.558 0.288 302.321);--accent:oklch(0.673 0.182 276.935);--ok:oklch(0.765 0.177 163.223)}
+  body{max-width:560px;margin:0 auto;padding:28px 20px;font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--fg);background:var(--bg)}
+  h1{font-size:15px;margin:0 0 4px;background:linear-gradient(135deg,var(--accent),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+  h2{font-size:11px;margin:16px 0 4px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  p{color:var(--muted);font-size:11px;margin:0 0 8px}
+  label{display:block;font-size:10px;color:var(--muted);margin-top:7px}
+  input,textarea,select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:11px/1.4 inherit;color:var(--fg);background:var(--card)}
+  textarea{height:96px;resize:vertical}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+  button{margin-top:14px;padding:8px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:600;cursor:pointer}
+  .ok{color:var(--ok);font-size:11px;margin-left:8px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:10px;color:var(--muted);margin-top:12px}
+  .sync{font-size:10px;color:var(--accent)}
+  a{color:var(--accent)}
+</style>
+
+<title>Jobinko settings</title>
+<h1>Jobinko — settings</h1>
+<div class="acct" id="acct" style="margin:8px 0 10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:12px">Connecting to your Jobinko account…</div>
+<p>The extension uses your Jobinko account: it fills forms from your profile, attaches your résumé, saves jobs to your tracker and tailors your résumé for a posting. What you type in the boxes below (salary, yes/no answers) stays in this browser.</p>
+<div class="sync" id="sync"></div>
+
+
+
+<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:12px">Use a different résumé (optional)</summary>
+<p>Your résumé comes from your Jobinko account automatically. Only fill this in to override it: the text scores postings, and an uploaded file is attached to résumé uploads instead of your account's.</p>
+<textarea id="resume" placeholder="Paste your résumé text…"></textarea>
+<label for="resumeFile">Résumé file (PDF or Word, up to 4 MB)</label><input id="resumeFile" type="file" accept=".pdf,.doc,.docx" />
+<div class="sync" id="fileName"></div>
+
+</details>
+
+<h2>For filling forms</h2>
+<label for="fullName">Full name</label><input id="fullName" />
+<div class="two">
+  <div><label for="email">Email</label><input id="email" type="email" /></div>
+  <div><label for="phone">Phone</label><input id="phone" type="tel" /></div>
+</div>
+<div class="two">
+  <div><label for="city">City</label><input id="city" /></div>
+  <div><label for="preferredLocations">Preferred cities (comma-separated)</label><input id="preferredLocations" /></div>
+</div>
+<div class="two">
+  <div><label for="currentTitle">Current title</label><input id="currentTitle" /></div>
+  <div><label for="currentEmployer">Current employer</label><input id="currentEmployer" /></div>
+</div>
+<div class="two">
+  <div><label for="yearsExperience">Years of experience</label><input id="yearsExperience" /></div>
+  <div><label for="noticePeriod">Notice period</label>
+    <select id="noticePeriod"><option value="">—</option><option>Immediate</option><option>15 days</option><option>30 days</option><option>60 days</option><option>90 days</option></select></div>
+</div>
+<label for="workAuth">Work authorisation (e.g. Indian citizen)</label><input id="workAuth" />
+<label for="linkedin">LinkedIn URL</label><input id="linkedin" type="url" />
+<label for="portfolio">Portfolio / GitHub</label><input id="portfolio" type="url" />
+
+<h2>Salary (only if you want it filled)</h2>
+<p>In lakhs per year. Written in the form's own unit — “18 LPA”, or rupees where the box asks for rupees. Left blank, salary boxes are left for you.</p>
+<div class="two">
+  <div><label for="currentCtcLakhs">Current CTC (lakhs)</label><input id="currentCtcLakhs" inputmode="decimal" /></div>
+  <div><label for="expectedCtcLakhs">Expected CTC (lakhs)</label><input id="expectedCtcLakhs" inputmode="decimal" /></div>
+</div>
+
+<h2>Your yes/no answers</h2>
+<p>Used only for these three questions. Left blank, they are left for you.</p>
+<label for="authorisedToWork">Authorised to work in India?</label>
+<select id="authorisedToWork"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+<label for="needsSponsorship">Need visa sponsorship?</label>
+<select id="needsSponsorship"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+<label for="willingToRelocate">Willing to relocate?</label>
+<select id="willingToRelocate"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+
+<div><button id="save">Save</button><span class="ok" id="msg"></span></div>
+
+<h2>Apply for me</h2>
+<p>Jobinko opens each queued job in a background tab, fills it from the details above, and presses Submit — <b>only</b> when every required answer is filled. It stops and leaves the tab for you at any CAPTCHA, any question it has no answer for, or a required file it doesn't have. Up to 25 a day. A job counts as applied only when the employer's page confirms it.</p>
+<label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--fg)"><input id="aaEnabled" type="checkbox" style="width:auto;margin-top:2px" /> Let Jobinko submit applications for me</label>
+<div class="sync" id="aaStatus" style="margin-top:8px"></div>
+<div class="sync" id="aaPaused" hidden></div>
+<ol id="aaQueue" style="padding-left:18px;font-size:10px;color:var(--muted);margin:8px 0 0"></ol>
+<div><button id="aaStart">Start applying</button> <button id="aaClear" style="background:var(--card);border:1px solid var(--line);color:var(--muted)" hidden>Clear queue</button><span class="ok" id="aaMsg"></span></div>
+<ul id="aaLog" style="padding-left:16px;font-size:10px;color:var(--muted);margin:10px 0 0"></ul>
+
+<div class="note">
+  <b>Never filled:</b> gender, caste, religion and other demographic questions; “why do you
+  want to work here” and other free text; consent boxes; passwords, Aadhaar and PAN.
+  Every dropdown or button we pick is listed on the card for you to check. Jobinko presses Submit only in
+  “Apply for me”, only after you switch it on, and never past a CAPTCHA.
+</div>
+
+<script src="options.js"></script>

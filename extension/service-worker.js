@@ -519,7 +519,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     if (msg.type === 'saaf:autoapply-gate') { sendResponse(await pausedBySaaf()); return }
     if (msg.type === 'saaf:autoapply-start') { sendResponse(await processNext()); return }
-    if (msg.type === 'saaf:autoapply-state') { sendResponse(mine ? { job: autoApplyActive.job, phase: autoApplyActive.phase } : null); return }
+    if (msg.type === 'saaf:autoapply-state') { sendResponse(mine ? { job: autoApplyActive.job, phase: autoApplyActive.phase, here: !!autoApplyActive.here } : null); return }
+    // "Apply on this page": the person pressed Apply in the panel, on the tab they are looking at. Same rules as the
+    // queue (daily cap, the kill switch, supported sites, one at a time), but no new tab, no queue, and the tab is
+    // never closed on them. They pressed the button; that press is the consent for THIS application only.
+    if (msg.type === 'saaf:autoapply-here') {
+      const tab = sender.tab
+      if (!tab || !supported(tab.url || '')) { sendResponse({ ok: false, error: 'This is not an application site the extension works on.' }); return }
+      if (autoApplyActive && Date.now() - autoApplyActive.startedAt < STALE_MS) { sendResponse({ ok: false, error: 'Another application is running. Wait for it to finish.' }); return }
+      const { autoApplyDay = {} } = await chrome.storage.local.get('autoApplyDay')
+      if ((autoApplyDay.date === today() ? autoApplyDay.count : 0) >= DAILY_CAP) { sendResponse({ ok: false, error: `Today's limit of ${DAILY_CAP} applications is reached.` }); return }
+      const gate = await pausedBySaaf()
+      if (gate.paused) { sendResponse({ ok: false, error: gate.message }); return }
+      const j = msg.job || {}
+      const job = { url: String(j.url || tab.url).slice(0, 2000), title: String(j.title || 'Untitled role').slice(0, 300), company: String(j.company || new URL(tab.url).hostname).slice(0, 200) }
+      await chrome.storage.session.set({ autoApplyActive: { tabId: tab.id, job, phase: 'fill', startedAt: Date.now(), here: true } })
+      sendResponse({ ok: true }); return
+    }
     if (msg.type === 'saaf:autoapply-phase' && mine) {
       // 'await-confirm' is sent immediately before the Submit click: the last
       // moment the kill switch can stop this application.
@@ -539,16 +555,61 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const count = autoApplyDay.date === today() ? autoApplyDay.count : 0
         await chrome.storage.local.set({ autoApplyDay: { date: today(), count: count + 1 } })
         await queueForTracker(job, 'applied', 'apply-for-me')
-        setTimeout(() => chrome.tabs.remove(sender.tab.id).catch(() => {}), 3000)
+        // A queue run owns its background tab and closes it; an application the person started on their own tab stays open.
+        if (!autoApplyActive.here) setTimeout(() => chrome.tabs.remove(sender.tab.id).catch(() => {}), 3000)
       } else {
         // Left open for the candidate, and filed as Applying — never Applied.
         await queueForTracker(job, 'applying', 'apply-for-me')
       }
       sendResponse({ ok: true })
-      setTimeout(() => { processNext() }, 4000)
+      // Only a queue run moves on to the next job.
+      if (!autoApplyActive.here) setTimeout(() => { processNext() }, 4000)
       return
     }
     sendResponse({ ok: false })
   })()
   return true
 })
+
+
+// ------------------------------------------------------------ The toolbar icon
+/**
+ * ⚠️ THE ICON OPENS THE PANEL ON THE PAGE, NOT A DROP-DOWN. (Founder, 2026-10-12: "the extension drops down from the
+ * icon rather than floating on the right like Jobright and Simplify".) Chrome shows a popup only while the tab's popup
+ * is set; on a tab where the panel is running we set it to nothing, so a click reaches `onClicked` and toggles the
+ * panel. On every other tab the popup stays — it says the site is not supported and offers "ask for it".
+ *
+ * Chrome keeps a per-tab popup until the tab closes, so it is put back to the default whenever the tab starts loading
+ * a new page; the panel's content script sets it again if the new page is one it runs on.
+ */
+const DEFAULT_POPUP = 'popup.html'
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type === 'jx:ready' && sender.tab?.id != null) {
+    chrome.action.setPopup({ tabId: sender.tab.id, popup: '' }).then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }))
+    return true
+  }
+  if (msg?.type === 'jx:open-options') {
+    chrome.runtime.openOptionsPage().then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }))
+    return true
+  }
+  return false
+})
+
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  if (info.status === 'loading') chrome.action.setPopup({ tabId, popup: DEFAULT_POPUP }).catch(() => {})
+})
+
+async function togglePanel(tab) {
+  if (!tab?.id) return
+  try {
+    await chrome.tabs.sendMessage(tab.id, { type: 'jx:toggle' })
+  } catch {
+    // No panel on this tab (the page changed under a stale popup setting): show the ordinary popup instead.
+    await chrome.action.setPopup({ tabId: tab.id, popup: DEFAULT_POPUP }).catch(() => {})
+    await chrome.action.openPopup().catch(() => {})
+  }
+}
+chrome.action.onClicked.addListener(togglePanel)
+// Exposed so the end-to-end test can press "the icon" — a toolbar click cannot be sent from a test.
+globalThis.__jxToggle = togglePanel
