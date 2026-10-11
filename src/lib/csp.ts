@@ -17,7 +17,7 @@
  * including the static landing page this policy is meant to protect.
  */
 export function cspReportOnly(env: { sentryDsn?: string; posthogHost?: string }): string {
-  const connect = ["'self'", 'https://*.supabase.co', 'wss://*.supabase.co']
+  const connect = ["'self'", 'https://*.supabase.co', 'wss://*.supabase.co', 'https://accounts.google.com/gsi/']
   let reportUri: string | undefined
 
   if (env.posthogHost) {
@@ -46,8 +46,9 @@ export function cspReportOnly(env: { sentryDsn?: string; posthogHost?: string })
 
   const directives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
+    "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
+    "frame-src https://accounts.google.com/gsi/",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src ${connect.join(' ')}`,

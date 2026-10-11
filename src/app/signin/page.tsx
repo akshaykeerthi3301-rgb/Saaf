@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { instantSignIn } from '@/app/actions/instant-signin'
+import { GOOGLE_CLIENT_ID, makeNonce } from '@/lib/google-signin'
 
 /**
  * Instant sign-in (an email address, no verification round-trip) is the
@@ -20,17 +21,73 @@ import { instantSignIn } from '@/app/actions/instant-signin'
  *
  * No password anywhere — one less secret to leak.
  *
+ * GOOGLE RUNS THROUGH GOOGLE'S OWN BUTTON, NOT A REDIRECT (founder, 2026-10-11): the redirect flow made Google's
+ * chooser say "to continue to adofdvkhdgifvmbuolcj.supabase.co". The button opens Google's small window, which names
+ * this site, and hands the page a signed token that /auth/google gives to Supabase (src/lib/google-signin.ts). The old
+ * redirect remains as the fallback when Google's script cannot load (an ad blocker, a corporate network).
+ *
  * LAID OUT AS A NORMAL SIGN-IN PAGE (founder's reference image, 2026-10-09): wordmark top-left, a bold heading, the
  * email field first, one primary Continue, "or", then Google with its own logo, then the terms line. Before this the
  * Google button was a bare text button above the email field and the page read as unfinished. Shapes stay inside the
  * design system's scale (rounded-xl controls, rounded-2xl card) and colours stay tokens.
  */
 
+type GoogleIdApi = {
+  initialize: (o: { client_id: string; nonce: string; ux_mode: 'popup'; callback: (r: { credential: string }) => void }) => void
+  renderButton: (el: HTMLElement, o: Record<string, unknown>) => void
+}
+declare global {
+  interface Window { google?: { accounts?: { id?: GoogleIdApi } } }
+}
+
 export default function SignInPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const [gisReady, setGisReady] = useState(false)
+  const [gisFailed, setGisFailed] = useState(false)
+  const googleSlot = useRef<HTMLDivElement>(null)
+  const nonce = useRef<string>('')
+
+  useEffect(() => {
+    let cancelled = false
+    const fail = () => { if (!cancelled) setGisFailed(true) }
+    const start = async () => {
+      const g = window.google?.accounts?.id
+      if (!g || !googleSlot.current) return fail()
+      const n = await makeNonce()
+      nonce.current = n.raw
+      g.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        nonce: n.hashed,
+        ux_mode: 'popup',
+        callback: async (resp) => {
+          setBusy(true); setError(undefined)
+          const r = await fetch('/auth/google', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ credential: resp.credential, nonce: nonce.current }),
+          }).catch(() => null)
+          const j = (await r?.json().catch(() => null)) as { ok?: boolean; path?: string } | null
+          if (j?.ok && j.path) { window.location.assign(j.path); return }
+          setBusy(false)
+          setError('Google sign-in did not finish. Try again, or use your email above.')
+        },
+      })
+      g.renderButton(googleSlot.current, { type: 'standard', theme: 'filled_black', size: 'large', text: 'continue_with', shape: 'rectangular', logo_alignment: 'left', width: Math.max(200, Math.min(400, Math.floor(googleSlot.current.parentElement?.clientWidth ?? 360))) })
+      if (!cancelled) setGisReady(true)
+    }
+    if (window.google?.accounts?.id) { void start(); return () => { cancelled = true } }
+    const tag = document.createElement('script')
+    tag.src = 'https://accounts.google.com/gsi/client'
+    tag.async = true
+    tag.onload = () => { void start() }
+    tag.onerror = fail
+    document.head.appendChild(tag)
+    const t = setTimeout(() => { if (!window.google?.accounts?.id) fail() }, 8000)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -103,11 +160,17 @@ export default function SignInPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <Button type="button" variant="ghost" className="w-full gap-3 py-4 text-base" onClick={withGoogle} disabled={busy}>
-          {/* Google's brand colours must stay exactly as Google draws them, so the logo is a static file (public/google-g.svg), not a component with colours in it. */}
-          <Image src="/google-g.svg" alt="" width={20} height={20} className="size-5 shrink-0" unoptimized />
-          Continue with Google
-        </Button>
+        {/* Google's own button (see the note at the top). The slot is reserved at full size so the card does not jump when it loads. */}
+        <div className={gisFailed ? 'hidden' : 'flex min-h-11 justify-center'} aria-busy={!gisReady}>
+          <div ref={googleSlot} className={busy ? 'pointer-events-none opacity-60' : undefined} />
+        </div>
+        {gisFailed ? (
+          <Button type="button" variant="ghost" className="w-full gap-3 py-4 text-base" onClick={withGoogle} disabled={busy}>
+            {/* Google's brand colours must stay exactly as Google draws them, so the logo is a static file (public/google-g.svg), not a component with colours in it. */}
+            <Image src="/google-g.svg" alt="" width={20} height={20} className="size-5 shrink-0" unoptimized />
+            Continue with Google
+          </Button>
+        ) : null}
 
         <p className="mt-8 text-center text-sm leading-6 text-muted-foreground">
           By continuing, you agree to Jobinko’s{' '}
