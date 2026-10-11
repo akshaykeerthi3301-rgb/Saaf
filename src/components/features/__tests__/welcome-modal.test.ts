@@ -7,8 +7,10 @@ import { createRoot, type Root } from 'react-dom/client'
  * The welcome card, driven the way a new person drives it. The save action and the router are mocked at their
  * boundary; everything on screen is the real component.
  */
-const mocks = vi.hoisted(() => ({ saveWelcome: vi.fn(), replace: vi.fn() }))
+const mocks = vi.hoisted(() => ({ saveWelcome: vi.fn(), saveProfileRoles: vi.fn(), replace: vi.fn() }))
 vi.mock('@/app/actions/first-run', () => ({ saveWelcome: mocks.saveWelcome }))
+vi.mock('@/app/actions/profile-cards', () => ({ saveProfileRoles: mocks.saveProfileRoles }))
+vi.mock('@/app/actions/role-catalogue', () => ({ roleCatalogue: vi.fn(async () => []), checkRoleTitle: vi.fn(async () => ({ count: null, suggestions: [] })) }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: mocks.replace, push: vi.fn() }) }))
 
 const { WelcomeModal } = await import('../welcome-modal')
@@ -20,13 +22,14 @@ const body = () => document.body
 const button = (label: RegExp) => [...body().querySelectorAll('button')].find((b) => label.test(b.textContent ?? ''))!
 const checked = () => [...body().querySelectorAll('input[type="checkbox"]')].map((i) => (i as HTMLInputElement).checked)
 
-async function mount(props: { found: number; years: number | null }) {
-  await act(async () => { root.render(createElement(WelcomeModal, props)) })
+async function mount(props: { found: number; years: number | null; roles?: string[] }) {
+  await act(async () => { root.render(createElement(WelcomeModal, { roles: ['Account Manager', 'Customer Success Manager'], ...props })) })
   await flush()
 }
 
 beforeEach(() => {
   mocks.saveWelcome.mockReset()
+  mocks.saveProfileRoles.mockReset()
   mocks.replace.mockReset()
   host = document.createElement('div')
   document.body.appendChild(host)
@@ -73,5 +76,39 @@ describe('WelcomeModal', () => {
     await flush()
     expect(mocks.saveWelcome).not.toHaveBeenCalled()
     expect(mocks.replace).toHaveBeenCalledWith('/today')
+  })
+
+  it('lists every role the person has, main first, and saves nothing extra when they are untouched', async () => {
+    mocks.saveWelcome.mockResolvedValue({ ok: true, feedLevel: 'mid' })
+    await mount({ found: 100, years: 4 })
+    const chips = [...body().querySelectorAll('ul[aria-label="Your roles"] li')].map((li) => li.textContent)
+    expect(chips).toHaveLength(2)
+    expect(chips[0]).toContain('Account Manager')
+    expect(chips[0]).toContain('Main')
+    expect(chips[1]).toContain('Customer Success Manager')
+    await act(async () => { button(/Confirm/).click() })
+    await flush()
+    expect(mocks.saveProfileRoles).not.toHaveBeenCalled()
+  })
+
+  it('re-saves the roles first when one is removed, then the rest of the card', async () => {
+    mocks.saveProfileRoles.mockResolvedValue({ ok: true })
+    mocks.saveWelcome.mockResolvedValue({ ok: true, feedLevel: null })
+    await mount({ found: 100, years: 4 })
+    await act(async () => { (body().querySelector('button[aria-label="Remove Customer Success Manager"]') as HTMLButtonElement).click() })
+    await act(async () => { button(/Confirm/).click() })
+    await flush()
+    expect(mocks.saveProfileRoles).toHaveBeenCalledWith({ primary: 'Account Manager', extras: [] })
+    expect(mocks.saveWelcome).toHaveBeenCalled()
+  })
+
+  it('stops and shows the error when the roles cannot be saved', async () => {
+    mocks.saveProfileRoles.mockResolvedValue({ ok: false, error: 'We could not save that just now.' })
+    await mount({ found: 100, years: 4 })
+    await act(async () => { (body().querySelector('button[aria-label="Remove Customer Success Manager"]') as HTMLButtonElement).click() })
+    await act(async () => { button(/Confirm/).click() })
+    await flush()
+    expect(body().textContent).toContain('could not save that just now')
+    expect(mocks.saveWelcome).not.toHaveBeenCalled()
   })
 })

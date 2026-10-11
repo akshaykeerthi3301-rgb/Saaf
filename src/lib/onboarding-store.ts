@@ -18,6 +18,8 @@ export type OnboardingDraft = {
   warnings?: string[]
   /** The current title, only when the index holds postings for it. See suggestedRoleFor(). */
   suggestedRole?: string
+  /** The roles the candidate chose on the confirm screen, main role first (up to five). */
+  roles?: string[]
   /** How the profile arrived — résumé file, LinkedIn PDF, or typed in. */
   source?: 'resume' | 'linkedin' | 'scratch'
 }

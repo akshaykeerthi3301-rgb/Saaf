@@ -434,7 +434,7 @@ export default async function TodayPage({
       contextOnMobile="hide"
     >
       <ShortlistViewed cleared={strong} withheld={0} />
-      {params.welcome === '1' ? <WelcomeModal found={allRows.length} years={profile.years_experience ?? null} /> : null}
+      {params.welcome === '1' ? <WelcomeModal found={allRows.length} years={profile.years_experience ?? null} roles={[...new Set([profile.preferred_role, ...(profile.preferred_roles ?? [])].filter((r): r is string => !!r))]} /> : null}
       <JobSheet />
 
       <JobsStage>

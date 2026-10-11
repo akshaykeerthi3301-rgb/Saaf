@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { RoleInput } from '@/components/features/role-input'
+import { RolesEditor } from '@/components/features/roles-editor'
 import { LocationInput } from '@/components/features/location-input'
 import { resolveCity } from '@/lib/taxonomy/locations'
 import { SkillsField } from '@/components/features/skills-field'
@@ -34,6 +34,8 @@ export default function ConfirmPage() {
   // Skills are a list, not a string, so they live outside the edits map.
   // undefined means "untouched" — fall through to whatever was parsed.
   const [skillEdits, setSkillEdits] = useState<string[]>()
+  // The roles they are looking for, main role first. undefined = untouched: fall through to the suggestion.
+  const [roleEdits, setRoleEdits] = useState<string[]>()
   const [error, setError] = useState<string>()
 
   // Derived during render from the draft plus any edits — no effect, so no
@@ -50,7 +52,7 @@ export default function ConfirmPage() {
     // ⚠️ ONLY WHEN THE INDEX HOLDS POSTINGS FOR IT (draft.suggestedRole, set by
     // parseResume). Copying the title unconditionally pre-filled "Hackfest" for
     // a student whose first "experience" was a hackathon (QA-09).
-    preferredRole: edits.preferredRole ?? draft.suggestedRole ?? '',
+    preferredRole: '',
     // Normalised at prefill, not just at save: a box reading "Bengaluru"
     // matches the chip the candidate sees highlighted, and shows the taxonomy
     // doing its job. The raw parse is what produced "Bangalore, India".
@@ -60,6 +62,7 @@ export default function ConfirmPage() {
     openToAdjacent: edits.openToAdjacent ?? (fields.openToAdjacent ? 'yes' : 'no'),
   }
   const skills = skillEdits ?? fields.skills ?? []
+  const roles = roleEdits ?? draft.roles ?? (draft.suggestedRole ? [draft.suggestedRole] : [])
   const setF = (patch: Partial<typeof f>) =>
     setEdits((e) => ({ ...e, ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) }))
 
@@ -71,12 +74,13 @@ export default function ConfirmPage() {
   const prov = (k: string) => (fromResume[k] ? 'read from your résumé' : undefined)
 
   function next() {
-    if (!f.currentTitle || !f.employer || !f.city || f.yearsExperience === '' || !f.preferredRole) {
+    if (!f.currentTitle || !f.employer || !f.city || f.yearsExperience === '' || roles.length === 0) {
       setError('We need this to run the experience gate.')
       return
     }
-    writeDraft({ fields: {
+    writeDraft({ roles, fields: {
       ...f,
+      preferredRole: roles[0],
       yearsExperience: Number(f.yearsExperience),
       openToAdjacent: f.openToAdjacent === 'yes',
       skills,
@@ -122,17 +126,21 @@ export default function ConfirmPage() {
           value={f.city}
           onChange={(v) => setF({ ...f, city: v })}
         />
-        <RoleInput
-          label="What job role are you looking for?"
-          provenance={draft.suggestedRole ? 'from your current title' : undefined}
-          helper={
-            fields.currentTitle && !draft.suggestedRole
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-primary">
+            What job roles are you looking for?
+            {draft.suggestedRole && !roleEdits ? <span className="ml-2 text-xs font-normal text-muted-foreground">first one from your current title</span> : null}
+          </p>
+          <p className="mb-3 mt-1 text-xs text-muted-foreground">Choose up to five. The first is your main role; the rest widen your list.</p>
+          <RolesEditor
+            roles={roles}
+            onChange={setRoleEdits}
+            helper="Be specific — 'Product Manager', not 'Manager'. Pick from the list or type your own and press Enter."
+            note={fields.currentTitle && !draft.suggestedRole && !roles.length
               ? `We hold no postings titled “${fields.currentTitle}”, so we have not filled this in — choose the role you want.`
-              : "Be specific — 'Product Manager', not 'Manager'."
-          }
-          value={f.preferredRole}
-          onChange={(v) => setF({ ...f, preferredRole: v })}
-        />
+              : undefined}
+          />
+        </div>
 
         <SkillsField
           skills={skills}
