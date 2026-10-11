@@ -639,24 +639,66 @@ function renderApplyResult(root, out) {
 }
 
 /**
- * The account wall (account.js): a sign-in or create-account form. The panel offers to write the person's EMAIL and leave
- * the password to the browser — it never creates, reads or stores one.
+ * The account wall (account.js): a sign-in or create-account form. The person sets ONE password in the panel, once; after that
+ * one click fills their email and that password and presses the site's own Create account / Sign in button. The password lives
+ * in this browser's extension storage only (`chrome.storage.local`) — never sent to Jobinko — and Remove deletes it. A site's
+ * agreement box is never ticked for them: it is outlined, and the same button is pressed again once they have ticked it.
  */
 function renderWall(root, state) {
   const el = root.getElementById('wall')
   const K = globalThis.SaafAccount
   const kind = K?.kind(document)
-  if (!kind) { el.innerHTML = ''; return }
-  el.innerHTML = `<div class="box"><h3>${kind === 'signup' ? 'This site wants you to create an account' : 'This site wants you to sign in'}</h3>
-    <div class="muted">Jobinko fills your email and leaves the password to you. ${kind === 'signup' ? 'Click the password box and Chrome offers a strong one and remembers it.' : 'Click the password box and Chrome offers the one it saved.'} Jobinko never sees, makes or stores a password.</div>
-    <button class="btn" id="wallemail" style="margin-top:8px">Fill my email</button><div class="note" id="wallnote"></div></div>`
-  root.getElementById('wallemail').addEventListener('click', async () => {
-    const { profile } = await chrome.storage.local.get('profile')
-    const email = profile?.email || state.account?.email
-    const note = root.getElementById('wallnote')
-    if (!email) { note.textContent = 'No email on file — sign in to Jobinko first.'; return }
-    const r = K.fillEmail(document, email)
-    note.textContent = !r.hadEmailBox ? 'Could not find the email box on this form.' : r.filled ? 'Email filled. Now click the password box, then press the site’s own button.' : 'The email box already has something in it, so it was left alone.'
+  if (!kind) { el.innerHTML = ''; el.dataset.key = ''; return }
+  return chrome.storage.local.get('accountPassword').then(({ accountPassword }) => {
+    const has = typeof accountPassword === 'string' && accountPassword.length > 0
+    const key = `${kind}:${has}`
+    // The panel is redrawn as the page changes; never redraw a form the person is typing in.
+    if (el.dataset.key === key) return
+    el.dataset.key = key
+    const title = kind === 'signup' ? 'This site wants you to create an account' : 'This site wants you to sign in'
+    const verb = kind === 'signup' ? 'Create my account' : 'Sign in'
+    el.innerHTML = has
+      ? `<div class="box"><h3>${title}</h3>
+          <div class="muted">Jobinko fills your email and your saved password, then presses the site’s own button — one click.</div>
+          <button class="btn" id="wallgo" style="margin-top:8px">${verb}</button>
+          <div class="note" id="wallnote"></div>
+          <div class="note"><a href="#" id="wallchange">Change password</a> · <a href="#" id="wallremove">Remove it</a></div></div>`
+      : `<div class="box"><h3>${title}</h3>
+          <div class="muted">Set one password for the accounts Jobinko creates for you. Once. It stays in this browser — it is never sent to Jobinko or anyone else — and from then on this is one click. Use a password you use nowhere else: if one employer’s site leaked it, it would work on all of them.</div>
+          <input id="wallpw" type="password" autocomplete="new-password" placeholder="Choose a password (10+ characters)" style="width:100%;margin-top:8px;box-sizing:border-box">
+          <button class="btn" id="wallgo" style="margin-top:8px">Save it and ${verb.toLowerCase()}</button>
+          <div class="note" id="wallnote"></div></div>`
+    const note = () => root.getElementById('wallnote')
+
+    root.getElementById('wallchange')?.addEventListener('click', async (e) => { e.preventDefault(); await chrome.storage.local.remove('accountPassword'); el.dataset.key = ''; renderWall(root, state) })
+    root.getElementById('wallremove')?.addEventListener('click', async (e) => { e.preventDefault(); await chrome.storage.local.remove('accountPassword'); el.dataset.key = ''; renderWall(root, state) })
+
+    root.getElementById('wallgo').addEventListener('click', async () => {
+      let pw = accountPassword
+      if (!has) {
+        pw = root.getElementById('wallpw').value
+        const problem = K.passwordProblem(pw)
+        if (problem) { note().textContent = problem; return }
+        await chrome.storage.local.set({ accountPassword: pw })
+      }
+      const { profile } = await chrome.storage.local.get('profile')
+      const email = profile?.email || state.account?.email
+      if (!email) { note().textContent = 'No email on file — sign in to Jobinko first.'; return }
+      const e = K.fillEmail(document, email)
+      K.fillPassword(document, pw, kind)
+      if (!e.hadEmailBox) { note().textContent = 'Could not find the email box on this form — fill it yourself; the password is in.'; return }
+      // A beat for the page's own scripts to notice the new values before its button is pressed.
+      await new Promise((r) => setTimeout(r, 400))
+      const out = K.proceed(document, kind)
+      const msg = out.waitingOn.length
+        ? 'Email and password are in. Tick the site’s agreement box (outlined) — that part is yours — then press this button again.'
+        : out.pressed
+          ? (kind === 'signup' ? 'Done — account form sent. If the site asks you to verify your email, do that; then press Autofill on the next page.' : 'Signing in… press Autofill once the next page loads.')
+          : 'Email and password are in. I could not find the site’s own button — press it yourself.'
+      // First time: the panel now shows the "saved" form, so redraw it before writing the result into its note.
+      if (!has) { el.dataset.key = ''; await renderWall(root, state) }
+      const n = root.getElementById('wallnote'); if (n) n.textContent = msg
+    })
   })
 }
 

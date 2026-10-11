@@ -33,11 +33,7 @@ await click(b, '#apply'); await b.waitForTimeout(300); await click(b, '#applyyes
 log('B  stayed on:', new URL(b.url()).pathname, '| submitted anything:', submittedHits.length > 0)
 log('B  panel says:', (await t(b, '#report')).slice(0, 220))
 
-// ---- C: a sign-in page → email only, never the password
+// ---- (C, the account wall, moved to account.mjs)
 const c = await context.newPage()
-await c.goto('http://localhost:4100/login'); await c.waitForSelector('#saaf-overlay-host', { state: 'attached' }); await c.waitForTimeout(5000)
-log('C  wall box:', (await t(c, '#wall')).slice(0, 110))
-await click(c, '#wallemail'); await c.waitForTimeout(500)
-log('C  email box:', await c.evaluate(() => le.value), '| password box:', JSON.stringify(await c.evaluate(() => lp.value)), '| cursor in password box:', await c.evaluate(() => document.activeElement === lp))
-log('C  note:', await t(c, '#wallnote'))
+// (the account wall — create account / sign in — has its own scenario: account.mjs)
 await context.close(); srv.close()

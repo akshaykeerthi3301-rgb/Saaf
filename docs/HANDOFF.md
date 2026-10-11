@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-12 (night, final) — extension 0.15.0: one saved password, one-click create account / sign in
+
+**Now:** on a create-account or sign-in page the Jobinko panel asks you ONCE for a password (10+ characters; upper, lower, number, symbol). After that, one button fills your email and that password and presses the site's own Create Account / Sign in. The site's own 'I agree' box is never ticked for you — it is outlined; you tick it and press the same button again. The password stays in this browser only and is never sent to Jobinko; 'Change password' / 'Remove it' are in the panel. **Risk you chose:** the same password on many employer sites — use one you use nowhere else.
+**Verified in a real Chromium on a test sign-up page** (14 checks, test password). **Not verified:** Workday's real button; steps after sign-in; your own Chrome.
+**You need to:** download 0.15.0 from the Profile banner, replace the folder, reload on chrome://extensions. On the Alteryx Create Account page press **Save it and create my account**, tick Workday's box, press the button again; verify your email if asked; then press Autofill on each next page and tell me where it still misses.
+
+---
+
 ## 🔶 2026-10-12 (night, last) — GPA, Experience Summary, and Jobright's mandatory fields · extension 0.14.0
 
 **Now:** GPA, Major and Experience summary exist in the Education and Work pop-ups; LinkedIn/GitHub/Portfolio sit in the Personal pop-up. Required (red *) are exactly the fields Jobright marks. 'Decline to state' counts as an answer for the voluntary questions. The extension (0.14.0) also fills GPA.

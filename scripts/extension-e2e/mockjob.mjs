@@ -48,7 +48,13 @@ const askJob = easyJob.replace('<label for="rs">', `<label for="why">Why do you 
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
-<label for="lp">Password *</label><input id="lp" type="password" name="password" autocomplete="current-password"><button type="submit" onclick="return false">Sign in</button></form></body></html>`
+<label for="lp">Password *</label><input id="lp" type="password" name="password" autocomplete="current-password"><button id="go" type="button" onclick="location.href='/thanks'">Sign in</button><button id="g" type="button">Continue with Google</button></form></body></html>`
+// A create-account page: email, password, confirm, an agreement box the person must tick, and the site's own button.
+const signup = (consent) => `${head('Create account – Acme Careers')}<h1>Create your account</h1><p>${para}</p>
+<form><label for="se">Email *</label><input id="se" type="email" name="email">
+<label for="sp">Password *</label><input id="sp" type="password" name="password"><label for="sc">Verify new password *</label><input id="sc" type="password" name="confirm">
+${consent ? '<label><input id="agree" type="checkbox" style="width:auto"> I acknowledge the terms and the privacy notice</label>' : ''}
+<a id="already" href="/login">Already have an account? Sign in</a><button id="create" type="button" onclick="location.href='/thanks'">Create Account</button></form></body></html>`
 // A posting page that has NO form: Apply is a link to the form page (same tab), a link that opens a new tab, or a button that reveals the form.
 const post = (apply) => `${head('Customer Success Manager – Acme')}<h1>Customer Success Manager</h1><p>Acme Robotics · Bengaluru</p><p>${para}</p>${apply}</body></html>`
 const leverJob = post('<a class="postings-btn" href="/lever/job/apply">Apply for this job</a>')
@@ -56,6 +62,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

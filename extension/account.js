@@ -1,11 +1,24 @@
 /**
  * Jobinko extension — the account wall: a site that makes you sign in, or create an account, before you can apply.
  *
- * ⚠️ THE FOUNDER CHOSE THE EMAIL-ONLY VERSION (2026-10-12), AND THAT IS THE WHOLE FEATURE. It recognises a sign-in or
- * create-account form and writes the person's EMAIL into it. It never writes a password, never generates one, never
- * reads one and never stores one — not in the extension, not at Jobinko. The password box is left to the browser: Chrome
- * offers a strong password on a create-account form and the saved one on a sign-in form, and remembers it in its own
- * encrypted password manager. A "verify your email" step and any CAPTCHA are the person's.
+ * HISTORY. 2026-10-12 morning the founder chose the EMAIL-ONLY version. Later that day, after trying a real Workday job,
+ * he reversed it and specified the Jobright behaviour: the person sets ONE password in the extension, once; from then on the
+ * extension fills their email and that password on every create-account / sign-in form, and the account is one click.
+ *
+ * HOW IT WORKS.
+ *   - The person saves a password in the panel (or the settings page). It is kept in this browser's extension storage
+ *     (`chrome.storage.local`, never `sync`), is never sent to Jobinko or anywhere else, and is removed with one button.
+ *   - On a create-account page the panel's button writes email + that password into the password and confirm boxes, then
+ *     presses the site's own Create account button.
+ *   - On a sign-in page it writes them and presses Sign in.
+ *
+ * WHAT IT STILL NEVER DOES. It never ticks a site's agreement box: if one is unticked it is outlined and the button waits
+ * — the person ticks it (accepting terms is theirs) and presses the panel button again. It never reads a password the
+ * person typed or the browser saved. A "verify your email" step and any CAPTCHA are the person's.
+ *
+ * ⚠️ ONE PASSWORD ON MANY SITES is what makes this one click — and what makes it worth guarding: a leak at one employer's
+ * site would expose it everywhere it was used. The panel says so where the password is set, and asks for a password used
+ * nowhere else.
  *
  * Attached to a global (MV3 content scripts are not modules); tested through it.
  */
@@ -17,7 +30,7 @@
   }
   const text = (el) => (el?.innerText || el?.textContent || '').replace(/\s+/g, ' ').trim()
 
-  /** Visible password boxes, in document order. Only ever FOUND, to locate the form — never read or written. */
+  /** Visible password boxes, in document order. */
   const passwordBoxes = (doc) => [...doc.querySelectorAll('input[type="password"]')].filter(visible)
   const scopeOf = (doc, pw) => pw.closest?.('form') || doc.body
 
@@ -40,18 +53,117 @@
   }
 
   /**
-   * Write the email, then put the cursor in the password box so the browser's own password manager takes over.
-   * Returns { filled, focused }. An email already typed is left as the person wrote it.
+   * Write the email. An email already typed is left as the person wrote it. Never touches a password box.
+   * Returns { filled, hadEmailBox }.
    */
   function fillEmail(doc, email) {
     const box = emailBox(doc)
-    const pw = passwordBoxes(doc)[0]
     let filled = false
     if (box && email && !String(box.value || '').trim()) { root.SaafAutofill.setNativeValue(box, email); filled = true }
-    let focused = false
-    try { if (pw) { pw.focus(); focused = true } } catch { /* not focusable */ }
-    return { filled, focused, hadEmailBox: !!box }
+    return { filled, hadEmailBox: !!box }
   }
 
-  root.SaafAccount = { kind, emailBox, passwordBoxes, fillEmail }
+  /**
+   * Why a password cannot be saved, or null. Most sites (Workday among them) demand upper and lower case, a digit and a
+   * symbol; a password that fails there would leave the person stuck on the first form, so it is refused up front.
+   */
+  function passwordProblem(pw) {
+    const p = String(pw || '')
+    if (p.length < 10) return 'Use at least 10 characters.'
+    const missing = []
+    if (!/[a-z]/.test(p)) missing.push('a lower-case letter')
+    if (!/[A-Z]/.test(p)) missing.push('an upper-case letter')
+    if (!/\d/.test(p)) missing.push('a number')
+    if (!/[^A-Za-z0-9]/.test(p)) missing.push('a symbol')
+    return missing.length ? `Add ${missing.join(', ')} — most sites require all four.` : null
+  }
+
+  /**
+   * Write the saved password into the form: every visible password box on a create-account form (password and confirm),
+   * the first on a sign-in form. A box that already holds something is left as the person typed it.
+   * Returns how many boxes were written.
+   */
+  function fillPassword(doc, password, which) {
+    if (!password) return 0
+    const boxes = passwordBoxes(doc)
+    const targets = which === 'login' ? boxes.slice(0, 1) : boxes
+    let n = 0
+    for (const b of targets) {
+      if (String(b.value || '').trim()) continue
+      root.SaafAutofill.setNativeValue(b, password)
+      n++
+    }
+    return n
+  }
+
+  /** A form's own wording around a tick-box: its label, its aria-label, or the line it sits in. */
+  function labelOf(box) {
+    const doc = box.ownerDocument
+    const bits = []
+    if (box.id) { const l = doc.querySelector(`label[for="${CSS.escape(box.id)}"]`); if (l) bits.push(text(l)) }
+    const wrap = box.closest?.('label'); if (wrap) bits.push(text(wrap))
+    bits.push(box.getAttribute?.('aria-label') || '')
+    if (!bits.join('').trim()) bits.push(text(box.parentElement).slice(0, 300))
+    return bits.join(' ')
+  }
+
+  /**
+   * Unticked agreement boxes on the form ("I agree to the terms", "I acknowledge the privacy notice", any required one).
+   * These are the person's to tick: accepting a site's terms is never done on their behalf.
+   */
+  function agreementBoxes(doc) {
+    const pw = passwordBoxes(doc)[0]
+    if (!pw) return []
+    return [...scopeOf(doc, pw).querySelectorAll('input[type="checkbox"], [role="checkbox"]')].filter((c) => {
+      if (!visible(c)) return false
+      const ticked = c.checked === true || c.getAttribute?.('aria-checked') === 'true'
+      return !ticked && (c.required || c.getAttribute?.('aria-required') === 'true' || /agree|acknowledg|terms|privacy|consent|accept|policy/i.test(labelOf(c)))
+    })
+  }
+
+  const NOT_THE_BUTTON = /google|linkedin|facebook|apple|microsoft|github|forgot|already|cancel|back|reset|show|hide|help|save for later/i
+  const BUTTONS = {
+    signup: [/create\s*(an?\s*)?account|sign\s*up|register|join\b/i, /^(continue|next|submit)$/i],
+    login: [/sign\s*in|log\s*in/i, /^(continue|next|submit)$/i],
+  }
+
+  /** The site's own Create account / Sign in button — found in the password box's form, or on the page. */
+  function submitButton(doc, which) {
+    const pw = passwordBoxes(doc)[0]
+    if (!pw) return null
+    const scopes = [scopeOf(doc, pw), doc.body]
+    const nameOf = (b) => (b.getAttribute?.('aria-label') || b.value || text(b) || '').trim()
+    for (const re of BUTTONS[which === 'login' ? 'login' : 'signup']) {
+      for (const scope of scopes) {
+        const hit = [...scope.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]')]
+          .find((b) => visible(b) && re.test(nameOf(b)) && !NOT_THE_BUTTON.test(nameOf(b)))
+        if (hit) return hit
+      }
+    }
+    return null
+  }
+
+  /**
+   * Press the site's button — unless an agreement box is still unticked. Then nothing is pressed, the box is outlined and
+   * scrolled to, and the caller says so: the person ticks it and presses the panel button again.
+   * Returns { pressed, waitingOn: [boxes], hadButton }.
+   */
+  function proceed(doc, which) {
+    if (which === 'signup') {
+      const open = agreementBoxes(doc)
+      if (open.length) {
+        for (const c of open) {
+          try { c.style.outline = '3px solid #f59e0b'; c.style.outlineOffset = '2px' } catch { /* not styleable */ }
+        }
+        try { open[0].scrollIntoView({ block: 'center', behavior: 'smooth' }) } catch { /* no layout */ }
+        return { pressed: false, waitingOn: open, hadButton: !!submitButton(doc, which) }
+      }
+    }
+    const btn = submitButton(doc, which)
+    if (!btn) return { pressed: false, waitingOn: [], hadButton: false }
+    btn.click()
+    return { pressed: true, waitingOn: [], hadButton: true }
+  }
+
+  root.SaafAccount = { kind, emailBox, passwordBoxes, fillEmail, passwordProblem, fillPassword, agreementBoxes, submitButton, proceed }
 })(typeof globalThis !== 'undefined' ? globalThis : window)
