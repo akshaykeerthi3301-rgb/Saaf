@@ -63,3 +63,18 @@ export function mergeAsked(bank: BankEntry[], asked: { question: string }[]): { 
 export function forExtension(bank: BankEntry[]): { key: string; a: string; auto: boolean }[] {
   return bank.filter((b) => b.a).map((b) => ({ key: questionKey(b.q), a: b.a, auto: b.auto }))
 }
+
+/**
+ * One answer the candidate just gave on a form: replaces the entry for the same question (keeping whether it may be used by
+ * "Apply for me"), or is added. A blank answer removes nothing — it is ignored. Existing entries for other questions are untouched.
+ */
+export function upsertAnswer(bank: BankEntry[], question: string, answer: string): BankEntry[] {
+  const q = String(question ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION)
+  const a = String(answer ?? '').trim().slice(0, MAX_ANSWER)
+  const key = questionKey(q)
+  if (!key || !a) return bank
+  const i = bank.findIndex((b) => questionKey(b.q) === key)
+  if (i >= 0) return bank.map((b, n) => (n === i ? { ...b, a } : b))
+  if (bank.length >= MAX_ENTRIES) return bank
+  return [...bank, { q, a, auto: false }]
+}

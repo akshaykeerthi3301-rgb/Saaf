@@ -87,6 +87,13 @@ const STYLE = `
   .report li { margin: 2px 0 }
   .report .ok { color: var(--fg) }
   .note { font-size: 11px; color: var(--muted); margin-top: 6px }
+  .qa { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line) }
+  .qa:first-of-type { border-top: 0; padding-top: 0 }
+  .qa .qt { font-size: 12px; font-weight: 600; margin-bottom: 6px }
+  .qa input { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px }
+  .opt { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); font-size: 12px }
+  .opt:hover { border-color: var(--accent) }
   summary { cursor: pointer; font-weight: 700; font-size: 12px }
   details.info summary { color: var(--fg) }
   a { color: var(--accent); text-decoration: none }
@@ -114,6 +121,7 @@ function mount() {
         <section id="actions"></section>
         <section id="tailored"></section>
         <section id="dash"></section>
+        <section id="ask"></section>
         <section id="report"></section>
       </div>
     </aside>`
@@ -381,6 +389,39 @@ function mountActions(root, job, state) {
 
   const submitbox = root.getElementById('submitbox')
 
+  /**
+   * "Questions for you": the required questions the form asked that Jobinko has no saved answer for. Answered here — typed or
+   * chosen — the answer is written into the form, kept in the person's Jobinko answer bank, and used on the next form that asks
+   * the same thing. Demographic and credential questions are never listed (they stay the person's, on the form).
+   */
+  const askEl = root.getElementById('ask')
+  function drawQuestions() {
+    const qs = A.questions(doc)
+    if (!qs.length) { askEl.innerHTML = ''; return qs }
+    askEl.innerHTML = `<div class="box"><h3>Questions for you</h3>
+      <div class="muted">This form asks ${qs.length === 1 ? 'this' : 'these'} and Jobinko has no saved answer. Answer once — it is filled in here and remembered for the next form.</div>
+      ${qs.map((q, i) => `<div class="qa" data-i="${i}"><div class="qt">${esc(q.question)}</div>
+        ${q.kind === 'text' ? `<div style="display:flex;gap:6px"><input data-q="${i}" placeholder="Your answer"><button class="opt" data-save="${i}">Save</button></div>`
+          : `<div class="opts">${q.options.map((o, n) => `<button class="opt" data-pick="${i}" data-n="${n}">${esc(o)}</button>`).join('')}</div>`}</div>`).join('')}
+      <div class="note" id="asknote"></div></div>`
+    const submitAnswer = async (q, value) => {
+      const note = root.getElementById('asknote')
+      if (!A.answerQuestion(q, value)) { note.textContent = 'The page would not take that — please answer it on the form.'; return }
+      chrome.runtime.sendMessage({ type: 'jx:answer', key: q.key, question: q.question, answer: value }).then((r) => {
+        const n = root.getElementById('asknote'); if (n) n.textContent = (r?.saved ? 'Saved to your Jobinko answers — used next time.' : 'Filled in. (Could not reach Jobinko to keep it — kept in this browser.)')
+      }).catch(() => {})
+      state.answered = true
+      setTimeout(() => { drawDashboard(); drawQuestions(); if (state.filledOnce) offerSubmit() }, 120)
+    }
+    askEl.querySelectorAll('[data-save]').forEach((b) => b.addEventListener('click', () => {
+      const i = Number(b.dataset.save); const v = askEl.querySelector(`input[data-q="${i}"]`).value
+      if (v.trim()) submitAnswer(qs[i], v)
+    }))
+    askEl.querySelectorAll('input[data-q]').forEach((inp) => inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') askEl.querySelector(`[data-save="${inp.dataset.q}"]`).click() }))
+    askEl.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { const q = qs[Number(b.dataset.pick)]; submitAnswer(q, q.options[Number(b.dataset.n)]) }))
+    return qs
+  }
+
   /** Fill the form on THIS page, with live progress, then offer the Submit step. */
   async function fillNow() {
     state.running = true; state.cancel = false; state.collapsed = false
@@ -426,6 +467,10 @@ function mountActions(root, job, state) {
     // Filling a form is the candidate applying, so the role goes on the tracker as Applying. It never reaches Applied
     // from here: we cannot see whether they pressed Submit, and saying they did would be a guess.
     if (res.filled.length) { await save(job, 'applying'); showSaved() }
+    state.filledOnce = true
+    state.sig = A.checklist(doc).items.map((i) => i.label).join('|')
+    gonote.textContent = ''
+    drawQuestions()
     offerSubmit()
   }
 
@@ -435,6 +480,8 @@ function mountActions(root, job, state) {
    * application as sent only when the employer's page confirms it.
    */
   function offerSubmit() {
+    // A sign-in or create-account page is not an application to submit; the account helper above handles it.
+    if (globalThis.SaafAccount?.kind(doc)) { submitbox.innerHTML = ''; return }
     const submit = A2.findSubmit(doc)
     if (!submit) {
       submitbox.innerHTML = `<div class="box" style="margin-top:8px"><b>Filled.</b> <span class="muted">This step has no Submit button — press the site’s own Next or Continue, then press <b>Autofill again</b> on the next step.</span></div>`
@@ -470,7 +517,15 @@ function mountActions(root, job, state) {
       // A note for whichever page the form turns up on (this one, the next, or a new tab); it expires in 90 seconds.
       await chrome.storage.local.set({ autofillPending: { at: Date.now() } })
       entry.click()
-      const appeared = await A2.waitForForm(doc, 8000)
+      // A pop-up of ways to start ("Apply Manually"…) may stand between Apply and the form: take the manual one.
+      let appeared = false
+      for (let step = 0; step < 3 && !appeared; step++) {
+        appeared = await A2.waitForForm(doc, 4000)
+        if (appeared) break
+        const choice = A2.findApplyChoice(doc)
+        if (choice) choice.click()
+      }
+      if (!appeared) appeared = await A2.waitForForm(doc, 4000)
       state.running = false
       if (!appeared) {
         // The page is navigating, or the application opened elsewhere: that page's panel takes over from the note.
@@ -515,10 +570,24 @@ function mountActions(root, job, state) {
     })
   })
 
-  if (hasForm()) return
-  const obs = new MutationObserver(() => { if (hasForm()) { setSupport(); refreshDashboard() } })
+  // Single-page job systems (Workday, Ashby…) draw the Apply button and the form AFTER the page loads and again at every
+  // step, so the panel keeps looking: on each burst of changes (debounced) it re-reads whether there is a form or an Apply
+  // button. Five minutes, then it stops — a watcher left running for the life of the tab is a cost every page pays.
+  let watch
+  const obs = new MutationObserver(() => {
+    clearTimeout(watch)
+    watch = setTimeout(() => {
+      if (state.running) return
+      setSupport(); refreshDashboard()
+      // A later step of the same application (Workday's My Information → My Experience → …): the fields changed since the last fill.
+      if (state.filledOnce && hasForm()) {
+        const sig = A.checklist(doc).items.map((i) => i.label).join('|')
+        if (sig && sig !== state.sig) { gonote.textContent = 'This looks like a new step — press Autofill again to fill it.'; submitbox.innerHTML = ''; askEl.innerHTML = '' }
+      }
+    }, 400)
+  })
   obs.observe(doc.body, { childList: true, subtree: true })
-  setTimeout(() => obs.disconnect(), 15000)
+  setTimeout(() => obs.disconnect(), 5 * 60_000)
 }
 
 /**

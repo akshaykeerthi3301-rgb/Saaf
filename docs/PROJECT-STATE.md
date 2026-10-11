@@ -3167,3 +3167,15 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **A claim retracted.** Midway I said the manifest only allowed `localhost` to message the extension and that this "was probably the cause". That came from a printout where my own filter had hidden the `https://` lines. The manifest already lists jobinko.in; the assertion before the edit stopped any change. The cause stated above is the measured one.
 
 **Built:** see TASK-237. **Not built:** Insider connections, the "1-Click Improvement" gauge, an industry-experience chip.
+
+### Stage BA — questions for the candidate, and Workday (2026-10-12)
+
+**Request:** after installing 0.11.0 the founder said it was good, but (a) the extension never asks the candidate the questions a form asks, so that information is missing from the autofill, and (b) Autofill cannot apply to a Workday job (Alteryx, Customer Success Manager).
+
+**Reproduced on the real Alteryx page (Chromium, 2026-10-12):** Apply is a button that renders late; pressing it opens a pop-up with 'Apply Manually'; that leads to a Create Account page. The old build stopped at the first step (no Apply found in time) and, once on Create Account, offered 'Ready to submit?'. Fixes: debounced 5-minute observer for late buttons, 'Apply Manually' accepted, `data-automation-id` and `data-testid` read as field signals, submit prompt gated on `SaafAccount.kind`.
+
+**Decisions.** (1) Questions are asked only for what the person can truthfully answer once — free text, yes/no, dropdown, when required and unanswered. Gender, caste, disability, veteran, credentials, consent boxes and files are never listed (they stay the person's, or come from their own saved self-ID answers, which is existing behaviour: the founder's saved gender was filled in the test). (2) Answers saved from the panel are `auto: false` — Apply for me never uses them until the person opts in on the Profile page. (3) A saved answer now also fills dropdowns and radios; before, the bank only fed text boxes.
+
+**Honest limits.** No Workday account was created (the rule is that the person makes accounts), so My Information, My Experience, Application Questions, Voluntary Disclosures and Review are untested; Workday's custom (non-native) dropdowns are not asked about. **Lesson:** my first cleanup marker did not match how the bank normalises text ('e2e-test' became 'e2e test'), so the first run reported 'left: 0' while saving nothing — a cleanup count is only evidence if the marker was seen to match; the test now asserts three rows were stored before cleaning.
+
+**Built:** see TASK-241.

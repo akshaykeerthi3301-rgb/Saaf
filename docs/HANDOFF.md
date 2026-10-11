@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-12 (night) — extension 0.12.0: it asks you the questions it cannot answer; Workday gets further
+
+**Now:** when a form has required questions Jobinko has no answer for (a typed answer, yes/no, a dropdown), the panel lists them under **Questions for you**. Answer once: it goes into the form and into your Jobinko answers, and the next form asking the same thing is filled for you. It never asks gender, caste, disability, passwords, consent boxes or files. On Workday the Apply button is now found and pressed, including 'Apply Manually', and it stops at Create Account without asking you to submit.
+**Verified in a real Chromium:** the questions flow end to end (answers reach the form and the database; the second form is filled from them) and every earlier flow; the real Alteryx page up to Create Account. **Not verified:** any Workday step after you sign in; your own Chrome.
+**You need to:** download 0.12.0 from the Profile banner, replace the folder, press reload on chrome://extensions. On the Alteryx job: press Autofill, make the Workday account yourself (Chrome offers to suggest the password), then press Autofill on each next step and tell me what it missed.
+
+---
+
 ## ✅🔶 2026-10-12 (later) — extension 0.11.0: Autofill presses Apply itself, on any job page
 
 **Founder's test of 0.10.0 on a real posting:** "Autofill is disabled; it tells me to click Apply on the job page. The extension should recognise the page, click Apply on its own, fill the details, and ask me to submit. Jobright and Jobinko are both in the browser." **Root causes (reproduced in his Chrome):** (1) Autofill stayed disabled until a form was already on the page; (2) on an employer's own careers page (Veeva) neither extension shows a panel — it is not on the built-in site list; (3) both panels sat on the right edge.

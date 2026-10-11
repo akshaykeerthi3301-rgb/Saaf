@@ -201,6 +201,8 @@
     bits.push(el.getAttribute?.('autocomplete') || '')
     bits.push(el.getAttribute?.('name') || '')
     bits.push(el.id || '')
+    // Workday (and several others) name fields only by test hooks: legalNameSection_firstName, phone-number, addressSection_city…
+    bits.push(el.getAttribute?.('data-automation-id') || '', el.getAttribute?.('data-testid') || '')
     return tidy(bits.join(' '))
   }
 
@@ -272,6 +274,15 @@
     }
     bits.push(el.getAttribute?.('name') || '')
     return tidy(bits.join(' '))
+  }
+
+  /** The visible question of a radio or tick-box group — legend or group label — falling back to its machine name. */
+  function groupQuestion(first, doc) {
+    const fs = first.closest ? first.closest('fieldset') : null
+    const grp = first.closest ? first.closest('[role="radiogroup"], [role="group"]') : null
+    const by = grp?.getAttribute('aria-labelledby')
+    const visibleQ = tidy([textOf(fs?.querySelector('legend')), grp?.getAttribute('aria-label') || '', by && doc ? by.split(/\s+/).map((id) => textOf(doc.getElementById?.(id))).join(' ') : ''].join(' '))
+    return (visibleQ || questionFor(first, doc)).replace(/\s*\*\s*$/, '').slice(0, 120)
   }
 
   /** The visible label of one option (radio or tick-box). */
@@ -423,6 +434,14 @@
   }
 
   /** An input we may write text into, before we know what it is. */
+  /** The option whose words equal, or contain, the saved answer — never "similar". Null when none does. */
+  function matchAnswer(answer, options) {
+    const want = String(answer || '').toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim()
+    if (!want) return null
+    const norm1 = (o) => String(o.text || '').toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim()
+    return options.find((o) => norm1(o) === want) || options.find((o) => norm1(o) && (norm1(o).startsWith(want + ' ') || norm1(o).endsWith(' ' + want))) || null
+  }
+
   function isFillable(el) {
     if (!el || el.disabled || el.readOnly) return false
     const tag = (el.tagName || '').toLowerCase()
@@ -625,6 +644,19 @@
       const signals = signalsFor(el, doc)
       const verdict = classify(signals, profile.selfId)
 
+      // ---- a dropdown the candidate has already answered once: their own saved words pick the option.
+      if (tag === 'select' && profile.answerBank && !neverFromBank(signals)) {
+        const q = questionLabel(el, doc)
+        const entry = q ? profile.answerBank[questionKey(q)] : null
+        const real = [...el.options].filter((o) => !isPlaceholder(o.text, o.value)).map((o) => ({ text: o.text, value: o.value }))
+        const cur = el.options[el.selectedIndex]
+        const alreadyChosen = cur && !isPlaceholder(cur.text, cur.value) && (real.length < el.options.length || el.selectedIndex !== 0)
+        if (entry && entry.a && !alreadyChosen && !(opts.mode === 'auto' && !entry.auto)) {
+          const hit = matchAnswer(entry.a, real)
+          if (hit) { setNativeValue(el, hit.value); out.filled.push({ key: 'answer', value: hit.text.trim(), how: 'chose' }); continue }
+        }
+      }
+
       // ---- a custom question: the candidate's own saved answer, or a note that it is theirs to write.
       const written = !verdict || (verdict.refused && REFUSALS.find((r) => r.re.test(signals))?.written)
       if (written && isTextBox(el) && !neverFromBank(signals)) {
@@ -699,6 +731,14 @@
       if (els.some((e) => e.checked)) { out.skipped++; continue }
       const single = !isRadio && els.length === 1
       const question = single ? signalsFor(first, doc) : questionFor(first, doc)
+      // A group the candidate has already answered once (a yes/no they typed): their own saved words pick the option.
+      if (isRadio && profile.answerBank && !neverFromBank(question)) {
+        const entry = profile.answerBank[questionKey(groupQuestion(first, doc))]
+        if (entry && entry.a && !(opts.mode === 'auto' && !entry.auto)) {
+          const hit = matchAnswer(entry.a, els.map((e) => ({ text: optionLabel(e, doc), ref: e })))
+          if (hit) { hit.ref.click(); out.filled.push({ key: 'answer', value: hit.text.trim(), how: 'chose' }); continue }
+        }
+      }
       const verdict = classify(question, profile.selfId)
       if (!verdict) { out.skipped++; continue }
       if (verdict.refused) { refuse(verdict.reason); continue }
@@ -790,12 +830,7 @@
     }
     for (const els of groups.values()) {
       const first = els[0]
-      // The visible question (legend / group label), not the machine name questionFor also searches.
-      const fs = first.closest ? first.closest('fieldset') : null
-      const grp = first.closest ? first.closest('[role="radiogroup"], [role="group"]') : null
-      const by = grp?.getAttribute('aria-labelledby')
-      const visibleQ = tidy([textOf(fs?.querySelector('legend')), grp?.getAttribute('aria-label') || '', by && doc ? by.split(/\s+/).map((id) => textOf(doc.getElementById?.(id))).join(' ') : ''].join(' '))
-      const label = (visibleQ || questionFor(first, doc)).replace(/\s*\*\s*$/, '').slice(0, 120)
+      const label = groupQuestion(first, doc)
       if (!label) continue
       items.push({ label, required: els.some(isRequiredEl), done: els.some((e) => e.checked), el: first })
     }
@@ -805,8 +840,66 @@
     return { items, required: counted.length, done: counted.filter((i) => i.done).length, counted: counted.length ? counted : [] }
   }
 
+  // --------------------------------------------------------------- questions --
+
+  /**
+   * The required questions still unanswered after a fill that the PERSON can answer — so the panel can ask them there and
+   * then, fill the answer in, and keep it for the next form that asks the same thing.
+   *
+   * Never asked, always left to them: files, passwords, the demographic and credential questions (NEVER_ANSWERED and the
+   * refusals that are not "written" ones — they have their own place), and single consent boxes.
+   * Returns [{ key, question, kind: 'text' | 'choice', options: [text], el, els }].
+   */
+  function questions(doc) {
+    const out = []
+    for (const it of checklist(doc).items) {
+      if (!it.required || it.done) continue
+      const el = it.el
+      const tag = (el.tagName || '').toLowerCase()
+      const type = (el.type || 'text').toLowerCase()
+      if (type === 'file' || type === 'password') continue
+      const signals = tag === 'input' && (type === 'radio' || type === 'checkbox') ? questionFor(el, doc) : signalsFor(el, doc)
+      if (neverFromBank(signals)) continue
+      const key = questionKey(it.label)
+      if (!key || out.some((q) => q.key === key)) continue
+      if (tag === 'input' && type === 'radio') {
+        const name = el.getAttribute('name')
+        const els = name ? [...doc.querySelectorAll(`input[type="radio"][name="${CSS.escape(name)}"]`)] : [el]
+        out.push({ key, question: it.label, kind: 'choice', options: els.map((e) => optionLabel(e, doc)).filter(Boolean), el, els })
+      } else if (tag === 'select') {
+        const real = [...el.options].filter((o) => !isPlaceholder(o.text, o.value))
+        if (real.length) out.push({ key, question: it.label, kind: 'choice', options: real.map((o) => o.text.trim()), el })
+      } else if (tag === 'input' && type === 'checkbox') {
+        continue
+      } else {
+        out.push({ key, question: it.label, kind: 'text', options: [], el })
+      }
+      if (out.length >= 12) break
+    }
+    return out
+  }
+
+  /** Write the person's answer into the page. True when the page took it. */
+  function answerQuestion(item, value) {
+    const v = String(value ?? '').trim()
+    if (!v) return false
+    if (item.kind === 'text') { setNativeValue(item.el, v); return true }
+    if (item.el.tagName.toLowerCase() === 'select') {
+      const real = [...item.el.options].filter((o) => !isPlaceholder(o.text, o.value)).map((o) => ({ text: o.text, value: o.value }))
+      const hit = real.find((o) => o.text.trim() === v) || matchAnswer(v, real)
+      if (!hit) return false
+      setNativeValue(item.el, hit.value)
+      return true
+    }
+    const doc = item.el.ownerDocument
+    const hit = (item.els || []).find((e) => optionLabel(e, doc) === v) || matchAnswer(v, (item.els || []).map((e) => ({ text: optionLabel(e, doc), ref: e })))?.ref
+    if (!hit) return false
+    hit.click()
+    return true
+  }
+
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue, questions, answerQuestion, matchAnswer,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

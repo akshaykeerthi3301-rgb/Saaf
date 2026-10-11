@@ -39,6 +39,12 @@ const easyJob = `${head('Customer Success Manager – Acme')}<h1>Customer Succes
 <button type="submit">Submit application</button></form></body></html>`
 // A form with a required free-text question: the extension has no answer, so it must stop and submit NOTHING.
 const hardJob = easyJob.replace('<label for="rs">','<label for="why">Why do you want to work here? *</label><textarea id="why" name="why" required></textarea><label for="rs">').replace('action="/thanks"','action="/WRONG-submitted"')
+// Required questions the extension can ask the person (text, yes/no, dropdown) plus a demographic one it must never ask. "e2e-test" marks them for cleanup.
+const askJob = easyJob.replace('<label for="rs">', `<label for="why">Why do you want to work here (e2e-test)? *</label><textarea id="why" name="why" required></textarea>
+<fieldset><legend>Do you require visa sponsorship (e2e-test)? *</legend><label><input type="radio" name="spons" value="y" required> Yes</label><label><input type="radio" name="spons" value="n"> No</label></fieldset>
+<label for="hear">How did you hear about us (e2e-test)? *</label><select id="hear" name="hear" required><option value="">Select…</option><option>LinkedIn</option><option>Referral</option></select>
+<fieldset><legend>What is your gender? *</legend><label><input type="radio" name="g" value="m" required> Male</label><label><input type="radio" name="g" value="f"> Female</label></fieldset>
+<label for="rs">`)
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
@@ -50,6 +56,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

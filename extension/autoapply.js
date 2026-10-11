@@ -129,6 +129,17 @@
     }) || null
   }
 
+  /**
+   * Some job systems (Workday) answer "Apply" with a pop-up of ways to start: "Autofill with Resume", "Apply Manually",
+   * "Use My Last Application". We take "Apply Manually" — the person's own saved details do the filling, and nothing is
+   * uploaded to the employer's résumé reader. Returns the button, or null when there is no such pop-up.
+   */
+  function findApplyChoice(doc) {
+    const cands = [...doc.querySelectorAll('a, button, [role="button"], [role="menuitem"]')].filter(isVisible)
+    const t = (e) => (e.textContent || e.value || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim()
+    return cands.find((e) => /^apply manually$/i.test(t(e))) || null
+  }
+
   /** Wait (up to `ms`) for an application form to appear on this page — a same-page form mounts a beat after Apply is clicked. */
   async function waitForForm(doc, ms = 8000) {
     const end = Date.now() + ms
@@ -216,5 +227,5 @@
     return { status: 'unconfirmed', reason: 'Clicked Submit but saw no confirmation — check this tab', filled, coverage: cov }
   }
 
-  root.SaafAutoApply = { run, submitOnly, waitForForm, hasCaptcha, missingRequired, requiredFields, coverage, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
+  root.SaafAutoApply = { run, submitOnly, waitForForm, findApplyChoice, hasCaptcha, missingRequired, requiredFields, coverage, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

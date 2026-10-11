@@ -211,6 +211,27 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
 
+  // An answer the person gave in the panel to a question the form asked: kept in their Jobinko answer bank, and here, so the
+  // very next form that asks the same thing is filled. Signed out → kept here only.
+  if (msg?.type === 'jx:answer') {
+    ;(async () => {
+      const key = String(msg.key || '').slice(0, 200)
+      const question = String(msg.question || '').slice(0, 200)
+      const answer = String(msg.answer || '').trim().slice(0, 1500)
+      if (!key || !question || !answer) { sendResponse({ ok: false }); return }
+      const { profile = {} } = await chrome.storage.local.get('profile')
+      profile.answerBank = { ...(profile.answerBank || {}), [key]: { a: answer, auto: profile.answerBank?.[key]?.auto === true } }
+      await chrome.storage.local.set({ profile })
+      let saved = false
+      try {
+        const res = await api('/api/extension/answer', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question, answer }) })
+        saved = res.ok
+      } catch { /* offline: kept here */ }
+      sendResponse({ ok: true, saved })
+    })()
+    return true
+  }
+
   // "Save job": straight onto the person's tracker. Signed out → it is queued as before and filed when Jobinko is next opened.
   if (msg?.type === 'jx:save') {
     ;(async () => {
