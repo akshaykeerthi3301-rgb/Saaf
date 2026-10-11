@@ -69,7 +69,7 @@ await click(c, '#go'); await c.waitForURL('**/thanks', { timeout: 10000 }).catch
 check('"Account creation & Autofill" alone creates the account', landed(c) === '/thanks')
 
 // ---- 5: after an account is created, the NEXT page (the sign-in page) is carried on automatically — no click
-const clearNote = () => sw.evaluate(() => chrome.storage.local.remove('autofillPending'))
+const clearNote = () => sw.evaluate(() => chrome.storage.local.remove(['autofillPending', 'appSession']))
 await sw.evaluate(() => chrome.storage.local.set({ autofillPending: { at: Date.now() } }))
 const d0 = await context.newPage(); await d0.goto('http://localhost:4100/login'); await d0.waitForURL('**/thanks', { timeout: 30000 }).catch(() => {})
 check('the sign-in page that follows is carried on with NO click', landed(d0) === '/thanks')

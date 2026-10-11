@@ -45,6 +45,12 @@ const askJob = easyJob.replace('<label for="rs">', `<label for="why">Why do you 
 <label for="hear">How did you hear about us (e2e-test)? *</label><select id="hear" name="hear" required><option value="">Select…</option><option>LinkedIn</option><option>Referral</option></select>
 <fieldset><legend>What is your gender? *</legend><label><input type="radio" name="g" value="m" required> Male</label><label><input type="radio" name="g" value="f"> Female</label></fieldset>
 <label for="rs">`)
+// A two-step single-page application (Workday-style): step 1 is replaced in place by step 2, no page load in between.
+const stepsJob = `${head('Customer Success Manager – Acme (steps)')}<h1>Customer Success Manager</h1><p>Acme Robotics · Bengaluru</p><p>${para}</p>
+<form id="app" onsubmit="return false"><div id="stepbox"><h2>My Information</h2>
+<label for="fn">Full name *</label><input id="fn" name="name" required>
+<label for="em">Email *</label><input id="em" type="email" name="email" required>
+<button id="next" type="button" onclick="document.getElementById('stepbox').innerHTML='<h2>My Experience</h2><label for=ph>Current company *</label><input id=ph name=org required><label for=li>Current job title *</label><input id=li name=title required><button type=button>Save and Continue</button>'">Save and Continue</button></div></form></body></html>`
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
@@ -63,6 +69,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

@@ -161,11 +161,58 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         // A résumé tailored for THIS page wins over the primary one; everywhere else the primary is attached.
         const { tailoredFor = {} } = await chrome.storage.local.get('tailoredFor')
         const mine = msg.pageKey ? tailoredFor[msg.pageKey] : null
-        const file = await ensureAccountResume(mine ? { id: mine.id, updatedAt: mine.at } : r.account.resume)
+        // The person's own pick in "View & Select Your Resume" — when there is one — beats the primary; "Apply without
+        // resume" attaches nothing. A résumé tailored for THIS page still wins over both.
+        const { chosenResume } = await chrome.storage.local.get('chosenResume')
+        if (chosenResume?.none && !mine) {
+          await chrome.storage.local.remove('resumeFile')
+          r.resumeFile = null; r.chosen = { none: true }
+          sendResponse(r); return
+        }
+        const picked = !mine && chosenResume?.id ? { id: chosenResume.id, updatedAt: chosenResume.updatedAt ?? null } : null
+        const file = await ensureAccountResume(mine ? { id: mine.id, updatedAt: mine.at } : (picked || r.account.resume))
+        r.chosen = picked ? { id: picked.id } : null
         r.resumeFile = file.ok ? { name: file.name, from: file.from, tailored: !!mine } : null
         r.tailored = mine ? { label: mine.label, scores: mine.scores, changed: mine.changed, id: mine.id } : null
       }
       sendResponse(r)
+    })()
+    return true
+  }
+
+  // The résumé picker and the autofill pop-up: read-only lists from the person's account (library route), and their choice.
+  if (msg?.type === 'jx:library') {
+    ;(async () => {
+      const view = ['list', 'preview', 'profile'].includes(msg.view) ? msg.view : null
+      if (!view) { sendResponse({ ok: false }); return }
+      try {
+        const res = await api(`/api/extension/library?view=${view}${view === 'preview' ? `&id=${encodeURIComponent(String(msg.id || ''))}` : ''}`)
+        if (res.status === 401) { sendResponse({ ok: false, signedIn: false }); return }
+        sendResponse(await res.json().catch(() => ({ ok: false })))
+      } catch { sendResponse({ ok: false, error: 'Could not reach Jobinko.' }) }
+    })()
+    return true
+  }
+  // "Continue" in the picker. A manual upload from the settings page would otherwise win, so it is dropped: the person has just chosen.
+  if (msg?.type === 'jx:resume-choose') {
+    ;(async () => {
+      if (msg.none === true) await chrome.storage.local.set({ chosenResume: { none: true } })
+      else if (typeof msg.id === 'string' && /^[0-9a-f-]{36}$/i.test(msg.id)) await chrome.storage.local.set({ chosenResume: { id: msg.id, updatedAt: String(msg.updatedAt || '') || null } })
+      else { sendResponse({ ok: false }); return }
+      await chrome.storage.local.remove('resumeFile')
+      const file = msg.none === true ? { ok: true, name: null } : await ensureAccountResume({ id: msg.id, updatedAt: msg.updatedAt || null })
+      sendResponse({ ok: file.ok, name: file.name ?? null })
+    })()
+    return true
+  }
+  // "Download Resume" in the picker: the Word file for one saved résumé.
+  if (msg?.type === 'jx:resume-file') {
+    ;(async () => {
+      try {
+        const res = await api('/api/extension/resume' + (msg.id ? `?id=${encodeURIComponent(String(msg.id))}` : ''))
+        if (!res.ok) { sendResponse({ ok: false }); return }
+        sendResponse({ ok: true, name: res.headers.get('x-filename') || 'Resume.docx', type: res.headers.get('content-type') || 'application/octet-stream', base64: toBase64(await res.arrayBuffer()) })
+      } catch { sendResponse({ ok: false }) }
     })()
     return true
   }

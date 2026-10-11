@@ -83,6 +83,27 @@ const STYLE = `
   .afm-update[disabled] { cursor: default; background: var(--chip); color: var(--muted) }
   .afm-note { margin-top: 12px; font-size: 13px; color: var(--muted) }
   .afm-pane a { color: var(--accent) }
+  .afm-paper { background: #fff; color: #111; border-radius: 10px; padding: 22px 26px; font: 11.5px/1.5 Georgia, 'Times New Roman', serif; white-space: pre-wrap; overflow-wrap: anywhere }
+  .afm-split { display: flex; flex: 1; min-height: 0 }
+  .afm-list { width: 360px; flex: none; padding: 22px; border-right: 1px solid var(--line); overflow-y: auto }
+  .afm-list h4 { margin: 0 0 10px; font-size: 14px }
+  .afm-opt { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; background: var(--chip); margin-bottom: 8px; cursor: pointer; font-size: 14px; border: 1px solid transparent }
+  .afm-opt.on { border-color: oklch(0.673 0.182 276.935 / 55%) }
+  .afm-opt .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .afm-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: oklch(0.765 0.177 163.223 / 20%); color: var(--high) }
+  .afm-foot2 { padding: 14px 28px 20px; border-top: 1px solid var(--line); display: flex; justify-content: center; gap: 14px }
+  .afm-ghost { all: unset; cursor: pointer; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--line); font-weight: 700; font-size: 15px }
+  .afm-chips { display: flex; flex-wrap: wrap; gap: 8px }
+  .afm-chips span { background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px }
+  .afm-card2 { background: var(--chip); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px }
+  .afm-card2 h4 { margin: 0 0 8px; font-size: 16px }
+  .sv { position: absolute; inset: 0; z-index: 6; background: var(--bg); display: flex; flex-direction: column }
+  .sv[hidden] { display: none }
+  .svh { display: flex; align-items: center; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); font-size: 15px }
+  .svb { flex: 1; overflow-y: auto; padding: 14px }
+  .svb h4 { margin: 14px 0 8px; font-size: 14px }
+  .svr { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--chip); margin-bottom: 8px; cursor: pointer }
+  .svf { padding: 12px 14px; border-top: 1px solid var(--line) }
 
   .panel.left { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--line); box-shadow: 12px 0 40px oklch(0 0 0 / 40%) }
   header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line) }
@@ -171,6 +192,7 @@ function mount() {
         <section id="ask"></section>
         <section id="report"></section>
       </div>
+      <div class="sv" id="sv" hidden></div>
     </aside>`
   const panel = root.getElementById('panel')
   const tab = root.getElementById('tab')
@@ -202,7 +224,33 @@ function mount() {
   setTimeout(dock, 1500); setTimeout(dock, 4000); setTimeout(dock, 9000)
   root.getElementById('collapse').addEventListener('click', () => setOpen(false))
   tab.addEventListener('click', () => setOpen(true))
-  root.getElementById('gear').addEventListener('click', () => chrome.runtime.sendMessage({ type: 'jx:open-options' }))
+  // Settings, in the panel (as Jobright's gear does): two choices and Save. "More settings" reaches the full settings page.
+  const sv = root.getElementById('sv')
+  const openSettings = async () => {
+    const { jxSettings = {} } = await chrome.storage.local.get('jxSettings')
+    const cur = { pageTurn: jxSettings.pageTurn === 'manual' ? 'manual' : 'auto', view: jxSettings.view === 'minimized' ? 'minimized' : 'expanded' }
+    const radio = (name, val, label) => `<label class="svr"><input type="radio" name="${name}" value="${val}" ${cur[name] === val ? 'checked' : ''}> ${label}</label>`
+    sv.innerHTML = `<div class="svh"><button class="x" id="svx" aria-label="Close settings">✕</button><b>Settings</b></div>
+      <div class="svb">
+        <h4>Autofill After Page Turn</h4>${radio('pageTurn', 'auto', 'Automatically')}${radio('pageTurn', 'manual', 'Manually')}
+        <div class="muted">Automatically: when an application moves to its next step, Jobinko fills that step too. It never presses Submit.</div>
+        <h4>Default Plugin View</h4>${radio('view', 'expanded', 'Expanded')}${radio('view', 'minimized', 'Minimized')}
+        <div class="muted" style="margin-top:14px"><a href="#" id="svmore">More settings</a> — phone, notice period, pay, Apply for me.</div>
+      </div>
+      <div class="svf"><button class="btn primary" id="svsave" style="width:100%">Save</button><div class="note" id="svnote"></div></div>`
+    sv.hidden = false
+    sv.querySelector('#svx').addEventListener('click', () => { sv.hidden = true })
+    sv.querySelector('#svmore').addEventListener('click', (e) => { e.preventDefault(); chrome.runtime.sendMessage({ type: 'jx:open-options' }) })
+    sv.querySelector('#svsave').addEventListener('click', async () => {
+      const pick = (n) => sv.querySelector(`input[name="${n}"]:checked`)?.value
+      await chrome.storage.local.set({ jxSettings: { pageTurn: pick('pageTurn') === 'manual' ? 'manual' : 'auto', view: pick('view') === 'minimized' ? 'minimized' : 'expanded' } })
+      sv.querySelector('#svnote').textContent = 'Saved.'
+      setTimeout(() => { sv.hidden = true }, 500)
+    })
+  }
+  root.getElementById('gear').addEventListener('click', () => { if (sv.hidden) openSettings(); else sv.hidden = true })
+  // Default Plugin View: "Minimized" starts collapsed to the edge tab (unless the toolbar icon just asked for the panel).
+  chrome.storage.local.get('jxSettings').then(({ jxSettings }) => { if (jxSettings?.view === 'minimized' && !globalThis.__jxForce) setOpen(false) })
   // The toolbar icon: opens the panel if it is collapsed, collapses it if it is open (service-worker.js, "The toolbar icon").
   chrome.runtime.onMessage.addListener((msg, _s, sendResponse) => {
     if (msg?.type === 'jx:ping') { sendResponse({ ok: true }); return false }
@@ -296,7 +344,7 @@ function mountActions(root, job, state) {
    * enables when a form does, and the observer stops after 15 s — one left running for the life of the tab is a cost
    * every page pays forever.
    */
-  const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form select'
+  const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form input:not([type]), form select'
   const hasForm = () => !!doc.querySelector(FORM_SELECTOR)
 
   actions.innerHTML = `
@@ -307,7 +355,7 @@ function mountActions(root, job, state) {
     <div id="submitbox"></div>
     <button class="box info" id="info" style="margin-top:10px;width:100%;display:flex;justify-content:space-between;align-items:center;font:inherit;color:inherit;cursor:pointer;text-align:left"><span>Your autofill information</span><span aria-hidden="true">›</span></button>
     <div class="box" id="resumerow" style="margin-top:8px">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Résumé</b><span class="muted" id="rname"></span></div>
+      <div id="rrow" role="button" tabindex="0" title="Choose which résumé to attach" style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;cursor:pointer"><b>Résumé</b><span class="muted" id="rname" style="flex:1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><span aria-hidden="true">›</span></div>
       <button class="btn" id="tailor" style="margin-top:8px">✦ Tailor résumé for this job</button>
     </div>
     <button class="btn" id="save" style="margin-top:8px">Save job</button>
@@ -336,6 +384,8 @@ function mountActions(root, job, state) {
   setSupport()
 
   // The one button, as Jobright names it: with a sign-up password saved it also does the account step.
+  // What this step of the application looks like: its fields, and whether it is an account form. A change means a new step.
+  const formSig = () => A.checklist(doc).items.map((i) => i.label).join('|') + '#' + (globalThis.SaafAccount?.kind(doc) || '')
   const goLabel = () => (state.hasPw ? '⚡ Account creation & Autofill' : '⚡ Autofill')
   state.hasPw = false
   const refreshPw = async () => { const { accountPassword } = await chrome.storage.local.get('accountPassword'); state.hasPw = !!accountPassword; if (!state.running) go.textContent = goLabel() }
@@ -348,6 +398,7 @@ function mountActions(root, job, state) {
 
   // "Your autofill information": the pop-up (below) — what the filler will type, and the sign-up password.
   state.openInfo = (tab) => openAutofillModal(root, state, tab)
+  root.getElementById('rrow').addEventListener('click', () => openResumePicker(root, state))
   root.getElementById('info').addEventListener('click', () => state.openInfo('personal'))
 
   // Save job — straight onto the tracker; falls back to a queue when signed out.
@@ -517,7 +568,8 @@ function mountActions(root, job, state) {
     // from here: we cannot see whether they pressed Submit, and saying they did would be a guess.
     if (res.filled.length) { await save(job, 'applying'); showSaved() }
     state.filledOnce = true
-    state.sig = A.checklist(doc).items.map((i) => i.label).join('|')
+    state.sig = formSig()
+    chrome.storage.local.set({ appSession: { host: location.host, at: Date.now() } })
     gonote.textContent = ''
     drawQuestions()
     offerSubmit()
@@ -562,6 +614,8 @@ function mountActions(root, job, state) {
     const wallKind = globalThis.SaafAccount?.kind(doc)
     if (wallKind) {
       state.running = true; go.textContent = 'Creating your account…'
+      state.sig = formSig()
+      chrome.storage.local.set({ appSession: { host: location.host, at: Date.now() } })
       const r = await accountStep(state, wallKind)
       state.running = false; go.textContent = goLabel()
       if (r.needsPassword) { openAutofillModal(root, state, 'signup'); return }
@@ -637,14 +691,21 @@ function mountActions(root, job, state) {
   let watch
   const obs = new MutationObserver(() => {
     clearTimeout(watch)
-    watch = setTimeout(() => {
+    watch = setTimeout(async () => {
       if (state.running) return
       setSupport(); refreshDashboard()
-      // A later step of the same application (Workday's My Information → My Experience → …): the fields changed since the last fill.
-      if (state.filledOnce && hasForm()) {
-        const sig = A.checklist(doc).items.map((i) => i.label).join('|')
-        if (sig && sig !== state.sig) { gonote.textContent = 'This looks like a new step — press Autofill again to fill it.'; submitbox.innerHTML = ''; askEl.innerHTML = '' }
-      }
+      // A later step of the same application (Workday's My Information → My Experience → …). "Autofill After Page Turn" decides:
+      // Automatically (the default, as in Jobright) fills the new step; Manually only says so. Never presses Submit.
+      const wallNow = globalThis.SaafAccount?.kind(doc)
+      if (!hasForm() && !wallNow) return
+      const sig = formSig()
+      if (!sig || sig === state.sig) return
+      const { jxSettings = {}, appSession, autofillPending } = await chrome.storage.local.get(['jxSettings', 'appSession', 'autofillPending'])
+      const recent = (t, ms) => !!t && Date.now() - t.at < ms
+      const inProgress = state.filledOnce || (appSession?.host === location.host && recent(appSession, 30 * 60_000)) || recent(autofillPending, 90_000)
+      if (!inProgress) return
+      if (jxSettings.pageTurn !== 'manual' && (state.autoRuns = (state.autoRuns || 0) + 1) <= 25) { state.sig = sig; state.autofill?.(); return }
+      if (state.filledOnce) { gonote.textContent = 'This looks like a new step — press Autofill again to fill it.'; submitbox.innerHTML = ''; askEl.innerHTML = '' }
     }, 400)
   })
   obs.observe(doc.body, { childList: true, subtree: true })
@@ -738,21 +799,55 @@ async function openAutofillModal(root, state, tab = 'personal') {
 
   const store = await chrome.storage.local.get(['profile', 'accountPassword', 'accountEmail', 'accountAutoAgree'])
   const profile = store.profile || {}
+  const libraryData = async () => { const r = await chrome.runtime.sendMessage({ type: 'jx:library', view: 'profile' }).catch(() => null); return r?.ok ? r : null }
   const link = `<a href="${SITE}/profile" target="_blank" rel="noopener">Edit on Jobinko</a>`
 
   const panes = {
     personal() {
       pane.innerHTML = `<h3>Personal</h3><p class="afm-sub">What Jobinko types into name, contact and address boxes. ${link}.</p><div class="afm-grid">${AFM_FIELDS.map(([l, f]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(f(profile) || '')}" placeholder="—"></div>`).join('')}</div>`
     },
-    education() { pane.innerHTML = `<h3>Education</h3><p class="afm-sub">Your schools, degrees, majors and GPA come from your résumé on Jobinko. ${link}.</p>` },
-    work() { pane.innerHTML = `<h3>Work Experience</h3><p class="afm-sub">Your roles, companies, job types and summaries come from your résumé on Jobinko. ${link}.</p>` },
-    skill() { pane.innerHTML = `<h3>Skill</h3><p class="afm-sub">Your skills come from your profile on Jobinko. ${link}.</p>` },
+    async education() {
+      pane.innerHTML = `<h3>Education</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
+      const d = await libraryData()
+      const box = pane.querySelector('#afm-data'); if (!box) return
+      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.education.length ? d.education.map((e, i) => `<div class="afm-card2"><h4>Education ${i + 1}</h4><div class="afm-grid">${[['School Name', e.school], ['Accreditation', e.degree], ['Major', e.major], ['GPA', e.gpa], ['Dates', e.dates]].map(([l, v]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(v)}" placeholder="—"></div>`).join('')}</div></div>`).join('') : 'No education on your résumé yet.'
+    },
+    async work() {
+      pane.innerHTML = `<h3>Work Experience</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
+      const d = await libraryData()
+      const box = pane.querySelector('#afm-data'); if (!box) return
+      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.experience.length ? d.experience.map((e, i) => `<div class="afm-card2"><h4>Work Experience ${i + 1}</h4><div class="afm-grid">${[['Company', e.company], ['Job Title', e.title], ['Location', e.location], ['Job Type', e.type], ['Dates', e.dates]].map(([l, v]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(v)}" placeholder="—"></div>`).join('')}</div>${e.summary ? `<label class="afm-l" style="margin-top:12px">Experience Summary</label><div class="afm-sub" style="margin:0">${esc(e.summary)}</div>` : ''}</div>`).join('') : 'No work experience on your résumé yet.'
+    },
+    async skill() {
+      pane.innerHTML = `<h3>Skills</h3><p class="afm-sub">Read from your main résumé on Jobinko. ${link}.</p><div id="afm-data" class="muted">Loading…</div>`
+      const d = await libraryData()
+      const box = pane.querySelector('#afm-data'); if (!box) return
+      box.innerHTML = !d ? 'Could not load — sign in to Jobinko.' : d.skills.length ? `<div class="afm-chips">${d.skills.map((k) => `<span>${esc(k)}</span>`).join('')}</div>` : 'No skills on your résumé yet.'
+    },
     equal() {
       const self = profile.selfId || {}
       const val = (k) => { const v = profile[k] ?? self[k]; return v === 'decline' ? 'Decline to state' : v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v || '' }
       pane.innerHTML = `<h3>Equal Employment</h3><p class="afm-sub">Only what you answered yourself is ever filled; “Decline to state” and unanswered are left blank. ${link}.</p><div class="afm-grid">${AFM_EQUAL.map(([l, k]) => `<div><label class="afm-l">${esc(l)}</label><input class="afm-in" readonly value="${esc(val(k))}" placeholder="—"></div>`).join('')}</div>`
     },
-    pref() { pane.innerHTML = `<h3>Preference</h3><p class="afm-sub">Notice period, expected pay and the places you would work are in your profile on Jobinko. ${link}.</p>` },
+    pref() {
+      pane.innerHTML = `<h3>Preference</h3><p class="afm-sub">Filled into salary and start-date questions. Pay figures are yours — Jobinko never guesses one.</p>
+        <label class="afm-l" for="pf-exp">What is your expected annual salary? (lakhs)</label><input class="afm-in" id="pf-exp" inputmode="decimal" placeholder="e.g. 18">
+        <label class="afm-l" for="pf-cur">What is your current annual salary? (lakhs)</label><input class="afm-in" id="pf-cur" inputmode="decimal" placeholder="e.g. 12">
+        <label class="afm-l">When can you start your next job?</label><input class="afm-in" readonly value="${esc(profile.noticePeriod || '')}" placeholder="—"><div class="afm-note">Notice period comes from your Jobinko profile. ${link}.</div><div class="afm-note" id="pf-msg"></div>`
+      const exp = pane.querySelector('#pf-exp'); const cur = pane.querySelector('#pf-cur')
+      exp.value = profile.expectedCtcLakhs || ''; cur.value = profile.currentCtcLakhs || ''
+      const was = { exp: exp.value, cur: cur.value }
+      const ok = (v) => v === '' || /^\d+(\.\d+)?$/.test(v.trim())
+      const check = () => { const bad = !ok(exp.value) || !ok(cur.value); pane.querySelector('#pf-msg').textContent = bad ? 'Numbers only, in lakhs.' : ''; dirty(!bad && (exp.value !== was.exp || cur.value !== was.cur), save) }
+      const save = async () => {
+        const { profile: p = {} } = await chrome.storage.local.get('profile')
+        p.expectedCtcLakhs = exp.value.trim(); p.currentCtcLakhs = cur.value.trim()
+        await chrome.storage.local.set({ profile: p })
+        profile.expectedCtcLakhs = p.expectedCtcLakhs; profile.currentCtcLakhs = p.currentCtcLakhs
+        was.exp = exp.value; was.cur = cur.value; pane.querySelector('#pf-msg').textContent = 'Saved.'; dirty(false)
+      }
+      ;[exp, cur].forEach((i) => i.addEventListener('input', check))
+    },
     signup() {
       pane.innerHTML = `<h3>Sign-up Information</h3>
         <p class="afm-sub"><b>Workday sites</b> require an account to apply. Save your credentials here and we’ll fill them in automatically.</p><hr>
@@ -802,6 +897,61 @@ async function openAutofillModal(root, state, tab = 'personal') {
   nav.innerHTML = AFM_TABS.map(([k, l]) => `<button data-k="${k}">${esc(l)}</button>`).join('')
   nav.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.k) })
   show(tab)
+}
+
+/**
+ * "View & Select Your Resume" — the same shape as Jobright's picker (observed 2026-10-12): the person's résumés as radio rows
+ * with a PRIMARY badge, "Apply without resume", a preview on the right, Download Resume and Continue. Jobright's "Choose
+ * version" row has no equivalent here (Jobinko keeps one résumé per label — a tailored one is its own row).
+ */
+async function openResumePicker(root, state) {
+  root.getElementById('afm')?.remove()
+  const ov = document.createElement('div')
+  ov.id = 'afm'; ov.className = 'afm'
+  ov.innerHTML = `<div class="afm-card" role="dialog" aria-label="View & Select Your Resume">
+    <div class="afm-head"><h2>View &amp; Select Your Resume</h2><button class="afm-x" aria-label="Close">✕</button></div>
+    <div class="afm-split"><div class="afm-list"><h4>Your Resume</h4><div id="rp-opts" class="muted">Loading…</div></div>
+      <div class="afm-pane"><div class="afm-paper" id="rp-prev"></div></div></div>
+    <div class="afm-foot2"><button class="afm-ghost" id="rp-dl">⭳ Download Resume</button><button class="afm-update" id="rp-go" disabled>Continue</button></div></div>`
+  root.appendChild(ov)
+  const $ = (sel) => ov.querySelector(sel)
+  const close = () => ov.remove()
+  $('.afm-x').addEventListener('click', close)
+  ov.addEventListener('mousedown', (e) => { if (e.target === ov) close() })
+  const lib = await chrome.runtime.sendMessage({ type: 'jx:library', view: 'list' }).catch(() => null)
+  if (!lib?.ok) { $('#rp-opts').textContent = lib?.signedIn === false ? 'Sign in to Jobinko to choose a résumé.' : 'Could not load your résumés.'; return }
+  const { chosenResume } = await chrome.storage.local.get('chosenResume')
+  const primary = lib.resumes.find((r) => r.isPrimary)?.id
+  const start = chosenResume?.none ? 'none' : (chosenResume?.id && lib.resumes.some((r) => r.id === chosenResume.id) ? chosenResume.id : primary || lib.resumes[0]?.id || 'none')
+  let sel = start
+  const draw = () => {
+    $('#rp-opts').innerHTML = lib.resumes.map((r) => `<div class="afm-opt ${sel === r.id ? 'on' : ''}" data-id="${esc(r.id)}"><input type="radio" ${sel === r.id ? 'checked' : ''} tabindex="-1"><span class="nm">${esc(r.label)}</span>${r.isPrimary ? '<span class="afm-badge">★ PRIMARY</span>' : ''}</div>`).join('')
+      + `<div class="afm-opt ${sel === 'none' ? 'on' : ''}" data-id="none"><input type="radio" ${sel === 'none' ? 'checked' : ''} tabindex="-1"><span class="nm">Apply without resume</span></div>`
+    $('#rp-go').disabled = sel === start
+    $('#rp-dl').disabled = sel === 'none'
+  }
+  const preview = async () => {
+    const box = $('#rp-prev')
+    if (sel === 'none') { box.textContent = 'No résumé will be attached to this application.'; return }
+    box.textContent = 'Loading…'
+    const r = await chrome.runtime.sendMessage({ type: 'jx:library', view: 'preview', id: sel }).catch(() => null)
+    if ($('#rp-prev') === box) box.textContent = r?.ok ? r.text : 'Could not load the preview.'
+  }
+  $('#rp-opts').addEventListener('click', (e) => { const o = e.target.closest('.afm-opt'); if (!o) return; sel = o.dataset.id; draw(); preview() })
+  $('#rp-dl').addEventListener('click', async () => {
+    const f = await chrome.runtime.sendMessage({ type: 'jx:resume-file', id: sel }).catch(() => null)
+    if (!f?.ok) return
+    const bytes = Uint8Array.from(atob(f.base64), (c) => c.charCodeAt(0))
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: f.type })); a.download = f.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+  })
+  $('#rp-go').addEventListener('click', async () => {
+    $('#rp-go').disabled = true; $('#rp-go').textContent = 'Saving…'
+    const picked = lib.resumes.find((r) => r.id === sel)
+    await chrome.runtime.sendMessage(sel === 'none' ? { type: 'jx:resume-choose', none: true } : { type: 'jx:resume-choose', id: sel, updatedAt: picked?.updatedAt }).catch(() => null)
+    await state.reconnect?.()
+    close()
+  })
+  draw(); preview()
 }
 
 /**
@@ -892,6 +1042,13 @@ async function renderWall(root, state) {
     if (await globalThis.SaafAutoApply.waitForForm(document, 8000)) {
       await chrome.storage.local.remove('autofillPending')
       state.autofill?.()
+    }
+  }
+  // A full page load in the middle of an application (not a single-page step): "Autofill After Page Turn: Automatically".
+  else if (!applied) {
+    const { jxSettings = {}, appSession } = await chrome.storage.local.get(['jxSettings', 'appSession'])
+    if (jxSettings.pageTurn !== 'manual' && appSession?.host === location.host && Date.now() - appSession.at < 30 * 60_000 && (formHere || globalThis.SaafAccount?.kind(document))) {
+      if (await globalThis.SaafAutoApply.waitForForm(document, 8000) || globalThis.SaafAccount?.kind(document)) state.autofill?.()
     }
   }
   if (noPosting) { root.getElementById('match').innerHTML = ''; return }

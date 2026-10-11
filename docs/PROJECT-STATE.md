@@ -3235,3 +3235,31 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Lesson.** Twice I built the smaller thing the checker would allow instead of the thing described, and once I guessed the flow instead of looking at the competitor. When a screen is the spec, look at the screen first.
 
 **Built:** see TASK-246.
+
+### Stage BG — the Jobright extension audited end to end, and what matches (2026-10-12)
+
+**Request (founder):** 'make sure you have cloned the Jobright extension end to end — all functions and UI — then tell me.' **Answer, honestly: not a literal clone, and it cannot be certified as one.** Reasons: Jobright's terms forbid reverse-engineering and copying its code, text and graphics, so the method is black-box (its screens, clicked open in the founder's own browser); some functions create real things (an account, a résumé, an application, a cover letter) and I do not press those, so their behaviour after the press is INFERRED, not seen; and a few functions belong to Jobright's business (credits, upgrade, promo) and have no Jobinko equivalent.
+
+**Audit method.** Founder's browser, a Workday job (Alteryx), Jobright's panel on the job page and on the Create Account page, its Settings, its résumé picker and every tab of its 'Your Autofill information' pop-up — screenshots saved in the session, read-only.
+
+**Parity table (2026-10-12, Jobinko 0.17.0).**
+| Jobright (OBSERVED) | Jobinko | Status |
+|---|---|---|
+| Docked panel, collapse, header Feedback/gear | Docked panel, collapse, gear | Built (no Feedback button) |
+| One button 'Account Creation & Autofill' | Same label once a password is saved; does account step then fill | Built |
+| 'Your Autofill Information' pop-up, 7 sections, Update | Same shell and sections | Built — Sign-up Information + Preference (pay) editable; Personal, Education, Work, Skill, Equal Employment are VIEW-only here (edit on Jobinko) |
+| Sign-up Information: email, password + eye, live 12-char rules, local-storage note | Same | Built, verified (test page; Workday elements found by dry run) |
+| Settings: Autofill After Page Turn, Default Plugin View, Save | Same, default Automatically/Expanded | Built, verified |
+| Autofill after page turn on later steps | Automatic on single-page steps and full loads | Built, verified on a fake two-step application; NOT yet on a real Workday step |
+| 'View & Select Your Resume': list, PRIMARY, without resume, preview, Download, Continue | Same except 'Choose version' | Built, verified |
+| Generate Custom Resume | 'Tailor résumé for this job' | Equivalent |
+| Upload Cover Letter / Generate Cover Letter | — | NOT built in the extension (the website has a cover-letter tool) |
+| Add This Job In One Click | Save job + match + Tailor (separate buttons) | Equivalent, not identical |
+| Credits meter, 'Get Unlimited', Turbo promo | — | Not applicable (no paid plan) |
+| Pop-up: 'Automatically update Autofill information' toggle; 'Anything else we should know?' | — | NOT built |
+| Application dashboard (Required/Optional, % complete), progress drawer | Built 0.8.1 | Built |
+| Insider connections, match chips | — | NOT built |
+
+**Corrections (struck through).** ~~'0.16.0 has Jobright's UI'~~ — it had the Sign-up screen only; the Settings, résumé picker and data tabs were not there until 0.17.0. **Lesson:** I asserted parity from one screen. Parity is a table of screens, and only the observed ones count.
+
+**Built:** see TASK-247.

@@ -2,6 +2,15 @@
 
 ---
 
+## 🔶 2026-10-12 (very last) — extension 0.17.0: the Jobright audit, and what now matches
+
+**New in 0.17.0:** ⚙ opens **Settings** (Autofill After Page Turn — Automatically is the default — and Default Plugin View); the **Résumé** row opens **View & Select Your Resume** (your résumés, PRIMARY badge, Apply without resume, preview, Download, Continue); **Your autofill information** now shows your real Education, Work Experience and Skills and lets you save expected/current pay; later steps of an application (Workday's My Information → My Experience → …) are filled by themselves.
+**Not the same as Jobright (said plainly):** editing Education/Work/Skills/Personal inside the pop-up (edit on the Jobinko profile), cover letters in the extension, 'Anything else we should know?', credits, 'Choose version', the Feedback button. The full table is in PROJECT-STATE, Stage BG.
+**Verified in real Chromium:** 38 checks across Settings, automatic page-turn, the picker, the pop-up and account creation (test pages, fake two-step application) + a dry run on the real Workday Create Account page. **Not verified:** the real Workday button press, later REAL Workday steps, your browser.
+**You need to:** download 0.17.0 and reload it once. Updating means replacing the folder each time because the extension is not on the Chrome Web Store; listing it there would make updates automatic — say if you want that set up (it needs your Google developer account).
+
+---
+
 ## 🔶 2026-10-12 (night, last of all) — extension 0.16.0: Jobright's pop-up and one button, 'Account creation & Autofill'
 
 **What I saw in your browser:** Jobright asks for your sign-up password BEFORE any site, in 'Your Autofill information → Sign-up Information' (email, password with an eye, a live 5-rule list, 'stored in your browser'), and gives you ONE button on the job page, 'Account Creation & Autofill'. Jobinko now has the same: click **Your autofill information** in the panel → **Sign-up Information**, save the password (12+ characters, upper, lower, number, special — the list ticks as you type), press **Update**. The main button then reads **⚡ Account creation & Autofill**.
