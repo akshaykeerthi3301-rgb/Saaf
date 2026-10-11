@@ -2,6 +2,16 @@
 
 ---
 
+## 🔶 2026-10-11 — the new Profile page: one database update to apply
+
+**Built and verified locally on your account; deployed only if the line below says so.** The Profile page now has the reference's layout: your name and headline on the left with Profile / Personal Info / Job Preferences, and a card for each section on the right, each with its own edit panel. Everything from before (alerts, wallet, saved answers, delete account) is under **"Account, alerts & all settings"** at the foot of the left column.
+
+**You need to do one thing for it to be complete:** apply `supabase/migrations/0052_profile_extras.sql` (one new column). Until then the page works but GitHub, other link, languages, address, birthday and some preferences show empty and say they cannot save. Say **"apply 0052"** and I will paste it into the Supabase editor the same way as 0051.
+
+**Check once:** Profile → Work Experience. Your older résumé was read by an older reader, so a couple of entries show a company name in the wrong place (e.g. "Go-to-Market & Growth … Bangalore" under Mind Customs). Click the pencil on those to fix them — or upload the résumé again.
+
+---
+
 ## ✅🔶 2026-10-11 — Google sign-in no longer shows the Supabase address; Google's own name check needs one DNS record from you
 
 **Live:** the "Continue with Google" button on `/signin` is now Google's own button. It opens Google's small window, which names **jobinko.in** instead of `adofdvkhdgifvmbuolcj.supabase.co`, and the page hands Google's signed token to Supabase (`POST /auth/google`). If Google's script cannot load (an ad blocker), the old redirect button appears instead. In Google Cloud I added `https://jobinko.in` and `http://localhost:3000` as allowed origins on the OAuth client and set the app name to **Jobinko**. **I did not sign in with Google to test it** (that is your account's action): please click the button once on https://jobinko.in/signin and read the first line of the window — it should say jobinko.in, not supabase.co. If it still shows something else, tell me what it says.

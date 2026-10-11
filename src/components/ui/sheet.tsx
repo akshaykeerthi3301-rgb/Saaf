@@ -22,6 +22,7 @@ export function Sheet({
   onOpenChange,
   trigger,
   wide = false,
+  roomy = false,
   children,
 }: {
   open: boolean
@@ -30,6 +31,8 @@ export function Sheet({
   trigger: ReactNode
   /** A working surface (the résumé and cover-letter tools) rather than a note: nearly the whole width. */
   wide?: boolean
+  /** A form drawer: wider than a note (the profile's edit panels), far narrower than a working surface. */
+  roomy?: boolean
   children: ReactNode
 }) {
   return (
@@ -37,7 +40,7 @@ export function Sheet({
       {trigger}
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-primary/25 backdrop-blur-sm print:hidden" />
-        <Dialog.Popup data-sheet-print className={`fixed inset-y-0 right-0 z-50 flex h-full w-full ${wide ? 'max-w-[min(1240px,94vw)]' : 'max-w-lg'} flex-col border-l border-border bg-card shadow-sm outline-none`}>
+        <Dialog.Popup data-sheet-print className={`fixed inset-y-0 right-0 z-50 flex h-full w-full ${wide ? 'max-w-[min(1240px,94vw)]' : roomy ? 'max-w-2xl' : 'max-w-lg'} flex-col border-l border-border bg-card shadow-sm outline-none`}>
           {children}
         </Dialog.Popup>
       </Dialog.Portal>

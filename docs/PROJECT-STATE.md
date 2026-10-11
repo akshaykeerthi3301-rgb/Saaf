@@ -3139,3 +3139,15 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 6. **Non-technical persona research is still the thinnest part.** Indian marketing
    communities were the weakest-mapped section in the Define phase and nothing has
    changed that.
+
+### Stage AX — the Profile page rebuilt to the reference's layout (2026-10-11)
+
+**Request (founder, 2026-10-11):** "Access and reverse engineer this format on to our profile section. Keep it the exact same" — a Simplify profile link. The link is private (it redirects to login); the founder signed in in their own Chrome and the page, its Personal Info and Job Preferences views and the edit panels were read there. **Nothing was signed in by me; nothing was saved or changed on Simplify** (every edit panel was opened and cancelled).
+
+**What was built (TASK-233).** Left column + three views + a card per section + right-hand edit panels, from our tokens (no Simplify colours, logos or wording copied). Decisions worth keeping:
+- **No second copy of a career.** Work experience, projects and education are the *primary saved résumé*; the page reads and writes it (`lib/profile-entries.ts`). The consequence — measured on the founder's account — is that a badly parsed old résumé now shows on the profile ("Go-to-Market & Growth … Bangalore" as an employer). It is the old reader's output, fixable in the edit panel or by re-uploading; it is not a new bug.
+- **A heart is a keyword.** The reference's "skills you'd prefer to use" has no effect we can verify there; here a hearted skill is written into `keywords`, which the scorer already treats as a boost and never a filter. Otherwise it would be a control that does nothing.
+- **Honest about what moves the list.** Role, skills, city, years and pay floor change matches; values, company size, industries, skills-to-avoid, employment type and hidden companies are stored (migration 0052, one jsonb) and say so on the page. 'Hide companies' is NOT applied to the feed yet and the card says so.
+- **Not built, on purpose:** the paid upsell (no plan exists — Stage AK), a working "show profile to recruiters" switch (the employer side is not approved — `docs/EMPLOYER-CONSENT.md`; the card shows it off and locked, and says nobody can find you), the extension banner until a store URL exists (`NEXT_PUBLIC_EXTENSION_URL` is empty), the US security-clearance question.
+- **Zod 4 re-applies field defaults under `.partial()`** (measured: `{a:'1'}` → `{a:'1', b:[]}`). A partial save of the extras would have blanked every answer it did not mention; `saveProfileExtras` keeps only the keys actually sent.
+- Dev sign-in note: stale `sb-…-auth-token` cookies on `localhost` make `/api/dev-signin` look broken ("Refresh Token Not Found"); clear them and it works. Two tabs sharing one dev session also fight each other.

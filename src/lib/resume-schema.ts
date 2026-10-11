@@ -29,6 +29,7 @@ export const sectionsSchema = z.object({
         bullets: z.array(bullet).max(20),
         /** Without this a project arrives as a job, and the export puts it under Experience. */
         isProject: z.boolean().optional(),
+        employmentType: z.string().max(30).optional(),
       }),
     )
     .max(15),

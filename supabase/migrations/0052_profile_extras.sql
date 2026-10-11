@@ -1,0 +1,13 @@
+-- Jobinko — the profile page's extra fields (2026-10-11, TASK-233).
+--
+-- One jsonb on the candidate's own profile row, for the fields the profile screen shows that no column held:
+--   preferredName, suffixName, birthday (YYYY-MM-DD), address1/2/3, postalCode   — Personal Info
+--   githubUrl, otherUrl, languages[]                                             — Portfolio & Links, Languages
+--   values[], companySizes[], employmentTypes[], industriesLike[], industriesAvoid[],
+--   skillsAvoid[], hiddenCompanies[]                                             — Job Preferences
+-- Nothing here is read by the scorer. It is stored for the candidate, and for the browser extension to fill forms with.
+-- Lives on profiles, so the existing owner-only policies are the access control. Written only by the candidate's own
+-- action; no new table, no new policy.
+-- SAFE TO DEPLOY BEFORE THIS IS APPLIED: the page reads `*`, shows empty values, and a save of these fields says its
+-- database update is missing instead of pretending to have saved.
+alter table profiles add column if not exists profile_extras jsonb not null default '{}'::jsonb;

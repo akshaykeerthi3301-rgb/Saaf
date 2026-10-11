@@ -33,6 +33,8 @@ export type ExperienceEntry = {
   bullets: string[]
   /** True when this came from a Projects section rather than an employment one. */
   isProject?: boolean
+  /** "Full-Time", "Internship"… Only ever set from the profile screen; the parser never reads one and no export prints it. */
+  employmentType?: string
 }
 
 export type EducationEntry = {
