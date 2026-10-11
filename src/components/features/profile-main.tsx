@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Briefcase, EyeOff, FileText, FolderGit2, GraduationCap, Globe, Heart, Languages, Link2, Puzzle, Search, Users, Zap } from 'lucide-react'
+import { Briefcase, EyeOff, FileText, FolderGit2, GraduationCap, Globe, Heart, Languages, Link2, Search, Users, Zap } from 'lucide-react'
 import { deleteProfileEntry, saveProfileExtras, saveProfileLinks, saveProfileSkills } from '@/app/actions/profile-cards'
 import { EntryDrawer, type EntryInitial } from '@/components/features/profile-entry-drawer'
 import {
@@ -27,7 +27,6 @@ export type ProfileMainData = {
   favourites: string[]
   languages: string[]
   answersCount: number
-  extensionUrl: string
   extrasStored: boolean
 }
 
@@ -89,18 +88,6 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
   return (
     <div className="space-y-4">
       {error ? <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">{error}</p> : null}
-
-      {data.extensionUrl ? (
-        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <div>
-            <h2 className="text-lg font-semibold tracking-[-0.02em] text-primary">Add the Jobinko extension to fill in your applications</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Takes 30 seconds to install. It fills the form from this profile and puts what you apply to on your tracker.</p>
-          </div>
-          <a href={data.extensionUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
-            <Puzzle className="size-4" aria-hidden="true" /> Add Extension
-          </a>
-        </section>
-      ) : null}
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold tracking-[-0.02em] text-primary">Your Jobinko profile fills in your job applications</h2>

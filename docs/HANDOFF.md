@@ -2,6 +2,16 @@
 
 ---
 
+## ✅🔶 2026-10-11 (night) — testers can now download the Jobinko extension from the Profile page
+
+**Live once the deploy line below says so.** Profile (all three views) now opens with an "Add the Jobinko extension" banner: **Download extension** and **How to install** (six steps; Chrome makes you load it by hand because it is not in the Chrome Web Store). It is **our own extension, version 0.7.0** — I did not copy or rebrand the reference product's extension: that is their copyrighted code, and we already have a working one.
+
+**The honest gap:** nobody has loaded this extension in Chrome yet — not me (my tools cannot install one) and not you. The first tester's try is the first real test. **Ask them to try:** install, sign in at jobinko.in, open a Greenhouse or Lever job, click the Jobinko icon, and press "Fill this application" — and tell me what happens.
+
+**For the Chrome Web Store later:** it needs a developer account (one-time US$5) and a review; then set `NEXT_PUBLIC_EXTENSION_URL` and the banner becomes a single "Add Extension" button. If I change anything under `extension/`, I must re-run `scripts/pack-extension.sh` and commit the zip — a test fails if I forget.
+
+---
+
 ## 🔶 2026-10-11 — the new Profile page: one database update to apply
 
 **LIVE on jobinko.in since 2026-10-11 (`dpl_DxTkdBA9tRcHxXZJE7dsLH1bqwYt`); opened on production after the deploy and the layout renders.** The Profile page now has the reference's layout: your name and headline on the left with Profile / Personal Info / Job Preferences, and a card for each section on the right, each with its own edit panel. Everything from before (alerts, wallet, saved answers, delete account) is under **"Account, alerts & all settings"** at the foot of the left column.

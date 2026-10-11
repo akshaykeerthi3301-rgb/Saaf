@@ -20,6 +20,7 @@ import { readSelfId } from '@/lib/services/self-id'
 import { readPrimaryResume, readProfileExtras } from '@/lib/services/profile-cards'
 import { ProfileSidebar, type ProfileView } from '@/components/features/profile-sidebar'
 import { ProfileMain } from '@/components/features/profile-main'
+import { ExtensionBanner } from '@/components/features/extension-banner'
 import { ProfilePersonal } from '@/components/features/profile-personal'
 import { ProfilePreferences } from '@/components/features/profile-preferences'
 import { favouriteSkills } from '@/lib/profile-extras'
@@ -133,7 +134,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           experience: listExperience(sections), projects: listProjects(sections), education: listEducation(sections),
           links: { linkedin: profile.linkedin_url ?? '', portfolio: profile.portfolio_url ?? '', github: extrasRead.extras.githubUrl, other: extrasRead.extras.otherUrl },
           skills, favourites, languages: extrasRead.extras.languages, answersCount: answers.bank.filter((b) => b.a.trim()).length,
-          extensionUrl: process.env.NEXT_PUBLIC_EXTENSION_URL ?? '', extrasStored: extrasRead.stored,
+ extrasStored: extrasRead.stored,
         }}
         networkPanel={<ConnectionsImport counts={connections ?? { linkedin: 0, google: 0, manual: 0, sourced: false }} stored={connections !== null} />}
         answersPanel={<AnswerBank initial={answers.bank} stored={answers.stored} />}
@@ -151,7 +152,10 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         ) : null}
         <div className="grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
           <ProfileSidebar view={view as ProfileView | 'settings'} name={shownName} initials={initials} headline={headline(profile.current_title, profile.employer)} status={account.status} health={health} />
-          <div className="min-w-0">{body}</div>
+          <div className="min-w-0">
+            {view !== 'settings' ? <ExtensionBanner storeUrl={process.env.NEXT_PUBLIC_EXTENSION_URL ?? ''} /> : null}
+            {body}
+          </div>
         </div>
       </div>
     </AppShell>
