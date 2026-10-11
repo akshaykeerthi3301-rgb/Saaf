@@ -162,7 +162,8 @@ export default function SignInPage() {
 
         {/* Google's own button (see the note at the top). The slot is reserved at full size so the card does not jump when it loads. */}
         <div className={gisFailed ? 'hidden' : 'flex min-h-11 justify-center'} aria-busy={!gisReady}>
-          <div ref={googleSlot} className={busy ? 'pointer-events-none opacity-60' : undefined} />
+          {/* color-scheme light: Google's frame is light, and on this dark page the browser otherwise paints a white backing behind it. */}
+          <div ref={googleSlot} style={{ colorScheme: 'light' }} className={busy ? 'pointer-events-none opacity-60' : undefined} />
         </div>
         {gisFailed ? (
           <Button type="button" variant="ghost" className="w-full gap-3 py-4 text-base" onClick={withGoogle} disabled={busy}>
