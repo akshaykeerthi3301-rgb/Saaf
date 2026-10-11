@@ -6,7 +6,7 @@
 
 **LIVE on jobinko.in since 2026-10-11 (`dpl_DxTkdBA9tRcHxXZJE7dsLH1bqwYt`); opened on production after the deploy and the layout renders.** The Profile page now has the reference's layout: your name and headline on the left with Profile / Personal Info / Job Preferences, and a card for each section on the right, each with its own edit panel. Everything from before (alerts, wallet, saved answers, delete account) is under **"Account, alerts & all settings"** at the foot of the left column.
 
-**You need to do one thing for it to be complete:** apply `supabase/migrations/0052_profile_extras.sql` (one new column). Until then the page works but GitHub, other link, languages, address, birthday and some preferences show empty and say they cannot save. Say **"apply 0052"** and I will paste it into the Supabase editor the same way as 0051.
+**Migration 0052 APPLIED 2026-10-11 on the founder's "apply 0052"** (Supabase SQL editor, `Success. No rows returned`). Verified on production: the yellow 'database update' note is gone, and a language added through the Languages panel saved and showed after reload (then removed again). Nothing is left for you to do for this page except the résumé-entry check below.
 
 **Check once:** Profile → Work Experience. Your older résumé was read by an older reader, so a couple of entries show a company name in the wrong place (e.g. "Go-to-Market & Growth … Bangalore" under Mind Customs). Click the pencil on those to fix them — or upload the résumé again.
 
