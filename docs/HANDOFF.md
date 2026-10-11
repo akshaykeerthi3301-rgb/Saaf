@@ -2,16 +2,16 @@
 
 ---
 
-## 🔶 2026-10-12 — extension 0.9.0: the icon now opens the panel; two requested pieces are BLOCKED and need your decision
+## ✅🔶 2026-10-12 — extension 0.10.0: Apply on this page, and the email-only sign-in helper
 
-**Founder said:** the extension "drops down from the icon" instead of floating on the right like Jobright's; and "after I gave all the information and clicked apply, nothing happened — no autofill, no login/password creation, no submit". **Measured causes:** (1) the icon opened a drop-down popup and never touched the in-page panel; (2) the popup's **Start applying** was disabled unless "Apply for me" was on AND the queue (filled only from Jobinko's job list) was non-empty — a dead button on a single job page; (3) no apply-to-THIS-page action, no account-wall help. NOT the cause: the panel does appear on the real Veeva Lever form (verified).
+**Built on the founder's decision** (after the first attempts were blocked, he said: "Build the Apply button and use the safer email-only login helper"):
+- **Apply on this page** (panel button, with a confirmation that says what it will and will not do). It fills the form from the person's own saved details and presses Submit **only when every required answer is filled**; it stops, and leaves the page to the person, at a CAPTCHA, a question it has no answer for, or a required file it lacks; "Applied" is shown only when the employer's page confirms it; the tab is never closed; the daily cap (25), the remote kill switch and the supported-sites rule apply; an applied job is filed on the tracker straight away. Same rules as "Apply for me" (`autoapply.js`), unchanged.
+- **Sign-in / create-account helper (email only).** On a page with a password box the panel offers **Fill my email**; it writes the Jobinko email, puts the cursor in the password box, and leaves the password to Chrome's own password manager. **It never creates, reads or stores a password** (tests assert the password box stays empty).
+- Icon opens the panel (0.9.0), settings page behind the ⚙.
 
-**Done in 0.9.0 (verified in a real Chromium):** on a page the panel runs on, the toolbar popup is switched off for that tab, so a click toggles the panel (collapses/opens, page margin follows); a ⚙ in the panel opens a real **settings page** (`options.html`, the old popup form moved there); on any other site the icon still shows a small popup ("this site isn't supported — ask for it", account status, Settings). The worker already has `saaf:autoapply-here` (apply to the page you are on: same daily cap, kill switch, supported-sites rule as the queue; never closes your tab) — **no button uses it yet**.
-
-**BLOCKED by the tool's safety checks (not retried, not worked around) — need your explicit go:**
-1. **"Apply on this page" button** (fills, presses Submit only when every required answer is filled, stops at CAPTCHA / unknown question / missing file, "applied" only on the employer's confirmation — all existing `autoapply.js` rules). The edit that adds the button was denied without a reason.
-2. **Account-wall help** (sign-in / create-account on sites like Workday): a version that generates a password and stores it in the extension was denied as persistence. A safer variant needs no stored password: fill your Jobinko email and move to the password box so Chrome's own "suggest strong password" and password manager do the rest. Say which you want.
-**To unblock:** add a permission rule for these edits in your Claude Code settings, or tell me to take the safer variant for (2) and how you want (1) handled. Tests: `scripts/extension-e2e` (own package: `npm install` there; `node icon-toggle.mjs`, `node e2e.mjs`, then `node cleanup.mjs`).
+**Checked in a real Chromium** (`scripts/extension-e2e/apply-here.mjs`): easy form → filled, submitted, thank-you page confirmed, panel "✓ Applied", tracker row Applied; form with an unanswerable required question → nothing submitted, reason shown; login page → email written, password empty, cursor in the password box. All test rows removed afterwards.
+**Not checked:** a real company's form (Workday, Greenhouse, Lever) — the first real application is yours to watch; sites that need email verification or a CAPTCHA stop by design.
+**Please:** remove the old extension build, download 0.10.0 from the Profile banner, and try a real posting you actually want. Fill in phone, LinkedIn and notice period first — without them the form is filled thinly.
 
 ---
 

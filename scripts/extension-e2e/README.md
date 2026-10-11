@@ -18,3 +18,9 @@ saved-résumé count first — the library caps at ten (the primary one is never
 
 Why Playwright's Chromium: Chrome 137+ removed `--load-extension` from branded builds. Why a mock page: real application
 forms are other companies' pages; the mock mirrors the shapes the filler handles (required text, file, select, radio group).
+
+## What each script checks
+- `e2e.mjs` — connect → match → Autofill → Save → Tailor → re-attach (writes a tracker row and a "Tailored — … Acme Robotics" résumé; `cleanup.mjs` removes them).
+- `icon-toggle.mjs` — the toolbar icon toggles the panel, the ⚙ opens settings, an unsupported site gets the ordinary popup.
+- `apply-here.mjs` — **A** an easy form is filled, submitted and confirmed (panel says Applied; tracker row is Applied); **B** a form with a required question the extension cannot answer is NOT submitted and says why; **C** a sign-in page gets the email only — the password box stays empty.
+- `real-lever.mjs` — loads a real public Lever application form and checks the panel appears (read-only; fills nothing).

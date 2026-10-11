@@ -107,6 +107,7 @@ function mount() {
       <div class="scroll">
         <section id="account"></section>
         <section id="support"></section>
+        <section id="wall"></section>
         <section id="match"><div class="muted">Scoring this posting…</div></section>
         <section id="actions"></section>
         <section id="tailored"></section>
@@ -230,6 +231,8 @@ function mountActions(root, job, state) {
   actions.innerHTML = `
     <button class="btn primary" id="go" disabled>⚡ Autofill</button>
     <div class="note" id="gonote"></div>
+    <button class="btn" id="apply" style="margin-top:8px" disabled>Apply on this page</button>
+    <div id="applybox"></div>
     <details class="box info" id="info" style="margin-top:10px"><summary>Your autofill information</summary><div id="infobody" class="muted"></div></details>
     <div class="box" id="resumerow" style="margin-top:8px">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Résumé</b><span class="muted" id="rname"></span></div>
@@ -245,8 +248,11 @@ function mountActions(root, job, state) {
   const tailorBtn = root.getElementById('tailor')
   const tailored = root.getElementById('tailored')
 
+  const applyBtn = root.getElementById('apply')
   const setSupport = () => {
     const ok = hasForm()
+    applyBtn.disabled = state.running || !(ok || globalThis.SaafAutoApply.findApplyEntry(doc))
+    renderWall(root, state)
     supportEl.innerHTML = `<div class="support ${ok ? '' : 'off'}"><span class="dot"></span>${ok ? `Autofill supported${job.atsPlatform ? ' · ' + esc(job.atsPlatform) : ''}` : 'No application form on this page yet — press Apply on the posting'}</div>`
     go.disabled = !ok || state.running
   }
@@ -396,6 +402,34 @@ function mountActions(root, job, state) {
     if (res.filled.length) { await save(job, 'applying'); showSaved() }
   })
 
+  // Apply on this page — fills, checks, and presses Submit only when everything required is answered from the person's
+  // own details. Their press is the consent for THIS application; the rules (autoapply.js) do not change: no CAPTCHAs,
+  // no guessing, "applied" only when the employer's page confirms it.
+  const applybox = root.getElementById('applybox')
+  applyBtn.addEventListener('click', () => {
+    applybox.innerHTML = `<div class="box" style="margin-top:8px"><b>Apply on this page?</b>
+      <div class="muted" style="margin:4px 0 8px">Jobinko fills this form from your saved details and presses Submit — but only when every required answer is filled. It stops, and leaves the page to you, at a CAPTCHA, at a question it has no answer for, or at a required file it does not have. It counts the application as sent only when the employer’s page confirms it. Up to 25 a day.</div>
+      <div class="row"><button class="btn primary" id="applyyes">Fill &amp; submit</button><button class="btn" id="applyno">Cancel</button></div></div>`
+    root.getElementById('applyno').addEventListener('click', () => { applybox.innerHTML = '' })
+    root.getElementById('applyyes').addEventListener('click', async () => {
+      applybox.innerHTML = '<div class="box muted" style="margin-top:8px">Applying… keep this tab open.</div>'
+      state.running = true; setSupport(); go.disabled = true
+      // Fresh profile and résumé from the account first, then register this tab as the one application running.
+      await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pk }).catch(() => null)
+      const ok = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-here', job: { url: job.pageUrl, title: job.title, company: job.company } }).catch(() => null)
+      if (!ok?.ok) {
+        state.running = false; setSupport(); go.disabled = !hasForm()
+        applybox.innerHTML = `<div class="box" style="margin-top:8px">${esc(ok?.error || 'Could not start.')}</div>`
+        return
+      }
+      const out = await autoApplyIfAssigned()
+      state.running = false; setSupport(); go.disabled = !hasForm()
+      renderApplyResult(root, out)
+      applybox.innerHTML = ''
+      refreshDashboard()
+    })
+  })
+
   if (hasForm()) return
   const obs = new MutationObserver(() => { if (hasForm()) { setSupport(); refreshDashboard() } })
   obs.observe(doc.body, { childList: true, subtree: true })
@@ -409,38 +443,76 @@ function mountActions(root, job, state) {
  */
 async function autoApplyIfAssigned() {
   const state = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-state' }).catch(() => null)
-  if (!state) return false
-  const report = (status, reason, coverage) => chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status, reason, coverage })
+  if (!state) return null
+  const here = !!state.here
+  const report = async (status, reason, coverage) => {
+    await chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status, reason, coverage })
+    return { here, status, reason, coverage }
+  }
   const A = globalThis.SaafAutoApply
 
   if (state.phase === 'await-confirm') {
     for (let i = 0; i < 20; i++) {
-      if (A.confirmationSeen(document)) { await report('submitted', 'The employer’s page confirmed it'); return true }
+      if (A.confirmationSeen(document)) return report('submitted', 'The employer’s page confirmed it')
       await new Promise((r) => setTimeout(r, 500))
     }
-    await report('unconfirmed', 'Submitted, but the next page showed no confirmation — check this tab')
-    return true
+    return report('unconfirmed', 'Submitted, but the next page showed no confirmation — check this tab')
   }
 
   const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
-  if (!profile?.fullName) { await report('needs-you', 'Add your details in the Jobinko extension first'); return true }
+  if (!profile?.fullName) return report('needs-you', 'Add your details in the Jobinko extension first')
   const beforeSubmit = () => chrome.runtime.sendMessage({ type: 'saaf:autoapply-phase', phase: 'await-confirm' })
-  let r = await A.run(document, profile, { resumeFile, beforeSubmit })
+  // A person who pressed Apply may use any answer they saved; a queued background run uses only those they marked for it.
+  const mode = here ? 'manual' : 'auto'
+  let r = await A.run(document, profile, { resumeFile, beforeSubmit, mode })
   if (r.status === 'open-form') {
     // Same-page forms appear a beat after the Apply button; a navigating one reloads this script.
     await new Promise((res) => setTimeout(res, 3000))
-    r = await A.run(document, profile, { resumeFile, beforeSubmit })
+    r = await A.run(document, profile, { resumeFile, beforeSubmit, mode })
     if (r.status === 'open-form') r = { status: 'needs-you', reason: 'Could not reach the application form' }
   }
   if (r.unanswered?.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: r.unanswered })
-  await report(r.status, r.reason, r.coverage)
-  return true
+  return report(r.status, r.reason, r.coverage)
+}
+
+/** What happened when the person pressed "Apply on this page", in plain words. */
+function renderApplyResult(root, out) {
+  const el = root.getElementById('report')
+  if (!out) { el.innerHTML = ''; return }
+  const head = { submitted: '✓ Applied', unconfirmed: 'Check this tab', 'needs-you': 'Needs you' }[out.status] ?? out.status
+  const cov = out.coverage ? `<div class="muted" style="margin-top:4px">${esc(out.coverage.percent)}% of required fields answered${out.coverage.missing?.length ? ` · missing: ${esc(out.coverage.missing.slice(0, 4).join('; '))}` : ''}</div>` : ''
+  el.innerHTML = `<div class="box report"><b>${esc(head)}</b><div>${esc(out.reason)}</div>${cov}${out.status === 'submitted' ? '' : '<div class="muted" style="margin-top:6px">Nothing was submitted unless it says Applied. The page is yours — finish it by hand.</div>'}</div>`
+}
+
+/**
+ * The account wall (account.js): a sign-in or create-account form. The panel offers to write the person's EMAIL and leave
+ * the password to the browser — it never creates, reads or stores one.
+ */
+function renderWall(root, state) {
+  const el = root.getElementById('wall')
+  const K = globalThis.SaafAccount
+  const kind = K?.kind(document)
+  if (!kind) { el.innerHTML = ''; return }
+  el.innerHTML = `<div class="box"><h3>${kind === 'signup' ? 'This site wants you to create an account' : 'This site wants you to sign in'}</h3>
+    <div class="muted">Jobinko fills your email and leaves the password to you. ${kind === 'signup' ? 'Click the password box and Chrome offers a strong one and remembers it.' : 'Click the password box and Chrome offers the one it saved.'} Jobinko never sees, makes or stores a password.</div>
+    <button class="btn" id="wallemail" style="margin-top:8px">Fill my email</button><div class="note" id="wallnote"></div></div>`
+  root.getElementById('wallemail').addEventListener('click', async () => {
+    const { profile } = await chrome.storage.local.get('profile')
+    const email = profile?.email || state.account?.email
+    const note = root.getElementById('wallnote')
+    if (!email) { note.textContent = 'No email on file — sign in to Jobinko first.'; return }
+    const r = K.fillEmail(document, email)
+    note.textContent = !r.hadEmailBox ? 'Could not find the email box on this form.' : r.filled ? 'Email filled. Now click the password box, then press the site’s own button.' : 'The email box already has something in it, so it was left alone.'
+  })
 }
 
 ;(async function run() {
-  if (await autoApplyIfAssigned()) return
+  const applied = await autoApplyIfAssigned()
+  if (applied && !applied.here) return
   const job = globalThis.SaafExtract.extractJob(document, location)
-  if (job.description.length < globalThis.SaafExtract.MIN_JD_CHARS) return
+  // A confirmation page is short: when the person applied from the panel, still show the panel with what happened.
+  const noPosting = job.description.length < globalThis.SaafExtract.MIN_JD_CHARS
+  if (noPosting && !applied) return
   const root = mount()
   const state = {
     signedIn: null, account: null, resumeFile: null, error: '',
@@ -458,8 +530,10 @@ async function autoApplyIfAssigned() {
   }
   renderAccount(root, state)
   mountActions(root, job, state)
+  if (applied) renderApplyResult(root, applied) // the page reloaded after Submit: show what the employer said
   // Connect first so the score below uses the account's current résumé.
   await state.reconnect()
+  if (noPosting) { root.getElementById('match').innerHTML = ''; return }
   chrome.runtime.sendMessage(
     { type: 'saaf:score', jdText: job.description, jdTitle: job.title, jdLocation: job.location },
     (data) => renderMatch(root, job, data),

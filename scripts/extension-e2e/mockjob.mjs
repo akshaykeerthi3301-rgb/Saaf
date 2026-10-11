@@ -27,7 +27,23 @@ const applyOnly = `<!doctype html><html><head><meta charset="utf-8"><title>Acme 
 <label for="co">Current company</label><input id="co" name="org">
 <label for="li">LinkedIn URL</label><input id="li" name="urls[LinkedIn]">
 <button type="submit" onclick="return false">Submit application</button></form></body></html>`
+const para = 'Customer Success Manager at Acme Robotics. You will own a book of enterprise accounts, drive adoption and renewals, run quarterly business reviews and partner with sales. We are looking for 3+ years of experience in customer success or account management, strong stakeholder management and excellent communication, based in Bengaluru.'
+const head = (t) => `<!doctype html><html><head><meta charset="utf-8"><title>${t}</title><style>body{font:16px sans-serif;max-width:640px;margin:30px auto;padding:0 20px}label{display:block;margin-top:12px;font-weight:600}input,select,textarea{width:100%;padding:8px}</style></head><body>`
+// An easy form: everything required is something the extension can answer. Submitting goes to the thank-you page.
+const easyJob = `${head('Customer Success Manager – Acme')}<h1>Customer Success Manager</h1><p>Acme Robotics · Bengaluru</p><p>${para}</p>
+<form action="/thanks" method="get"><h2>Apply</h2>
+<label for="fn">Full name *</label><input id="fn" name="name" required>
+<label for="em">Email *</label><input id="em" type="email" name="email" required>
+<label for="ph">Phone</label><input id="ph" type="tel" name="phone">
+<label for="rs">Resume/CV *</label><input id="rs" type="file" name="resume" required>
+<button type="submit">Submit application</button></form></body></html>`
+// A form with a required free-text question: the extension has no answer, so it must stop and submit NOTHING.
+const hardJob = easyJob.replace('<label for="rs">','<label for="why">Why do you want to work here? *</label><textarea id="why" name="why" required></textarea><label for="rs">').replace('action="/thanks"','action="/WRONG-submitted"')
+const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
+const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
+<form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
+<label for="lp">Password *</label><input id="lp" type="password" name="password" autocomplete="current-password"><button type="submit" onclick="return false">Sign in</button></form></body></html>`
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html'); s.end(q.url.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' ? easyJob : p === '/hard/job' ? hardJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

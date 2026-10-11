@@ -807,6 +807,6 @@
 
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist,
+    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

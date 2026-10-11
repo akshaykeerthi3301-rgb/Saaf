@@ -555,6 +555,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const count = autoApplyDay.date === today() ? autoApplyDay.count : 0
         await chrome.storage.local.set({ autoApplyDay: { date: today(), count: count + 1 } })
         await queueForTracker(job, 'applied', 'apply-for-me')
+        // Applied from the panel: file it on the tracker now (the queue above stays as the fallback; the same page never files twice).
+        if (autoApplyActive.here) {
+          api('/api/extension/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: job.url, title: job.title, company: job.company, status: 'applied' }) }).catch(() => {})
+        }
         // A queue run owns its background tab and closes it; an application the person started on their own tab stays open.
         if (!autoApplyActive.here) setTimeout(() => chrome.tabs.remove(sender.tab.id).catch(() => {}), 3000)
       } else {

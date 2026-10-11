@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jobinko — score any job posting",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Score any job posting against your resume, see the missing keywords, fill the application form, apply for you when you turn it on, and track it in Jobinko. Reads only the page you are on.",
   "permissions": [
     "storage",
@@ -87,6 +87,7 @@
         "extractor.js",
         "autofill.js",
         "autoapply.js",
+        "account.js",
         "content-script.js"
       ],
       "run_at": "document_idle"
