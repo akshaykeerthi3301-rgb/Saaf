@@ -596,6 +596,7 @@
 
     const groups = new Map()
     for (const el of all) {
+      if (opts.shouldStop?.()) break // the person pressed Cancel: keep what is filled, stop writing
       if (el.disabled || el.readOnly) continue
       const tag = (el.tagName || '').toLowerCase()
       const type = (el.type || 'text').toLowerCase()
@@ -692,6 +693,7 @@
 
     // ---- radio and tick-box groups.
     for (const els of groups.values()) {
+      if (opts.shouldStop?.()) break
       const first = els[0]
       const isRadio = (first.type || '').toLowerCase() === 'radio'
       if (els.some((e) => e.checked)) { out.skipped++; continue }

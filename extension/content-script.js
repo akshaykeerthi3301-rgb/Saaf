@@ -86,6 +86,8 @@ const STYLE = `
   .report li { margin: 2px 0 }
   .report .ok { color: var(--fg) }
   .note { font-size: 11px; color: var(--muted); margin-top: 6px }
+  summary { cursor: pointer; font-weight: 700; font-size: 12px }
+  details.info summary { color: var(--fg) }
   a { color: var(--accent); text-decoration: none }
   .tab { all: unset; cursor: pointer; position: fixed; right: 0; top: 40%; z-index: 1; padding: 12px 8px; border-radius: 12px 0 0 12px; writing-mode: vertical-rl;
     font: 700 12px -apple-system, sans-serif; color: #fff; background: linear-gradient(135deg, oklch(0.585 0.233 277.117), oklch(0.558 0.288 302.321)); box-shadow: -4px 0 18px oklch(0 0 0 / 35%) }
@@ -193,13 +195,18 @@ const save = (job, status) => chrome.runtime.sendMessage({
   item: { url: job.pageUrl, title: job.title || 'Untitled role', company: job.company || new URL(job.pageUrl).hostname, ats: job.atsPlatform, status },
 })
 
-/** "Autofill" button, the completion bar and the required list — the panel's working half. */
+/**
+ * The panel's working half, laid out like the reference's: Autofill, then what it fills with ("Your autofill information"),
+ * the résumé it will attach (with Tailor beside it), Save job, and — as it runs — live progress with the page's own
+ * Required and Optional fields, each ticked as it is filled, collapsing to "6/6 required fields filled" when done.
+ */
 function mountActions(root, job, state) {
   const doc = document
   const A = globalThis.SaafAutofill
   const actions = root.getElementById('actions')
   const dash = root.getElementById('dash')
   const report = root.getElementById('report')
+  const pk = pageKey(job.pageUrl)
   /**
    * ⚠️ THE FORM OFTEN ARRIVES AFTER THE PANEL. Greenhouse renders the application below the description, Lever puts it
    * on a separate /apply URL, and several ATS front ends mount it client-side a beat later. So the Autofill button
@@ -212,28 +219,46 @@ function mountActions(root, job, state) {
   actions.innerHTML = `
     <button class="btn primary" id="go" disabled>⚡ Autofill</button>
     <div class="note" id="gonote"></div>
-    <div class="row"><button class="btn" id="save">Save job</button><button class="btn" id="tailor">Tailor résumé</button></div>
+    <details class="box info" id="info" style="margin-top:10px"><summary>Your autofill information</summary><div id="infobody" class="muted"></div></details>
+    <div class="box" id="resumerow" style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Résumé</b><span class="muted" id="rname"></span></div>
+      <button class="btn" id="tailor" style="margin-top:8px">✦ Tailor résumé for this job</button>
+    </div>
+    <button class="btn" id="save" style="margin-top:8px">Save job</button>
     <div class="note" id="savenote"></div>`
   const go = root.getElementById('go')
   const gonote = root.getElementById('gonote')
   const supportEl = root.getElementById('support')
+  const saveBtn = root.getElementById('save')
+  const saveNote = root.getElementById('savenote')
+  const tailorBtn = root.getElementById('tailor')
+  const tailored = root.getElementById('tailored')
 
   const setSupport = () => {
     const ok = hasForm()
     supportEl.innerHTML = `<div class="support ${ok ? '' : 'off'}"><span class="dot"></span>${ok ? `Autofill supported${job.atsPlatform ? ' · ' + esc(job.atsPlatform) : ''}` : 'No application form on this page yet — press Apply on the posting'}</div>`
-    go.disabled = !ok
-    gonote.textContent = ok ? '' : ''
+    go.disabled = !ok || state.running
   }
   setSupport()
 
+  // Résumé row: which file will be attached.
+  state.drawResume = () => { root.getElementById('rname').textContent = state.resumeFile ? `${state.resumeFile.tailored ? 'Tailored · ' : ''}${state.resumeFile.name}` : 'none yet' }
+  state.drawResume()
+
+  // "Your autofill information": exactly what the filler will type, so nothing is a surprise.
+  const LABELS = { fullName: 'Full name', email: 'Email', phone: 'Phone', city: 'City', currentTitle: 'Current title', currentEmployer: 'Current employer', yearsExperience: 'Years of experience', noticePeriod: 'Notice period', workAuth: 'Work authorisation', linkedin: 'LinkedIn', portfolio: 'Portfolio' }
+  root.getElementById('info').addEventListener('toggle', async (e) => {
+    if (!e.currentTarget.open) return
+    const { profile = {} } = await chrome.storage.local.get('profile')
+    const rows = Object.entries(LABELS).map(([k, label]) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--line)"><span>${label}</span><span style="color:var(--fg);text-align:right;overflow-wrap:anywhere">${esc(profile[k]) || '—'}</span></div>`).join('')
+    root.getElementById('infobody').innerHTML = `<div style="margin-top:6px">${rows}</div><div class="note">Kept in this browser; synced from your Jobinko profile. <a href="${SITE}/profile" target="_blank" rel="noopener">Edit on Jobinko</a></div>`
+  })
+
   // Save job — straight onto the tracker; falls back to a queue when signed out.
-  const saveBtn = root.getElementById('save')
-  const saveNote = root.getElementById('savenote')
   async function showSaved() {
     const { tracked = [], pendingTrack = [] } = await chrome.storage.local.get(['tracked', 'pendingTrack'])
-    const key = pageKey(job.pageUrl)
-    const on = tracked.find((t) => pageKey(t.url) === key)
-    const queued = pendingTrack.find((t) => pageKey(t.url) === key)
+    const on = tracked.find((t) => pageKey(t.url) === pk)
+    const queued = pendingTrack.find((t) => pageKey(t.url) === pk)
     if (on) { saveBtn.textContent = `✓ ${STAGE_LABEL[on.status] ?? on.status}`; saveNote.innerHTML = `On your Jobinko tracker · <a href="${SITE}/applications" target="_blank" rel="noopener">open it</a>` }
     else if (queued) { saveBtn.textContent = '✓ Saved'; saveNote.innerHTML = `Not signed in — it goes on your tracker next time Jobinko is open. <a href="${SITE}/applications" target="_blank" rel="noopener">Open Jobinko</a>` }
     else { saveBtn.textContent = 'Save job'; saveNote.textContent = '' }
@@ -251,9 +276,6 @@ function mountActions(root, job, state) {
 
   // Tailor — rewrites your résumé for THIS posting on Jobinko (same engine and honesty guard as the website), keeps it as a
   // saved résumé, and attaches exactly that file on this application.
-  const tailorBtn = root.getElementById('tailor')
-  const tailored = root.getElementById('tailored')
-  const pk = pageKey(job.pageUrl)
   function drawTailored(t) {
     if (!t) { tailored.innerHTML = ''; return }
     const sc = t.scores?.before != null && t.scores?.after != null ? `Match ${esc(t.scores.before)} → <b>${esc(t.scores.after)}</b> · ` : ''
@@ -271,58 +293,78 @@ function mountActions(root, job, state) {
   state.drawTailored = drawTailored
   tailorBtn.addEventListener('click', async () => {
     tailorBtn.disabled = true
-    tailorBtn.textContent = 'Tailoring…'
-    saveNote.textContent = 'Rewriting your résumé for this posting — this takes about 20 seconds.'
+    tailorBtn.textContent = 'Tailoring… about 20 seconds'
     const r = await chrome.runtime.sendMessage({ type: 'jx:tailor', pageKey: pk, jdText: job.description, jdTitle: job.title, company: job.company }).catch(() => null)
     tailorBtn.disabled = false
-    tailorBtn.textContent = 'Tailor résumé'
-    showSaved()
+    tailorBtn.textContent = '✦ Tailor résumé for this job'
     if (r?.signedIn === false) { state.signedIn = false; renderAccount(root, state); return }
     if (!r?.ok) { tailored.innerHTML = `<div class="box">${esc(r?.error || 'Could not tailor it just now.')}</div>`; return }
     state.resumeFile = r.file ? { name: r.file.name, tailored: true } : state.resumeFile
     renderAccount(root, state)
+    state.drawResume()
     drawTailored(r)
   })
 
-  // The completion bar and the required list, drawn from the page's own marks.
+  // The Required and Optional lists, drawn from the page's own marks, ticked live while Autofill runs.
+  const row = (i, n) => `<li class="${i.done ? 'done' : ''}" data-n="${n}"><span class="tick">✓</span><span>${esc(i.label)}</span></li>`
+  let shown = []
   function drawDashboard() {
     const c = A.checklist(doc)
+    shown = c.items
     if (!c.items.length) { dash.innerHTML = ''; return c }
+    const counted = c.counted
     const pct = c.required ? Math.round((c.done / c.required) * 100) : 0
-    const rows = c.counted.map((i, n) => `<li class="${i.done ? 'done' : ''}" data-n="${n}"><span class="tick">✓</span><span>${esc(i.label)}</span></li>`).join('')
-    dash.innerHTML = `<div class="box"><h3>Application dashboard</h3>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span class="muted">Completion</span><span class="pct">${pct}%</span></div>
-      <div class="bar"><i style="width:${pct}%"></i></div>
-      <div class="muted" style="margin-top:10px">${c.counted.some((i) => i.required) ? 'Required' : 'Fields'} · ${c.done} of ${c.required} done</div>
-      <ul class="list">${rows}</ul></div>`
+    const hasReq = c.items.some((i) => i.required)
+    const head = state.running
+      ? `<div style="display:flex;justify-content:space-between;align-items:baseline"><b>Autofilling…</b><span class="pct">${pct}%</span><button class="x" id="cancel" style="font-size:12px;text-decoration:underline">Cancel</button></div>`
+      : `<div style="display:flex;justify-content:space-between;align-items:baseline"><b>${c.done}/${c.required} ${hasReq ? 'required ' : ''}fields filled</b><span class="pct">${pct}%</span></div>`
+    const req = c.items.map((i, n) => [i, n]).filter(([i]) => i.required)
+    const opt = c.items.map((i, n) => [i, n]).filter(([i]) => !i.required)
+    const list = (title, rows) => rows.length ? `<div class="muted" style="margin-top:10px;font-weight:700">${title}</div><ul class="list">${rows.map(([i, n]) => row(i, n)).join('')}</ul>` : ''
+    dash.innerHTML = `<div class="box"><h3>Application dashboard</h3>${head}<div class="bar" style="margin-top:6px"><i style="width:${pct}%"></i></div>
+      <details ${state.running || !state.collapsed ? 'open' : ''} id="dlist"><summary class="muted" style="cursor:pointer;margin-top:8px">${state.running ? 'Fields' : 'Show fields'}</summary>${list('Required', req)}${list(hasReq ? 'Optional' : 'Fields', opt.length || !hasReq ? opt : [])}</details></div>`
+    void counted
     dash.querySelectorAll('li').forEach((li) => li.addEventListener('click', () => {
-      const el = c.counted[Number(li.dataset.n)]?.el
+      const el = shown[Number(li.dataset.n)]?.el
       if (!el) return
       el.scrollIntoView({ block: 'center', behavior: 'smooth' })
       try { el.focus({ preventScroll: true }) } catch { /* not focusable */ }
     }))
+    root.getElementById('cancel')?.addEventListener('click', () => { state.cancel = true })
+    root.getElementById('dlist')?.addEventListener('toggle', (e) => { state.collapsed = !e.currentTarget.open })
     return c
   }
-  const refreshDashboard = () => { if (hasForm()) drawDashboard(); else dash.innerHTML = '' }
+  const refreshDashboard = () => { if (hasForm() && !state.running) drawDashboard(); else if (!hasForm()) dash.innerHTML = '' }
   refreshDashboard()
   // The person types answers themselves too; keep the bar honest (cheap: only while a form exists).
   doc.addEventListener('input', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
   doc.addEventListener('change', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
 
   go.addEventListener('click', async () => {
+    state.running = true; state.cancel = false; state.collapsed = false
     go.disabled = true
     go.textContent = 'Autofilling…'
     report.innerHTML = ''
     // Bring the profile, answers and résumé file up to date from the account, then fill.
     const conn = await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pk }).catch(() => null)
-    if (conn) { state.signedIn = conn.signedIn; state.account = conn.account; state.resumeFile = conn.resumeFile; renderAccount(root, state) }
+    if (conn) { state.signedIn = conn.signedIn; state.account = conn.account; state.resumeFile = conn.resumeFile; renderAccount(root, state); state.drawResume() }
     const { profile, resumeFile } = await chrome.storage.local.get(['profile', 'resumeFile'])
     if (!profile || !profile.fullName) {
+      state.running = false
       report.innerHTML = '<div class="box report">We have no details to fill with yet. Sign in to Jobinko and finish your profile — or open Jobinko once while signed in and they sync.</div>'
       go.textContent = '⚡ Autofill'; go.disabled = !hasForm()
       return
     }
-    const res = await A.fillForm(profile, doc, { resumeFile, replaceResumeNamed: state.attachedName })
+    // Live progress: redraw the lists from the page's own state while the filler works.
+    drawDashboard()
+    const tick = setInterval(drawDashboard, 150)
+    let res
+    try {
+      res = await A.fillForm(profile, doc, { resumeFile, replaceResumeNamed: state.attachedName, shouldStop: () => state.cancel })
+    } finally {
+      clearInterval(tick)
+      state.running = false
+    }
     const att = res.filled.find((f) => f.how === 'attached')
     if (att) state.attachedName = att.value
     if (res.unanswered.length) chrome.runtime.sendMessage({ type: 'saaf:questions', items: res.unanswered })
@@ -330,12 +372,13 @@ function mountActions(root, job, state) {
     const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
     const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
     report.innerHTML = `<div class="box report">
-      <b>Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
+      <b>${state.cancel ? 'Stopped. ' : ''}Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
       ${picks ? `<ul>${picks}</ul>` : ''}
       ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
       ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Write ${res.unanswered.length === 1 ? 'it' : 'each'} once in Jobinko → Profile → Templates, and it is filled next time it is asked.</div>` : ''}</div>`
     go.textContent = 'Autofill again'
     go.disabled = false
+    state.collapsed = !state.cancel // like the reference: finish → collapse to the summary line
     drawDashboard()
     // Filling a form is the candidate applying, so the role goes on the tracker as Applying. It never reaches Applied
     // from here: we cannot see whether they pressed Submit, and saying they did would be a guess.
@@ -397,6 +440,7 @@ async function autoApplyIfAssigned() {
       state.account = r?.account ?? null
       state.resumeFile = r?.resumeFile ?? null
       state.drawTailored?.(r?.tailored ?? null)
+      state.drawResume?.()
       state.error = r?.error || (r ? '' : 'Could not reach Jobinko.')
       renderAccount(root, state)
     },
