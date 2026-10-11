@@ -99,3 +99,4 @@ bench/corpus/samples/
 # over-broad `git add -A` on 2026-09-15.
 .tmp-key/
 .tmp-probe/
+scripts/extension-e2e/shots/

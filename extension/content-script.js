@@ -29,10 +29,12 @@ const STAGE_LABEL = { saved: 'Saved', applying: 'Applying', applied: 'Applied', 
 const STYLE = `
   :host { all: initial }
   * { box-sizing: border-box }
+  /* Colours shared by the panel and the pop-ups. LAYOUT must NOT be shared: the pop-up once inherited the panel's 380px width. */
   .panel, .afm { --bg: oklch(0.205 0.006 285.885); --fg: oklch(0.985 0 0); --muted: oklch(0.705 0.015 286.067);
     --line: oklch(1 0 0 / 10%); --chip: oklch(0.274 0.006 286.033); --brand: oklch(0.585 0.233 277.117);
     --brand-2: oklch(0.558 0.288 302.321); --accent: oklch(0.673 0.182 276.935);
-    --high: oklch(0.765 0.177 163.223); --mid: oklch(0.828 0.189 84.429); --low: oklch(0.704 0.191 22.216);
+    --high: oklch(0.765 0.177 163.223); --mid: oklch(0.828 0.189 84.429); --low: oklch(0.704 0.191 22.216); }
+  .panel {
     position: fixed; top: 0; right: 0; height: 100vh; width: 380px; max-width: 94vw; display: flex; flex-direction: column;
     font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg); background: var(--bg);
     border-left: 1px solid var(--line); box-shadow: -12px 0 40px oklch(0 0 0 / 40%) }

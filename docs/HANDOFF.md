@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 (fix) — extension 0.18.1: the pop-ups were drawn off-screen; fixed
+
+**What was wrong:** since 0.16.0 every pop-up (Your autofill information, résumé picker, cover letter) opened as a narrow strip pushed off the left edge — my error: a style rule gave them the panel's width. **Fixed in 0.18.1.** Measured against the screen with the panel on the right and on the left, at two screen sizes, and on the real Alteryx Create Account page; screenshots read.
+**You need to:** download 0.18.1, replace the folder, reload it on chrome://extensions, then press Autofill on the Alteryx job: a centred pop-up 'Your Autofill information' on Sign-up Information should appear. If anything still looks wrong, send a screenshot — it is measurable now.
+
+---
+
 ## 🔶 2026-10-12 (final) — extension 0.18.0: editable pop-up, cover letters
 
 **New:** **Your autofill information** — every tab is now editable with its own **Update**: Personal, Education (add / remove, GPA, major), Work Experience (job type, summary), Skills (chips), Equal Employment (tap to pick / Decline), Preference (pay, and **Anything else we should know?**). Saves go to the same place the Profile page saves. **Cover letter** row under Résumé: **✦ Generate cover letter** writes one from the job on screen (checked against your profile); read it, change it, fill any [Blank], press **Use this letter**. From then on Autofill types it into a cover-letter box or attaches it to a cover-letter upload on that application. **Download** gives a Word file.

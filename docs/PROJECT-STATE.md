@@ -3271,3 +3271,9 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Decisions.** (1) The extension edits through a GATE in front of the website's actions, not new write logic — one set of rules; a bug fixed on the Profile page is fixed in the pop-up. (2) A letter with an unfilled [Blank] is never usable: the panel names the blank and keeps 'Use this letter' off. (3) A letter reaches a form only after the person pressed 'Use this letter' for that page; an unapproved draft never does. (4) The pop-up's saves were not exercised against the real database in testing (the founder's profile is the real one) — they were stubbed and the exact requests asserted; the actions behind them are the website's. **Lesson:** the first cover-letter draft had `[Role]` and `[Company]` in it — the writer's fallback is a template for a person to fill, and only running it showed that the extension, which knows those facts, has to fill them.
 
 **Built:** see TASK-248.
+
+### Stage BI — the pop-up that opened off-screen (2026-10-12)
+
+**Defect, shipped in 0.16.0–0.18.0 (three releases):** each pop-up inherited the panel's 380 px width through a shared CSS rule, so it was a 380 px strip with a 1,056 px card spilling off the left edge; with Jobright's panel present (ours docks left) the half-hidden card sat on top of the page. Fixed in 0.18.1 (TASK-249). The founder found it; my tests did not, and I had not looked at my own screens.
+
+**Correction (struck through).** ~~'Verified in real Chromium … the pop-up shows your corrected education'~~ — the data was right and the pop-up was unusable; text in a hidden box still passes a text check. **Rule from now on for this extension: a screen is verified when it has been measured against the viewport AND a screenshot of it has been read** — in both dock positions. `popup-visual.mjs` does the first; the second is a person (or me) looking.
