@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 — the founder's "absolute parity" demand on the extension: diagnosed, NOT yet built
+
+**Founder said:** the extension "drops down from the icon" instead of floating on the right like Jobright's; and "after I gave all the information and clicked apply, nothing happened — no autofill, no login/password creation, no submit". **Measured causes (code + real-Chromium runs):** (1) the toolbar icon opens `popup.html` (a drop-down) and never touches the in-page panel; (2) the popup's **Start applying** is disabled unless "Apply for me" is on AND the queue (filled only from Jobinko's job list) is non-empty — a person on one job page gets a dead button; (3) there is no apply-to-THIS-page action and no account-wall (login / create password) helper. NOT the cause: the panel does appear on the real Veeva Lever apply page (verified).
+**Plan (next session, in order):** A. icon click toggles the in-page panel (`chrome.action.setPopup({tabId, popup:''})` on supported tabs, so `onClicked` fires; popup stays only for unsupported sites); move the settings form to an options page behind a gear in the panel. B. an "Apply on this page" action in the panel using the existing `autoapply.js` rules (explicit consent, never past a CAPTCHA, never a guessed answer, confirmation required). C. account-wall assist: fill sign-in from a locally stored credential; on a create-account form generate a strong password, fill it, keep it on this device only (never sent to Jobinko). Tests: extend `scripts/extension-e2e` (now its own package: `npm install` there).
+
+---
+
 ## 🔶 2026-10-11 (late night) — extension 0.8.0: a side panel that uses your Jobinko account
 
 **What changed, in plain words.** The first version could not use your Jobinko login, so it couldn't save a job to your tracker or fetch your résumé, and you had to upload a PDF into it by hand. Version 0.8.0 uses your Jobinko login (the same browser), shows a **side panel** on job pages (match, Autofill, Save job, Tailor résumé, a completion bar and a list of what the form still needs), **attaches your résumé automatically**, and can **tailor your résumé for the job on the page and attach that one**. It is our own code; I did not copy Jobright's.

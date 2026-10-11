@@ -1,0 +1,1 @@
+{ "name": "extension-e2e", "private": true, "type": "module", "description": "Loads the real extension in Chromium and walks the panel. Not part of the app's build.", "dependencies": { "playwright": "1.64.0" } }

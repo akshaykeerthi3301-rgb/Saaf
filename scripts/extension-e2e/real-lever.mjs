@@ -1,0 +1,13 @@
+import { patchedExtension, launch } from './lib.mjs'
+const { context } = await launch(patchedExtension())
+const page = await context.newPage()
+await page.goto('http://localhost:3000/api/dev-signin'); await page.waitForTimeout(6000)
+const lever = await context.newPage()
+await lever.goto('https://jobs.lever.co/veeva/20ac0b20-911a-46b7-a4b6-1399fe293625/apply', { waitUntil: 'domcontentloaded' })
+await lever.waitForTimeout(9000)
+const n = await lever.locator('#saaf-overlay-host').count()
+console.log('panel on the REAL Lever apply page:', n ? 'YES' : 'NO — nothing appears')
+console.log('body text length:', await lever.evaluate(() => document.body.innerText.length), '| job ld+json present:', await lever.evaluate(() => !!document.querySelector('script[type="application/ld+json"]')))
+if (n) console.log((await lever.locator('#account').innerText().catch(()=>'')).replace(/\s+/g,' '))
+await lever.screenshot({ path: 'real-lever.png' })
+await context.close()
