@@ -10,7 +10,7 @@ const tab = () => sw.evaluate(async () => { const [t] = await chrome.tabs.query(
 const popup = async (id) => sw.evaluate((id) => chrome.action.getPopup({ tabId: id }), id)
 const panelOpen = () => job.evaluate(() => !document.querySelector('#saaf-overlay-host').shadowRoot.getElementById('panel').hidden)
 const t1 = await tab()
-console.log('supported page  → popup setting:', JSON.stringify(await popup(t1.id)), '(empty = the icon toggles the panel, no drop-down)')
+console.log('supported page  → popup setting:', JSON.stringify(await popup(t1.id)), '(empty = no drop-down anywhere)')
 console.log('panel open at start:', await panelOpen())
 await sw.evaluate((t) => globalThis.__jxToggle(t), t1); await job.waitForTimeout(500)
 console.log('after icon click #1:', (await panelOpen()) ? 'open' : 'collapsed', '| page margin:', await job.evaluate(() => document.documentElement.style.marginRight || '(none)'))
@@ -24,5 +24,5 @@ console.log('gear opened the settings page:', !!opts, opts ? '| title: ' + (awai
 // a page the panel does not run on gets the ordinary popup back
 await job.goto('https://example.com/', { waitUntil: 'domcontentloaded' }); await job.waitForTimeout(1500)
 const t2 = t1 // same tab, now on a site the panel does not run on
-console.log('unsupported page → popup setting:', JSON.stringify(await popup(t2.id)))
+console.log('any other page → popup setting:', JSON.stringify(await popup(t2.id)), '(empty: the icon injects the panel there too)')
 await context.close(); srv.close()

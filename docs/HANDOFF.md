@@ -2,16 +2,12 @@
 
 ---
 
-## ✅🔶 2026-10-12 — extension 0.10.0: Apply on this page, and the email-only sign-in helper
+## ✅🔶 2026-10-12 (later) — extension 0.11.0: Autofill presses Apply itself, on any job page
 
-**Built on the founder's decision** (after the first attempts were blocked, he said: "Build the Apply button and use the safer email-only login helper"):
-- **Apply on this page** (panel button, with a confirmation that says what it will and will not do). It fills the form from the person's own saved details and presses Submit **only when every required answer is filled**; it stops, and leaves the page to the person, at a CAPTCHA, a question it has no answer for, or a required file it lacks; "Applied" is shown only when the employer's page confirms it; the tab is never closed; the daily cap (25), the remote kill switch and the supported-sites rule apply; an applied job is filed on the tracker straight away. Same rules as "Apply for me" (`autoapply.js`), unchanged.
-- **Sign-in / create-account helper (email only).** On a page with a password box the panel offers **Fill my email**; it writes the Jobinko email, puts the cursor in the password box, and leaves the password to Chrome's own password manager. **It never creates, reads or stores a password** (tests assert the password box stays empty).
-- Icon opens the panel (0.9.0), settings page behind the ⚙.
-
-**Checked in a real Chromium** (`scripts/extension-e2e/apply-here.mjs`): easy form → filled, submitted, thank-you page confirmed, panel "✓ Applied", tracker row Applied; form with an unanswerable required question → nothing submitted, reason shown; login page → email written, password empty, cursor in the password box. All test rows removed afterwards.
-**Not checked:** a real company's form (Workday, Greenhouse, Lever) — the first real application is yours to watch; sites that need email verification or a CAPTCHA stop by design.
-**Please:** remove the old extension build, download 0.10.0 from the Profile banner, and try a real posting you actually want. Fill in phone, LinkedIn and notice period first — without them the form is filled thinly.
+**Founder's test of 0.10.0 on a real posting:** "Autofill is disabled; it tells me to click Apply on the job page. The extension should recognise the page, click Apply on its own, fill the details, and ask me to submit. Jobright and Jobinko are both in the browser." **Root causes (reproduced in his Chrome):** (1) Autofill stayed disabled until a form was already on the page; (2) on an employer's own careers page (Veeva) neither extension shows a panel — it is not on the built-in site list; (3) both panels sat on the right edge.
+**Now (0.11.0, new permission `scripting`):** Autofill is enabled whenever there is a form OR an Apply button it can press; it presses Apply itself, and carries on wherever the form appears — same page, next page, or a **new tab** (a 90-second note in storage hands over); it fills with live progress, then asks **"Ready to submit?"** (Submit application / I'll review first — Submit runs the same checks: nothing required empty, no CAPTCHA, the kill switch, "applied" only on the employer's confirmation). The toolbar icon now opens the panel on **any** web page (not LinkedIn, Naukri or Jobinko) by injecting it on demand — no standing access to every site; it stays with the tab through the application. If another job extension's panel (Jobright) is on the right, ours docks on the **left**.
+**Verified in a real Chromium** (`scripts/extension-e2e`: `autofill-flow.mjs`, `real-veeva.mjs`, plus regression): all five flows pass; the real Veeva → Lever flow fills name, email, phone and company on Lever's real form and stops before Submit (never pressed). **Not verified:** your own Chrome with 0.11.0 (I cannot load it there); Workday-style multi-step applications beyond the first step; sites that need email verification stop by design.
+**You need to:** download 0.11.0 from the Profile banner, replace the folder, press the reload arrow on chrome://extensions (it adds a permission). Then: open a job page, click the Jobinko icon, press Autofill.
 
 ---
 

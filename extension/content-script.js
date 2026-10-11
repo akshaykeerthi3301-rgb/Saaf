@@ -37,6 +37,7 @@ const STYLE = `
     font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg); background: var(--bg);
     border-left: 1px solid var(--line); box-shadow: -12px 0 40px oklch(0 0 0 / 40%) }
   .panel[hidden] { display: none }
+  .panel.left { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--line); box-shadow: 12px 0 40px oklch(0 0 0 / 40%) }
   header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line) }
   .brand { font-weight: 700; font-size: 15px; background: linear-gradient(135deg, var(--accent), var(--brand-2));
     -webkit-background-clip: text; background-clip: text; color: transparent }
@@ -92,6 +93,7 @@ const STYLE = `
   .tab { all: unset; cursor: pointer; position: fixed; right: 0; top: 40%; z-index: 1; padding: 12px 8px; border-radius: 12px 0 0 12px; writing-mode: vertical-rl;
     font: 700 12px -apple-system, sans-serif; color: #fff; background: linear-gradient(135deg, oklch(0.585 0.233 277.117), oklch(0.558 0.288 302.321)); box-shadow: -4px 0 18px oklch(0 0 0 / 35%) }
   .tab[hidden] { display: none }
+  .tab.left { right: auto; left: 0; border-radius: 0 12px 12px 0 }
 `
 
 function mount() {
@@ -118,29 +120,42 @@ function mount() {
   const panel = root.getElementById('panel')
   const tab = root.getElementById('tab')
   /**
-   * The panel makes room instead of covering the form: the page gets a right margin the width of the panel while it is
-   * open, and gives it back when collapsed. (Narrow windows keep the panel on top: a squeezed form is worse than a covered one.)
+   * The panel makes room instead of covering the form: the page gets a margin the width of the panel while it is open and
+   * gives it back when collapsed. (Narrow windows keep the panel on top: a squeezed form is worse than a covered one.)
+   *
+   * ⚠️ TWO JOB EXTENSIONS ON ONE PAGE FIGHT FOR THE RIGHT EDGE. The founder runs Jobright and Jobinko side by side, and a
+   * second panel on the same edge covers the first. Where another job extension's panel is present, ours docks on the
+   * LEFT instead. Checked at mount and again as the other panel finishes loading.
    */
   const PANEL_W = 380
-  const room = (open) => {
+  const OTHER_PANELS = 'plasmo-csui#jobright-helper-plugin, #jobright-helper-plugin, #simplify-jobs-extension, [id^="simplify"][id*="container" i]'
+  let side = 'right'
+  let open = true
+  const apply = () => {
     const wide = window.innerWidth >= 900
-    document.documentElement.style.transition = 'margin-right .2s'
-    document.documentElement.style.marginRight = open && wide ? `${PANEL_W}px` : ''
+    const de = document.documentElement
+    de.style.transition = 'margin .2s'
+    de.style.marginRight = open && wide && side === 'right' ? `${PANEL_W}px` : ''
+    de.style.marginLeft = open && wide && side === 'left' ? `${PANEL_W}px` : ''
+    panel.classList.toggle('left', side === 'left')
+    tab.classList.toggle('left', side === 'left')
+    host.style.cssText = `all:initial;position:fixed;top:0;${side}:0;z-index:2147483647`
   }
-  room(true)
-  const setOpen = (open) => { panel.hidden = !open; tab.hidden = open; room(open) }
+  const dock = () => { const next = document.querySelector(OTHER_PANELS) ? 'left' : 'right'; if (next !== side) { side = next; apply() } }
+  const setOpen = (o) => { open = o; panel.hidden = !o; tab.hidden = o; apply() }
+  apply()
+  setTimeout(dock, 1500); setTimeout(dock, 4000); setTimeout(dock, 9000)
   root.getElementById('collapse').addEventListener('click', () => setOpen(false))
   tab.addEventListener('click', () => setOpen(true))
   root.getElementById('gear').addEventListener('click', () => chrome.runtime.sendMessage({ type: 'jx:open-options' }))
   // The toolbar icon: opens the panel if it is collapsed, collapses it if it is open (service-worker.js, "The toolbar icon").
   chrome.runtime.onMessage.addListener((msg, _s, sendResponse) => {
+    if (msg?.type === 'jx:ping') { sendResponse({ ok: true }); return false }
     if (msg?.type !== 'jx:toggle') return false
     setOpen(panel.hidden)
     sendResponse({ ok: true })
     return false
   })
-  // Tell the worker the panel runs here, so the icon toggles it instead of dropping a menu down.
-  chrome.runtime.sendMessage({ type: 'jx:ready' }).catch(() => {})
   return root
 }
 
@@ -215,6 +230,7 @@ const save = (job, status) => chrome.runtime.sendMessage({
 function mountActions(root, job, state) {
   const doc = document
   const A = globalThis.SaafAutofill
+  const A2 = globalThis.SaafAutoApply
   const actions = root.getElementById('actions')
   const dash = root.getElementById('dash')
   const report = root.getElementById('report')
@@ -233,6 +249,7 @@ function mountActions(root, job, state) {
     <div class="note" id="gonote"></div>
     <button class="btn" id="apply" style="margin-top:8px" disabled>Apply on this page</button>
     <div id="applybox"></div>
+    <div id="submitbox"></div>
     <details class="box info" id="info" style="margin-top:10px"><summary>Your autofill information</summary><div id="infobody" class="muted"></div></details>
     <div class="box" id="resumerow" style="margin-top:8px">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Résumé</b><span class="muted" id="rname"></span></div>
@@ -250,11 +267,16 @@ function mountActions(root, job, state) {
 
   const applyBtn = root.getElementById('apply')
   const setSupport = () => {
-    const ok = hasForm()
-    applyBtn.disabled = state.running || !(ok || globalThis.SaafAutoApply.findApplyEntry(doc))
+    const form = hasForm()
+    const entry = !form && !!globalThis.SaafAutoApply.findApplyEntry(doc)
+    // Autofill works with a form on the page, or — new — with an Apply button it can press itself.
+    go.disabled = state.running || !(form || entry)
+    applyBtn.disabled = state.running || !(form || entry)
     renderWall(root, state)
-    supportEl.innerHTML = `<div class="support ${ok ? '' : 'off'}"><span class="dot"></span>${ok ? `Autofill supported${job.atsPlatform ? ' · ' + esc(job.atsPlatform) : ''}` : 'No application form on this page yet — press Apply on the posting'}</div>`
-    go.disabled = !ok || state.running
+    const msg = form ? `Autofill supported${job.atsPlatform ? ' · ' + esc(job.atsPlatform) : ''}`
+      : entry ? 'Jobinko will press Apply for you, then fill the form'
+      : 'No application form or Apply button found on this page'
+    supportEl.innerHTML = `<div class="support ${form || entry ? '' : 'off'}"><span class="dot"></span>${msg}</div>`
   }
   setSupport()
 
@@ -357,11 +379,15 @@ function mountActions(root, job, state) {
   doc.addEventListener('input', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
   doc.addEventListener('change', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
 
-  go.addEventListener('click', async () => {
+  const submitbox = root.getElementById('submitbox')
+
+  /** Fill the form on THIS page, with live progress, then offer the Submit step. */
+  async function fillNow() {
     state.running = true; state.cancel = false; state.collapsed = false
     go.disabled = true
     go.textContent = 'Autofilling…'
     report.innerHTML = ''
+    submitbox.innerHTML = ''
     // Bring the profile, answers and résumé file up to date from the account, then fill.
     const conn = await chrome.runtime.sendMessage({ type: 'jx:connect', pageKey: pk }).catch(() => null)
     if (conn) { state.signedIn = conn.signedIn; state.account = conn.account; state.resumeFile = conn.resumeFile; renderAccount(root, state); state.drawResume() }
@@ -369,7 +395,7 @@ function mountActions(root, job, state) {
     if (!profile || !profile.fullName) {
       state.running = false
       report.innerHTML = '<div class="box report">We have no details to fill with yet. Sign in to Jobinko and finish your profile — or open Jobinko once while signed in and they sync.</div>'
-      go.textContent = '⚡ Autofill'; go.disabled = !hasForm()
+      go.textContent = '⚡ Autofill'; setSupport()
       return
     }
     // Live progress: redraw the lists from the page's own state while the filler works.
@@ -389,18 +415,77 @@ function mountActions(root, job, state) {
     const picks = res.filled.map((f) => `<li class="ok">${how[f.how] ?? 'Filled'}: ${esc(f.value)}</li>`).join('')
     const left = res.refused.map((r) => `<li>${esc(r.reason)}</li>`).join('')
     report.innerHTML = `<div class="box report">
-      <b>${state.cancel ? 'Stopped. ' : ''}Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit — we never do.
+      <b>${state.cancel ? 'Stopped. ' : ''}Filled ${res.filled.length} field${res.filled.length === 1 ? '' : 's'}.</b> Check them before you submit.
       ${picks ? `<ul>${picks}</ul>` : ''}
       ${left ? `<div class="muted" style="margin-top:6px">Left for you:</div><ul>${left}</ul>` : ''}
       ${res.unanswered.length ? `<div class="muted" style="margin-top:6px">${res.unanswered.length} question${res.unanswered.length === 1 ? '' : 's'} on this form ${res.unanswered.length === 1 ? 'needs' : 'need'} your own answer. Write ${res.unanswered.length === 1 ? 'it' : 'each'} once in Jobinko → Profile → Templates, and it is filled next time it is asked.</div>` : ''}</div>`
     go.textContent = 'Autofill again'
-    go.disabled = false
+    setSupport()
     state.collapsed = !state.cancel // like the reference: finish → collapse to the summary line
     drawDashboard()
     // Filling a form is the candidate applying, so the role goes on the tracker as Applying. It never reaches Applied
     // from here: we cannot see whether they pressed Submit, and saying they did would be a guess.
     if (res.filled.length) { await save(job, 'applying'); showSaved() }
-  })
+    offerSubmit()
+  }
+
+  /**
+   * After the form is filled: ask. The person reads the form and presses Submit themselves — or presses it here, which
+   * runs the same checks as the one-click flow (nothing required empty, no CAPTCHA, the kill switch) and counts the
+   * application as sent only when the employer's page confirms it.
+   */
+  function offerSubmit() {
+    const submit = A2.findSubmit(doc)
+    if (!submit) {
+      submitbox.innerHTML = `<div class="box" style="margin-top:8px"><b>Filled.</b> <span class="muted">This step has no Submit button — press the site’s own Next or Continue, then press <b>Autofill again</b> on the next step.</span></div>`
+      return
+    }
+    submitbox.innerHTML = `<div class="box" style="margin-top:8px"><b>Ready to submit?</b>
+      <div class="muted" style="margin:4px 0 8px">Read the form first. Jobinko presses Submit only when every required answer is filled, and counts it as sent only when the employer’s page confirms it.</div>
+      <div class="row"><button class="btn primary" id="submitnow">Submit application</button><button class="btn" id="submitlater">I’ll review first</button></div></div>`
+    root.getElementById('submitlater').addEventListener('click', () => { submitbox.innerHTML = '' })
+    root.getElementById('submitnow').addEventListener('click', async () => {
+      submitbox.innerHTML = '<div class="box muted" style="margin-top:8px">Submitting… keep this tab open.</div>'
+      const ok = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-here', job: { url: job.pageUrl, title: job.title, company: job.company } }).catch(() => null)
+      if (!ok?.ok) { submitbox.innerHTML = `<div class="box" style="margin-top:8px">${esc(ok?.error || 'Could not start.')}</div>`; return }
+      const beforeSubmit = () => chrome.runtime.sendMessage({ type: 'saaf:autoapply-phase', phase: 'await-confirm' })
+      const r = await A2.submitOnly(doc, { beforeSubmit }, {}).catch(() => ({ status: 'needs-you', reason: 'Something went wrong — check this page' }))
+      await chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status: r.status, reason: r.reason, coverage: r.coverage }).catch(() => {})
+      submitbox.innerHTML = ''
+      renderApplyResult(root, { here: true, status: r.status, reason: r.reason, coverage: r.coverage })
+    })
+  }
+
+  /**
+   * The Autofill button. On a posting page with no form it PRESSES APPLY ITSELF first — the form may open on this page, on
+   * the next page, or in a new tab — and the fill carries on wherever the form appears (the note left in storage, below).
+   */
+  async function startAutofill() {
+    if (state.running) return
+    if (!hasForm()) {
+      const entry = A2.findApplyEntry(doc)
+      if (!entry) { report.innerHTML = '<div class="box report">I could not find an Apply button on this page. Open the application form and press Autofill.</div>'; return }
+      state.running = true; setSupport()
+      go.textContent = 'Opening the application…'
+      // A note for whichever page the form turns up on (this one, the next, or a new tab); it expires in 90 seconds.
+      await chrome.storage.local.set({ autofillPending: { at: Date.now() } })
+      entry.click()
+      const appeared = await A2.waitForForm(doc, 8000)
+      state.running = false
+      if (!appeared) {
+        // The page is navigating, or the application opened elsewhere: that page's panel takes over from the note.
+        go.textContent = '⚡ Autofill'
+        setSupport()
+        report.innerHTML = '<div class="box report muted">Opening the application… the form will be filled as soon as it appears (on this page or in a new tab).</div>'
+        return
+      }
+      await chrome.storage.local.remove('autofillPending')
+    }
+    await fillNow()
+  }
+  go.addEventListener('click', () => startAutofill())
+  state.autofill = startAutofill
+  state.hasForm = hasForm
 
   // Apply on this page — fills, checks, and presses Submit only when everything required is answered from the person's
   // own details. Their press is the consent for THIS application; the rules (autoapply.js) do not change: no CAPTCHAs,
@@ -506,13 +591,23 @@ function renderWall(root, state) {
   })
 }
 
+/**
+ * `run`: the page decides whether the panel shows — a posting with a description, a page with an application form, a page
+ * the person just pressed Apply toward (the note in storage), the page after a Submit, or any page the toolbar icon forced.
+ * Anything else stays quiet: an extension that paints on every page is one people uninstall.
+ */
 ;(async function run() {
+  if (globalThis.__jxMounted) return
   const applied = await autoApplyIfAssigned()
   if (applied && !applied.here) return
   const job = globalThis.SaafExtract.extractJob(document, location)
+  const { autofillPending: pending } = await chrome.storage.local.get('autofillPending')
+  const pendingFresh = !!pending && Date.now() - pending.at < 90_000
   // A confirmation page is short: when the person applied from the panel, still show the panel with what happened.
   const noPosting = job.description.length < globalThis.SaafExtract.MIN_JD_CHARS
-  if (noPosting && !applied) return
+  const formHere = globalThis.SaafAutoApply.hasForm(document)
+  if (noPosting && !applied && !globalThis.__jxForce && !pendingFresh && !formHere) return
+  globalThis.__jxMounted = true
   const root = mount()
   const state = {
     signedIn: null, account: null, resumeFile: null, error: '',
@@ -533,6 +628,13 @@ function renderWall(root, state) {
   if (applied) renderApplyResult(root, applied) // the page reloaded after Submit: show what the employer said
   // Connect first so the score below uses the account's current résumé.
   await state.reconnect()
+  // The person pressed Autofill on the posting and the form opened here (the same tab, or a new one): carry on, no click needed.
+  if (pendingFresh && !applied) {
+    if (await globalThis.SaafAutoApply.waitForForm(document, 8000)) {
+      await chrome.storage.local.remove('autofillPending')
+      state.autofill?.()
+    }
+  }
   if (noPosting) { root.getElementById('match').innerHTML = ''; return }
   chrome.runtime.sendMessage(
     { type: 'saaf:score', jdText: job.description, jdTitle: job.title, jdLocation: job.location },

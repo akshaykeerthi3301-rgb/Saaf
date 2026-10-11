@@ -43,7 +43,13 @@ const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We hav
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
 <label for="lp">Password *</label><input id="lp" type="password" name="password" autocomplete="current-password"><button type="submit" onclick="return false">Sign in</button></form></body></html>`
+// A posting page that has NO form: Apply is a link to the form page (same tab), a link that opens a new tab, or a button that reveals the form.
+const post = (apply) => `${head('Customer Success Manager – Acme')}<h1>Customer Success Manager</h1><p>Acme Robotics · Bengaluru</p><p>${para}</p>${apply}</body></html>`
+const leverJob = post('<a class="postings-btn" href="/lever/job/apply">Apply for this job</a>')
+const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener">Apply Now</a>')
+const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
+<div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' ? easyJob : p === '/hard/job' ? hardJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

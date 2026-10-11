@@ -32,6 +32,8 @@
     return CAPTCHA.some((s) => doc.querySelector(s))
   }
 
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
   const isVisible = (el) => {
     if (!el || el.type === 'hidden' || el.disabled) return false
     const style = el.ownerDocument?.defaultView?.getComputedStyle?.(el)
@@ -107,11 +109,34 @@
     )
   }
 
-  /** On a posting page with no form yet: the button or link that opens the application. */
+  /**
+   * On a posting page with no form yet: the button or link that opens the application.
+   *
+   * Matches the wording real posting pages use — "Apply", "Apply Now", "Apply for this job", "Apply to this position",
+   * "Start application", "Easy Apply", "I'm interested" — after trimming arrows and icons, and also a link whose address
+   * ends in /apply or /application and whose text mentions applying. Never a "with LinkedIn / Indeed / Google" button.
+   */
   function findApplyEntry(doc) {
-    const cands = [...doc.querySelectorAll('a, button')].filter(isVisible)
-    const t = (e) => (e.textContent || '').replace(/\s+/g, ' ').trim()
-    return cands.find((e) => /^(apply( for this (job|position|role))?|apply now|i'?m interested)$/i.test(t(e)) && !/linkedin|indeed/i.test(t(e))) || null
+    const cands = [...doc.querySelectorAll('a, button, [role="button"], input[type="button"]')].filter(isVisible)
+    const t = (e) => (e.textContent || e.value || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '').trim()
+    const social = /linkedin|indeed|google|facebook|apple|microsoft|github|with resume|autofill with/i
+    const words = /^(apply( now| today| here)?|apply (for|to) (this |the |a )?(job|position|role|opening|vacancy)|apply for job|i['’]?m interested|easy apply|start (your |an )?application|begin (your )?application|apply manually)$/i
+    const byText = cands.find((e) => words.test(t(e)) && !social.test(t(e)))
+    if (byText) return byText
+    return cands.find((e) => {
+      const href = e.getAttribute?.('href') || ''
+      return /\/(apply|application)(\/|\?|#|$)/i.test(href) && /apply|application/i.test(t(e)) && !social.test(t(e) + ' ' + href)
+    }) || null
+  }
+
+  /** Wait (up to `ms`) for an application form to appear on this page — a same-page form mounts a beat after Apply is clicked. */
+  async function waitForForm(doc, ms = 8000) {
+    const end = Date.now() + ms
+    while (Date.now() < end) {
+      if (hasForm(doc)) return true
+      await sleep(250)
+    }
+    return hasForm(doc)
   }
 
   /**
@@ -131,8 +156,6 @@
     return !!doc.querySelector('input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form input:not([type])')
   }
 
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
   /**
    * Fill, check, and submit only when nothing is missing.
    * Returns { status: 'submitted' | 'needs-you' | 'open-form' | 'unconfirmed', reason, filled, coverage }.
@@ -149,13 +172,24 @@
     await sleep(opts.settleMs ?? 400)
     if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled: res.filled, coverage: coverage(doc) }
 
+    return submitOnly(doc, opts, { filled: res.filled, unanswered: res.unanswered })
+  }
+
+  /**
+   * The last half: refuse if anything required is empty or a CAPTCHA is up, then press the form's own Submit and wait for
+   * the employer's confirmation. Used by the one-click flow (run, above) and by the panel's "Submit application" button
+   * after the person has looked at the filled form — one tested path, so the two cannot drift apart.
+   */
+  async function submitOnly(doc, opts = {}, ctx = {}) {
+    const filled = ctx.filled ?? []
+    if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared — that one is yours', filled, coverage: coverage(doc) }
     const cov = coverage(doc)
     const missing = missingRequired(doc)
     if (missing.length) {
-      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled: res.filled, coverage: cov, unanswered: res.unanswered }
+      return { status: 'needs-you', reason: `Required and not filled: ${missing.slice(0, 3).join('; ')}${missing.length > 3 ? '…' : ''}`, filled, coverage: cov, unanswered: ctx.unanswered }
     }
     const submit = findSubmit(doc)
-    if (!submit) return { status: 'needs-you', reason: 'Could not find the form’s own Submit button', filled: res.filled, coverage: cov }
+    if (!submit) return { status: 'needs-you', reason: 'Could not find the form’s own Submit button', filled, coverage: cov }
 
     // Tell the service worker before clicking: most ATS forms navigate on
     // submit, which ends this script — the NEXT page then checks for the
@@ -169,18 +203,18 @@
     if (opts.beforeSubmit) {
       const verdict = await opts.beforeSubmit()
       if (verdict && verdict.allow === false) {
-        return { status: 'needs-you', reason: verdict.reason || 'Apply for me is paused by Jobinko', filled: res.filled, coverage: cov }
+        return { status: 'needs-you', reason: verdict.reason || 'Apply for me is paused by Jobinko', filled, coverage: cov }
       }
     }
     submit.click()
     const deadline = Date.now() + (opts.confirmMs ?? 15000)
     while (Date.now() < deadline) {
       await sleep(500)
-      if (confirmationSeen(doc)) return { status: 'submitted', reason: 'The employer’s page confirmed it', filled: res.filled, coverage: cov }
-      if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared on submit — that one is yours', filled: res.filled, coverage: cov }
+      if (confirmationSeen(doc)) return { status: 'submitted', reason: 'The employer’s page confirmed it', filled, coverage: cov }
+      if (hasCaptcha(doc)) return { status: 'needs-you', reason: 'A CAPTCHA appeared on submit — that one is yours', filled, coverage: cov }
     }
-    return { status: 'unconfirmed', reason: 'Clicked Submit but saw no confirmation — check this tab', filled: res.filled, coverage: cov }
+    return { status: 'unconfirmed', reason: 'Clicked Submit but saw no confirmation — check this tab', filled, coverage: cov }
   }
 
-  root.SaafAutoApply = { run, hasCaptcha, missingRequired, requiredFields, coverage, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
+  root.SaafAutoApply = { run, submitOnly, waitForForm, hasCaptcha, missingRequired, requiredFields, coverage, findSubmit, findApplyEntry, confirmationSeen, hasForm, CONFIRM }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

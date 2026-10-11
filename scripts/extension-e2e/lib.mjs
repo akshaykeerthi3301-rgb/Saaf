@@ -13,7 +13,7 @@ export function patchedExtension() {
   cpSync(join(REPO, 'extension'), dir, { recursive: true, filter: (s) => !/\.test\.ts$/.test(s) })
   const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'))
   const local = ['http://localhost/*', 'http://localhost:*/*', 'http://127.0.0.1/*', 'http://127.0.0.1:*/*']
-  m.host_permissions.push(...local)
+  m.host_permissions.push(...local, 'http://[::1]/*', 'http://[::1]:*/*', 'https://careers.veeva.com/*') // [::1]: a stand-in for a site the built-in list does not cover — host access only, no content script
   for (const c of m.content_scripts) c.matches.push(...local)
   m.externally_connectable = { matches: ['http://localhost/*', 'http://localhost:*/*'] }
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(m, null, 2))

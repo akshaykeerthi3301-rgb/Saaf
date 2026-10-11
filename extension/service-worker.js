@@ -525,7 +525,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // never closed on them. They pressed the button; that press is the consent for THIS application only.
     if (msg.type === 'saaf:autoapply-here') {
       const tab = sender.tab
-      if (!tab || !supported(tab.url || '')) { sendResponse({ ok: false, error: 'This is not an application site the extension works on.' }); return }
+      let hostOk = false
+      try { const u = new URL(tab?.url || ''); hostOk = /^https?:$/.test(u.protocol) && !NEVER_HOST.test(u.hostname) } catch { /* no address */ }
+      if (!tab || !hostOk) { sendResponse({ ok: false, error: 'Jobinko does not run on this page.' }); return }
       if (autoApplyActive && Date.now() - autoApplyActive.startedAt < STALE_MS) { sendResponse({ ok: false, error: 'Another application is running. Wait for it to finish.' }); return }
       const { autoApplyDay = {} } = await chrome.storage.local.get('autoApplyDay')
       if ((autoApplyDay.date === today() ? autoApplyDay.count : 0) >= DAILY_CAP) { sendResponse({ ok: false, error: `Today's limit of ${DAILY_CAP} applications is reached.` }); return }
@@ -578,21 +580,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // ------------------------------------------------------------ The toolbar icon
 /**
- * ⚠️ THE ICON OPENS THE PANEL ON THE PAGE, NOT A DROP-DOWN. (Founder, 2026-10-12: "the extension drops down from the
- * icon rather than floating on the right like Jobright and Simplify".) Chrome shows a popup only while the tab's popup
- * is set; on a tab where the panel is running we set it to nothing, so a click reaches `onClicked` and toggles the
- * panel. On every other tab the popup stays — it says the site is not supported and offers "ask for it".
+ * ⚠️ THE ICON OPENS THE PANEL ON THE PAGE — ON ANY JOB PAGE, NOT ONLY THE KNOWN ONES. (Founder, 2026-10-12: "the extension
+ * drops down from the icon rather than floating on the right like Jobright and Simplify", then "it should recognise the page
+ * and do it on its own".)
  *
- * Chrome keeps a per-tab popup until the tab closes, so it is put back to the default whenever the tab starts loading
- * a new page; the panel's content script sets it again if the new page is one it runs on.
+ * The manifest has no popup, so a click always arrives here:
+ *  1. a panel is already running on the tab → toggle it;
+ *  2. otherwise, on an ordinary web page (not LinkedIn, Naukri or Jobinko itself) → inject the panel now. Clicking the icon
+ *     grants `activeTab` for that tab, so no standing access to every site is needed. This is how an employer's own careers
+ *     page (Veeva, say), which the built-in site list does not cover, still gets the panel;
+ *  3. anywhere else → the small popup, with the "ask Jobinko to support this site" button.
  */
-const DEFAULT_POPUP = 'popup.html'
+const NEVER_HOST = /(^|\.)(linkedin\.com|naukri\.com|jobinko\.in|saaf-ten\.vercel\.app)$/
+const CONTENT_FILES = chrome.runtime.getManifest().content_scripts?.[0]?.js ?? []
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg?.type === 'jx:ready' && sender.tab?.id != null) {
-    chrome.action.setPopup({ tabId: sender.tab.id, popup: '' }).then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }))
-    return true
-  }
   if (msg?.type === 'jx:open-options') {
     chrome.runtime.openOptionsPage().then(() => sendResponse({ ok: true })).catch(() => sendResponse({ ok: false }))
     return true
@@ -600,20 +602,55 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return false
 })
 
-chrome.tabs.onUpdated.addListener((tabId, info) => {
-  if (info.status === 'loading') chrome.action.setPopup({ tabId, popup: DEFAULT_POPUP }).catch(() => {})
-})
+async function showPopup(tabId) {
+  await chrome.action.setPopup({ tabId, popup: 'popup.html' }).catch(() => {})
+  await chrome.action.openPopup().catch(() => {})
+  // Back to "no popup", so the next click on this tab opens the panel again.
+  setTimeout(() => chrome.action.setPopup({ tabId, popup: '' }).catch(() => {}), 1500)
+}
 
 async function togglePanel(tab) {
   if (!tab?.id) return
   try {
     await chrome.tabs.sendMessage(tab.id, { type: 'jx:toggle' })
+    return
+  } catch { /* no panel on this tab yet */ }
+  let host = ''
+  try { const u = new URL(tab.url || ''); if (/^https?:$/.test(u.protocol)) host = u.hostname.toLowerCase() } catch { /* no address */ }
+  if (!host || NEVER_HOST.test(host)) { await showPopup(tab.id); return }
+  try {
+    await injectPanel(tab.id)
+    // Remember this tab, so the panel comes back on the next page of the same application (below).
+    const { injectedTabs = [] } = await chrome.storage.session.get('injectedTabs')
+    if (!injectedTabs.includes(tab.id)) await chrome.storage.session.set({ injectedTabs: [...injectedTabs, tab.id].slice(-20) })
   } catch {
-    // No panel on this tab (the page changed under a stale popup setting): show the ordinary popup instead.
-    await chrome.action.setPopup({ tabId: tab.id, popup: DEFAULT_POPUP }).catch(() => {})
-    await chrome.action.openPopup().catch(() => {})
+    await showPopup(tab.id)
   }
 }
+
+/** `__jxForce` tells the panel to open even when the page has no posting text yet. */
+async function injectPanel(tabId) {
+  await chrome.scripting.executeScript({ target: { tabId }, func: () => { globalThis.__jxForce = true } })
+  await chrome.scripting.executeScript({ target: { tabId }, files: CONTENT_FILES })
+}
+
+/**
+ * A tab where the person opened the panel by hand keeps it as the application moves from page to page. Chrome only lets us
+ * do that while it still allows access to the tab (it ends when the person leaves the site), so a refusal here is simply
+ * the end of that, not an error.
+ */
+chrome.tabs.onUpdated.addListener(async (tabId, info) => {
+  if (info.status !== 'complete') return
+  const { injectedTabs = [] } = await chrome.storage.session.get('injectedTabs')
+  if (!injectedTabs.includes(tabId)) return
+  // Already running here (a supported site started it itself)? Then there is nothing to do — injecting twice would only throw.
+  const alive = await chrome.tabs.sendMessage(tabId, { type: 'jx:ping' }).then(() => true).catch(() => false)
+  if (!alive) await injectPanel(tabId).catch(() => {})
+})
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const { injectedTabs = [] } = await chrome.storage.session.get('injectedTabs')
+  if (injectedTabs.includes(tabId)) await chrome.storage.session.set({ injectedTabs: injectedTabs.filter((t) => t !== tabId) })
+})
 chrome.action.onClicked.addListener(togglePanel)
 // Exposed so the end-to-end test can press "the icon" — a toolbar click cannot be sent from a test.
 globalThis.__jxToggle = togglePanel

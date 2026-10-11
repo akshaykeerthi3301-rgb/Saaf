@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Jobinko — score any job posting",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Score any job posting against your resume, see the missing keywords, fill the application form, apply for you when you turn it on, and track it in Jobinko. Reads only the page you are on.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://boards.greenhouse.io/*",
@@ -94,8 +95,7 @@
     }
   ],
   "action": {
-    "default_title": "Jobinko",
-    "default_popup": "popup.html"
+    "default_title": "Jobinko"
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuURGSzvQrj5FuWAQCwE1Mj5oFgpHabHU2uoquodzrB8hByBtIhhHn+7ThDv3rm8TemKjqNejzBdTmEx0A6UjbFCvjfhEmsnds9laxhdLpTG6QnwgKJ1xxVYiKGb2o5sDnobRx8Ib/le7tvVqgkvZOowGL2DnVaBaDU7A0S0W0E+d8WVn69Lbjn1cOflfbZqEFfLxAcrvrLWFRx+N7hsqwgYb4PgzjYMUpedRU4NZc084Fol9Ilwd9psJYd9W6fOtWhnVXkOdCGwxejIj9Nrn4lJ9NKU8O/hk15+Ldq1eFFzdGDiElq2d2lZnd7xa53r5L3NnEbPc7PuNdEFcZd0qyQIDAQAB",
   "externally_connectable": {
