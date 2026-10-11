@@ -221,21 +221,23 @@ export const YES_NO_CHOICES: Choice[] = [{ value: 'yes', label: 'Yes' }, { value
  * empties the answer; tapping the chosen chip again does the same. A stored value that is not on the list (an answer
  * typed before the list existed) still shows, selected, so nothing the person said is hidden.
  */
-export function ChoiceChips({ options, value, onChange, label, clearLabel }: {
+export function ChoiceChips({ options, value, onChange, label, clearLabel, clearValue = '' }: {
   options: readonly Choice[]
   value: string
   onChange: (v: string) => void
   label: string
   clearLabel?: string
+  /** What the clear chip stores. Empty by default; the voluntary questions store a declined answer instead. */
+  clearValue?: string
 }) {
-  const shown = value && !options.some((o) => o.value === value) ? [...options, { value, label: value }] : options
+  const shown = value && value !== clearValue && !options.some((o) => o.value === value) ? [...options, { value, label: value }] : options
   const chip = (on: boolean) => `rounded-full border px-3.5 py-1.5 text-sm transition-colors ${on ? 'border-accent bg-accent/10 font-semibold text-primary' : 'border-border bg-card text-muted-foreground hover:text-primary'}`
   return (
     <div role="group" aria-label={label} className="flex flex-wrap gap-2">
       {shown.map((o) => (
         <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(value === o.value ? '' : o.value)} className={chip(value === o.value)}>{o.label}</button>
       ))}
-      {clearLabel ? <button type="button" aria-pressed={!value} onClick={() => onChange('')} className={chip(!value)}>{clearLabel}</button> : null}
+      {clearLabel ? <button type="button" aria-pressed={value === clearValue} onClick={() => onChange(clearValue)} className={chip(value === clearValue)}>{clearLabel}</button> : null}
     </div>
   )
 }

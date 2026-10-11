@@ -2,6 +2,15 @@
 
 ---
 
+## 🔶 2026-10-12 (night, last) — GPA, Experience Summary, and Jobright's mandatory fields · extension 0.14.0
+
+**Now:** GPA, Major and Experience summary exist in the Education and Work pop-ups; LinkedIn/GitHub/Portfolio sit in the Personal pop-up. Required (red *) are exactly the fields Jobright marks. 'Decline to state' counts as an answer for the voluntary questions. The extension (0.14.0) also fills GPA.
+**Heads-up:** your saved education shows 'MBA' as the school and the college as the degree (the résumé reader swapped them). Open the pencil on each education entry and put the school in School name, the field in Major, the degree in Degree type. Work entries that have no job type will ask for one the next time you edit them.
+**Verified:** tests; the pop-ups in the local browser; the extension flows. **Not verified:** pressing Save/Update on your real data; GPA on a real employer form.
+**You need to:** after the deploy, fix the two education entries, pick a job type on your work entries, fill the starred Personal and Employment questions, then download 0.14.0 and reload it on chrome://extensions.
+
+---
+
 ## 🔶 2026-10-12 (night, later) — profile: everything Jobright collects, in tap-to-pick pop-ups · extension 0.13.0
 
 **Now:** Profile → Personal Info has middle name, phone type, country, state, county; the Employment pop-up is rows of tap-to-pick chips with Jobright's own choices (gender, pronouns, race, sexual orientation, Yes/No questions, 'Decline to state'), plus 'legally authorised to work in India', 'sponsorship' and 'relocate'. The extension (0.13.0) fills the new fields; it will not give your Indian work-permit answer to a form asking about the US or UK — those appear under 'Questions for you'. **Not added:** GPA and Experience Summary (they change the résumé itself — say if you want them).

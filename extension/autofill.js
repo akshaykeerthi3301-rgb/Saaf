@@ -111,7 +111,7 @@
     const hits = SELF_ID.filter((q) => q.re.test(signals))
     if (hits.length !== 1) return null
     const v = selfId[hits[0].key]
-    return typeof v === 'string' && v.trim() ? `selfId:${hits[0].key}` : null
+    return typeof v === 'string' && v.trim() && v !== 'decline' ? `selfId:${hits[0].key}` : null
   }
 
   /**
@@ -168,6 +168,7 @@
     { key: 'country',         re: /\bcountr(y|ies)\b(?!\s*(code|dial))/i },
     { key: 'state',           re: /\b(state|province)\b/i },
     { key: 'county',          re: /\bcounty\b/i },
+    { key: 'gpa',             re: /\b(c?gpa|grade\s*point)/i },
     { key: 'linkedin',        re: /\b(linked-?in)\b/i },
     { key: 'portfolio',       re: /\b(portfolio|website|personal\s*site|github|behance|dribbble)\b/i },
     { key: 'currentTitle',    re: /\b(current\s*(job\s*)?title|current\s*role|present\s*designation|job\s*title|designation)\b/i },
@@ -371,7 +372,7 @@
     if (key.startsWith('selfId:')) {
       const v = p.selfId && p.selfId[key.slice(7)]
       if (SELF_ID_YES_NO.has(key)) return yesNo(v)
-      return typeof v === 'string' && v.trim() ? v.trim() : undefined
+      return typeof v === 'string' && v.trim() && v !== 'decline' ? v.trim() : undefined
     }
     const full = (p.fullName || '').trim()
     switch (key) {
@@ -387,7 +388,7 @@
       case 'yearsExperience': return p.yearsExperience
       case 'noticePeriod': return p.noticePeriod
       case 'city': return p.city
-      case 'middleName': case 'phoneType': case 'address': case 'postalCode': case 'country': case 'state': case 'county': return p[key]
+      case 'gpa': case 'middleName': case 'phoneType': case 'address': case 'postalCode': case 'country': case 'state': case 'county': return p[key]
       case 'preferredLocations': return p.preferredLocations
       case 'workAuth': return p.workAuth
       case 'currentCtc': return p.currentCtcLakhs

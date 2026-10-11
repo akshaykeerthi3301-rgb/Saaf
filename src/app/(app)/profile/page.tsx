@@ -87,7 +87,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   let body
   if (view === 'personal') {
-    body = <ProfilePersonal data={{ firstName, lastName: rest.join(' '), email, phone: profile.phone ?? '', city: profile.city ?? '', extras: extrasRead.extras, selfId: selfId.answers, selfIdStored: selfId.stored }} />
+    body = <ProfilePersonal data={{ firstName, lastName: rest.join(' '), email, phone: profile.phone ?? '', city: profile.city ?? '', extras: extrasRead.extras, selfId: selfId.answers, selfIdStored: selfId.stored, links: { linkedin: profile.linkedin_url ?? '', portfolio: profile.portfolio_url ?? '', github: extrasRead.extras.githubUrl, other: extrasRead.extras.otherUrl } }} />
   } else if (view === 'preferences') {
     body = (
       <ProfilePreferences data={{

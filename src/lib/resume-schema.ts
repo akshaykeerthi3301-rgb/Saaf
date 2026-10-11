@@ -30,6 +30,7 @@ export const sectionsSchema = z.object({
         /** Without this a project arrives as a job, and the export puts it under Experience. */
         isProject: z.boolean().optional(),
         employmentType: z.string().max(30).optional(),
+        summary: z.string().max(1000).optional(),
       }),
     )
     .max(15),
@@ -39,6 +40,8 @@ export const sectionsSchema = z.object({
         qualification: z.string().max(300),
         institution: z.string().max(200).nullable(),
         dates: z.string().max(80).nullable(),
+        major: z.string().max(120).optional(),
+        gpa: z.string().max(20).optional(),
       }),
     )
     .max(10),

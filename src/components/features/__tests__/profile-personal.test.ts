@@ -18,7 +18,7 @@ const flush = async () => { await act(async () => { await Promise.resolve() }) }
 const body = () => document.body
 const button = (label: RegExp, within: ParentNode = body()) => [...within.querySelectorAll('button')].find((b) => label.test(b.textContent ?? b.getAttribute('aria-label') ?? ''))!
 const group = (label: string) => body().querySelector(`[role="group"][aria-label="${label}"]`)!
-const data = { firstName: 'Priya', lastName: 'Iyer', email: 'p@example.com', phone: '+91 98450 00000', city: 'Bengaluru', extras: { ...EMPTY_EXTRAS }, selfId: {}, selfIdStored: true }
+const data = { firstName: 'Priya', lastName: 'Iyer', email: 'p@example.com', phone: '+91 98450 00000', city: 'Bengaluru', extras: { ...EMPTY_EXTRAS }, selfId: {}, selfIdStored: true, links: { linkedin: '', portfolio: '', github: '', other: '' } }
 
 async function mount(over: Partial<typeof data> = {}) {
   await act(async () => { root.render(createElement(ProfilePersonal, { data: { ...data, ...over } })) })
@@ -51,31 +51,57 @@ describe('Employment pop-up', () => {
     expect([...group('Do you identify as LGBTQ+?').querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Yes', 'No', 'Decline to state'])
   })
 
-  it('saves exactly the answers tapped — nothing for a question left on Decline to state', async () => {
+  const REQUIRED = [
+    ['Are you legally authorised to work in India?', /^Yes$/], ['Will you now or in the future require sponsorship for an employment visa?', /^No$/],
+    ['What is your gender?', /^Female$/], ['Do you have a disability?', /Decline/], ['Are you a veteran?', /Decline/],
+    ['How would you identify your race?', /Decline/], ['Are you Hispanic or Latino?', /Decline/], ['Do you identify as LGBTQ+?', /^No$/],
+    ['How would you describe your sexual orientation?', /Decline/],
+  ] as const
+  const answerRequired = async (skip: string[] = []) => {
+    for (const [q, chip] of REQUIRED) if (!skip.includes(q)) await act(async () => { button(chip, group(q)).click() })
+  }
+
+  it('will not save until every question marked * is answered or declined, and says which', async () => {
+    await mount(); await openEmployment()
+    await answerRequired(['What is your gender?', 'Are you a veteran?'])
+    await act(async () => { button(/^\s*Update\s*$/).click() }); await flush()
+    expect(body().textContent).toContain('Please answer these 2 questions, marked *')
+    expect(body().textContent).toContain('What is your gender? · Are you a veteran?')
+    expect(mocks.saveSelfId).not.toHaveBeenCalled()
+    expect(mocks.saveProfileExtras).not.toHaveBeenCalled()
+  })
+
+  it('the two work-permit questions are Yes/No only — no way to decline them, as on Jobright', async () => {
+    await mount(); await openEmployment()
+    expect([...group('Are you legally authorised to work in India?').querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Yes', 'No'])
+    expect([...group('Are you willing to relocate?').querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Yes', 'No', 'Decline to state'])
+  })
+
+  it('saves what was tapped; a declined voluntary question is stored as declined, an untouched optional one is left out', async () => {
     mocks.saveSelfId.mockResolvedValue({ ok: true }); mocks.saveProfileExtras.mockResolvedValue({ ok: true })
     await mount(); await openEmployment()
-    await act(async () => { button(/^Female$/, group('What is your gender?')).click() })
-    await act(async () => { button(/^No$/, group('Do you identify as LGBTQ+?')).click() })
-    await act(async () => { button(/^Yes$/, group('Are you legally authorised to work in India?')).click() })
-    await act(async () => { button(/^No$/, group('Will you now or in the future require sponsorship for an employment visa?')).click() })
+    await answerRequired()
     await act(async () => { button(/^\s*Update\s*$/).click() }); await flush()
-    expect(mocks.saveSelfId).toHaveBeenCalledWith({ gender: 'Female', lgbtq: 'no' })
+    expect(mocks.saveSelfId).toHaveBeenCalledWith({ gender: 'Female', lgbtq: 'no', disability: 'decline', veteran: 'decline', ethnicity: 'decline', hispanic: 'decline', orientation: 'decline' })
     expect(mocks.saveProfileExtras).toHaveBeenCalledWith({ authorisedToWork: 'yes', needsSponsorship: 'no', willingToRelocate: '' })
   })
 
-  it('tapping a chosen chip again, or Decline to state, takes the answer back', async () => {
+  it('Decline to state on an optional question simply empties it', async () => {
     mocks.saveSelfId.mockResolvedValue({ ok: true }); mocks.saveProfileExtras.mockResolvedValue({ ok: true })
-    await mount({ selfId: { gender: 'Male', pronouns: 'He/Him' } }); await openEmployment()
+    await mount({ selfId: { pronouns: 'He/Him', gender: 'Male' } }); await openEmployment()
     expect(button(/^Male$/, group('What is your gender?')).getAttribute('aria-pressed')).toBe('true')
-    await act(async () => { button(/^Male$/, group('What is your gender?')).click() })
     await act(async () => { button(/Decline to state/, group('What are your pronouns?')).click() })
+    await answerRequired(['What is your gender?'])
     await act(async () => { button(/^\s*Update\s*$/).click() }); await flush()
-    expect(mocks.saveSelfId).toHaveBeenCalledWith({})
+    const sent = mocks.saveSelfId.mock.calls[0][0]
+    expect(sent.pronouns).toBeUndefined()
+    expect(sent.gender).toBe('Male')
   })
 
   it('shows the action’s refusal and keeps the pop-up open', async () => {
     mocks.saveSelfId.mockResolvedValue({ ok: false, error: 'This needs a database update (0038) that has not been applied yet.' })
     await mount(); await openEmployment()
+    await answerRequired()
     await act(async () => { button(/^\s*Update\s*$/).click() }); await flush()
     expect(body().textContent).toContain('0038')
     expect(mocks.saveProfileExtras).not.toHaveBeenCalled()

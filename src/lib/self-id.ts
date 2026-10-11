@@ -20,28 +20,36 @@ export type SelfIdField = {
   suggestions?: string[]
   /** The choices shown as tap-to-pick chips. "Prefer not to say" is always the last chip and clears the answer. */
   options?: string[]
+  /** Marked with a red star on Jobright's pop-up, so it must be answered — or explicitly declined — before saving. */
+  required?: boolean
   hint?: string
 }
 
 export const SELF_ID_FIELDS: SelfIdField[] = [
-  { key: 'gender', label: 'What is your gender?', kind: 'text', options: ['Male', 'Female', 'Non-Binary'] },
+  { key: 'gender', required: true, label: 'What is your gender?', kind: 'text', options: ['Male', 'Female', 'Non-Binary'] },
   { key: 'pronouns', label: 'What are your pronouns?', kind: 'text', options: ['He/Him', 'She/Her', 'They/Them', 'Other'] },
-  { key: 'disability', label: 'Do you have a disability?', kind: 'yesno', hint: 'Answers “Do you have a disability?” with Yes or No.' },
-  { key: 'veteran', label: 'Are you a veteran?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
+  { key: 'disability', required: true, label: 'Do you have a disability?', kind: 'yesno', hint: 'Answers “Do you have a disability?” with Yes or No.' },
+  { key: 'veteran', required: true, label: 'Are you a veteran?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
   {
-    key: 'ethnicity', label: 'How would you identify your race?', kind: 'text',
+    key: 'ethnicity', required: true, label: 'How would you identify your race?', kind: 'text',
     options: ['American Indian or Alaskan Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'White', 'Native Hawaiian or Other Pacific Islander', 'Two or More Races'],
     hint: 'Matched only when a form offers exactly these words.',
   },
-  { key: 'hispanic', label: 'Are you Hispanic or Latino?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
-  { key: 'lgbtq', label: 'Do you identify as LGBTQ+?', kind: 'yesno' },
-  { key: 'orientation', label: 'How would you describe your sexual orientation?', kind: 'text', options: ['Asexual', 'Bisexual', 'Gay', 'Heterosexual', 'Lesbian', 'Pansexual', 'Queer', 'I prefer to self-describe'] },
+  { key: 'hispanic', required: true, label: 'Are you Hispanic or Latino?', kind: 'yesno', hint: 'Mostly asked on US forms.' },
+  { key: 'lgbtq', required: true, label: 'Do you identify as LGBTQ+?', kind: 'yesno' },
+  { key: 'orientation', required: true, label: 'How would you describe your sexual orientation?', kind: 'text', options: ['Asexual', 'Bisexual', 'Gay', 'Heterosexual', 'Lesbian', 'Pansexual', 'Queer', 'I prefer to self-describe'] },
   { key: 'caste', label: 'Caste / category', kind: 'text', options: ['General', 'OBC', 'SC', 'ST', 'EWS'], hint: 'Asked on some Indian forms.' },
   { key: 'religion', label: 'Religion', kind: 'text' },
   { key: 'marital', label: 'Marital status', kind: 'text', options: ['Single', 'Married'] },
 ]
 
 export type SelfIdAnswers = Partial<Record<SelfIdKey, string>>
+
+/**
+ * "Decline to state", stored. An empty answer means "not answered yet" — and a question marked required must be answered
+ * or declined, so a declined one needs its own value. The extension never fills it and never holds it.
+ */
+export const DECLINED = 'decline'
 
 const MAX_LEN = 60
 const KEYS = new Set<string>(SELF_ID_FIELDS.map((f) => f.key))
@@ -59,6 +67,7 @@ export function sanitizeSelfId(raw: unknown): SelfIdAnswers {
     if (!KEYS.has(k) || typeof v !== 'string') continue
     const t = v.replace(/\s+/g, ' ').trim().slice(0, MAX_LEN)
     if (!t) continue
+    if (t.toLowerCase() === DECLINED) { out[k as SelfIdKey] = DECLINED; continue }
     if (YESNO.has(k)) {
       const yn = t.toLowerCase()
       if (yn !== 'yes' && yn !== 'no') continue

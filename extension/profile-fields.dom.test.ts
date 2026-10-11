@@ -84,3 +84,16 @@ describe('the two new voluntary questions', () => {
     expect(A.questions(document)).toEqual([])
   })
 })
+
+describe('GPA, and a declined answer', () => {
+  it('fills GPA from the profile', async () => {
+    page('<label for="g">GPA / CGPA</label><input id="g">')
+    await A.fillForm({ ...BASE, gpa: '8.4' }, document, { mode: 'manual' })
+    expect(val('#g')).toBe('8.4')
+  })
+  it('never fills a question the person declined — the form is left for them', async () => {
+    page('<fieldset><legend>What is your gender? *</legend><label><input type="radio" name="g" value="m" required> Male</label><label><input type="radio" name="g" value="f"> Female</label></fieldset>')
+    await A.fillForm({ ...BASE, selfId: { gender: 'decline' } }, document, { mode: 'manual' })
+    expect(radio('g', 'm') || radio('g', 'f')).toBe(false)
+  })
+})

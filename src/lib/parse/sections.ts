@@ -35,12 +35,18 @@ export type ExperienceEntry = {
   isProject?: boolean
   /** "Full-Time", "Internship"… Only ever set from the profile screen; the parser never reads one and no export prints it. */
   employmentType?: string
+  /** A short summary of the role. Profile-screen only — kept for autofill, never printed on the résumé. */
+  summary?: string
 }
 
 export type EducationEntry = {
   qualification: string
   institution: string | null
   dates: string | null
+  /** The field of study ("General Management"). Profile-screen only — kept for autofill, never printed on the résumé. */
+  major?: string
+  /** As the person writes it (8.4, 3.7/4.0, 78%). Profile-screen only — kept for autofill, never printed on the résumé. */
+  gpa?: string
 }
 
 export type ResumeSections = {

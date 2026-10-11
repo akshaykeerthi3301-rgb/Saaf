@@ -36,7 +36,7 @@ const SYNCED_FIELDS = [
   'fullName', 'email', 'phone', 'city', 'currentTitle', 'currentEmployer',
   'yearsExperience', 'noticePeriod', 'linkedin', 'portfolio', 'workAuth', 'preferredLocations',
   'middleName', 'phoneType', 'address', 'postalCode', 'country', 'state', 'county',
-  'authorisedToWork', 'needsSponsorship', 'willingToRelocate',
+  'authorisedToWork', 'needsSponsorship', 'willingToRelocate', 'gpa',
 ]
 const RANK = { saved: 0, applying: 1, applied: 2 }
 

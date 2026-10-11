@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { readSelfId } from '@/lib/services/self-id'
-import type { SelfIdAnswers } from '@/lib/self-id'
+import { DECLINED, type SelfIdAnswers } from '@/lib/self-id'
 import { readAnswerBank } from '@/lib/services/answer-bank'
 import { forExtension } from '@/lib/answer-bank'
-import { readProfileExtras } from '@/lib/services/profile-cards'
+import { readPrimaryResume, readProfileExtras } from '@/lib/services/profile-cards'
 
 /**
  * The web app's half of the extension bridge (2026-09-25, Jobright parity).
@@ -43,6 +43,8 @@ export type ExtensionProfile = {
   authorisedToWork: string
   needsSponsorship: string
   willingToRelocate: string
+  /** From the first education entry of the primary résumé, as the person wrote it. */
+  gpa: string
 }
 
 export type ExtensionSync = {
@@ -101,6 +103,7 @@ export async function readExtensionSync(userId: string, email: string): Promise<
   ])
   const { answers: selfId } = await readSelfId(userId)
   const { extras } = await readProfileExtras(userId)
+  const primaryResume = await readPrimaryResume(userId)
   const { bank } = await readAnswerBank(userId)
   const row = (p as unknown as ProfileRow | null)
   const s = (v: string | number | null | undefined) => (v == null ? '' : String(v))
@@ -128,8 +131,10 @@ export async function readExtensionSync(userId: string, email: string): Promise<
       authorisedToWork: extras.authorisedToWork,
       needsSponsorship: extras.needsSponsorship,
       willingToRelocate: extras.willingToRelocate,
+      gpa: primaryResume?.resume.sections.education.find((e) => e.gpa)?.gpa ?? '',
     },
-    selfId,
+    // A declined question is the person's own "leave it blank": the extension never holds it, so it can never be filled.
+    selfId: Object.fromEntries(Object.entries(selfId).filter(([, v]) => v !== DECLINED)) as SelfIdAnswers,
     answerBank: forExtension(bank),
     resumeText: s(((!primary.error && primary.data ? primary.data : latest.data) as { body: string | null } | null)?.body),
     tracked: ((apps ?? []) as unknown as { apply_url: string; status: Stage }[])

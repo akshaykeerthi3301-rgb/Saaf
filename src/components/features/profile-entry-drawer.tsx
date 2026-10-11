@@ -20,6 +20,9 @@ export type EntryInitial = {
   bullets?: string[]
   qualification?: string
   institution?: string | null
+  major?: string
+  gpa?: string
+  summary?: string
 }
 
 const YEARS = (() => {
@@ -45,6 +48,10 @@ export function EntryDrawer({ kind, index, initial, onClose }: {
   const [description, setDescription] = useState(bulletsToText(initial.bullets ?? []))
   const [institution, setInstitution] = useState(initial.institution ?? '')
   const [qualification, setQualification] = useState(initial.qualification ?? '')
+  // An entry saved before majors had their own box: the field of study is what follows the degree's comma.
+  const [major, setMajor] = useState(initial.major ?? (initial.qualification?.includes(',') ? initial.qualification.split(',').slice(1).join(',').trim() : ''))
+  const [gpa, setGpa] = useState(initial.gpa ?? '')
+  const [summary, setSummary] = useState(initial.summary ?? '')
   const [sm, setSm] = useState<number | null>(d.startMonth)
   const [sy, setSy] = useState<number | null>(d.startYear)
   const [em, setEm] = useState<number | null>(d.endMonth)
@@ -56,8 +63,8 @@ export function EntryDrawer({ kind, index, initial, onClose }: {
 
   async function save(): Promise<string | null> {
     const r = edu
-      ? await saveProfileEntry({ kind: 'education', index, institution, qualification, ...dates })
-      : await saveProfileEntry({ kind, index, title, employer, location, employmentType: type, description, ...dates })
+      ? await saveProfileEntry({ kind: 'education', index, institution, major, qualification, gpa, ...dates })
+      : await saveProfileEntry({ kind, index, title, employer, location, employmentType: type, summary, description, ...dates })
     return r.ok ? null : r.error
   }
 
@@ -95,17 +102,21 @@ export function EntryDrawer({ kind, index, initial, onClose }: {
     >
       {edu ? (
         <>
-          <Field label="School" required><input value={institution} onChange={(e) => setInstitution(e.target.value)} className={inputClass} placeholder="e.g. Indian Institute of Management" /></Field>
-          <Field label="Degree and field" hint="For example: Master's, Marketing"><input value={qualification} onChange={(e) => setQualification(e.target.value)} className={inputClass} placeholder="Master's, Marketing" /></Field>
+          <Field label="School name" required><input value={institution} onChange={(e) => setInstitution(e.target.value)} className={inputClass} placeholder="e.g. Indian Institute of Management" /></Field>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Major" required><input value={major} onChange={(e) => setMajor(e.target.value)} className={inputClass} placeholder="Marketing" /></Field>
+            <Field label="Degree type" required><input value={qualification} onChange={(e) => setQualification(e.target.value)} className={inputClass} placeholder="MBA, Marketing" /></Field>
+            <Field label="GPA" hint="As you write it: 8.4, 3.7/4.0, 78%"><input value={gpa} onChange={(e) => setGpa(e.target.value)} className={inputClass} placeholder="8.4" /></Field>
+          </div>
         </>
       ) : (
         <>
           <Field label={kind === 'project' ? 'Project name' : 'Position title'} required><input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} /></Field>
-          <Field label={kind === 'project' ? 'Organisation or context' : 'Company'}><input value={employer} onChange={(e) => setEmployer(e.target.value)} className={inputClass} /></Field>
+          <Field label={kind === 'project' ? 'Organisation or context' : 'Company'} required={kind === 'experience'}><input value={employer} onChange={(e) => setEmployer(e.target.value)} className={inputClass} /></Field>
           <div className={`grid gap-4 ${kind === 'experience' ? 'sm:grid-cols-2' : ''}`}>
             <Field label="Location"><input value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder="Bengaluru, India" /></Field>
             {kind === 'experience' ? (
-              <Field label="Experience type">
+              <Field label="Job type" required>
                 <select value={type} onChange={(e) => setType(e.target.value)} className={select}>
                   <option value="">Select…</option>
                   {EMPLOYMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -126,6 +137,12 @@ export function EntryDrawer({ kind, index, initial, onClose }: {
         <input type="checkbox" checked={current} onChange={(e) => setCurrent(e.target.checked)} className="size-4 rounded border-input" />
         {edu ? 'I currently study here' : kind === 'project' ? 'This is ongoing' : 'I currently work here'}
       </label>
+
+      {edu || kind !== 'experience' ? null : (
+        <Field label="Experience summary" hint="One or two sentences on the role. Kept for autofill — not printed on your résumé.">
+          <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} maxLength={1000} className={`${inputClass} resize-y leading-6`} />
+        </Field>
+      )}
 
       {edu ? null : (
         <Field label="Description" hint="One achievement per line. Numbers and outcomes read best.">

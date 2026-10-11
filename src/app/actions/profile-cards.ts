@@ -42,6 +42,7 @@ const dateFields = {
   endYear: z.number().int().min(1950).max(2100).nullable(),
   current: z.boolean(),
 }
+/** Mandatory exactly where Jobright's pop-ups mark a red star: job title, company and job type (for a job, not a project). */
 const job = z.object({
   kind: z.enum(['experience', 'project']),
   index: z.number().int().min(0).max(40).nullable(),
@@ -49,14 +50,22 @@ const job = z.object({
   employer: z.string().trim().max(200),
   location: z.string().trim().max(120),
   employmentType: z.string().trim().max(30),
+  summary: z.string().trim().max(1000).default(''),
   description: z.string().max(12000),
   ...dateFields,
+}).superRefine((v, ctx) => {
+  if (v.kind !== 'experience') return
+  if (!v.employer) ctx.addIssue({ code: 'custom', path: ['employer'], message: 'Add the company.' })
+  if (!v.employmentType) ctx.addIssue({ code: 'custom', path: ['employmentType'], message: 'Choose the job type.' })
 })
+/** School, major and degree type are mandatory; GPA is not. */
 const school = z.object({
   kind: z.literal('education'),
   index: z.number().int().min(0).max(40).nullable(),
   institution: z.string().trim().min(1, 'Add the school.').max(200),
-  qualification: z.string().trim().max(300),
+  major: z.string().trim().min(1, 'Add the major.').max(120),
+  qualification: z.string().trim().min(1, 'Add the degree type.').max(300),
+  gpa: z.string().trim().max(20).default(''),
   ...dateFields,
 })
 const entrySchema = z.discriminatedUnion('kind', [job, school])
@@ -75,7 +84,7 @@ export async function saveProfileEntry(input: z.input<typeof entrySchema>): Prom
 
   let entry
   if (v.kind === 'education') {
-    entry = { qualification: v.qualification, institution: v.institution, dates }
+    entry = { qualification: v.qualification, institution: v.institution, dates, ...(v.major ? { major: v.major } : {}), ...(v.gpa ? { gpa: v.gpa } : {}) }
   } else {
     const bullets = textToBullets(v.description)
     if (bullets.some((b) => b.length > 600)) return { ok: false, error: 'One line is longer than 600 characters. Split it into two.' }
@@ -83,6 +92,7 @@ export async function saveProfileEntry(input: z.input<typeof entrySchema>): Prom
     entry = {
       title: v.title, employer: v.employer || null, dates, location: v.location || null, bullets,
       ...(v.employmentType ? { employmentType: v.employmentType } : {}),
+      ...(v.summary ? { summary: v.summary } : {}),
     }
   }
 
@@ -186,23 +196,28 @@ export async function saveProfileRoles(input: { primary: string; extras: string[
   return { ok: true }
 }
 
+/** Mandatory exactly where Jobright's Personal pop-up marks a red star; middle name, phone type, county, GitHub and portfolio are not. */
 const personalSchema = z.object({
   firstName: z.string().trim().min(1, 'Add your first name.').max(60),
-  lastName: z.string().trim().max(60),
-  phone: z.string().trim().max(40),
+  lastName: z.string().trim().min(1, 'Add your last name.').max(60),
+  phone: z.string().trim().min(1, 'Add your phone number.').max(40),
   city: z.string().trim().min(1, 'Add your city — it decides which jobs are near you.').max(120),
   preferredName: z.string().trim().max(60),
   suffixName: z.string().trim().max(30),
   birthday: extrasSchema.shape.birthday,
-  address1: z.string().trim().max(160),
+  address1: z.string().trim().min(1, 'Add your address line.').max(160),
   address2: z.string().trim().max(160),
   address3: z.string().trim().max(160),
-  postalCode: z.string().trim().max(20),
+  postalCode: z.string().trim().min(1, 'Add your postal code.').max(20),
   middleName: z.string().trim().max(60),
   phoneType: extrasSchema.shape.phoneType,
-  country: z.string().trim().max(60),
-  state: z.string().trim().max(60),
+  country: z.string().trim().min(1, 'Add your country.').max(60),
+  state: z.string().trim().min(1, 'Add your state or province.').max(60),
   county: z.string().trim().max(60),
+  linkedinUrl: z.string().trim().min(1, 'Add your LinkedIn URL.').max(300),
+  portfolioUrl: url,
+  githubUrl: url,
+  otherUrl: url,
 })
 
 export async function saveProfilePersonal(input: z.input<typeof personalSchema>): Promise<{ ok: true; note?: string } | Fail> {
@@ -210,15 +225,17 @@ export async function saveProfilePersonal(input: z.input<typeof personalSchema>)
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Please check the fields.' }
   const userId = await whoAmI()
   if (!userId) return NOT_SIGNED_IN
-  const { firstName, lastName, phone, city, ...extras } = parsed.data
+  const { firstName, lastName, phone, city, linkedinUrl, portfolioUrl, ...extras } = parsed.data
 
   const canonical = resolveCity(city)?.name ?? city
   const core = await writeProfilePersonal(userId, { fullName: [firstName, lastName].filter(Boolean).join(' '), phone, city: canonical })
   if (!core.ok) return CONNECTION
+  const links = await writeProfileLinks(userId, { linkedinUrl, portfolioUrl })
+  if (!links.ok) return CONNECTION
   await evaluateUser(userId).catch(() => undefined)
   const extra = await writeProfileExtras(userId, extras)
   revalidatePath('/profile')
-  return extra.ok ? { ok: true } : { ok: false, error: `Name, phone and city saved. The rest: ${EXTRAS_MISSING}` }
+  return extra.ok ? { ok: true } : { ok: false, error: `Name, phone, city and links saved. The rest: ${EXTRAS_MISSING}` }
 }
 
 /** Any subset of the extras — languages, the preference answers. Fields left out are kept as they are. */

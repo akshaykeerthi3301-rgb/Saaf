@@ -3191,3 +3191,13 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Limits.** Saving through the new pop-ups was not exercised against the real database (the founder's profile was not touched); the new address fields were tested on plain forms, not on Workday's own field names.
 
 **Built:** see TASK-242.
+
+### Stage BC — GPA, Experience Summary, and "mandatory only where Jobright's is" (2026-10-12)
+
+**OBSERVED 2026-10-12 in the founder's Chrome (red stars in Jobright's pop-ups):** Personal — First, Last, Email, Phone, Address line, Country/Region, State/Province, City, Postal code, LinkedIn URL. Education — School, Major, Degree type. Work — Job title, Company, Job type. Employment — authorised to work, sponsorship, disability, veteran, gender, LGBTQ+, race, Hispanic/Latino, orientation (pronouns carries no star). Not starred: middle name, phone type, county, GitHub, portfolio, GPA, dates, location, experience summary, description.
+
+**Decisions.** (1) Mandatory means *mandatory to save that pop-up*; it never blocks using the product (the standing rule is never to gate a user out). (2) 'Decline to state' must count as an answer for a required question, so it is now stored (`decline`) rather than being the absence of a key; the extension strips it on sync and ignores it if it ever sees one — a declined question is left blank, exactly as before. Optional questions keep the old meaning: Decline = clear. (3) GPA, Major and Experience Summary are optional fields on the résumé record, never printed — the résumé's text, export and ATS score are untouched. (4) Work authorisation and sponsorship are Yes/No only (Jobright offers no decline for them); Jobinko's own 'willing to relocate' stays optional. (5) Existing entries saved before these rules (no job type, no major) will ask for it the next time they are edited; nothing is rewritten in bulk.
+
+**Found, not fixed:** the résumé reader stored the founder's education with school and degree swapped ('MBA' as the school name). Tracked as a separate task.
+
+**Built:** see TASK-243.

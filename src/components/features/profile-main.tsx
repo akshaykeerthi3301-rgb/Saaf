@@ -66,13 +66,14 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
               {e.employer ? <p className="text-base font-semibold text-muted-foreground">{e.employer}</p> : null}
             </div>
             <div className="flex shrink-0 gap-2">
-              <EditButton label={`Edit ${e.title ?? 'entry'}`} onClick={() => open(kind, e.index, { title: e.title, employer: e.employer, location: e.location, employmentType: e.employmentType, dates: e.dates, bullets: e.bullets })} />
+              <EditButton label={`Edit ${e.title ?? 'entry'}`} onClick={() => open(kind, e.index, { title: e.title, employer: e.employer, location: e.location, employmentType: e.employmentType, summary: e.summary, dates: e.dates, bullets: e.bullets })} />
               <DeleteButton label={`Remove ${e.title ?? 'entry'}`} disabled={deleting === `${kind}-${e.index}`} onClick={() => remove(kind, e.index, e.title ?? 'this entry')} />
             </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {[e.location, range, e.employmentType].filter(Boolean).map((t) => <Chip key={t}>{t}</Chip>)}
           </div>
+          {e.summary ? <p className="mt-4 text-sm leading-6 text-muted-foreground">{e.summary}</p> : null}
           {e.bullets.length ? (
             <ul className="mt-4 space-y-1 text-sm leading-6 text-primary">
               {e.bullets.map((b, i) => <li key={i} className="flex gap-2"><span aria-hidden="true">●</span><span className="min-w-0">{b}</span></li>)}
@@ -165,12 +166,12 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-semibold text-primary">{e.institution ?? e.qualification}</h3>
                       <div className="flex shrink-0 gap-2">
-                        <EditButton label={`Edit ${e.institution ?? 'education'}`} onClick={() => open('education', e.index, { institution: e.institution, qualification: e.qualification, dates: e.dates })} />
+                        <EditButton label={`Edit ${e.institution ?? 'education'}`} onClick={() => open('education', e.index, { institution: e.institution, qualification: e.qualification, major: e.major, gpa: e.gpa, dates: e.dates })} />
                         <DeleteButton label={`Remove ${e.institution ?? 'education'}`} disabled={deleting === `education-${e.index}`} onClick={() => remove('education', e.index, e.institution ?? 'this school')} />
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {[range, e.institution ? e.qualification : ''].filter(Boolean).map((t) => <Chip key={t}>{t}</Chip>)}
+                      {[range, e.institution ? e.qualification : '', e.gpa ? `GPA ${e.gpa}` : ''].filter(Boolean).map((t) => <Chip key={t}>{t}</Chip>)}
                     </div>
                   </div>
                 </li>

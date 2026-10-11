@@ -47,4 +47,9 @@ describe('sanitizeSelfId — only what the candidate typed survives', () => {
     expect(sanitizeSelfId({ lgbtq: 'No', hispanic: 'yes' })).toEqual({ lgbtq: 'no', hispanic: 'yes' })
     expect(sanitizeSelfId({ lgbtq: 'sometimes' })).toEqual({})
   })
+
+  it('stores a declined answer as `decline` for any question, and marks the questions Jobright requires', () => {
+    expect(sanitizeSelfId({ gender: 'Decline', disability: 'DECLINE', religion: 'decline' })).toEqual({ gender: 'decline', disability: 'decline', religion: 'decline' })
+    expect(SELF_ID_FIELDS.filter((f) => f.required).map((f) => f.key).sort()).toEqual(['disability', 'ethnicity', 'gender', 'hispanic', 'lgbtq', 'orientation', 'veteran'])
+  })
 })
