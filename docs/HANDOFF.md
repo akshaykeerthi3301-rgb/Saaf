@@ -5,7 +5,7 @@
 ## 🔶 2026-10-12 (night, last) — GPA, Experience Summary, and Jobright's mandatory fields · extension 0.14.0
 
 **Now:** GPA, Major and Experience summary exist in the Education and Work pop-ups; LinkedIn/GitHub/Portfolio sit in the Personal pop-up. Required (red *) are exactly the fields Jobright marks. 'Decline to state' counts as an answer for the voluntary questions. The extension (0.14.0) also fills GPA.
-**Heads-up (updated):** the résumé reader's school/degree swap is fixed for any résumé read from now on (TASK-244), but your ALREADY-SAVED education still shows the swap — re-upload your résumé, or open the pencil on each education entry and put the school in School name, the field in Major, the degree in Degree type. Work entries that have no job type will ask for one the next time you edit them.
+**Done (2026-10-12, founder-approved):** the résumé reader's school/degree swap is fixed (TASK-244), and your saved primary résumé's two education entries were corrected in the database (school, degree and major; dates kept) — read back from the database and seen on the live profile page. Only `sections.education` was changed; the résumé's text, experience and score were not. Backup of the old entries: scratchpad `education-backup.json` (session-local). Work entries that have no job type will ask for one the next time you edit them.
 **Verified:** tests; the pop-ups in the local browser; the extension flows. **Not verified:** pressing Save/Update on your real data; GPA on a real employer form.
 **You need to:** after the deploy, fix the two education entries, pick a job type on your work entries, fill the starred Personal and Employment questions, then download 0.14.0 and reload it on chrome://extensions.
 
