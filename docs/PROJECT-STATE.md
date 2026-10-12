@@ -3298,3 +3298,11 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Ranking rule:** score by what the option *is* (first comma-part equals the wanted place = 92), then prefer the option in the person's own state/country, then the shorter text. Ties between equal candidates take the first listed.
 **Isolation rule:** every field is in its own try/catch and the type-ahead has a 12 s ceiling; whatever fails is left empty and reported, never half-typed.
 **Measured (2026-10-12):** `city-picker.mjs` 13/13 in real Chromium (normal list 0.7 s, slow 1.6 s, click-ignoring, never-answers 4.5 s total, throws 1 s). Unverified on the real SmartRecruiters page.
+
+### Stage BM — why 0.18.5 did not fix the City box (2026-10-12)
+
+**~~0.18.5 solved it~~ — it did not.** It was proven only against a mock I wrote from a *guess* at the real list's markup. The founder reported 'same issue'; I then drove the real page in their Chrome tab (OBSERVED, not inferred).
+**Observed on the real SmartRecruiters page:** City list rows are `spl-select-option` (no role) inside `div[role=listbox]` with the text in light DOM; the last row is a 'Cannot find your city? Click here to fill in manually' link; clicking a row (host or inner `spl-dropdown-item`) does nothing; ArrowDown + Enter on the input commits ('Bengaluru, Karnataka, India', `aria-expanded` false); a script's bare value change leaves the component's own copy stale and the next write is appended ('BengalooruBeng'); `execCommand('insertText')` over a selection types cleanly and the phone component then reformats ('86063 66187', host value `{country:'IN', internationalFormat:'+918606366187'}`, `ng-valid`). Phone field host `spl-phone-field` carries `label`, `autocomplete=tel`, `required`.
+**Rule (lesson):** a mock is only evidence for the shape it copies. For any third-party widget read the live DOM first; the mock must fail on the old code (negative control) — this one now does.
+**Decision:** inside web components, text goes in as a genuine edit (insert-text command, then change + blur); plain light-DOM fields keep the proven native-setter path (React).
+**Not measured:** the packaged 0.18.6 extension running on the real page — needs the founder's reload.

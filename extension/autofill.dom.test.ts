@@ -282,6 +282,25 @@ describe('searchable pickers', () => {
     expect(res.filled).toContainEqual({ key: 'city', value: 'Bengaluru, Karnataka, India', how: 'chose' })
   }, 15000)
 
+  it('reads a list made of role-less custom option tags and chooses from it with the keyboard (SmartRecruiters\' City)', async () => {
+    form(`<label for="loc">City</label><input id="loc" role="combobox" aria-controls="lb" aria-expanded="false"><div id="lb" role="listbox"></div>`)
+    const input = $('#loc')
+    let active = -1, shown: string[] = []
+    input.addEventListener('input', () => {
+      shown = /beng/i.test(input.value) ? ['Bengaluru, Karnataka, India', 'Bengbu, Anhui, China'] : []
+      $('#lb').innerHTML = shown.map((o) => `<spl-select-option>${o}</spl-select-option>`).join('') + (shown.length ? '<spl-select-option>Cannot find your city? Click here to fill in manually</spl-select-option>' : '')
+      active = -1
+    })
+    input.addEventListener('keydown', (e) => {
+      const k = (e as KeyboardEvent).key
+      if (k === 'ArrowDown') active++
+      else if (k === 'Enter' && active >= 0) { input.dataset.committed = shown[active]; input.value = shown[active]; $('#lb').innerHTML = ''; input.setAttribute('aria-expanded', 'false') }
+    })
+    const res = await A.fillForm(PROFILE, document, { waitMs: 300 })
+    expect(input.dataset.committed).toBe('Bengaluru, Karnataka, India')
+    expect(res.filled).toContainEqual({ key: 'city', value: 'Bengaluru, Karnataka, India', how: 'chose' })
+  }, 15000)
+
   it('clears its typing when nothing in the list matches', async () => {
     const input = picker(['Mumbai, Maharashtra, India'])
     const res = await A.fillForm(PROFILE, document, { waitMs: 200 })

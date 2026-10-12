@@ -719,10 +719,26 @@
   /** Never wait forever on a page's own widget: after `ms`, give up with `fallback` and let the form carry on. */
   const within = (promise, ms, fallback) => Promise.race([promise, sleep(ms).then(() => fallback)])
 
-  /** Type into a box the way a person does — focus, the text, a real "insert text" input event, a key-up — across any shadow edge. */
+  /**
+   * A genuine edit: focus the box, select what is in it, and run the browser's own "insert text" command — exactly what a keystroke
+   * does, so every listener hears one real input event. ⚠️ Component libraries that keep their OWN copy of the text (SmartRecruiters'
+   * City and phone) ignore a bare value change, and APPEND the next attempt to the last one ("Bengalooru"). True if the box now shows
+   * exactly `text`; false where the browser or box does not allow it (a test DOM, a date input) so the caller can fall back.
+   */
+  function insertTyped(el, text) {
+    try { el.focus?.() } catch { /* not focusable */ }
+    try {
+      el.select?.()
+      const d = el.ownerDocument
+      const ok = text ? d.execCommand('insertText', false, text) : d.execCommand('delete')
+      return !!ok && el.value === text
+    } catch { return false }
+  }
+
+  /** Type into a box the way a person does — a real edit if the browser allows it, else focus, the text, an "insert text" input event, a key-up. */
   function typeInto(el, text) {
     const view = el.ownerDocument.defaultView
-    try { el.focus?.() } catch { /* not focusable */ }
+    if (insertTyped(el, text)) return
     setNativeValue(el, text)
     try { el.dispatchEvent(new view.InputEvent('input', { bubbles: true, composed: true, inputType: text ? 'insertText' : 'deleteContentBackward', data: text || null })) } catch { /* old engine */ }
     try { el.dispatchEvent(new view.KeyboardEvent('keyup', { bubbles: true, composed: true, key: text ? text.slice(-1) : 'Backspace' })) } catch { /* old engine */ }
@@ -740,9 +756,11 @@
   const optionList = (el, doc) => {
     const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
     const scope = (listId && byIdIn(el, doc, listId)) || doc
-    return deepAll(scope, '[role="option"]')
+    // Standard markup says role="option"; component libraries use their own tag (SmartRecruiters: <spl-select-option>) with no role at
+    // all — which is why a list that was plainly on screen read as empty. The "can't find it? type it yourself" link is not an answer.
+    return deepAll(scope, '[role="option"], [role="menuitem"], spl-select-option')
       .map((o) => ({ text: textOf(o).trim(), value: o.getAttribute('data-value') || '', ref: o }))
-      .filter((o) => o.text && !/^(no (options|results|matches)|loading|searching|type to search)/i.test(o.text))
+      .filter((o) => o.text && !/^(no (options|results|matches)|loading|searching|type to search|(cannot|can.?t) find|add (it )?manually)/i.test(o.text))
   }
   /** Did the picker take the choice? The box now shows (the start of) the option's text, or its list has closed. */
   function chosen(el, option, before) {
@@ -775,20 +793,23 @@
    * wording finds nothing it tries the next (the place's first part, its other names). If nothing works the box is emptied again —
    * half-typed search text in a picker looks answered and is not — and null is returned so the form carries on without it.
    */
-  async function fillCombobox(el, key, raw, text, doc, waitMs, hints) {
+  async function fillCombobox(el, key, raw, text, doc, waitMs, hints, ctl = { stop: false }) {
     const before = el.value || ''
     const patience = Math.max(waitMs, LOCATION_KEYS.has(key) ? 2500 : 1200)
     for (const query of queryVariants(raw, text)) {
+      // `ctl.stop` is set by the caller when its time is up: this field is abandoned and must stop typing into the page at once,
+      // or it keeps fighting the next fields for the keyboard.
+      if (ctl.stop) break
       typeInto(el, query)
       const deadline = Date.now() + patience
       let options = [], last = '', steady = 0
-      while (Date.now() < deadline) {
+      while (Date.now() < deadline && !ctl.stop) {
         await sleep(60)
         options = optionList(el, doc)
         const sig = options.map((o) => o.text).join('|')
         if (options.length) { steady = sig === last ? steady + 1 : 0; last = sig; if (steady >= 2) break } else { steady = 0; last = '' }
       }
-      const choice = pickOption(key, raw, options, hints)
+      const choice = ctl.stop ? null : pickOption(key, raw, options, hints)
       if (choice && (await commitOption(el, choice, options, query))) return choice.text
     }
     typeInto(el, '')
@@ -929,14 +950,24 @@
       // ---- searchable picker.
       const role = el.getAttribute?.('role')
       if (role === 'combobox' || el.getAttribute?.('aria-autocomplete') === 'list') {
-        const picked = await within(fillCombobox(el, verdict.key, raw, text.value, doc, waitMs, profile), 12000, null)
+        const ctl = { stop: false }
+        const picked = await within(fillCombobox(el, verdict.key, raw, text.value, doc, waitMs, profile, ctl), 12000, null)
+        ctl.stop = true
         if (picked) { seen.add(verdict.key); out.filled.push({ key: verdict.key, value: picked, how: 'chose' }) }
         else refuse('a dropdown whose options did not match your answer — left for you')
         continue
       }
 
       seen.add(verdict.key)
-      setNativeValue(el, text.value)
+      if (hostChain(el).length) {
+        // ⚠️ Inside a web component the box keeps its OWN copy of what was typed (SmartRecruiters' phone field reformats it, checks it,
+        // and shows empty if it never saw a keystroke). A bare value change is invisible to it; a real "insert text" edit is not.
+        if (insertTyped(el, text.value)) {
+          // …and then "tab out", as a person does: the component validates and commits on change/blur, not on each keystroke.
+          for (const type of ['change', 'blur']) el.dispatchEvent(new (el.ownerDocument.defaultView.Event)(type, { bubbles: true, composed: true }))
+        } else setNativeValue(el, text.value)
+        if (!el.value) { refuse('a field the page would not take — left for you'); out.skipped++; continue }
+      } else setNativeValue(el, text.value)
       out.filled.push({ key: verdict.key, value: text.value, how: 'typed' })
       } catch (err) {
         out.skipped++

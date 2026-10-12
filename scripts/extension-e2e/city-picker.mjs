@@ -36,6 +36,11 @@ check('slow: rest of the form filled', !!r.st.email)
 r = await run('keyboard')
 check('widget ignores clicks: chosen with the keyboard instead', r.st.city === 'Bengaluru, Karnataka, India', JSON.stringify(r.st.city))
 
+r = await run('spl')
+check('REAL SmartRecruiters shape (role-less spl-select-option, keyboard-only, "Cannot find your city" link): chosen', r.st.city === 'Bengaluru, Karnataka, India', JSON.stringify({ city: r.st.city, typed: r.st.typed }))
+check('…typed cleanly, no leftovers ("Bengalooru")', r.st.typed === 'Bengaluru', JSON.stringify(r.st.typed))
+check('…fields after it filled and the panel recovered', !!r.st.email && r.done, `${r.secs}s · ${r.go}`)
+
 r = await run('normal', () => chrome.storage.local.get('profile').then(({ profile }) => chrome.storage.local.set({ profile: { ...profile, city: 'Bangalore' } })))
 check('"Bangalore" in the profile → "Bengaluru, Karnataka, India" in the list', r.st.city === 'Bengaluru, Karnataka, India', JSON.stringify(r.st.city))
 

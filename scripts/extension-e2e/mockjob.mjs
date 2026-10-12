@@ -110,7 +110,8 @@ const mk = (name, build) => customElements.define(name, class extends HTMLElemen
 mk('spl-input', (h, sr) => {
   const id = h.id || 'x'
   sr.innerHTML = '<div><label for="' + id + '-box">' + (h.getAttribute('label') || '') + '</label><input id="' + id + '-box" type="' + (h.getAttribute('type') || 'text') + '"></div>'
-  h.addEventListener('input', () => { __st[h.id] = sr.querySelector('input').value })
+  // Like the real component: only a genuine edit (a keystroke, or an "insert text" command) counts; a script's bare value change does not.
+  h.addEventListener('input', (e) => { if (e.isTrusted) __st[h.id] = sr.querySelector('input').value })
 })
 mk('spl-autocomplete', (h, sr) => {
   sr.innerHTML = '<div><label for="c-box">City</label><input id="c-box" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="c-lb" aria-expanded="false" autocomplete="off"><ul id="c-lb" role="listbox"></ul></div>'
@@ -118,7 +119,13 @@ mk('spl-autocomplete', (h, sr) => {
   if (mode === 'throws') input.getAttribute = () => { throw new Error('boom') }
   let shown = [], active = -1
   const choose = (c) => { input.value = c; lb.innerHTML = ''; shown = []; input.setAttribute('aria-expanded', 'false'); __st.city = c }
-  const render = (list) => { lb.innerHTML = ''; shown = list; active = -1; input.setAttribute('aria-expanded', String(!!list.length)); list.forEach((c) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = c; if (mode !== 'keyboard') li.addEventListener('click', () => choose(c)); lb.appendChild(li) }) }
+  // mode=spl is the REAL SmartRecruiters shape, read from the live page: <spl-select-option> tags with NO role, the text in the light
+  // DOM, a "Cannot find your city?" link as the last entry, and a list that only the keyboard can choose from.
+  if (!customElements.get('spl-select-option')) customElements.define('spl-select-option', class extends HTMLElement { connectedCallback() { if (!this.shadowRoot) this.attachShadow({ mode: 'open' }).innerHTML = '<div><slot></slot></div>' } })
+  const render = (list) => { lb.innerHTML = ''; shown = list; active = -1; input.setAttribute('aria-expanded', String(!!list.length))
+    list.forEach((c) => { if (mode === 'spl') { const o = document.createElement('spl-select-option'); o.textContent = c; lb.appendChild(o); return }
+      const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = c; if (mode !== 'keyboard') li.addEventListener('click', () => choose(c)); lb.appendChild(li) })
+    if (mode === 'spl' && list.length) { const o = document.createElement('spl-select-option'); o.innerHTML = '<a href="#">Cannot find your city? Click here to fill in manually</a>'; lb.appendChild(o) } }
   input.addEventListener('input', () => {
     const q = input.value.toLowerCase(); __st.typed = input.value
     if (mode === 'never' || !q) return render([])

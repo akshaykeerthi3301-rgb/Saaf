@@ -2,6 +2,14 @@
 
 ---
 
+## 🔶 2026-10-12 (City, second fix) — extension 0.18.6
+
+**Why 0.18.5 did not work, and what I did differently:** I had built it against a stand-in page I made from a guess. This time I opened your real Swiggy tab and watched it. Three real causes: the City list uses non-standard tags my code could not see (so it kept retyping new spellings for ~50 seconds), the box keeps its own copy of the text and a plain 'set the value' was ignored (this is also why **Phone number** stayed empty), and clicking an item does nothing — only the arrow-down + Enter keys choose. **All three fixed**, and I checked each directly on the live page (City picks 'Bengaluru, Karnataka, India'; the phone box accepts your number and shows it as valid).
+**You need to:** press ↻ reload on Jobinko (files already in `~/Downloads/jobinko-extension 2`), **reload the Swiggy page**, press Autofill. Expect First/Last name, both emails, City 'Bengaluru, Karnataka, India', Phone, and the résumé. Not yet seen end to end with the real extension — only the reload lets me confirm, so tell me what the page shows.
+**Note:** while testing I typed your city and phone into the Swiggy form myself (nothing submitted).
+
+---
+
 ## 🔶 2026-10-12 (City dropdown) — extension 0.18.5
 
 **What was wrong:** on the Swiggy page the City box is a type-ahead (you type, a list appears from the site's server). The extension typed once, waited under a second, and only accepted an exact match — so "Bengaluru" against "Bengaluru, Karnataka, India" stalled, and one stuck box could hold up everything after it. **Fixed for every dropdown:** it now waits for the list, picks the closest match (Bangalore/Bengaluru, Gurgaon/Gurugram… all understood), and if nothing fits it clears the box, leaves it for you and carries on with the next field.
