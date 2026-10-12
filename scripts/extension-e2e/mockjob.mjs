@@ -98,6 +98,39 @@ mk('spl-textarea', (h, sr) => { sr.innerHTML = '<label for="t">' + (h.getAttribu
 <h2>Resume *</h2><spl-dropzone data-test="resume-upload"></spl-dropzone>
 <spl-textarea label="Let the company know about your interest"></spl-textarea>
 </body></html>`
+// A City type-ahead that misbehaves on request (?mode=…), with fields AFTER it so a hang or error would show as fields left unfilled.
+//   normal   list after 0.7 s, several similar places      slow     list after 1.6 s (a server)
+//   keyboard clicking an option does nothing; only ArrowDown + Enter chooses
+//   never    no list ever appears                          throws   the box's own methods throw
+const srCityPage = `${head('Easy apply – City – ACME')}<h1>Account Manager</h1><p>${para}</p>
+<script>
+window.__st = {}
+const mode = new URLSearchParams(location.search).get('mode') || 'normal'
+const mk = (name, build) => customElements.define(name, class extends HTMLElement { connectedCallback() { if (!this.shadowRoot) build(this, this.attachShadow({ mode: 'open' })) } })
+mk('spl-input', (h, sr) => {
+  const id = h.id || 'x'
+  sr.innerHTML = '<div><label for="' + id + '-box">' + (h.getAttribute('label') || '') + '</label><input id="' + id + '-box" type="' + (h.getAttribute('type') || 'text') + '"></div>'
+  h.addEventListener('input', () => { __st[h.id] = sr.querySelector('input').value })
+})
+mk('spl-autocomplete', (h, sr) => {
+  sr.innerHTML = '<div><label for="c-box">City</label><input id="c-box" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="c-lb" aria-expanded="false" autocomplete="off"><ul id="c-lb" role="listbox"></ul></div>'
+  const input = sr.querySelector('input'), lb = sr.querySelector('ul')
+  if (mode === 'throws') input.getAttribute = () => { throw new Error('boom') }
+  let shown = [], active = -1
+  const choose = (c) => { input.value = c; lb.innerHTML = ''; shown = []; input.setAttribute('aria-expanded', 'false'); __st.city = c }
+  const render = (list) => { lb.innerHTML = ''; shown = list; active = -1; input.setAttribute('aria-expanded', String(!!list.length)); list.forEach((c) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = c; if (mode !== 'keyboard') li.addEventListener('click', () => choose(c)); lb.appendChild(li) }) }
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase(); __st.typed = input.value
+    if (mode === 'never' || !q) return render([])
+    setTimeout(() => { if (input.value.toLowerCase() !== q) return; render(/beng|bang/.test(q) ? ['Bengaluru Rural, Karnataka, India', 'Bengaluru, Karnataka, India', 'Bengal, West Bengal, India'] : []) }, mode === 'slow' ? 1600 : 700)
+  })
+  input.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { active = Math.min(shown.length - 1, active + 1); e.preventDefault() } else if (e.key === 'Enter' && active >= 0) { choose(shown[active]); e.preventDefault() } })
+})
+</script>
+<spl-autocomplete></spl-autocomplete>
+<spl-input id="company" label="Current company"></spl-input>
+<spl-input id="email" type="email" label="Email"></spl-input>
+</body></html>`
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
@@ -116,6 +149,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/sr/apply' ? srPage : p === '/nav/start' ? navStart : p === '/nav/blank' ? navBlank : p === '/nav/same' ? navSame : p === '/cover/job' ? coverJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/sr/city' ? srCityPage : p === '/sr/apply' ? srPage : p === '/nav/start' ? navStart : p === '/nav/blank' ? navBlank : p === '/nav/same' ? navSame : p === '/cover/job' ? coverJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }

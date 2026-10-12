@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 (City dropdown) — extension 0.18.5
+
+**What was wrong:** on the Swiggy page the City box is a type-ahead (you type, a list appears from the site's server). The extension typed once, waited under a second, and only accepted an exact match — so "Bengaluru" against "Bengaluru, Karnataka, India" stalled, and one stuck box could hold up everything after it. **Fixed for every dropdown:** it now waits for the list, picks the closest match (Bangalore/Bengaluru, Gurgaon/Gurugram… all understood), and if nothing fits it clears the box, leaves it for you and carries on with the next field.
+**You need to:** press ↻ reload on Jobinko (the new files are already in `~/Downloads/jobinko-extension 2`), open the Swiggy page and press Autofill. Check the City reads "Bengaluru, Karnataka, India". If any box is still wrong, send a screenshot.
+
+---
+
 ## 🔶 2026-10-12 (SmartRecruiters) — extension 0.18.4
 
 **Why Autofill was greyed out on the Swiggy page:** that page keeps every field inside hidden 'web component' boxes, and the extension could not see inside them — so as far as it knew there was no form. **Fixed for any such site.** The new files are already in `~/Downloads/jobinko-extension 2`.

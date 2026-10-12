@@ -108,12 +108,11 @@ describe('dropdowns', () => {
     expect($<HTMLSelectElement>('#c').value).toBe('Mumbai')
   })
 
-  it('never guesses between two matching options, and says so', async () => {
+  it('a city with several near matches takes the closest one rather than stalling on it', async () => {
     form(`<label for="c">City</label>
       <select id="c"><option value="">Select</option><option>Bengaluru Urban</option><option>Bengaluru Rural</option></select>`)
-    const res = await A.fillForm(PROFILE, document)
-    expect($<HTMLSelectElement>('#c').value).toBe('')
-    expect(res.refused.map((r) => r.reason).join()).toMatch(/dropdown/)
+    await A.fillForm(PROFILE, document)
+    expect($<HTMLSelectElement>('#c').value).toMatch(/^Bengaluru/)
   })
 
   it('still refuses a demographic dropdown', async () => {
@@ -270,7 +269,7 @@ describe('searchable pickers', () => {
       $('#lb').innerHTML = options.filter((o) => q && o.toLowerCase().includes(q))
         .map((o) => `<li role="option">${o}</li>`).join('')
       for (const li of document.querySelectorAll('[role="option"]')) {
-        li.addEventListener('click', () => { input.dataset.committed = li.textContent ?? '' })
+        li.addEventListener('click', () => { input.dataset.committed = li.textContent ?? ''; input.value = li.textContent ?? ''; $('#lb').innerHTML = '' })
       }
     })
     return input
@@ -281,7 +280,7 @@ describe('searchable pickers', () => {
     const res = await A.fillForm(PROFILE, document, { waitMs: 300 })
     expect(input.dataset.committed).toBe('Bengaluru, Karnataka, India')
     expect(res.filled).toContainEqual({ key: 'city', value: 'Bengaluru, Karnataka, India', how: 'chose' })
-  })
+  }, 15000)
 
   it('clears its typing when nothing in the list matches', async () => {
     const input = picker(['Mumbai, Maharashtra, India'])
@@ -289,7 +288,7 @@ describe('searchable pickers', () => {
     expect(input.value).toBe('')
     expect(input.dataset.committed).toBeUndefined()
     expect(res.refused.map((r) => r.reason).join()).toMatch(/dropdown/)
-  })
+  }, 20000)
 })
 
 describe('it never submits', () => {

@@ -401,7 +401,8 @@ function mountActions(root, job, state) {
       : entry ? 'Jobinko will press Apply for you, then fill the form'
       : 'No application form or Apply button found on this page'
     supportEl.innerHTML = `<div class="support ${form || entry ? '' : 'off'}"><span class="dot"></span>${msg}</div>`
-    if (!state.running && go.textContent !== 'Autofilling…') go.textContent = goLabel()
+    // Whenever the panel is not running, its button says what it can do now — so a button can never be left reading "Autofilling…".
+    if (!state.running) go.textContent = goLabel()
   }
   setSupport()
 
@@ -586,9 +587,14 @@ function mountActions(root, job, state) {
     let res
     try {
       res = await A.fillForm(profile, doc, { resumeFile, coverLetter: coverFor[pk] || null, replaceResumeNamed: state.attachedName, shouldStop: () => state.cancel })
+    } catch (err) {
+      // fillForm skips a field that fails, so this is rare — but if anything does escape, the panel must recover and say so,
+      // never sit on "Autofilling…". What was already written into the form stays.
+      res = { filled: [], refused: [{ reason: 'something on this page stopped the fill — what was filled stays; press Autofill again to retry' }], skipped: 0, unanswered: [] }
     } finally {
       clearInterval(tick)
       state.running = false
+      go.disabled = false
     }
     const att = res.filled.find((f) => f.how === 'attached')
     if (att) state.attachedName = att.value

@@ -553,11 +553,84 @@
     return { lo: a, hi: a }
   }
 
+  // ------------------------------------------------------- the closest option --
+  //
+  // A drop-down almost never words an answer the way the profile does: the profile says "Bengaluru", the list says
+  // "Bengaluru, Karnataka, India" (and also "Bengaluru Rural, Karnataka, India"); the profile says "Bangalore", the list says
+  // "Bengaluru". An answer is therefore matched by CLOSENESS, not by equality: every option is scored and the best one is
+  // chosen — only when nothing is close at all is the field left for the person. (Yes/no, demographic and numeric-range answers
+  // keep their own stricter rules above; this is for places, names and plain choices.)
+  const ALIASES = [
+    ['bengaluru', 'bangalore', 'bengalooru'], ['mumbai', 'bombay'], ['chennai', 'madras'], ['kolkata', 'calcutta'],
+    ['gurugram', 'gurgaon'], ['pune', 'poona'], ['thiruvananthapuram', 'trivandrum'], ['kochi', 'cochin'],
+    ['vadodara', 'baroda'], ['mysuru', 'mysore'], ['delhi', 'new delhi', 'delhi ncr', 'ncr'], ['kozhikode', 'calicut'],
+    ['varanasi', 'benares'], ['prayagraj', 'allahabad'], ['visakhapatnam', 'vizag'], ['usa', 'united states', 'united states of america', 'us'],
+    ['uk', 'united kingdom', 'great britain'], ['uae', 'united arab emirates'],
+  ]
+  const LOCATION_KEYS = new Set(['city', 'preferredLocations', 'state', 'country', 'county'])
+  const fold = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim()
+  const aliasForms = (w) => { const f = fold(w); const g = ALIASES.find((grp) => grp.includes(f)); return g ? [...g] : [f] }
+  /** "Bengaluru, Karnataka, India" → ['bengaluru', 'karnataka', 'india'] */
+  const placeParts = (x) => String(x || '').split(/[,|/–—()]+| - /).map(fold).filter(Boolean)
+  function editDistance(a, b) {
+    const m = a.length, n = b.length
+    if (!m || !n) return Math.max(m, n)
+    let prev = Array.from({ length: n + 1 }, (_, j) => j)
+    for (let i = 1; i <= m; i++) {
+      const cur = [i]
+      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+      prev = cur
+    }
+    return prev[n]
+  }
+  const similarity = (a, b) => 1 - editDistance(a, b) / Math.max(a.length, b.length, 1)
   /**
-   * The one option that matches, or null. Never guesses between two.
-   * options: [{ text, value, ref }] with placeholders already removed.
+   * How close one option is to the wanted answer. `base` (0–100) is the closeness itself and is what must clear the bar;
+   * `rank` adds the tie-breaks (same state / country as the person, then the shorter, plainer option) and only orders the options
+   * that already qualified — a tie-break can never turn a good match into a rejected one. `hints` = the profile.
    */
-  function pickOption(key, raw, options) {
+  function scoreOption(raw, optionText, hints) {
+    const t = fold(optionText)
+    if (!t) return { base: 0, rank: 0 }
+    const rawParts = placeParts(raw)
+    const wants = new Set([fold(raw), ...(rawParts[0] ? aliasForms(rawParts[0]) : [])].filter(Boolean))
+    const parts = placeParts(optionText)
+    let base = 0
+    if (wants.has(t)) base = 100
+    else if (parts[0] && wants.has(parts[0])) base = 92                      // "Bengaluru, Karnataka, India" for "Bengaluru"
+    else if (parts.some((p) => wants.has(p))) base = 80                       // the name is one whole part of the option
+    else {
+      const padded = ` ${t} `
+      for (const w of wants) if (padded.includes(` ${w} `)) base = Math.max(base, 72)            // the name is a whole word inside it
+      if (parts[0] && parts[0].length >= 3 && ` ${fold(raw)} `.includes(` ${parts[0]} `)) base = Math.max(base, 74) // the option is shorter: "Bengaluru" for "Bengaluru, Karnataka"
+      for (const w of wants) for (const p of parts) {
+        const sim = similarity(w, p)
+        if (w.length >= 5 && sim >= (w.length >= 7 ? 0.75 : 0.85)) base = Math.max(base, 40 + sim * 30) // a spelling slip: "Bengalore"
+      }
+    }
+    if (!base) return { base: 0, rank: 0 }
+    const near = [hints?.state, hints?.country].map(fold).filter((x) => x.length >= 2)
+    const sameRegion = near.filter((x) => parts.some((p) => p === x || p.includes(x))).length
+    return { base, rank: base + Math.min(8, 4 * sameRegion) - Math.min(1.5, Math.max(0, t.length - fold(raw).length) / 40) }
+  }
+  /** The best option, if any is close enough; otherwise null (and the person is left to choose). */
+  function closestOption(raw, options, hints, minScore) {
+    let best = null, bestRank = -1
+    for (const o of options) {
+      const a = scoreOption(raw, o.text, hints)
+      const b = o.value ? scoreOption(raw, o.value, hints) : { base: 0, rank: 0 }
+      const sc = a.base >= b.base ? a : b
+      if (sc.base < minScore) continue
+      if (sc.rank > bestRank || (sc.rank === bestRank && best && fold(o.text).length < fold(best.text).length)) { best = o; bestRank = sc.rank }
+    }
+    return best
+  }
+
+  /**
+   * The one option that matches, or null. Yes/no, demographic and numeric answers never guess between two; every other answer
+   * takes the CLOSEST option (see above). options: [{ text, value, ref }] with placeholders already removed.
+   */
+  function pickOption(key, raw, options, hints) {
     if (!options.length || raw == null || raw === '') return null
     const only = (list) => (list.length === 1 ? list[0] : null)
 
@@ -588,11 +661,8 @@
     const want = norm(raw)
     if (!want) return null
     const exact = options.filter((o) => norm(o.text) === want || norm(o.value) === want)
-    if (exact.length) return only(exact)
-    return only(options.filter((o) => {
-      const t = norm(o.text)
-      return t.length >= 3 && (t.includes(want) || want.includes(t))
-    }))
+    if (exact.length === 1) return exact[0]
+    return closestOption(raw, exact.length ? exact : options, hints, LOCATION_KEYS.has(key) ? 58 : 72)
   }
 
   // ---------------------------------------------------------------- writing --
@@ -645,32 +715,84 @@
 
   const RESUME_UPLOAD = /(resume|résumé|\bcv\b|curriculum)/i
 
-  /**
-   * A combobox (React-Select, Headless UI, Ashby's pickers): type the value,
-   * wait for the list, click the one option that matches. If none or several
-   * match, the typed text is cleared again — half-typed search text in a picker
-   * looks answered and is not.
-   */
-  async function fillCombobox(el, key, raw, text, doc, waitMs) {
-    setNativeValue(el, text)
-    const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
-    const deadline = Date.now() + waitMs
-    let choice = null
-    do {
-      await new Promise((r) => setTimeout(r, 40))
-      const scope = (listId && byIdIn(el, doc, listId)) || doc
-      const options = deepAll(scope, '[role="option"]')
-        .map((o) => ({ text: textOf(o).trim(), value: o.getAttribute('data-value') || '', ref: o }))
-        .filter((o) => o.text && !/^no (options|results)/i.test(o.text))
-      choice = pickOption(key, raw, options)
-      if (choice) break
-    } while (Date.now() < deadline)
-    if (!choice) { setNativeValue(el, ''); return null }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+  /** Never wait forever on a page's own widget: after `ms`, give up with `fallback` and let the form carry on. */
+  const within = (promise, ms, fallback) => Promise.race([promise, sleep(ms).then(() => fallback)])
+
+  /** Type into a box the way a person does — focus, the text, a real "insert text" input event, a key-up — across any shadow edge. */
+  function typeInto(el, text) {
     const view = el.ownerDocument.defaultView
-    for (const type of ['mousedown', 'mouseup', 'click']) {
-      choice.ref.dispatchEvent(new view.MouseEvent(type, { bubbles: true, cancelable: true }))
+    try { el.focus?.() } catch { /* not focusable */ }
+    setNativeValue(el, text)
+    try { el.dispatchEvent(new view.InputEvent('input', { bubbles: true, composed: true, inputType: text ? 'insertText' : 'deleteContentBackward', data: text || null })) } catch { /* old engine */ }
+    try { el.dispatchEvent(new view.KeyboardEvent('keyup', { bubbles: true, composed: true, key: text ? text.slice(-1) : 'Backspace' })) } catch { /* old engine */ }
+  }
+  const press = (el, key) => {
+    const view = el.ownerDocument.defaultView
+    for (const type of ['keydown', 'keyup']) el.dispatchEvent(new view.KeyboardEvent(type, { key, code: key === 'Enter' ? 'Enter' : key, bubbles: true, composed: true, cancelable: true }))
+  }
+  /** What the person would try, in order: the answer as stored, its first part ("Bengaluru, Karnataka" → "Bengaluru"), then the other names of the place. */
+  function queryVariants(raw, text) {
+    const first = String(raw).split(/[,;/]/)[0].trim()
+    const out = [String(text || raw).trim(), first, ...aliasForms(first).map((a) => a.replace(/\b\w/g, (c) => c.toUpperCase()))]
+    return [...new Set(out.filter((q) => q && q.length >= 2))].slice(0, 4)
+  }
+  const optionList = (el, doc) => {
+    const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
+    const scope = (listId && byIdIn(el, doc, listId)) || doc
+    return deepAll(scope, '[role="option"]')
+      .map((o) => ({ text: textOf(o).trim(), value: o.getAttribute('data-value') || '', ref: o }))
+      .filter((o) => o.text && !/^(no (options|results|matches)|loading|searching|type to search)/i.test(o.text))
+  }
+  /** Did the picker take the choice? The box now shows (the start of) the option's text, or its list has closed. */
+  function chosen(el, option, before) {
+    const shown = fold(el.value)
+    const first = placeParts(option.text)[0] || fold(option.text)
+    if (shown && first && (shown.includes(first) || first.includes(shown)) && shown !== fold(before)) return true
+    if (shown && shown === fold(option.text)) return true
+    return el.getAttribute('aria-expanded') === 'false' && !!shown && shown !== fold(before)
+  }
+  /** Click the option like a hand would; if the widget ignores that, drive it from the keyboard (Down × position, Enter). */
+  async function commitOption(el, option, options, before) {
+    const view = el.ownerDocument.defaultView
+    for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+      const Ev = type.startsWith('pointer') && view.PointerEvent ? view.PointerEvent : view.MouseEvent
+      option.ref.dispatchEvent(new Ev(type, { bubbles: true, cancelable: true, composed: true, view }))
     }
-    return choice.text
+    await sleep(200)
+    if (chosen(el, option, before)) return true
+    try { el.focus?.() } catch { /* not focusable */ }
+    const at = Math.max(0, options.findIndex((o) => o.ref === option.ref))
+    for (let i = 0; i <= at; i++) { press(el, 'ArrowDown'); await sleep(30) }
+    press(el, 'Enter')
+    await sleep(250)
+    return chosen(el, option, before)
+  }
+
+  /**
+   * A searchable picker (React-Select, Headless UI, Ashby, SmartRecruiters' City): type, WAIT for the list to settle (many come
+   * from a server and take a second or more), choose the CLOSEST option to the answer, and confirm the picker took it. If the first
+   * wording finds nothing it tries the next (the place's first part, its other names). If nothing works the box is emptied again —
+   * half-typed search text in a picker looks answered and is not — and null is returned so the form carries on without it.
+   */
+  async function fillCombobox(el, key, raw, text, doc, waitMs, hints) {
+    const before = el.value || ''
+    const patience = Math.max(waitMs, LOCATION_KEYS.has(key) ? 2500 : 1200)
+    for (const query of queryVariants(raw, text)) {
+      typeInto(el, query)
+      const deadline = Date.now() + patience
+      let options = [], last = '', steady = 0
+      while (Date.now() < deadline) {
+        await sleep(60)
+        options = optionList(el, doc)
+        const sig = options.map((o) => o.text).join('|')
+        if (options.length) { steady = sig === last ? steady + 1 : 0; last = sig; if (steady >= 2) break } else { steady = 0; last = '' }
+      }
+      const choice = pickOption(key, raw, options, hints)
+      if (choice && (await commitOption(el, choice, options, query))) return choice.text
+    }
+    typeInto(el, '')
+    return null
   }
 
   /**
@@ -691,6 +813,9 @@
     const groups = new Map()
     for (const el of all) {
       if (opts.shouldStop?.()) break // the person pressed Cancel: keep what is filled, stop writing
+      // ⚠️ ONE FIELD MUST NEVER STOP THE REST. Whatever a page's own widget does — throws, hangs, ignores us — this field is left for
+      // the person and the loop moves on.
+      try {
       if (el.disabled || el.readOnly) continue
       const tag = (el.tagName || '').toLowerCase()
       const type = (el.type || 'text').toLowerCase()
@@ -787,7 +912,7 @@
         if (current && !isPlaceholder(current.text, current.value) && (hasPlaceholder || el.selectedIndex !== 0)) {
           out.skipped++; continue
         }
-        const choice = pickOption(verdict.key, raw, real)
+        const choice = pickOption(verdict.key, raw, real, profile)
         if (!choice) { refuse('a dropdown whose options did not match your answer — left for you'); continue }
         setNativeValue(el, choice.value)
         out.filled.push({ key: verdict.key, value: choice.text.trim(), how: 'chose' })
@@ -804,7 +929,7 @@
       // ---- searchable picker.
       const role = el.getAttribute?.('role')
       if (role === 'combobox' || el.getAttribute?.('aria-autocomplete') === 'list') {
-        const picked = await fillCombobox(el, verdict.key, raw, text.value, doc, waitMs)
+        const picked = await within(fillCombobox(el, verdict.key, raw, text.value, doc, waitMs, profile), 12000, null)
         if (picked) { seen.add(verdict.key); out.filled.push({ key: verdict.key, value: picked, how: 'chose' }) }
         else refuse('a dropdown whose options did not match your answer — left for you')
         continue
@@ -813,11 +938,17 @@
       seen.add(verdict.key)
       setNativeValue(el, text.value)
       out.filled.push({ key: verdict.key, value: text.value, how: 'typed' })
+      } catch (err) {
+        out.skipped++
+        refuse('a field the page would not take — left for you')
+        try { if (/combobox/.test(el.getAttribute?.('role') || '')) typeInto(el, '') } catch { /* leave it */ }
+      }
     }
 
     // ---- radio and tick-box groups.
     for (const els of groups.values()) {
       if (opts.shouldStop?.()) break
+      try {
       const first = els[0]
       const isRadio = (first.type || '').toLowerCase() === 'radio'
       if (els.some((e) => e.checked)) { out.skipped++; continue }
@@ -856,7 +987,7 @@
         const wanted = String(raw).split(/[,;/]/).map((s) => s.trim()).filter(Boolean)
         const ticked = []
         for (const w of wanted) {
-          const o = pickOption('city', w, options)
+          const o = pickOption('city', w, options, profile)
           if (o && !o.ref.checked) { o.ref.click(); ticked.push(o.text) }
         }
         if (ticked.length) out.filled.push({ key: verdict.key, value: ticked.join(', '), how: 'ticked' })
@@ -865,10 +996,11 @@
       }
       if (!isRadio) { out.skipped++; continue }
 
-      const choice = pickOption(verdict.key, raw, options)
+      const choice = pickOption(verdict.key, raw, options, profile)
       if (!choice) { refuse('a choice whose options did not match your answer — left for you'); continue }
       choice.ref.click()
       out.filled.push({ key: verdict.key, value: choice.text, how: 'chose' })
+      } catch { out.skipped++; refuse('a choice the page would not take — left for you') }
     }
 
     return out
@@ -992,6 +1124,6 @@
 
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    deepAll, pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue, questions, answerQuestion, matchAnswer,
+    deepAll, pickOption, closestOption, scoreOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue, questions, answerQuestion, matchAnswer,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)
