@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 (follow-the-page fix) — extension 0.18.3
+
+**Fixed:** the panel now follows the page as it changes — a different application, a step that needs no account, a page that only becomes an application later. The 'Account creation & Autofill' wording and the sign-up box show only where an account is needed. It was also fixed for a case I found on your real Workday page, where the sign-up box never appeared after Apply.
+**The new files are already in `~/Downloads/jobinko-extension 2`.** One click left for you: press the round reload ↻ on Jobinko in your extensions page (I cannot press it for you), then try the new application.
+
+---
+
 ## 🔶 2026-10-12 (last) — extension 0.18.2 is already in your extension folder
 
 I copied the 0.18.2 files into `~/Downloads/jobinko-extension 2` (the folder your browser loads). **One click left for you:** open the extensions page, find Jobinko, press the round **reload ↻** arrow (or restart the browser). I cannot press it — my desktop tool can only look at browsers, and I do not get around that.

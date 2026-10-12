@@ -3277,3 +3277,10 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Defect, shipped in 0.16.0–0.18.0 (three releases):** each pop-up inherited the panel's 380 px width through a shared CSS rule, so it was a 380 px strip with a 1,056 px card spilling off the left edge; with Jobright's panel present (ours docks left) the half-hidden card sat on top of the page. Fixed in 0.18.1 (TASK-249). The founder found it; my tests did not, and I had not looked at my own screens.
 
 **Correction (struck through).** ~~'Verified in real Chromium … the pop-up shows your corrected education'~~ — the data was right and the pop-up was unusable; text in a hidden box still passes a text check. **Rule from now on for this extension: a screen is verified when it has been measured against the viewport AND a screenshot of it has been read** — in both dock positions. `popup-visual.mjs` does the first; the second is a person (or me) looking.
+
+
+### Stage BJ — the panel follows the page (2026-10-12)
+
+**Defect (0.16–0.18.2):** the panel's idea of 'what page is this' was taken once at open, then refreshed only by DOM-change events for five minutes, and ignored while it was busy. On a single-page site that left it describing a page that no longer existed. **Rule from now on:** page-dependent UI (account box, button wording, job card, form support) is derived from the CURRENT page on a timer as well as on events, and a change of address rebuilds the panel. **How it was found:** the first fix came from reasoning about the five-minute cutoff; the second — the more damaging — only appeared when the real Alteryx flow was run with a timeline of the panel's state every few seconds. Reasoning found half of it; running the real thing found the rest.
+
+**Built:** see TASK-251.

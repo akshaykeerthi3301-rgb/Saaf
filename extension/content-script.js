@@ -254,13 +254,18 @@ function mount() {
   // Default Plugin View: "Minimized" starts collapsed to the edge tab (unless the toolbar icon just asked for the panel).
   chrome.storage.local.get('jxSettings').then(({ jxSettings }) => { if (jxSettings?.view === 'minimized' && !globalThis.__jxForce) setOpen(false) })
   // The toolbar icon: opens the panel if it is collapsed, collapses it if it is open (service-worker.js, "The toolbar icon").
-  chrome.runtime.onMessage.addListener((msg, _s, sendResponse) => {
-    if (msg?.type === 'jx:ping') { sendResponse({ ok: true }); return false }
-    if (msg?.type !== 'jx:toggle') return false
-    setOpen(panel.hidden)
-    sendResponse({ ok: true })
-    return false
-  })
+  // The page may rebuild the panel as it changes (below), so the listener is registered ONCE and calls whichever panel is current.
+  globalThis.__jxPanelToggle = () => setOpen(panel.hidden)
+  if (!globalThis.__jxMsgBound) {
+    globalThis.__jxMsgBound = true
+    chrome.runtime.onMessage.addListener((msg, _s, sendResponse) => {
+      if (msg?.type === 'jx:ping') { sendResponse({ ok: !!globalThis.__jxMounted }); return false }
+      if (msg?.type !== 'jx:toggle' || !globalThis.__jxPanelToggle) return false
+      globalThis.__jxPanelToggle()
+      sendResponse({ ok: true })
+      return false
+    })
+  }
   return root
 }
 
@@ -375,6 +380,15 @@ function mountActions(root, job, state) {
   const tailored = root.getElementById('tailored')
 
   const applyBtn = root.getElementById('apply')
+  // Everything this panel registers outside its own DOM is undone when the page changes and the panel is rebuilt.
+  state.cleanups = []
+  const onStore = (fn) => { chrome.storage.onChanged.addListener(fn); state.cleanups.push(() => chrome.storage.onChanged.removeListener(fn)) }
+  // The one button. With a sign-up password saved it ALSO does the account step — but only on a page that needs an account
+  // (an account form is showing, or the site is one that makes you sign up first). On any other page it is plain Autofill.
+  const ACCOUNT_SITES = ['Workday', 'iCIMS', 'Taleo', 'SuccessFactors']
+  const needsAccount = () => !!globalThis.SaafAccount?.kind(doc) || ACCOUNT_SITES.includes(job.atsPlatform || '')
+  const goLabel = () => (state.filledOnce ? 'Autofill again' : state.hasPw && needsAccount() ? '⚡ Account creation & Autofill' : '⚡ Autofill')
+  state.hasPw = false
   const setSupport = () => {
     const form = hasForm()
     const entry = !form && !!globalThis.SaafAutoApply.findApplyEntry(doc)
@@ -386,16 +400,15 @@ function mountActions(root, job, state) {
       : entry ? 'Jobinko will press Apply for you, then fill the form'
       : 'No application form or Apply button found on this page'
     supportEl.innerHTML = `<div class="support ${form || entry ? '' : 'off'}"><span class="dot"></span>${msg}</div>`
+    if (!state.running && go.textContent !== 'Autofilling…') go.textContent = goLabel()
   }
   setSupport()
 
   // The one button, as Jobright names it: with a sign-up password saved it also does the account step.
   // What this step of the application looks like: its fields, and whether it is an account form. A change means a new step.
   const formSig = () => A.checklist(doc).items.map((i) => i.label).join('|') + '#' + (globalThis.SaafAccount?.kind(doc) || '')
-  const goLabel = () => (state.hasPw ? '⚡ Account creation & Autofill' : '⚡ Autofill')
-  state.hasPw = false
   const refreshPw = async () => { const { accountPassword } = await chrome.storage.local.get('accountPassword'); state.hasPw = !!accountPassword; if (!state.running) go.textContent = goLabel() }
-  chrome.storage.onChanged.addListener((c, area) => { if (area === 'local' && c.accountPassword) refreshPw() })
+  onStore((c, area) => { if (area === 'local' && c.accountPassword) refreshPw() })
   refreshPw()
 
   // Résumé row: which file will be attached.
@@ -418,8 +431,8 @@ function mountActions(root, job, state) {
   // "Anything else we should know?" — the person's own notes, offered (never filled by itself) beside free-text questions.
   const loadNotes = async () => { state.notes = ((await chrome.storage.local.get('profile')).profile || {}).anythingElse || '' }
   loadNotes()
-  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.profile) loadNotes() })
-  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.coverFor) state.drawCover() })
+  onStore((ch, area) => { if (area === 'local' && ch.profile) loadNotes() })
+  onStore((ch, area) => { if (area === 'local' && ch.coverFor) state.drawCover() })
   const openCover = () => openCoverLetter(root, state, job, pk)
   coverBtn.addEventListener('click', openCover)
   root.getElementById('crow').addEventListener('click', openCover)
@@ -443,7 +456,7 @@ function mountActions(root, job, state) {
     await showSaved()
   })
   showSaved()
-  chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && (changes.tracked || changes.pendingTrack)) showSaved() })
+  onStore((changes, area) => { if (area === 'local' && (changes.tracked || changes.pendingTrack)) showSaved() })
 
   // Tailor — rewrites your résumé for THIS posting on Jobinko (same engine and honesty guard as the website), keeps it as a
   // saved résumé, and attaches exactly that file on this application.
@@ -508,8 +521,10 @@ function mountActions(root, job, state) {
   const refreshDashboard = () => { if (hasForm() && !state.running) drawDashboard(); else if (!hasForm()) dash.innerHTML = '' }
   refreshDashboard()
   // The person types answers themselves too; keep the bar honest (cheap: only while a form exists).
-  doc.addEventListener('input', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
-  doc.addEventListener('change', () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }, true)
+  const redraw = () => { clearTimeout(refreshDashboard.t); refreshDashboard.t = setTimeout(refreshDashboard, 300) }
+  doc.addEventListener('input', redraw, true)
+  doc.addEventListener('change', redraw, true)
+  state.cleanups.push(() => { doc.removeEventListener('input', redraw, true); doc.removeEventListener('change', redraw, true); clearTimeout(refreshDashboard.t) })
 
   const submitbox = root.getElementById('submitbox')
 
@@ -618,13 +633,15 @@ function mountActions(root, job, state) {
       <div class="row"><button class="btn primary" id="submitnow">Submit application</button><button class="btn" id="submitlater">I’ll review first</button></div></div>`
     root.getElementById('submitlater').addEventListener('click', () => { submitbox.innerHTML = '' })
     root.getElementById('submitnow').addEventListener('click', async () => {
+      state.submitting = true // the page may change under us as it confirms — the panel must not be rebuilt mid-submit
       submitbox.innerHTML = '<div class="box muted" style="margin-top:8px">Submitting… keep this tab open.</div>'
       const ok = await chrome.runtime.sendMessage({ type: 'saaf:autoapply-here', job: { url: job.pageUrl, title: job.title, company: job.company } }).catch(() => null)
-      if (!ok?.ok) { submitbox.innerHTML = `<div class="box" style="margin-top:8px">${esc(ok?.error || 'Could not start.')}</div>`; return }
+      if (!ok?.ok) { state.submitting = false; submitbox.innerHTML = `<div class="box" style="margin-top:8px">${esc(ok?.error || 'Could not start.')}</div>`; return }
       const beforeSubmit = () => chrome.runtime.sendMessage({ type: 'saaf:autoapply-phase', phase: 'await-confirm' })
       const r = await A2.submitOnly(doc, { beforeSubmit }, {}).catch(() => ({ status: 'needs-you', reason: 'Something went wrong — check this page' }))
       await chrome.runtime.sendMessage({ type: 'saaf:autoapply-result', status: r.status, reason: r.reason, coverage: r.coverage }).catch(() => {})
       submitbox.innerHTML = ''
+      state.submitting = false
       renderApplyResult(root, { here: true, status: r.status, reason: r.reason, coverage: r.coverage })
     })
   }
@@ -713,11 +730,14 @@ function mountActions(root, job, state) {
   // Single-page job systems (Workday, Ashby…) draw the Apply button and the form AFTER the page loads and again at every
   // step, so the panel keeps looking: on each burst of changes (debounced) it re-reads whether there is a form or an Apply
   // button. Five minutes, then it stops — a watcher left running for the life of the tab is a cost every page pays.
-  let watch
-  const obs = new MutationObserver(() => {
-    clearTimeout(watch)
-    watch = setTimeout(async () => {
-      if (state.running) return
+  // Re-read the page: is there a form, an account form, a new step? Called when the page's content changes AND on a one-second beat
+  // (below) — never only on a change: a change that arrives while the panel is busy (pressing Apply, filling) would otherwise be
+  // ignored and, with nothing after it to trigger another look, never noticed at all.
+  let reading = false
+  const reassess = async () => {
+    if (state.running || reading || document.visibilityState === 'hidden') return
+    reading = true
+    try {
       setSupport(); refreshDashboard()
       // A later step of the same application (Workday's My Information → My Experience → …). "Autofill After Page Turn" decides:
       // Automatically (the default, as in Jobright) fills the new step; Manually only says so. Never presses Submit.
@@ -728,13 +748,19 @@ function mountActions(root, job, state) {
       const { jxSettings = {}, appSession, autofillPending } = await chrome.storage.local.get(['jxSettings', 'appSession', 'autofillPending'])
       const recent = (t, ms) => !!t && Date.now() - t.at < ms
       const inProgress = state.filledOnce || (appSession?.host === location.host && recent(appSession, 30 * 60_000)) || recent(autofillPending, 90_000)
-      if (!inProgress) return
+      if (!inProgress) { state.sig = sig; return }
       if (jxSettings.pageTurn !== 'manual' && (state.autoRuns = (state.autoRuns || 0) + 1) <= 25) { state.sig = sig; state.autofill?.(); return }
       if (state.filledOnce) { gonote.textContent = 'This looks like a new step — press Autofill again to fill it.'; submitbox.innerHTML = ''; askEl.innerHTML = '' }
-    }, 400)
-  })
+    } finally { reading = false }
+  }
+  state.reassess = reassess
+  let watch
+  const obs = new MutationObserver(() => { clearTimeout(watch); watch = setTimeout(reassess, 400) })
   obs.observe(doc.body, { childList: true, subtree: true })
-  setTimeout(() => obs.disconnect(), 5 * 60_000)
+  // No time limit: a single-page site changes under the panel at any moment, and a panel that stopped looking after five minutes
+  // kept showing the old page's account box on the next application. The callback is cheap and idle while the tab is hidden.
+  state.cleanups.push(() => { obs.disconnect(); clearTimeout(watch) })
+  state.stop = () => { state.cleanups.splice(0).forEach((f) => { try { f() } catch { /* already gone */ } }) }
 }
 
 /**
@@ -1094,7 +1120,7 @@ async function renderWall(root, state) {
  * the person just pressed Apply toward (the note in storage), the page after a Submit, or any page the toolbar icon forced.
  * Anything else stays quiet: an extension that paints on every page is one people uninstall.
  */
-;(async function run() {
+async function runPanel() {
   if (globalThis.__jxMounted) return
   const applied = await autoApplyIfAssigned()
   if (applied && !applied.here) return
@@ -1106,6 +1132,7 @@ async function renderWall(root, state) {
   const formHere = globalThis.SaafAutoApply.hasForm(document)
   if (noPosting && !applied && !globalThis.__jxForce && !pendingFresh && !formHere) return
   globalThis.__jxMounted = true
+  globalThis.__jxPage = pageKey(location.href)
   const root = mount()
   const state = {
     signedIn: null, account: null, resumeFile: null, error: '',
@@ -1123,6 +1150,7 @@ async function renderWall(root, state) {
   }
   renderAccount(root, state)
   mountActions(root, job, state)
+  globalThis.__jxCurrent = { state, root }
   if (applied) renderApplyResult(root, applied) // the page reloaded after Submit: show what the employer said
   // Connect first so the score below uses the account's current résumé.
   await state.reconnect()
@@ -1145,4 +1173,54 @@ async function renderWall(root, state) {
     { type: 'saaf:score', jdText: job.description, jdTitle: job.title, jdLocation: job.location },
     (data) => renderMatch(root, job, data),
   )
-})()
+}
+
+/** Take the panel down completely — its DOM, its listeners, the room it made on the page — so a fresh one can be built. */
+function teardownPanel() {
+  try { globalThis.__jxCurrent?.state.stop?.() } catch { /* already gone */ }
+  document.getElementById('saaf-overlay-host')?.remove()
+  document.documentElement.style.marginLeft = ''
+  document.documentElement.style.marginRight = ''
+  globalThis.__jxPanelToggle = null
+  globalThis.__jxCurrent = null
+  globalThis.__jxMounted = false
+}
+
+/**
+ * ⚠️ THE PAGE CHANGES UNDER THE PANEL, and the panel must follow. A job site is mostly one long-lived page: the address changes,
+ * the content is swapped, and the script that opened the panel never runs again. The panel used to read the page once, when it
+ * opened (plus five minutes of watching), so after a move to a different application it kept the OLD job and — worst — the old
+ * "this site wants you to create an account" box. Now, for as long as the tab is open:
+ *   - the ADDRESS (without ?query and #hash) changing rebuilds the panel for the new page — unless a fill or a submit is under
+ *     way, in which case it waits for that to finish;
+ *   - a page with NO panel is looked at again when its address changes or an application form appears, so landing on an
+ *     application inside a single-page site shows the panel without a reload.
+ * The check is a string compare once a second plus the browser's own navigation events; the heavier read only runs on a change.
+ */
+if (!globalThis.__jxWatching) {
+  globalThis.__jxWatching = true
+  let lastKey = pageKey(location.href)
+  let lastForm = false
+  let beat = 0
+  const tick = () => {
+    if (document.visibilityState === 'hidden') return
+    const cur = globalThis.__jxCurrent
+    if (cur?.state.running || cur?.state.submitting) return
+    const key = pageKey(location.href)
+    if (globalThis.__jxMounted) {
+      if (key !== globalThis.__jxPage) { teardownPanel(); runPanel() }
+      else if (++beat % 2 === 0) cur?.state.reassess?.() // every other second, whether or not the page announced a change
+    } else {
+      const form = globalThis.SaafAutoApply.hasForm(document)
+      if (key !== lastKey || (form && !lastForm)) runPanel()
+      lastForm = form
+    }
+    lastKey = key
+  }
+  setInterval(tick, 1000)
+  window.addEventListener('popstate', tick)
+  window.addEventListener('hashchange', tick)
+  globalThis.navigation?.addEventListener?.('navigatesuccess', () => setTimeout(tick, 200))
+}
+
+runPanel()
