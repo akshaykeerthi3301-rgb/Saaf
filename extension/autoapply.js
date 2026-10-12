@@ -40,7 +40,10 @@
     return !(style && (style.display === 'none' || style.visibility === 'hidden'))
   }
 
-  const isRequired = (el) => el.required || el.getAttribute('aria-required') === 'true'
+  /** querySelectorAll that also looks inside web components' shadow trees (autofill.js `deepAll`); plain when that is not loaded. */
+  const qAll = (doc, sel) => (root.SaafAutofill?.deepAll ? root.SaafAutofill.deepAll(doc, sel) : [...doc.querySelectorAll(sel)])
+  const hostsOf = (el) => { const hs = []; let r = el.getRootNode?.(); while (r && r.host && hs.length < 8) { hs.push(r.host); r = r.host.getRootNode?.() } return hs }
+  const isRequired = (el) => el.required || el.getAttribute('aria-required') === 'true' || hostsOf(el).some((h) => h.hasAttribute?.('required'))
 
   /**
    * Every visible required field, with whether it holds an answer. The one place
@@ -50,7 +53,7 @@
   function requiredFields(doc) {
     const out = []
     const seenGroups = new Set()
-    for (const el of doc.querySelectorAll('input, select, textarea')) {
+    for (const el of qAll(doc, 'input, select, textarea')) {
       if (!isVisible(el) || !isRequired(el)) continue
       const type = (el.type || '').toLowerCase()
       let empty
@@ -58,7 +61,7 @@
         const name = el.name || el.id
         if (seenGroups.has(name)) continue
         seenGroups.add(name)
-        const group = name ? [...doc.querySelectorAll(`input[name="${CSS.escape(name)}"]`)] : [el]
+        const group = name ? qAll(doc, `input[name="${CSS.escape(name)}"]`) : [el]
         empty = !group.some((g) => g.checked)
       } else if (type === 'file') {
         empty = !(el.files && el.files.length)
@@ -90,15 +93,16 @@
   }
 
   function labelOf(el, doc) {
-    const byFor = el.id && doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)
+    const scope = el.getRootNode?.() && el.getRootNode().querySelector ? el.getRootNode() : doc
+    const byFor = el.id && scope.querySelector(`label[for="${CSS.escape(el.id)}"]`)
     const text = (byFor?.textContent || el.closest?.('label')?.textContent || el.closest?.('fieldset')?.querySelector('legend')?.textContent
-      || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.name || 'a required field')
+      || el.getAttribute('aria-label') || el.getAttribute('placeholder') || hostsOf(el).map((h) => h.getAttribute?.('label')).find(Boolean) || el.name || 'a required field')
     return text.replace(/\s+/g, ' ').replace(/\*/g, '').trim().slice(0, 80)
   }
 
   /** The form's own submit control — never a generic link or an "apply with LinkedIn" button. */
   function findSubmit(doc) {
-    const cands = [...doc.querySelectorAll('button, input[type="submit"]')].filter(isVisible)
+    const cands = qAll(doc, 'button, input[type="submit"]').filter(isVisible)
     const label = (b) => (b.textContent || b.value || b.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim()
     const bad = /linkedin|indeed|google|save|draft|cancel|back|sign ?in|log ?in|upload|attach|add another/i
     const good = /^(submit( application)?|apply|send application|apply now|submit your application)$/i
@@ -117,7 +121,7 @@
    * ends in /apply or /application and whose text mentions applying. Never a "with LinkedIn / Indeed / Google" button.
    */
   function findApplyEntry(doc) {
-    const cands = [...doc.querySelectorAll('a, button, [role="button"], input[type="button"]')].filter(isVisible)
+    const cands = qAll(doc, 'a, button, [role="button"], input[type="button"]').filter(isVisible)
     const t = (e) => (e.textContent || e.value || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '').trim()
     const social = /linkedin|indeed|google|facebook|apple|microsoft|github|with resume|autofill with/i
     const words = /^(apply( now| today| here)?|apply (for|to) (this |the |a )?(job|position|role|opening|vacancy)|apply for job|i['’]?m interested|easy apply|start (your |an )?application|begin (your )?application|apply manually)$/i
@@ -135,7 +139,7 @@
    * uploaded to the employer's résumé reader. Returns the button, or null when there is no such pop-up.
    */
   function findApplyChoice(doc) {
-    const cands = [...doc.querySelectorAll('a, button, [role="button"], [role="menuitem"]')].filter(isVisible)
+    const cands = qAll(doc, 'a, button, [role="button"], [role="menuitem"]').filter(isVisible)
     const t = (e) => (e.textContent || e.value || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim()
     return cands.find((e) => /^apply manually$/i.test(t(e))) || null
   }
@@ -164,7 +168,9 @@
 
   function hasForm(doc) {
     // An <input> with no type attribute IS a text box, and CSS [type="text"] does not match it.
+    // An ordinary page, or one built from web components whose boxes sit inside shadow trees (SmartRecruiters).
     return !!doc.querySelector('input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form input:not([type])')
+      || qAll(doc, 'input[type="email"], input[type="tel"], input[type="file"], input[type="text"], input:not([type]), textarea').some((e) => hostsOf(e).length > 0 && !/dropdown-search|select-search/i.test(hostsOf(e).map((h) => h.tagName).join(' ')))
   }
 
   /**

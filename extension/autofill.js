@@ -76,7 +76,7 @@
       reason: 'free text the employer asked you — not us', written: true },
     { re: /\b(password|passcode|ssn|social\s*security|aadhaar|\bpan\b|bank|account\s*number|ifsc)\b/i,
       reason: 'a credential or identity number — never entered by us' },
-    { re: /\b(i\s*agree|agree\s*to|consent|terms\s*(and|&)\s*conditions|privacy\s*(policy|notice)|i\s*(hereby\s*)?(certify|confirm|declare|acknowledge))/i,
+    { re: /\b(i\s*agree|agree\s*to|consent|terms\s*(and|&)\s*conditions|privacy\s*(policy|notice)|(?<![\w-])i\s+(hereby\s+)?(certify|confirm|declare|acknowledge)(?!\s+(your\s+)?(e\s?mail|password|phone|mobile|address|number)))/i,
       reason: 'a consent box — yours to agree to' },
   ]
 
@@ -205,6 +205,56 @@
 
   const textOf = (n) => (n ? (n.textContent || '') : '')
 
+  // ------------------------------------------------------ web components (Shadow DOM) --
+  //
+  // ⚠️ SOME APPLICATION FORMS HAVE NO NORMAL FIELDS AT ALL. SmartRecruiters' one-click page (and a growing number of others) is
+  // built from web components — <spl-input>, <spl-phone-field>, <spl-dropzone> — and the real <input> boxes live inside each
+  // component's own hidden "shadow" tree, which document.querySelectorAll never enters. To this file the page then had no form:
+  // the panel found nothing to fill and the Autofill button stayed grey. Everything that looks for fields goes through deepAll(),
+  // which also searches every open shadow tree; and the label of such a field is often an ATTRIBUTE on the component around it
+  // (label="First name", autocomplete="given-name"), so those are read too (hostBits). For an ordinary page every one of these
+  // helpers returns exactly what the old code did.
+  const _roots = new WeakMap()
+  /**
+   * Every open shadow root below `root`. A big page is not rescanned on every call: the list is reused for a quarter of a second
+   * AND only while the number of elements on the page is unchanged — so a component that has just been added or removed is never
+   * missed or kept.
+   */
+  function shadowRoots(root) {
+    const hit = _roots.get(root); const now = Date.now()
+    const count = root.getElementsByTagName ? root.getElementsByTagName('*').length : -1
+    // …and only while every component it names is still on the page (one swapped for another keeps the count the same).
+    if (hit && count >= 0 && hit.count === count && now - hit.at < 250 && hit.list.every((sr) => sr.host.isConnected)) return hit.list
+    const list = []
+    const visit = (r, depth) => { for (const e of r.querySelectorAll('*')) if (e.shadowRoot && depth < 8) { list.push(e.shadowRoot); visit(e.shadowRoot, depth + 1) } }
+    visit(root, 0)
+    _roots.set(root, { at: now, list, count })
+    return list
+  }
+  /** querySelectorAll that also looks inside every open shadow tree. */
+  function deepAll(root, selector) {
+    const out = [...root.querySelectorAll(selector)]
+    for (const sr of shadowRoots(root)) out.push(...sr.querySelectorAll(selector))
+    return out
+  }
+  /** The components this element sits inside, nearest first. Empty for an ordinary field. */
+  function hostChain(el) {
+    const hosts = []
+    let r = el.getRootNode?.()
+    while (r && r.host && hosts.length < 8) { hosts.push(r.host); r = r.host.getRootNode?.() }
+    return hosts
+  }
+  const HOST_ATTRS = ['label', 'aria-label', 'name', 'autocomplete', 'placeholder', 'data-test', 'data-testid', 'data-automation-id']
+  const hostBits = (el) => hostChain(el).flatMap((h) => [...HOST_ATTRS.map((a) => h.getAttribute?.(a) || ''), h.id || ''])
+  /** Where an element's own <label for>/aria-labelledby ids live: its own tree — the page, or the component's shadow root. */
+  const scopeOf = (el, doc) => { const r = el.getRootNode?.(); return r && r.querySelector ? r : doc }
+  const labelFor = (el, doc) => (el.id && doc ? scopeOf(el, doc).querySelector?.(`label[for="${CSS.escape(el.id)}"]`) || null : null)
+  const byIdIn = (el, doc, id) => scopeOf(el, doc).getElementById?.(id) || doc.getElementById?.(id)
+  /** Inside a component: is it actually drawn? (A hidden pick-a-country search box must never be typed into.) */
+  const drawn = (el) => !!el.getClientRects?.().length && getComputedStyle(el).visibility !== 'hidden'
+  /** The search box inside a component's drop-down is not a field of the form. */
+  const isPickerInternals = (el) => hostChain(el).some((h) => /dropdown-search|select-search|combobox-search/i.test(h.tagName || ''))
+
   /**
    * Everything the page says about one input, joined into one haystack.
    * Order is deliberate: an explicit label beats a placeholder, which beats a
@@ -213,21 +263,20 @@
    */
   function signalsFor(el, doc) {
     const bits = []
-    if (el.id && doc) {
-      const lab = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)
-      if (lab) bits.push(textOf(lab))
-    }
+    const lab = labelFor(el, doc)
+    if (lab) bits.push(textOf(lab))
     const wrapping = el.closest ? el.closest('label') : null
     if (wrapping) bits.push(textOf(wrapping))
     bits.push(el.getAttribute?.('aria-label') || '')
     const by = el.getAttribute?.('aria-labelledby')
-    if (by && doc) for (const id of by.split(/\s+/)) bits.push(textOf(doc.getElementById?.(id)))
+    if (by && doc) for (const id of by.split(/\s+/)) bits.push(textOf(byIdIn(el, doc, id)))
     bits.push(el.getAttribute?.('placeholder') || '')
     bits.push(el.getAttribute?.('autocomplete') || '')
     bits.push(el.getAttribute?.('name') || '')
     bits.push(el.id || '')
     // Workday (and several others) name fields only by test hooks: legalNameSection_firstName, phone-number, addressSection_city…
     bits.push(el.getAttribute?.('data-automation-id') || '', el.getAttribute?.('data-testid') || '')
+    bits.push(...hostBits(el)) // web components: the label is an attribute on the component around the box
     return tidy(bits.join(' '))
   }
 
@@ -247,14 +296,15 @@
   /** The question as the page words it — the label, not the machine names signalsFor also searches. */
   function questionLabel(el, doc) {
     const first = (...bits) => bits.map((b) => tidy(b || '')).find(Boolean) || ''
-    const lab = el.id && doc ? doc.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null
+    const lab = labelFor(el, doc)
     const by = el.getAttribute?.('aria-labelledby')
     return first(
       textOf(lab),
       textOf(el.closest ? el.closest('label') : null),
       el.getAttribute?.('aria-label'),
-      by && doc ? by.split(/\s+/).map((id) => textOf(doc.getElementById?.(id))).join(' ') : '',
+      by && doc ? by.split(/\s+/).map((id) => textOf(byIdIn(el, doc, id))).join(' ') : '',
       el.getAttribute?.('placeholder'),
+      ...hostChain(el).map((h) => h.getAttribute?.('label') || h.getAttribute?.('aria-label')),
     )
   }
 
@@ -268,7 +318,7 @@
   /** Demographic, credential and consent questions: the bank is never consulted, whatever it holds. */
   const neverFromBank = (signals) => NEVER_ANSWERED.test(signals) || REFUSALS.some((r) => !r.written && r.re.test(signals))
 
-  const isRequiredEl = (el) => !!el.required || el.getAttribute?.('aria-required') === 'true'
+  const isRequiredEl = (el) => !!el.required || el.getAttribute?.('aria-required') === 'true' || hostChain(el).some((h) => h.hasAttribute?.('required') || h.getAttribute?.('aria-required') === 'true')
 
   /**
    * ⚠️ SEPARATORS BECOME SPACES, AND WITHOUT THIS THE WHOLE MODULE IS INERT ON
@@ -312,10 +362,8 @@
 
   /** The visible label of one option (radio or tick-box). */
   function optionLabel(el, doc) {
-    if (el.id && doc) {
-      const lab = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)
-      if (lab) return textOf(lab).trim()
-    }
+    const lab = labelFor(el, doc)
+    if (lab) return textOf(lab).trim()
     const wrapping = el.closest ? el.closest('label') : null
     if (wrapping) return textOf(wrapping).trim()
     return (el.getAttribute?.('aria-label') || el.value || '').trim()
@@ -573,7 +621,8 @@
   function fire(el) {
     const view = el.ownerDocument && el.ownerDocument.defaultView
     const Ev = (view && view.Event) || Event
-    for (const type of ['input', 'change', 'blur']) el.dispatchEvent(new Ev(type, { bubbles: true }))
+    // composed: the page's own scripts listen on the COMPONENT around a box; an event that stops at the shadow edge never reaches them.
+    for (const type of ['input', 'change', 'blur']) el.dispatchEvent(new Ev(type, { bubbles: true, composed: true }))
   }
 
   /** Attach the stored résumé to a file input. False if the page refuses it. */
@@ -609,8 +658,8 @@
     let choice = null
     do {
       await new Promise((r) => setTimeout(r, 40))
-      const scope = (listId && doc.getElementById(listId)) || doc
-      const options = [...scope.querySelectorAll('[role="option"]')]
+      const scope = (listId && byIdIn(el, doc, listId)) || doc
+      const options = deepAll(scope, '[role="option"]')
         .map((o) => ({ text: textOf(o).trim(), value: o.getAttribute('data-value') || '', ref: o }))
         .filter((o) => o.text && !/^no (options|results)/i.test(o.text))
       choice = pickOption(key, raw, options)
@@ -637,7 +686,7 @@
     }
     const seen = new Set()
     const waitMs = opts.waitMs ?? 800
-    const all = [...doc.querySelectorAll('input, textarea, select')]
+    const all = deepAll(doc, 'input, textarea, select').filter((e) => !isPickerInternals(e) && (hostChain(e).length === 0 || drawn(e) || e.type === 'file'))
 
     const groups = new Map()
     for (const el of all) {
@@ -657,6 +706,8 @@
       // ---- files: only a résumé upload, only with a stored résumé file.
       if (tag === 'input' && type === 'file') {
         const signals = signalsFor(el, doc)
+        // A site's own "autofill from your résumé" drop zone is left alone: it re-reads the file and overwrites what is typed.
+        if (/apply-with-resume|autofill-with|resume-parser/i.test(hostBits(el).join(' '))) { out.skipped++; continue }
         // A cover-letter upload gets the letter the person wrote or approved in the panel — and nothing else, ever.
         if (/cover\s*letter/i.test(signals)) {
           if (opts.coverLetter?.file && !(el.files && el.files.length)) {
@@ -846,8 +897,8 @@
       if (style && (style.display === 'none' || style.visibility === 'hidden')) return false
       return true
     }
-    for (const el of doc.querySelectorAll('input, textarea, select')) {
-      if (el.disabled || !visible(el)) continue
+    for (const el of deepAll(doc, 'input, textarea, select')) {
+      if (el.disabled || !visible(el) || isPickerInternals(el) || (hostChain(el).length && !drawn(el) && el.type !== 'file')) continue
       const tag = (el.tagName || '').toLowerCase()
       const type = (el.type || 'text').toLowerCase()
       if (tag === 'input' && ['hidden', 'submit', 'button', 'image', 'reset', 'password', 'search'].includes(type)) continue
@@ -905,7 +956,7 @@
       if (!key || out.some((q) => q.key === key)) continue
       if (tag === 'input' && type === 'radio') {
         const name = el.getAttribute('name')
-        const els = name ? [...doc.querySelectorAll(`input[type="radio"][name="${CSS.escape(name)}"]`)] : [el]
+        const els = name ? deepAll(doc, `input[type="radio"][name="${CSS.escape(name)}"]`) : [el]
         out.push({ key, question: it.label, kind: 'choice', options: els.map((e) => optionLabel(e, doc)).filter(Boolean), el, els })
       } else if (tag === 'select') {
         const real = [...el.options].filter((o) => !isPlaceholder(o.text, o.value))
@@ -941,6 +992,6 @@
 
   root.SaafAutofill = {
     classify, signalsFor, valueFor, formatFor, isFillable, fillForm,
-    pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue, questions, answerQuestion, matchAnswer,
+    deepAll, pickOption, rangeOf, noticeDays, REFUSALS, FIELDS, ANSWERS, SELF_ID, questionKey, checklist, setNativeValue, questions, answerQuestion, matchAnswer,
   }
 })(typeof globalThis !== 'undefined' ? globalThis : window)

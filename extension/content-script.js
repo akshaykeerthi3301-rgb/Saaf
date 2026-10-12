@@ -352,7 +352,8 @@ function mountActions(root, job, state) {
    * every page pays forever.
    */
   const FORM_SELECTOR = 'input[type="email"], input[type="tel"], input[type="file"], form input[type="text"], form input:not([type]), form select'
-  const hasForm = () => !!doc.querySelector(FORM_SELECTOR)
+  // The page's own boxes, or boxes inside web components (SmartRecruiters) — see autofill.js `deepAll`.
+  const hasForm = () => !!doc.querySelector(FORM_SELECTOR) || globalThis.SaafAutoApply.hasForm(doc)
 
   actions.innerHTML = `
     <button class="btn primary" id="go" disabled>⚡ Autofill</button>

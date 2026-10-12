@@ -2,6 +2,13 @@
 
 ---
 
+## 🔶 2026-10-12 (SmartRecruiters) — extension 0.18.4
+
+**Why Autofill was greyed out on the Swiggy page:** that page keeps every field inside hidden 'web component' boxes, and the extension could not see inside them — so as far as it knew there was no form. **Fixed for any such site.** The new files are already in `~/Downloads/jobinko-extension 2`.
+**You need to:** press ↻ reload on Jobinko, open the Swiggy page, and the panel should appear on its own with Autofill enabled. Press it. It fills first and last name, email (and confirm email), picks your city from the list, and attaches your résumé to the Resume box. **Heads-up:** attaching the résumé uploads it to SmartRecruiters immediately. Phone stays empty until you add one to your Jobinko profile; the 'tell the company about your interest' box is yours to write. Tell me what it misses — the lower part of that form (experience, education, questions) I could not see.
+
+---
+
 ## 🔶 2026-10-12 (follow-the-page fix) — extension 0.18.3
 
 **Fixed:** the panel now follows the page as it changes — a different application, a step that needs no account, a page that only becomes an application later. The 'Account creation & Autofill' wording and the sign-up box show only where an account is needed. It was also fixed for a case I found on your real Workday page, where the sign-up box never appeared after Apply.

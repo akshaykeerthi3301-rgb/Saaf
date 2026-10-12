@@ -75,6 +75,8 @@ const d0 = await context.newPage(); await d0.goto('http://localhost:4100/login')
 check('the sign-in page that follows is carried on with NO click', landed(d0) === '/thanks')
 
 // ---- 5b: signing in by hand — one click, never the Google button
+// (Autofill After Page Turn is switched to Manual here: otherwise the next page may sign in by itself a moment before this click.)
+await sw.evaluate(() => chrome.storage.local.set({ jxSettings: { pageTurn: 'manual', view: 'expanded' } }))
 await clearNote()
 const d = await open('/login')
 await click(d, '#wallgo'); await d.waitForURL('**/thanks', { timeout: 10000 }).catch(() => {})

@@ -63,6 +63,41 @@ const navStart = `${head('Create account – Acme')}<h1 id="t">Create your accou
 const navSame = navStart.replace("history.pushState({},'','/nav/apply')", "void 0")
 const navBlank = `${head('Careers – Acme')}<h1 id="t">Careers</h1><p id="d">Welcome.</p><div id="f"></div>
 <button id="swap" type="button" onclick="document.title='Customer Success Manager – Acme';t.textContent='Customer Success Manager';d.textContent='${longJd('Customer Success Manager at Acme Robotics')}';f.innerHTML='<form><label for=fn>Full name *</label><input id=fn><label for=em>Email *</label><input id=em type=email><button type=button>Submit</button></form>';history.pushState({},'','/nav/job')">swap</button></body></html>`
+// SmartRecruiters-shaped: NO ordinary <input> on the page — every box lives inside a web component's shadow tree, the label is an
+// attribute on the component, and the page only learns a value when the component ITSELF hears an input event (so an event that
+// does not cross the shadow edge is lost, as on the real site).
+const srPage = `${head('Easy apply – Account Manager – ACME')}<h1>Account Manager</h1><p>${para}</p>
+<script>
+window.__st = {}
+const mk = (name, build) => customElements.define(name, class extends HTMLElement { connectedCallback() { if (!this.shadowRoot) build(this, this.attachShadow({ mode: 'open' })) } })
+mk('spl-input', (h, sr) => {
+  const id = h.id || 'x' + Math.random().toString(36).slice(2)
+  sr.innerHTML = '<div><label for="' + id + '-i">' + (h.getAttribute('label') || '') + '</label><input id="' + id + '-i" type="' + (h.getAttribute('type') || 'text') + '" autocomplete="' + (h.getAttribute('autocomplete') || '') + '"></div>'
+  h.addEventListener('input', () => { __st[h.id || h.getAttribute('label')] = sr.querySelector('input').value })
+})
+mk('spl-dropdown-search', (h, sr) => { sr.innerHTML = '<input type="text" placeholder="Search countries" autocomplete="tel">' })
+mk('spl-autocomplete', (h, sr) => {
+  sr.innerHTML = '<div><label for="c-i">City</label><input id="c-i" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="c-lb" aria-expanded="false" autocomplete="off"><ul id="c-lb" role="listbox"></ul></div>'
+  const input = sr.querySelector('input'), lb = sr.querySelector('ul')
+  const show = () => { const q = input.value.toLowerCase(); lb.innerHTML = ''; if (!q) return; for (const c of ['Bengaluru, Karnataka', 'Mumbai, Maharashtra', 'Delhi']) if (c.toLowerCase().includes(q.split(',')[0])) { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = c; li.addEventListener('click', () => { input.value = c; lb.innerHTML = ''; __st.city = c }); lb.appendChild(li) } }
+  input.addEventListener('input', show)
+})
+mk('spl-phone-field', (h, sr) => { sr.innerHTML = '<div style="display:flex;gap:8px"><div style="display:none"><spl-dropdown-search></spl-dropdown-search></div><spl-input id="phone-number" type="tel" label="Phone number" required></spl-input></div>' })
+mk('spl-dropzone', (h, sr) => { sr.innerHTML = '<div>Choose a file or drop it here <input type="file" accept=".pdf,.doc,.docx"></div>'; sr.querySelector('input').addEventListener('change', (e) => { __st['file:' + h.getAttribute('data-test')] = e.target.files[0]?.name }) })
+mk('spl-textarea', (h, sr) => { sr.innerHTML = '<label for="t">' + (h.getAttribute('label') || '') + '</label><textarea id="t"></textarea>'; h.addEventListener('input', () => { __st.interest = sr.querySelector('textarea').value }) })
+</script>
+<spl-dropzone data-test="apply-with-resume-container"></spl-dropzone>
+<h2>Personal information</h2>
+<spl-input id="first-name-input" label="First name" autocomplete="given-name" required></spl-input>
+<spl-input id="last-name-input" label="Last name" autocomplete="family-name" required></spl-input>
+<spl-input id="email-input" type="email" label="Email" autocomplete="email" required></spl-input>
+<spl-input id="confirm-email-input" type="email" label="Confirm your email" autocomplete="email" required></spl-input>
+<spl-phone-field label="Phone number" required></spl-phone-field>
+<spl-autocomplete label="City" required></spl-autocomplete>
+<spl-input id="linkedin-input" label="LinkedIn"></spl-input>
+<h2>Resume *</h2><spl-dropzone data-test="resume-upload"></spl-dropzone>
+<spl-textarea label="Let the company know about your interest"></spl-textarea>
+</body></html>`
 const thanksPage = `${head('Thank you')}<h1>Thank you for applying</h1><p>We have received your application and will be in touch.</p></body></html>`
 const loginPage = `${head('Sign in – Acme Careers')}<h1>Sign in to continue your application</h1><p>${para}</p>
 <form><label for="le">Email *</label><input id="le" type="email" name="email" autocomplete="username">
@@ -81,6 +116,6 @@ const newTabJob = post('<a href="/lever/job/apply" target="_blank" rel="noopener
 const spaJob = post(`<button id="apply-btn" onclick="setTimeout(()=>{document.getElementById('f').style.display='block'},600);this.remove()">Apply</button>
 <div id="f" style="display:none">${easyJob.slice(easyJob.indexOf('<form'), easyJob.indexOf('</form>') + 7)}</div>`)
 export function serve(port = 4100) {
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/nav/start' ? navStart : p === '/nav/blank' ? navBlank : p === '/nav/same' ? navSame : p === '/cover/job' ? coverJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
+  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); const p = q.url.split('?')[0]; s.end(p === '/ez/job' || p === '/lever/job/apply' ? easyJob : p === '/lever/job' ? leverJob : p === '/new/job' ? newTabJob : p === '/spa/job' ? spaJob : p === '/hard/job' ? hardJob : p === '/sr/apply' ? srPage : p === '/nav/start' ? navStart : p === '/nav/blank' ? navBlank : p === '/nav/same' ? navSame : p === '/cover/job' ? coverJob : p === '/steps' ? stepsJob : p === '/ask/job' || p === '/ask/job2' ? askJob : p === '/thanks' ? thanksPage : p === '/login' ? loginPage : p === '/signup' ? signup(true) : p === '/signup-plain' ? signup(false) : p.endsWith('/apply') ? applyOnly : html) }).listen(port)
   return srv
 }
