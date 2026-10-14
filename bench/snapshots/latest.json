@@ -10,22 +10,22 @@
     "lines": 38
   },
   "real/Akshay_Keerthi_Resume_A_.pdf": {
-    "score": 83,
+    "score": 90,
     "experience": 3,
     "lines": 67
   },
   "real/Akshay_Keerthi_Resume_A_Consulting (1).pdf": {
-    "score": 83,
+    "score": 90,
     "experience": 3,
     "lines": 67
   },
   "real/Akshay_Keerthi_Resume_A_Consulting.pdf": {
-    "score": 83,
+    "score": 90,
     "experience": 3,
     "lines": 64
   },
   "real/Akshay_Keerthi_Resume_B_FinTech.pdf": {
-    "score": 83,
+    "score": 90,
     "experience": 3,
     "lines": 66
   },
@@ -51,17 +51,17 @@
   },
   "samples/uw-consulting.pdf": {
     "score": 86,
-    "experience": 4,
+    "experience": 6,
     "lines": 43
   },
   "samples/uw-cv.pdf": {
     "score": 69,
-    "experience": 8,
+    "experience": 9,
     "lines": 72
   },
   "samples/uw-grad.pdf": {
     "score": 85,
-    "experience": 6,
+    "experience": 8,
     "lines": 45
   },
   "samples/uw-health.pdf": {
@@ -98,6 +98,606 @@
     "score": 72,
     "experience": 4,
     "lines": 43
+  },
+  "stress/all-ended.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/all-ended.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/all-ended.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/all-ended.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/all-ended.pdf2col.pdf": {
+    "score": 75,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/brackets.docx-box.docx": {
+    "score": 93,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/brackets.docx-table.docx": {
+    "score": 93,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/brackets.docx.docx": {
+    "score": 94,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/brackets.pdf.pdf": {
+    "score": 94,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/brackets.pdf2col.pdf": {
+    "score": 74,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/company-first.docx-box.docx": {
+    "score": 88,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/company-first.docx-table.docx": {
+    "score": 88,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/company-first.docx.docx": {
+    "score": 87,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/company-first.pdf.pdf": {
+    "score": 94,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/company-first.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/concurrent.docx-box.docx": {
+    "score": 91,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/concurrent.docx-table.docx": {
+    "score": 91,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/concurrent.docx.docx": {
+    "score": 92,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/concurrent.pdf.pdf": {
+    "score": 92,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/concurrent.pdf2col.pdf": {
+    "score": 71,
+    "experience": 3,
+    "lines": 25
+  },
+  "stress/gap-mba.docx-box.docx": {
+    "score": 88,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/gap-mba.docx-table.docx": {
+    "score": 88,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/gap-mba.docx.docx": {
+    "score": 89,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/gap-mba.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/gap-mba.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 23
+  },
+  "stress/h-articleship.docx-box.docx": {
+    "score": 97,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-articleship.docx-table.docx": {
+    "score": 97,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-articleship.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-articleship.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-articleship.pdf2col.pdf": {
+    "score": 77,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-comma-style.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-comma-style.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-comma-style.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-comma-style.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-comma-style.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-fellowship.docx-box.docx": {
+    "score": 94,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/h-fellowship.docx-table.docx": {
+    "score": 94,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/h-fellowship.docx.docx": {
+    "score": 95,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/h-fellowship.pdf.pdf": {
+    "score": 95,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/h-fellowship.pdf2col.pdf": {
+    "score": 74,
+    "experience": 3,
+    "lines": 22
+  },
+  "stress/h-future-end.docx-box.docx": {
+    "score": 95,
+    "experience": 1,
+    "lines": 15
+  },
+  "stress/h-future-end.docx-table.docx": {
+    "score": 95,
+    "experience": 1,
+    "lines": 15
+  },
+  "stress/h-future-end.docx.docx": {
+    "score": 96,
+    "experience": 1,
+    "lines": 15
+  },
+  "stress/h-future-end.pdf.pdf": {
+    "score": 96,
+    "experience": 1,
+    "lines": 15
+  },
+  "stress/h-future-end.pdf2col.pdf": {
+    "score": 76,
+    "experience": 1,
+    "lines": 15
+  },
+  "stress/h-longmonths.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-longmonths.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-longmonths.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-longmonths.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-longmonths.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/h-names.docx-box.docx": {
+    "score": 93,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/h-names.docx-table.docx": {
+    "score": 93,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/h-names.docx.docx": {
+    "score": 94,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/h-names.pdf.pdf": {
+    "score": 94,
+    "experience": 2,
+    "lines": 16
+  },
+  "stress/h-names.pdf2col.pdf": {
+    "score": 74,
+    "experience": 2,
+    "lines": 17
+  },
+  "stress/h-oldest-first.docx-box.docx": {
+    "score": 92,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/h-oldest-first.docx-table.docx": {
+    "score": 92,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/h-oldest-first.docx.docx": {
+    "score": 93,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/h-oldest-first.pdf.pdf": {
+    "score": 93,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/h-oldest-first.pdf2col.pdf": {
+    "score": 72,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/h-tight-dates.docx-box.docx": {
+    "score": 89,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-tight-dates.docx-table.docx": {
+    "score": 89,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-tight-dates.docx.docx": {
+    "score": 90,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-tight-dates.pdf.pdf": {
+    "score": 97,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-tight-dates.pdf2col.pdf": {
+    "score": 77,
+    "experience": 2,
+    "lines": 20
+  },
+  "stress/h-two-fulltime.docx-box.docx": {
+    "score": 90,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-two-fulltime.docx-table.docx": {
+    "score": 90,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-two-fulltime.docx.docx": {
+    "score": 91,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-two-fulltime.pdf.pdf": {
+    "score": 91,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-two-fulltime.pdf2col.pdf": {
+    "score": 70,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/h-volunteer.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-volunteer.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-volunteer.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-volunteer.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/h-volunteer.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/headingless.docx-box.docx": {
+    "score": 85,
+    "experience": 0,
+    "lines": 15
+  },
+  "stress/headingless.docx-table.docx": {
+    "score": 85,
+    "experience": 0,
+    "lines": 15
+  },
+  "stress/headingless.docx.docx": {
+    "score": 77,
+    "experience": 0,
+    "lines": 15
+  },
+  "stress/headingless.pdf.pdf": {
+    "score": 77,
+    "experience": 0,
+    "lines": 15
+  },
+  "stress/headingless.pdf2col.pdf": {
+    "score": 68,
+    "experience": 0,
+    "lines": 16
+  },
+  "stress/interns.docx-box.docx": {
+    "score": 93,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/interns.docx-table.docx": {
+    "score": 93,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/interns.docx.docx": {
+    "score": 94,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/interns.pdf.pdf": {
+    "score": 94,
+    "experience": 3,
+    "lines": 21
+  },
+  "stress/interns.pdf2col.pdf": {
+    "score": 75,
+    "experience": 3,
+    "lines": 23
+  },
+  "stress/long.docx-box.docx": {
+    "score": 95,
+    "experience": 9,
+    "lines": 66
+  },
+  "stress/long.docx-table.docx": {
+    "score": 95,
+    "experience": 9,
+    "lines": 66
+  },
+  "stress/long.docx.docx": {
+    "score": 96,
+    "experience": 9,
+    "lines": 66
+  },
+  "stress/long.pdf.pdf": {
+    "score": 97,
+    "experience": 9,
+    "lines": 66
+  },
+  "stress/long.pdf2col.pdf": {
+    "score": 75,
+    "experience": 9,
+    "lines": 107
+  },
+  "stress/lost-dash.docx-box.docx": {
+    "score": 81,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/lost-dash.docx-table.docx": {
+    "score": 81,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/lost-dash.docx.docx": {
+    "score": 82,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/lost-dash.pdf.pdf": {
+    "score": 82,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/lost-dash.pdf2col.pdf": {
+    "score": 63,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/projects.docx-box.docx": {
+    "score": 88,
+    "experience": 4,
+    "lines": 19
+  },
+  "stress/projects.docx-table.docx": {
+    "score": 88,
+    "experience": 4,
+    "lines": 19
+  },
+  "stress/projects.docx.docx": {
+    "score": 88,
+    "experience": 4,
+    "lines": 19
+  },
+  "stress/projects.pdf.pdf": {
+    "score": 96,
+    "experience": 4,
+    "lines": 19
+  },
+  "stress/projects.pdf2col.pdf": {
+    "score": 75,
+    "experience": 4,
+    "lines": 20
+  },
+  "stress/promotions.docx-box.docx": {
+    "score": 93,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/promotions.docx-table.docx": {
+    "score": 93,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/promotions.docx.docx": {
+    "score": 94,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/promotions.pdf.pdf": {
+    "score": 94,
+    "experience": 3,
+    "lines": 18
+  },
+  "stress/promotions.pdf2col.pdf": {
+    "score": 76,
+    "experience": 3,
+    "lines": 22
+  },
+  "stress/steady.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 21
+  },
+  "stress/steady.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 21
+  },
+  "stress/steady.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 21
+  },
+  "stress/steady.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 21
+  },
+  "stress/steady.pdf2col.pdf": {
+    "score": 74,
+    "experience": 2,
+    "lines": 27
+  },
+  "stress/two-digit-dates.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/two-digit-dates.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/two-digit-dates.docx.docx": {
+    "score": 94,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/two-digit-dates.pdf.pdf": {
+    "score": 94,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/two-digit-dates.pdf2col.pdf": {
+    "score": 75,
+    "experience": 2,
+    "lines": 19
+  },
+  "stress/year-only.docx-box.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/year-only.docx-table.docx": {
+    "score": 95,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/year-only.docx.docx": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/year-only.pdf.pdf": {
+    "score": 96,
+    "experience": 2,
+    "lines": 18
+  },
+  "stress/year-only.pdf2col.pdf": {
+    "score": 76,
+    "experience": 2,
+    "lines": 19
   },
   "synthetic/headings-odd.pdf": {
     "score": 96,

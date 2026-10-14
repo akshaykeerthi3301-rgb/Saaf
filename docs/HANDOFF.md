@@ -2,6 +2,21 @@
 
 ---
 
+## 🔶 2026-10-15 — résumé parsing: audited, hardened, still not live
+
+**Live vs written:** all of this is **written and tested on your laptop only** — nothing is committed, nothing is deployed, and the website's upload still uses the old reader. (So a résumé made with 'Print to PDF' is still turned away there today.)
+
+**What changed since the last note:** the new reader was cross-checked six ways and fixed wherever it was wrong (full list: PROJECT-STATE Stage BN, Round 2). On 120 made-up résumés with known answers it now gets every check right; the honest first-sight score on a set I had not tuned for was **98.3%**. Four of your own résumés also score 83 → 90 in the ATS checker because dates are now read correctly.
+
+**Two decisions you made are built in:** scans are read inside our own app; internships/fellowships/short projects never count toward 'years of experience'.
+
+**You need to:**
+1. **Open `output/reports/pilot_audit_sheet.csv`** and mark your 9 résumés OK / WRONG / MISSING (about 2–3 hours). It now also shows how each total was found, your career gaps (your MBA gap is labelled 'falls inside a period of study'), and warnings. This is the only real answer key we can get. It is not tracked by git — it holds your details.
+2. **The volunteer folder is still empty** (`tests/fixtures/resumes/indian_volunteers/`). About 30 people's redacted résumés + written consent are what would let us claim anything about Indian résumés beyond yours.
+3. Say **'commit and wire it in'** when you want it live. I would run it beside the old reader first and compare, as the plan says. Two things to know first: three new software packages were added (`tesseract.js`, `@tesseract.js-data/eng`, `@napi-rs/canvas`), and I have **not** checked that the scanned-file reader runs on Vercel's servers.
+
+---
+
 ## 🔶 2026-10-12 (City, second fix) — extension 0.18.6
 
 **Why 0.18.5 did not work, and what I did differently:** I had built it against a stand-in page I made from a guess. This time I opened your real Swiggy tab and watched it. Three real causes: the City list uses non-standard tags my code could not see (so it kept retyping new spellings for ~50 seconds), the box keeps its own copy of the text and a plain 'set the value' was ignored (this is also why **Phone number** stayed empty), and clicking an item does nothing — only the arrow-down + Enter keys choose. **All three fixed**, and I checked each directly on the live page (City picks 'Bengaluru, Karnataka, India'; the phone box accepts your number and shows it as valid).

@@ -1,0 +1,51 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1012 >>
+stream
+BT /F2 10 Tf 1 0 0 1 36 750 Tm (ADITI KULKARNI) Tj ET
+BT /F1 10 Tf 1 0 0 1 36 737 Tm (Pune, India) Tj ET
+BT /F1 10 Tf 1 0 0 1 36 724 Tm (aditi@example.com) Tj ET
+BT /F1 10 Tf 1 0 0 1 36 711 Tm (+91 98450 12345) Tj ET
+BT /F2 11 Tf 1 0 0 1 36 692 Tm (SKILLS) Tj ET
+BT /F1 10 Tf 1 0 0 1 36 679 Tm (Java, Spring Boot, SQL, Git) Tj ET
+BT /F2 11 Tf 1 0 0 1 36 660 Tm (EDUCATION) Tj ET
+BT /F2 10 Tf 1 0 0 1 36 647 Tm (B.E. Computer Science) Tj ET
+BT /F1 10 Tf 1 0 0 1 36 634 Tm (VTU Belagavi, 2020 - 2024) Tj ET
+BT /F2 10 Tf 1 0 0 1 215 750 Tm (Associate Software Engineer at Wipro) Tj ET
+BT /F1 10 Tf 1 0 0 1 215 737 Tm (Jul 2024-Present) Tj ET
+BT /F1 10 Tf 1 0 0 1 215 724 Tm (- Maintain a retail banking service in Java and Spring Boot.) Tj ET
+BT /F2 10 Tf 1 0 0 1 215 711 Tm (Trainee Engineer at Wipro) Tj ET
+BT /F1 10 Tf 1 0 0 1 215 698 Tm (Jan 2024-Jun 2024) Tj ET
+BT /F1 10 Tf 1 0 0 1 215 685 Tm (- Completed the Mysore training programme; built an internal) Tj ET
+BT /F1 10 Tf 1 0 0 1 215 672 Tm (  tool.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001315 00000 n 
+0000001412 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1514
+%%EOF

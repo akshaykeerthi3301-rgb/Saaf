@@ -25,7 +25,7 @@ import { buildPage, layoutToText, type LayoutDoc, type LayoutItem } from './layo
 // clean error surfaced to the client at all.
 const MAX_PAGES = 15
 
-async function loadDocument(buffer: Buffer) {
+export async function loadDocument(buffer: Buffer) {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
   // On Node, pdfjs-dist always disables the real Worker and instead boots a
@@ -117,6 +117,30 @@ export async function pdfProducer(buffer: Buffer): Promise<string | undefined> {
     return info?.Producer ?? info?.Creator
   } catch {
     return undefined
+  } finally {
+    await task.destroy()
+  }
+}
+
+/** "D:20210315123456+05'30'" → "2021-03-15". PDF dates are a fixed-width string, not ISO. */
+export function parsePdfDate(raw: string | undefined | null): string | null {
+  const m = raw?.match(/^D?:?(\d{4})(\d{2})?(\d{2})?/)
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2] ?? '01')
+  if (y < 1990 || y > 2100 || mo < 1 || mo > 12) return null
+  return `${m[1]}-${String(mo).padStart(2, '0')}-${m[3] ?? '01'}`
+}
+
+/** When the PDF was last saved (modified, else created), or null. A scanner stamps the SCAN date; Word stamps the save. */
+export async function pdfDocumentDate(buffer: Buffer): Promise<string | null> {
+  const task = await loadDocument(buffer)
+  try {
+    const doc = await task.promise
+    const info = (await doc.getMetadata()).info as { ModDate?: string; CreationDate?: string } | undefined
+    return parsePdfDate(info?.ModDate) ?? parsePdfDate(info?.CreationDate)
+  } catch {
+    return null
   } finally {
     await task.destroy()
   }

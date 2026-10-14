@@ -44,11 +44,18 @@ const RANGE_SEP = `(?:\\s*${DASH}\\s*|\\s+to\\s+)`
  * Captures the two halves as written, never normalised to a Date.
  */
 export function dateRange(): RegExp {
-  return new RegExp(
-    `(${MONTH_ANY}\\d{4})${RANGE_SEP}(${MONTH_ANY}\\d{4}|${OPEN_ENDED})`,
-    'i',
-  )
+  return new RegExp(`(${POINT})${RANGE_SEP}(${POINT}|${OPEN_ENDED})`, 'i')
 }
+
+/**
+ * One date as a range endpoint: a four-digit year with an optional month, OR a two-digit year in the two forms that
+ * cannot be mistaken for anything else — "Jan'21" (apostrophe) and "03/19" (slash, month first).
+ *
+ * ⚠️ TWO-DIGIT YEARS WERE UNREADABLE, so "03/19 - 08/22" and "Jan'21 - Aug'26" produced a role with NO DATES — and the
+ * experience total quietly dropped it. The slash is required for the numeric form on purpose: with a dot, a pay range
+ * "12.50 - 15.00 LPA" would parse as a date range.
+ */
+const POINT = `(?:${MONTH}\\.?\\s*['’]\\d{2}(?!\\d)|(?:0?[1-9]|1[0-2])/\\d{2}(?!\\d)|${MONTH_ANY}\\d{4})`
 
 /**
  * The same range, global, capturing the four-digit YEARS rather than the whole

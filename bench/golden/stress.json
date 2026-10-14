@@ -1,0 +1,3640 @@
+{
+ "as_of": "2026-10-14",
+ "docs": {
+  "steady.pdf.pdf": {
+   "career": "steady",
+   "current": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Mixpanel",
+    "Figma",
+    "Jira",
+    "Amplitude",
+    "Python"
+   ],
+   "heldout": false
+  },
+  "steady.pdf2col.pdf": {
+   "career": "steady",
+   "current": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Mixpanel",
+    "Figma",
+    "Jira",
+    "Amplitude",
+    "Python"
+   ],
+   "heldout": false
+  },
+  "steady.docx.docx": {
+   "career": "steady",
+   "current": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Mixpanel",
+    "Figma",
+    "Jira",
+    "Amplitude",
+    "Python"
+   ],
+   "heldout": false
+  },
+  "steady.docx-table.docx": {
+   "career": "steady",
+   "current": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Mixpanel",
+    "Figma",
+    "Jira",
+    "Amplitude",
+    "Python"
+   ],
+   "heldout": false
+  },
+  "steady.docx-box.docx": {
+   "career": "steady",
+   "current": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Senior Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Mixpanel",
+    "Figma",
+    "Jira",
+    "Amplitude",
+    "Python"
+   ],
+   "heldout": false
+  },
+  "concurrent.pdf.pdf": {
+   "career": "concurrent",
+   "current": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "latest": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "months": {
+    "low": 77,
+    "mid": 77,
+    "high": 77
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Figma",
+    "Illustrator",
+    "Prototyping",
+    "Design systems",
+    "Photoshop"
+   ],
+   "heldout": false
+  },
+  "concurrent.pdf2col.pdf": {
+   "career": "concurrent",
+   "current": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "latest": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "months": {
+    "low": 77,
+    "mid": 77,
+    "high": 77
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Figma",
+    "Illustrator",
+    "Prototyping",
+    "Design systems",
+    "Photoshop"
+   ],
+   "heldout": false
+  },
+  "concurrent.docx.docx": {
+   "career": "concurrent",
+   "current": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "latest": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "months": {
+    "low": 77,
+    "mid": 77,
+    "high": 77
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Figma",
+    "Illustrator",
+    "Prototyping",
+    "Design systems",
+    "Photoshop"
+   ],
+   "heldout": false
+  },
+  "concurrent.docx-table.docx": {
+   "career": "concurrent",
+   "current": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "latest": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "months": {
+    "low": 77,
+    "mid": 77,
+    "high": 77
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Figma",
+    "Illustrator",
+    "Prototyping",
+    "Design systems",
+    "Photoshop"
+   ],
+   "heldout": false
+  },
+  "concurrent.docx-box.docx": {
+   "career": "concurrent",
+   "current": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "latest": {
+    "title": "Brand Designer",
+    "employer": "Swiggy"
+   },
+   "months": {
+    "low": 77,
+    "mid": 77,
+    "high": 77
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Figma",
+    "Illustrator",
+    "Prototyping",
+    "Design systems",
+    "Photoshop"
+   ],
+   "heldout": false
+  },
+  "promotions.pdf.pdf": {
+   "career": "promotions",
+   "current": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "latest": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Java",
+    "Oracle",
+    "Core banking",
+    "Stakeholder management"
+   ],
+   "heldout": false
+  },
+  "promotions.pdf2col.pdf": {
+   "career": "promotions",
+   "current": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "latest": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Java",
+    "Oracle",
+    "Core banking",
+    "Stakeholder management"
+   ],
+   "heldout": false
+  },
+  "promotions.docx.docx": {
+   "career": "promotions",
+   "current": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "latest": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Java",
+    "Oracle",
+    "Core banking",
+    "Stakeholder management"
+   ],
+   "heldout": false
+  },
+  "promotions.docx-table.docx": {
+   "career": "promotions",
+   "current": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "latest": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Java",
+    "Oracle",
+    "Core banking",
+    "Stakeholder management"
+   ],
+   "heldout": false
+  },
+  "promotions.docx-box.docx": {
+   "career": "promotions",
+   "current": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "latest": {
+    "title": "Lead Consultant",
+    "employer": "Infosys"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Java",
+    "Oracle",
+    "Core banking",
+    "Stakeholder management"
+   ],
+   "heldout": false
+  },
+  "gap-mba.pdf.pdf": {
+   "career": "gap-mba",
+   "current": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "latest": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "months": {
+    "low": 87,
+    "mid": 87,
+    "high": 87
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 2,
+   "gap_reasons": [
+    "education"
+   ],
+   "flags": [],
+   "skills": [
+    "Financial modelling",
+    "Market sizing",
+    "Excel",
+    "PowerPoint"
+   ],
+   "heldout": false
+  },
+  "gap-mba.pdf2col.pdf": {
+   "career": "gap-mba",
+   "current": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "latest": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "months": {
+    "low": 87,
+    "mid": 87,
+    "high": 87
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 2,
+   "gap_reasons": [
+    "education"
+   ],
+   "flags": [],
+   "skills": [
+    "Financial modelling",
+    "Market sizing",
+    "Excel",
+    "PowerPoint"
+   ],
+   "heldout": false
+  },
+  "gap-mba.docx.docx": {
+   "career": "gap-mba",
+   "current": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "latest": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "months": {
+    "low": 87,
+    "mid": 87,
+    "high": 87
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 2,
+   "gap_reasons": [
+    "education"
+   ],
+   "flags": [],
+   "skills": [
+    "Financial modelling",
+    "Market sizing",
+    "Excel",
+    "PowerPoint"
+   ],
+   "heldout": false
+  },
+  "gap-mba.docx-table.docx": {
+   "career": "gap-mba",
+   "current": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "latest": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "months": {
+    "low": 87,
+    "mid": 87,
+    "high": 87
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 2,
+   "gap_reasons": [
+    "education"
+   ],
+   "flags": [],
+   "skills": [
+    "Financial modelling",
+    "Market sizing",
+    "Excel",
+    "PowerPoint"
+   ],
+   "heldout": false
+  },
+  "gap-mba.docx-box.docx": {
+   "career": "gap-mba",
+   "current": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "latest": {
+    "title": "Manager, Strategy",
+    "employer": "Mahindra"
+   },
+   "months": {
+    "low": 87,
+    "mid": 87,
+    "high": 87
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 2,
+   "gap_reasons": [
+    "education"
+   ],
+   "flags": [],
+   "skills": [
+    "Financial modelling",
+    "Market sizing",
+    "Excel",
+    "PowerPoint"
+   ],
+   "heldout": false
+  },
+  "interns.pdf.pdf": {
+   "career": "interns",
+   "current": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "latest": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "months": {
+    "low": 40,
+    "mid": 40,
+    "high": 40
+   },
+   "internship_months": 6,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Python",
+    "MATLAB",
+    "SolidWorks",
+    "Lean manufacturing"
+   ],
+   "heldout": false
+  },
+  "interns.pdf2col.pdf": {
+   "career": "interns",
+   "current": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "latest": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "months": {
+    "low": 40,
+    "mid": 40,
+    "high": 40
+   },
+   "internship_months": 6,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Python",
+    "MATLAB",
+    "SolidWorks",
+    "Lean manufacturing"
+   ],
+   "heldout": false
+  },
+  "interns.docx.docx": {
+   "career": "interns",
+   "current": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "latest": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "months": {
+    "low": 40,
+    "mid": 40,
+    "high": 40
+   },
+   "internship_months": 6,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Python",
+    "MATLAB",
+    "SolidWorks",
+    "Lean manufacturing"
+   ],
+   "heldout": false
+  },
+  "interns.docx-table.docx": {
+   "career": "interns",
+   "current": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "latest": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "months": {
+    "low": 40,
+    "mid": 40,
+    "high": 40
+   },
+   "internship_months": 6,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Python",
+    "MATLAB",
+    "SolidWorks",
+    "Lean manufacturing"
+   ],
+   "heldout": false
+  },
+  "interns.docx-box.docx": {
+   "career": "interns",
+   "current": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "latest": {
+    "title": "Graduate Engineer Trainee",
+    "employer": "Tata Motors"
+   },
+   "months": {
+    "low": 40,
+    "mid": 40,
+    "high": 40
+   },
+   "internship_months": 6,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Python",
+    "MATLAB",
+    "SolidWorks",
+    "Lean manufacturing"
+   ],
+   "heldout": false
+  },
+  "year-only.pdf.pdf": {
+   "career": "year-only",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "months": {
+    "low": 97,
+    "mid": 112,
+    "high": 118
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Supply chain",
+    "Excel",
+    "Forecasting",
+    "SAP"
+   ],
+   "heldout": false
+  },
+  "year-only.pdf2col.pdf": {
+   "career": "year-only",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "months": {
+    "low": 97,
+    "mid": 112,
+    "high": 118
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Supply chain",
+    "Excel",
+    "Forecasting",
+    "SAP"
+   ],
+   "heldout": false
+  },
+  "year-only.docx.docx": {
+   "career": "year-only",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "months": {
+    "low": 97,
+    "mid": 112,
+    "high": 118
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Supply chain",
+    "Excel",
+    "Forecasting",
+    "SAP"
+   ],
+   "heldout": false
+  },
+  "year-only.docx-table.docx": {
+   "career": "year-only",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "months": {
+    "low": 97,
+    "mid": 112,
+    "high": 118
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Supply chain",
+    "Excel",
+    "Forecasting",
+    "SAP"
+   ],
+   "heldout": false
+  },
+  "year-only.docx-box.docx": {
+   "career": "year-only",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "BigBasket"
+   },
+   "months": {
+    "low": 97,
+    "mid": 112,
+    "high": 118
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Supply chain",
+    "Excel",
+    "Forecasting",
+    "SAP"
+   ],
+   "heldout": false
+  },
+  "company-first.pdf.pdf": {
+   "career": "company-first",
+   "current": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "latest": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "months": {
+    "low": 89,
+    "mid": 89,
+    "high": 89
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Python",
+    "Tableau",
+    "Statistics"
+   ],
+   "heldout": false
+  },
+  "company-first.pdf2col.pdf": {
+   "career": "company-first",
+   "current": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "latest": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "months": {
+    "low": 89,
+    "mid": 89,
+    "high": 89
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Python",
+    "Tableau",
+    "Statistics"
+   ],
+   "heldout": false
+  },
+  "company-first.docx.docx": {
+   "career": "company-first",
+   "current": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "latest": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "months": {
+    "low": 89,
+    "mid": 89,
+    "high": 89
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Python",
+    "Tableau",
+    "Statistics"
+   ],
+   "heldout": false
+  },
+  "company-first.docx-table.docx": {
+   "career": "company-first",
+   "current": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "latest": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "months": {
+    "low": 89,
+    "mid": 89,
+    "high": 89
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Python",
+    "Tableau",
+    "Statistics"
+   ],
+   "heldout": false
+  },
+  "company-first.docx-box.docx": {
+   "career": "company-first",
+   "current": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "latest": {
+    "title": "Senior Analyst",
+    "employer": "Zomato"
+   },
+   "months": {
+    "low": 89,
+    "mid": 89,
+    "high": 89
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "SQL",
+    "Python",
+    "Tableau",
+    "Statistics"
+   ],
+   "heldout": false
+  },
+  "all-ended.pdf.pdf": {
+   "career": "all-ended",
+   "current": null,
+   "latest": {
+    "title": "Content Lead",
+    "employer": "Byjus"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "recently_ended"
+   ],
+   "skills": [
+    "Editing",
+    "SEO",
+    "Content strategy",
+    "Copywriting"
+   ],
+   "heldout": false
+  },
+  "all-ended.pdf2col.pdf": {
+   "career": "all-ended",
+   "current": null,
+   "latest": {
+    "title": "Content Lead",
+    "employer": "Byjus"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "recently_ended"
+   ],
+   "skills": [
+    "Editing",
+    "SEO",
+    "Content strategy",
+    "Copywriting"
+   ],
+   "heldout": false
+  },
+  "all-ended.docx.docx": {
+   "career": "all-ended",
+   "current": null,
+   "latest": {
+    "title": "Content Lead",
+    "employer": "Byjus"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "recently_ended"
+   ],
+   "skills": [
+    "Editing",
+    "SEO",
+    "Content strategy",
+    "Copywriting"
+   ],
+   "heldout": false
+  },
+  "all-ended.docx-table.docx": {
+   "career": "all-ended",
+   "current": null,
+   "latest": {
+    "title": "Content Lead",
+    "employer": "Byjus"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "recently_ended"
+   ],
+   "skills": [
+    "Editing",
+    "SEO",
+    "Content strategy",
+    "Copywriting"
+   ],
+   "heldout": false
+  },
+  "all-ended.docx-box.docx": {
+   "career": "all-ended",
+   "current": null,
+   "latest": {
+    "title": "Content Lead",
+    "employer": "Byjus"
+   },
+   "months": {
+    "low": 100,
+    "mid": 100,
+    "high": 100
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "recently_ended"
+   ],
+   "skills": [
+    "Editing",
+    "SEO",
+    "Content strategy",
+    "Copywriting"
+   ],
+   "heldout": false
+  },
+  "brackets.pdf.pdf": {
+   "career": "brackets",
+   "current": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "latest": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Wealth management",
+    "Portfolio review",
+    "Client relations"
+   ],
+   "heldout": false
+  },
+  "brackets.pdf2col.pdf": {
+   "career": "brackets",
+   "current": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "latest": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Wealth management",
+    "Portfolio review",
+    "Client relations"
+   ],
+   "heldout": false
+  },
+  "brackets.docx.docx": {
+   "career": "brackets",
+   "current": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "latest": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Wealth management",
+    "Portfolio review",
+    "Client relations"
+   ],
+   "heldout": false
+  },
+  "brackets.docx-table.docx": {
+   "career": "brackets",
+   "current": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "latest": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Wealth management",
+    "Portfolio review",
+    "Client relations"
+   ],
+   "heldout": false
+  },
+  "brackets.docx-box.docx": {
+   "career": "brackets",
+   "current": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "latest": {
+    "title": "Relationship Manager (Private Banking, Wealth)",
+    "employer": "HDFC Bank"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Wealth management",
+    "Portfolio review",
+    "Client relations"
+   ],
+   "heldout": false
+  },
+  "projects.pdf.pdf": {
+   "career": "projects",
+   "current": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "latest": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "months": {
+    "low": 51,
+    "mid": 51,
+    "high": 51
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 3,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Go",
+    "PostgreSQL",
+    "Kafka",
+    "Docker",
+    "AWS"
+   ],
+   "heldout": false
+  },
+  "projects.pdf2col.pdf": {
+   "career": "projects",
+   "current": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "latest": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "months": {
+    "low": 51,
+    "mid": 51,
+    "high": 51
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 3,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Go",
+    "PostgreSQL",
+    "Kafka",
+    "Docker",
+    "AWS"
+   ],
+   "heldout": false
+  },
+  "projects.docx.docx": {
+   "career": "projects",
+   "current": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "latest": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "months": {
+    "low": 51,
+    "mid": 51,
+    "high": 51
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 3,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Go",
+    "PostgreSQL",
+    "Kafka",
+    "Docker",
+    "AWS"
+   ],
+   "heldout": false
+  },
+  "projects.docx-table.docx": {
+   "career": "projects",
+   "current": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "latest": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "months": {
+    "low": 51,
+    "mid": 51,
+    "high": 51
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 3,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Go",
+    "PostgreSQL",
+    "Kafka",
+    "Docker",
+    "AWS"
+   ],
+   "heldout": false
+  },
+  "projects.docx-box.docx": {
+   "career": "projects",
+   "current": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "latest": {
+    "title": "Backend Engineer",
+    "employer": "Freshworks"
+   },
+   "months": {
+    "low": 51,
+    "mid": 51,
+    "high": 51
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 3,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Go",
+    "PostgreSQL",
+    "Kafka",
+    "Docker",
+    "AWS"
+   ],
+   "heldout": false
+  },
+  "long.pdf.pdf": {
+   "career": "long",
+   "current": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "latest": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "months": {
+    "low": 207,
+    "mid": 207,
+    "high": 207
+   },
+   "internship_months": 0,
+   "n_experience": 9,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Enterprise sales",
+    "Negotiation",
+    "Forecasting",
+    "CRM",
+    "Channel management",
+    "Team building"
+   ],
+   "heldout": false
+  },
+  "long.pdf2col.pdf": {
+   "career": "long",
+   "current": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "latest": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "months": {
+    "low": 207,
+    "mid": 207,
+    "high": 207
+   },
+   "internship_months": 0,
+   "n_experience": 9,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Enterprise sales",
+    "Negotiation",
+    "Forecasting",
+    "CRM",
+    "Channel management",
+    "Team building"
+   ],
+   "heldout": false
+  },
+  "long.docx.docx": {
+   "career": "long",
+   "current": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "latest": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "months": {
+    "low": 207,
+    "mid": 207,
+    "high": 207
+   },
+   "internship_months": 0,
+   "n_experience": 9,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Enterprise sales",
+    "Negotiation",
+    "Forecasting",
+    "CRM",
+    "Channel management",
+    "Team building"
+   ],
+   "heldout": false
+  },
+  "long.docx-table.docx": {
+   "career": "long",
+   "current": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "latest": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "months": {
+    "low": 207,
+    "mid": 207,
+    "high": 207
+   },
+   "internship_months": 0,
+   "n_experience": 9,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Enterprise sales",
+    "Negotiation",
+    "Forecasting",
+    "CRM",
+    "Channel management",
+    "Team building"
+   ],
+   "heldout": false
+  },
+  "long.docx-box.docx": {
+   "career": "long",
+   "current": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "latest": {
+    "title": "Vice President Sales",
+    "employer": "Chargebee"
+   },
+   "months": {
+    "low": 207,
+    "mid": 207,
+    "high": 207
+   },
+   "internship_months": 0,
+   "n_experience": 9,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Enterprise sales",
+    "Negotiation",
+    "Forecasting",
+    "CRM",
+    "Channel management",
+    "Team building"
+   ],
+   "heldout": false
+  },
+  "two-digit-dates.pdf.pdf": {
+   "career": "two-digit-dates",
+   "current": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "latest": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "months": {
+    "low": 90,
+    "mid": 90,
+    "high": 90
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Automation",
+    "Negotiation",
+    "PLC",
+    "Key accounts"
+   ],
+   "heldout": false
+  },
+  "two-digit-dates.pdf2col.pdf": {
+   "career": "two-digit-dates",
+   "current": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "latest": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "months": {
+    "low": 90,
+    "mid": 90,
+    "high": 90
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Automation",
+    "Negotiation",
+    "PLC",
+    "Key accounts"
+   ],
+   "heldout": false
+  },
+  "two-digit-dates.docx.docx": {
+   "career": "two-digit-dates",
+   "current": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "latest": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "months": {
+    "low": 90,
+    "mid": 90,
+    "high": 90
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Automation",
+    "Negotiation",
+    "PLC",
+    "Key accounts"
+   ],
+   "heldout": false
+  },
+  "two-digit-dates.docx-table.docx": {
+   "career": "two-digit-dates",
+   "current": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "latest": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "months": {
+    "low": 90,
+    "mid": 90,
+    "high": 90
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Automation",
+    "Negotiation",
+    "PLC",
+    "Key accounts"
+   ],
+   "heldout": false
+  },
+  "two-digit-dates.docx-box.docx": {
+   "career": "two-digit-dates",
+   "current": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "latest": {
+    "title": "Senior Sales Engineer",
+    "employer": "Siemens"
+   },
+   "months": {
+    "low": 90,
+    "mid": 90,
+    "high": 90
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Automation",
+    "Negotiation",
+    "PLC",
+    "Key accounts"
+   ],
+   "heldout": false
+  },
+  "lost-dash.pdf.pdf": {
+   "career": "lost-dash",
+   "current": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "latest": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "months": {
+    "low": 91,
+    "mid": 91,
+    "high": 91
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Public speaking",
+    "Nutrition",
+    "Counselling"
+   ],
+   "heldout": false
+  },
+  "lost-dash.pdf2col.pdf": {
+   "career": "lost-dash",
+   "current": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "latest": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "months": {
+    "low": 91,
+    "mid": 91,
+    "high": 91
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Public speaking",
+    "Nutrition",
+    "Counselling"
+   ],
+   "heldout": false
+  },
+  "lost-dash.docx.docx": {
+   "career": "lost-dash",
+   "current": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "latest": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "months": {
+    "low": 91,
+    "mid": 91,
+    "high": 91
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Public speaking",
+    "Nutrition",
+    "Counselling"
+   ],
+   "heldout": false
+  },
+  "lost-dash.docx-table.docx": {
+   "career": "lost-dash",
+   "current": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "latest": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "months": {
+    "low": 91,
+    "mid": 91,
+    "high": 91
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Public speaking",
+    "Nutrition",
+    "Counselling"
+   ],
+   "heldout": false
+  },
+  "lost-dash.docx-box.docx": {
+   "career": "lost-dash",
+   "current": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "latest": {
+    "title": "Yoga Instructor",
+    "employer": "University Recreation Centre"
+   },
+   "months": {
+    "low": 91,
+    "mid": 91,
+    "high": 91
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Public speaking",
+    "Nutrition",
+    "Counselling"
+   ],
+   "heldout": false
+  },
+  "headingless.pdf.pdf": {
+   "career": "headingless",
+   "current": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "latest": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "months": {
+    "low": 34,
+    "mid": 34,
+    "high": 34
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Java",
+    "Spring Boot",
+    "SQL",
+    "Git"
+   ],
+   "heldout": false
+  },
+  "headingless.pdf2col.pdf": {
+   "career": "headingless",
+   "current": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "latest": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "months": {
+    "low": 34,
+    "mid": 34,
+    "high": 34
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Java",
+    "Spring Boot",
+    "SQL",
+    "Git"
+   ],
+   "heldout": false
+  },
+  "headingless.docx.docx": {
+   "career": "headingless",
+   "current": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "latest": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "months": {
+    "low": 34,
+    "mid": 34,
+    "high": 34
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Java",
+    "Spring Boot",
+    "SQL",
+    "Git"
+   ],
+   "heldout": false
+  },
+  "headingless.docx-table.docx": {
+   "career": "headingless",
+   "current": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "latest": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "months": {
+    "low": 34,
+    "mid": 34,
+    "high": 34
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Java",
+    "Spring Boot",
+    "SQL",
+    "Git"
+   ],
+   "heldout": false
+  },
+  "headingless.docx-box.docx": {
+   "career": "headingless",
+   "current": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "latest": {
+    "title": "Associate Software Engineer",
+    "employer": "Wipro"
+   },
+   "months": {
+    "low": 34,
+    "mid": 34,
+    "high": 34
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "trainee_role_counted"
+   ],
+   "skills": [
+    "Java",
+    "Spring Boot",
+    "SQL",
+    "Git"
+   ],
+   "heldout": false
+  },
+  "h-longmonths.pdf.pdf": {
+   "career": "h-longmonths",
+   "current": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "latest": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "months": {
+    "low": 81,
+    "mid": 81,
+    "high": 81
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Python",
+    "PyTorch",
+    "SQL",
+    "Spark"
+   ],
+   "heldout": true
+  },
+  "h-longmonths.pdf2col.pdf": {
+   "career": "h-longmonths",
+   "current": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "latest": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "months": {
+    "low": 81,
+    "mid": 81,
+    "high": 81
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Python",
+    "PyTorch",
+    "SQL",
+    "Spark"
+   ],
+   "heldout": true
+  },
+  "h-longmonths.docx.docx": {
+   "career": "h-longmonths",
+   "current": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "latest": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "months": {
+    "low": 81,
+    "mid": 81,
+    "high": 81
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Python",
+    "PyTorch",
+    "SQL",
+    "Spark"
+   ],
+   "heldout": true
+  },
+  "h-longmonths.docx-table.docx": {
+   "career": "h-longmonths",
+   "current": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "latest": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "months": {
+    "low": 81,
+    "mid": 81,
+    "high": 81
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Python",
+    "PyTorch",
+    "SQL",
+    "Spark"
+   ],
+   "heldout": true
+  },
+  "h-longmonths.docx-box.docx": {
+   "career": "h-longmonths",
+   "current": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "latest": {
+    "title": "Senior Data Scientist",
+    "employer": "Myntra"
+   },
+   "months": {
+    "low": 81,
+    "mid": 81,
+    "high": 81
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Python",
+    "PyTorch",
+    "SQL",
+    "Spark"
+   ],
+   "heldout": true
+  },
+  "h-oldest-first.pdf.pdf": {
+   "career": "h-oldest-first",
+   "current": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "latest": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "months": {
+    "low": 136,
+    "mid": 136,
+    "high": 136
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IFRS",
+    "Excel",
+    "Audit",
+    "SAP"
+   ],
+   "heldout": true
+  },
+  "h-oldest-first.pdf2col.pdf": {
+   "career": "h-oldest-first",
+   "current": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "latest": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "months": {
+    "low": 136,
+    "mid": 136,
+    "high": 136
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IFRS",
+    "Excel",
+    "Audit",
+    "SAP"
+   ],
+   "heldout": true
+  },
+  "h-oldest-first.docx.docx": {
+   "career": "h-oldest-first",
+   "current": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "latest": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "months": {
+    "low": 136,
+    "mid": 136,
+    "high": 136
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IFRS",
+    "Excel",
+    "Audit",
+    "SAP"
+   ],
+   "heldout": true
+  },
+  "h-oldest-first.docx-table.docx": {
+   "career": "h-oldest-first",
+   "current": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "latest": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "months": {
+    "low": 136,
+    "mid": 136,
+    "high": 136
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IFRS",
+    "Excel",
+    "Audit",
+    "SAP"
+   ],
+   "heldout": true
+  },
+  "h-oldest-first.docx-box.docx": {
+   "career": "h-oldest-first",
+   "current": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "latest": {
+    "title": "Finance Manager",
+    "employer": "Paytm"
+   },
+   "months": {
+    "low": 136,
+    "mid": 136,
+    "high": 136
+   },
+   "internship_months": 0,
+   "n_experience": 3,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IFRS",
+    "Excel",
+    "Audit",
+    "SAP"
+   ],
+   "heldout": true
+  },
+  "h-comma-style.pdf.pdf": {
+   "career": "h-comma-style",
+   "current": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 75,
+    "mid": 75,
+    "high": 75
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Strategy",
+    "SQL",
+    "Roadmapping"
+   ],
+   "heldout": true
+  },
+  "h-comma-style.pdf2col.pdf": {
+   "career": "h-comma-style",
+   "current": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 75,
+    "mid": 75,
+    "high": 75
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Strategy",
+    "SQL",
+    "Roadmapping"
+   ],
+   "heldout": true
+  },
+  "h-comma-style.docx.docx": {
+   "career": "h-comma-style",
+   "current": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 75,
+    "mid": 75,
+    "high": 75
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Strategy",
+    "SQL",
+    "Roadmapping"
+   ],
+   "heldout": true
+  },
+  "h-comma-style.docx-table.docx": {
+   "career": "h-comma-style",
+   "current": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 75,
+    "mid": 75,
+    "high": 75
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Strategy",
+    "SQL",
+    "Roadmapping"
+   ],
+   "heldout": true
+  },
+  "h-comma-style.docx-box.docx": {
+   "career": "h-comma-style",
+   "current": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "latest": {
+    "title": "Product Manager",
+    "employer": "Razorpay"
+   },
+   "months": {
+    "low": 75,
+    "mid": 75,
+    "high": 75
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Strategy",
+    "SQL",
+    "Roadmapping"
+   ],
+   "heldout": true
+  },
+  "h-fellowship.pdf.pdf": {
+   "career": "h-fellowship",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "months": {
+    "low": 53,
+    "mid": 53,
+    "high": 53
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Operations",
+    "Excel",
+    "Training"
+   ],
+   "heldout": true
+  },
+  "h-fellowship.pdf2col.pdf": {
+   "career": "h-fellowship",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "months": {
+    "low": 53,
+    "mid": 53,
+    "high": 53
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Operations",
+    "Excel",
+    "Training"
+   ],
+   "heldout": true
+  },
+  "h-fellowship.docx.docx": {
+   "career": "h-fellowship",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "months": {
+    "low": 53,
+    "mid": 53,
+    "high": 53
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Operations",
+    "Excel",
+    "Training"
+   ],
+   "heldout": true
+  },
+  "h-fellowship.docx-table.docx": {
+   "career": "h-fellowship",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "months": {
+    "low": 53,
+    "mid": 53,
+    "high": 53
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Operations",
+    "Excel",
+    "Training"
+   ],
+   "heldout": true
+  },
+  "h-fellowship.docx-box.docx": {
+   "career": "h-fellowship",
+   "current": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "latest": {
+    "title": "Operations Manager",
+    "employer": "Urban Company"
+   },
+   "months": {
+    "low": 53,
+    "mid": 53,
+    "high": 53
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 2,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Operations",
+    "Excel",
+    "Training"
+   ],
+   "heldout": true
+  },
+  "h-articleship.pdf.pdf": {
+   "career": "h-articleship",
+   "current": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "latest": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "months": {
+    "low": 98,
+    "mid": 98,
+    "high": 98
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 1,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IND AS",
+    "Consolidation",
+    "Excel"
+   ],
+   "heldout": true
+  },
+  "h-articleship.pdf2col.pdf": {
+   "career": "h-articleship",
+   "current": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "latest": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "months": {
+    "low": 98,
+    "mid": 98,
+    "high": 98
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 1,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IND AS",
+    "Consolidation",
+    "Excel"
+   ],
+   "heldout": true
+  },
+  "h-articleship.docx.docx": {
+   "career": "h-articleship",
+   "current": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "latest": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "months": {
+    "low": 98,
+    "mid": 98,
+    "high": 98
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 1,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IND AS",
+    "Consolidation",
+    "Excel"
+   ],
+   "heldout": true
+  },
+  "h-articleship.docx-table.docx": {
+   "career": "h-articleship",
+   "current": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "latest": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "months": {
+    "low": 98,
+    "mid": 98,
+    "high": 98
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 1,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IND AS",
+    "Consolidation",
+    "Excel"
+   ],
+   "heldout": true
+  },
+  "h-articleship.docx-box.docx": {
+   "career": "h-articleship",
+   "current": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "latest": {
+    "title": "Assistant Manager Finance",
+    "employer": "Tata Steel"
+   },
+   "months": {
+    "low": 98,
+    "mid": 98,
+    "high": 98
+   },
+   "internship_months": 36,
+   "n_experience": 1,
+   "n_internships": 1,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "IND AS",
+    "Consolidation",
+    "Excel"
+   ],
+   "heldout": true
+  },
+  "h-volunteer.pdf.pdf": {
+   "career": "h-volunteer",
+   "current": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "latest": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "months": {
+    "low": 63,
+    "mid": 63,
+    "high": 63
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Java",
+    "Kotlin",
+    "AWS"
+   ],
+   "heldout": true
+  },
+  "h-volunteer.pdf2col.pdf": {
+   "career": "h-volunteer",
+   "current": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "latest": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "months": {
+    "low": 63,
+    "mid": 63,
+    "high": 63
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Java",
+    "Kotlin",
+    "AWS"
+   ],
+   "heldout": true
+  },
+  "h-volunteer.docx.docx": {
+   "career": "h-volunteer",
+   "current": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "latest": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "months": {
+    "low": 63,
+    "mid": 63,
+    "high": 63
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Java",
+    "Kotlin",
+    "AWS"
+   ],
+   "heldout": true
+  },
+  "h-volunteer.docx-table.docx": {
+   "career": "h-volunteer",
+   "current": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "latest": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "months": {
+    "low": 63,
+    "mid": 63,
+    "high": 63
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Java",
+    "Kotlin",
+    "AWS"
+   ],
+   "heldout": true
+  },
+  "h-volunteer.docx-box.docx": {
+   "career": "h-volunteer",
+   "current": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "latest": {
+    "title": "Software Engineer",
+    "employer": "Atlassian"
+   },
+   "months": {
+    "low": 63,
+    "mid": 63,
+    "high": 63
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Java",
+    "Kotlin",
+    "AWS"
+   ],
+   "heldout": true
+  },
+  "h-two-fulltime.pdf.pdf": {
+   "career": "h-two-fulltime",
+   "current": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "latest": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "months": {
+    "low": 58,
+    "mid": 58,
+    "high": 58
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Performance marketing",
+    "SEO",
+    "Analytics"
+   ],
+   "heldout": true
+  },
+  "h-two-fulltime.pdf2col.pdf": {
+   "career": "h-two-fulltime",
+   "current": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "latest": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "months": {
+    "low": 58,
+    "mid": 58,
+    "high": 58
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Performance marketing",
+    "SEO",
+    "Analytics"
+   ],
+   "heldout": true
+  },
+  "h-two-fulltime.docx.docx": {
+   "career": "h-two-fulltime",
+   "current": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "latest": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "months": {
+    "low": 58,
+    "mid": 58,
+    "high": 58
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Performance marketing",
+    "SEO",
+    "Analytics"
+   ],
+   "heldout": true
+  },
+  "h-two-fulltime.docx-table.docx": {
+   "career": "h-two-fulltime",
+   "current": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "latest": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "months": {
+    "low": 58,
+    "mid": 58,
+    "high": 58
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Performance marketing",
+    "SEO",
+    "Analytics"
+   ],
+   "heldout": true
+  },
+  "h-two-fulltime.docx-box.docx": {
+   "career": "h-two-fulltime",
+   "current": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "latest": {
+    "title": "Senior Marketing Manager",
+    "employer": "Nykaa"
+   },
+   "months": {
+    "low": 58,
+    "mid": 58,
+    "high": 58
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [
+    "concurrent_roles"
+   ],
+   "skills": [
+    "Performance marketing",
+    "SEO",
+    "Analytics"
+   ],
+   "heldout": true
+  },
+  "h-future-end.pdf.pdf": {
+   "career": "h-future-end",
+   "current": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "latest": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "months": {
+    "low": 41,
+    "mid": 41,
+    "high": 41
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Lean",
+    "AutoCAD",
+    "Six Sigma"
+   ],
+   "heldout": true
+  },
+  "h-future-end.pdf2col.pdf": {
+   "career": "h-future-end",
+   "current": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "latest": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "months": {
+    "low": 41,
+    "mid": 41,
+    "high": 41
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Lean",
+    "AutoCAD",
+    "Six Sigma"
+   ],
+   "heldout": true
+  },
+  "h-future-end.docx.docx": {
+   "career": "h-future-end",
+   "current": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "latest": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "months": {
+    "low": 41,
+    "mid": 41,
+    "high": 41
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Lean",
+    "AutoCAD",
+    "Six Sigma"
+   ],
+   "heldout": true
+  },
+  "h-future-end.docx-table.docx": {
+   "career": "h-future-end",
+   "current": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "latest": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "months": {
+    "low": 41,
+    "mid": 41,
+    "high": 41
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Lean",
+    "AutoCAD",
+    "Six Sigma"
+   ],
+   "heldout": true
+  },
+  "h-future-end.docx-box.docx": {
+   "career": "h-future-end",
+   "current": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "latest": {
+    "title": "Process Engineer",
+    "employer": "Bajaj Auto"
+   },
+   "months": {
+    "low": 41,
+    "mid": 41,
+    "high": 41
+   },
+   "internship_months": 0,
+   "n_experience": 1,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Lean",
+    "AutoCAD",
+    "Six Sigma"
+   ],
+   "heldout": true
+  },
+  "h-names.pdf.pdf": {
+   "career": "h-names",
+   "current": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "latest": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "CATIA",
+    "MATLAB",
+    "Python"
+   ],
+   "heldout": true
+  },
+  "h-names.pdf2col.pdf": {
+   "career": "h-names",
+   "current": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "latest": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "CATIA",
+    "MATLAB",
+    "Python"
+   ],
+   "heldout": true
+  },
+  "h-names.docx.docx": {
+   "career": "h-names",
+   "current": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "latest": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "CATIA",
+    "MATLAB",
+    "Python"
+   ],
+   "heldout": true
+  },
+  "h-names.docx-table.docx": {
+   "career": "h-names",
+   "current": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "latest": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "CATIA",
+    "MATLAB",
+    "Python"
+   ],
+   "heldout": true
+  },
+  "h-names.docx-box.docx": {
+   "career": "h-names",
+   "current": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "latest": {
+    "title": "Design Engineer",
+    "employer": "Mercedes-Benz R&D India"
+   },
+   "months": {
+    "low": 88,
+    "mid": 88,
+    "high": 88
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "CATIA",
+    "MATLAB",
+    "Python"
+   ],
+   "heldout": true
+  },
+  "h-tight-dates.pdf.pdf": {
+   "career": "h-tight-dates",
+   "current": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "latest": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Curriculum design",
+    "Physics"
+   ],
+   "heldout": true
+  },
+  "h-tight-dates.pdf2col.pdf": {
+   "career": "h-tight-dates",
+   "current": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "latest": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Curriculum design",
+    "Physics"
+   ],
+   "heldout": true
+  },
+  "h-tight-dates.docx.docx": {
+   "career": "h-tight-dates",
+   "current": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "latest": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Curriculum design",
+    "Physics"
+   ],
+   "heldout": true
+  },
+  "h-tight-dates.docx-table.docx": {
+   "career": "h-tight-dates",
+   "current": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "latest": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Curriculum design",
+    "Physics"
+   ],
+   "heldout": true
+  },
+  "h-tight-dates.docx-box.docx": {
+   "career": "h-tight-dates",
+   "current": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "latest": {
+    "title": "Curriculum Lead",
+    "employer": "PhysicsWallah"
+   },
+   "months": {
+    "low": 127,
+    "mid": 127,
+    "high": 127
+   },
+   "internship_months": 0,
+   "n_experience": 2,
+   "n_internships": 0,
+   "n_projects": 0,
+   "n_education": 1,
+   "gap_reasons": [],
+   "flags": [],
+   "skills": [
+    "Teaching",
+    "Curriculum design",
+    "Physics"
+   ],
+   "heldout": true
+  }
+ }
+}

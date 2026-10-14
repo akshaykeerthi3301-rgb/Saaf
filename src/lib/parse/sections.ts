@@ -150,6 +150,22 @@ const BULLET_GLYPH = /^\s*[•▪‣◦·*•●▪]|^\s*[-–—]\s+/
 const HEADER_SPLIT = /\s+[|·•—–]\s+|\s+[-]\s+|\s+at\s+|,\s+/i
 
 /**
+ * Split on HEADER_SPLIT, but never inside brackets.
+ *
+ * ⚠️ "Relationship Manager (Private Banking, Wealth)" was cut at its comma into a title "Relationship Manager (Private
+ * Banking" and an employer "Wealth)" — the real employer pushed to third place. Found by a stress résumé built from the
+ * founder's own older documents, where the same cut dropped "Relationship Manager, Private Banking)" from a title. A comma
+ * inside brackets is part of the bracket.
+ */
+const KEEP = '\u0001'
+/** "Manager, Strategy" and "Head, Marketing" are one TITLE; "Manager, Zeta" is a title and a company. A function word after the comma is the tell. */
+const FUNCTION_AFTER_COMMA = /,(?=\s+(?:strategy|operations|marketing|sales|finance|product|engineering|design|technology|analytics|growth|hr|human resources|people|legal|commercial|business development|supply chain|data|research|customer success|partnerships|brand|content|risk|compliance|audit|treasury|procurement|logistics|revenue|credit|retail|corporate)\b(?:\s+(?:and|&)\s+\w+)?\s*(?:$|[|·•—–]|\s{2,}|\t))/gi
+function splitHeader(s: string): string[] {
+  const guarded = s.replace(/\([^)]*\)/g, (m) => m.replace(/,/g, KEEP)).replace(FUNCTION_AFTER_COMMA, KEEP)
+  return guarded.split(HEADER_SPLIT).map((p) => p.replaceAll(KEEP, ','))
+}
+
+/**
  * The separators that may IDENTIFY a line as a role header — a deliberately
  * smaller set than the ones used to split one.
  *
@@ -282,8 +298,7 @@ function parseHeader(lines: string[]): Omit<ExperienceEntry, 'bullets'> {
   // A tab or a run of spaces is how a two-column header ("ICICI Bank        Jun 2025 - Jul 2026") reaches us.
   const joined = lines.map((l) => l.trim().replace(/\t+|\s{3,}/g, ' | ')).join(' · ')
   const { rest, dates } = splitDates(joined)
-  const parts = rest
-    .split(HEADER_SPLIT)
+  const parts = splitHeader(rest)
     .map((p) =>
       // ⚠️ STRIP SEPARATORS LEFT AT THE EDGES. HEADER_SPLIT only matches a
       // separator with whitespace on BOTH sides, so a part that began the line
@@ -408,7 +423,9 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
     if (startsEntry(line)) {
       // A second header line directly under the first (employer on its own
       // line) belongs to the same entry, not a new one.
-      if (header.length > 0 && bullets.length === 0 && header.length < 3) {
+      // …unless it carries a date range of its own while the header already has one: one entry has one date range,
+      // so this is the next entry (a list of one-line projects, each with its dates and no bullets).
+      if (header.length > 0 && bullets.length === 0 && header.length < 3 && !(dateRange().test(header.join(' ')) && dateRange().test(line))) {
         header.push(line)
         continue
       }
@@ -478,8 +495,13 @@ function parseExperience(lines: string[]): { entries: ExperienceEntry[]; unplace
 /** A word that makes a part of an education line a school rather than a subject. */
 const INSTITUTION = /\b(universit\w*|college|institute|school|academy|polytechnic|iit|nit|iiit|iim|bits|vit|vidya\w*)\b/i
 
+/**
+ * ⚠️ Indian qualifications beyond engineering and commerce were missing — "B.Des Communication Design" read as TWO entries
+ * (the degree line and the school line each opening one) because "B.Des" matched nothing, and so did BBA, B.Arch, B.Pharm,
+ * LLB, M.Phil and MBBS. Found by a stress résumé, not by a bug report.
+ */
 const DEGREE =
-  /\b(b\.?\s?tech|b\.?\s?e\.?|b\.?sc|b\.?a\.?|b\.?com|bca|m\.?\s?tech|m\.?sc|m\.?a\.?|m\.?com|mca|mba|ph\.?\s?d|diploma|bachelors?|masters?|doctorate|pgdm|hsc|ssc|intermediate)\b/i
+  /\b(b\.?\s?tech|b\.?\s?e\.?|b\.?sc|b\.?a\.?|b\.?com|bca|bba|bbm|bfa|mfa|bhm|bpt|b\.?des|m\.?des|b\.?arch|m\.?arch|b\.?pharm|m\.?pharm|b\.?ed|m\.?ed|llb|llm|m\.?phil|mbbs|bds|pgp|pgdba|m\.?\s?tech|m\.?sc|m\.?a\.?|m\.?com|mca|mba|ph\.?\s?d|diploma|bachelors?|masters?|doctorate|pgdm|hsc|ssc|intermediate)\b/i
 
 function parseEducation(lines: string[]): EducationEntry[] {
   const out: EducationEntry[] = []
@@ -541,14 +563,17 @@ function parseEducation(lines: string[]): EducationEntry[] {
     }
 
     const { rest, dates } = splitDates(line)
-    const parts = rest
-      .split(HEADER_SPLIT)
+    const parts = splitHeader(rest)
       // Same edge-stripping as parseHeader: a split on ", " leaves the comma on
       // whichever part began the line, and it travelled into the rebuilt
       // document as "PES University, · 2021".
       .map((p) => p.replace(/^[\s|·•—–,-]+/, '').replace(/[\s|·•—–,-]+$/, '').trim())
       .filter(Boolean)
-    if (parts.length === 0) continue
+    // A line that is only dates ("2021 - 2023", the wrapped tail of "Indian School of Business,") belongs to the entry above.
+    if (parts.length === 0) {
+      if (dates && prev && !prev.dates) prev.dates = dates
+      continue
+    }
     // "B.Tech, Computer Science, VIT Vellore, 2019": the comma split puts the field of study where the school goes.
     // When the first part is a degree, the second names no institution and the third does, the first two are one
     // qualification.
@@ -574,9 +599,22 @@ function parseEducation(lines: string[]): EducationEntry[] {
  */
 function parseSkills(lines: string[]): string[] {
   const out: string[] = []
-  for (const raw of lines) {
-    const line = raw.replace(BULLET_GLYPH, '').trim()
-    if (!line) continue
+  /**
+   * ⚠️ A SKILLS LIST WRAPPED BY A NARROW COLUMN is one list, not several. A sidebar 150 pt wide broke "Core banking,
+   * Stakeholder management" over three lines and read back as the "skills" "Core", "banking" and "Stakeholder". A line is
+   * a continuation when the one above has no closing delimiter AND either it starts in lower case or the line above ran to
+   * the section's full width (a deliberate new line starts a capital and is usually shorter than the wrap width).
+   */
+  const clean = lines.map((l) => l.replace(BULLET_GLYPH, '').trim()).filter(Boolean)
+  const widest = Math.max(0, ...clean.map((l) => l.length))
+  const joined: string[] = []
+  for (const line of clean) {
+    const prev = joined[joined.length - 1]
+    const labelled = /^[A-Za-z &/]{2,24}:/.test(line)
+    if (prev !== undefined && !labelled && !/[,;|·•.:]$/.test(prev) && /,/.test(prev) && (/^[a-z]/.test(line) || prev.length >= 0.85 * widest)) joined[joined.length - 1] = `${prev} ${line}`
+    else joined.push(line)
+  }
+  for (const line of joined) {
     // "Languages: Python, SQL" — drop the label, keep the list.
     const body = line.includes(':') ? line.slice(line.indexOf(':') + 1) : line
     for (const part of body.split(/[,;|·•]/)) {

@@ -1,0 +1,53 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1087 >>
+stream
+BT /F2 10 Tf 1 0 0 1 40 750 Tm (FARHAN ALI) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 737 Tm (Bengaluru, India) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 724 Tm (farhan@example.com) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 711 Tm (+91 98450 12345) Tj ET
+BT /F2 11 Tf 1 0 0 1 40 684 Tm (PROFESSIONAL SUMMARY) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 671 Tm (Engineer who mentors on the side.) Tj ET
+BT /F2 11 Tf 1 0 0 1 40 652 Tm (WORK EXPERIENCE) Tj ET
+BT /F2 10 Tf 1 0 0 1 40 639 Tm (Software Engineer at Atlassian) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 626 Tm (Aug 2021 - Present) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 613 Tm (- Build the permissions service.) Tj ET
+BT /F2 10 Tf 1 0 0 1 40 600 Tm (Volunteer Mentor at Code For India) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 587 Tm (Jun 2019 - May 2021) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 574 Tm (- Mentor 12 students a year.) Tj ET
+BT /F2 11 Tf 1 0 0 1 40 555 Tm (SKILLS) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 542 Tm (Java, Kotlin, AWS) Tj ET
+BT /F2 11 Tf 1 0 0 1 40 523 Tm (EDUCATION) Tj ET
+BT /F2 10 Tf 1 0 0 1 40 510 Tm (B.E. Computer Science) Tj ET
+BT /F1 10 Tf 1 0 0 1 40 497 Tm (PES University, 2017 - 2021) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001390 00000 n 
+0000001487 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1589
+%%EOF

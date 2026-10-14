@@ -63,6 +63,18 @@ const SPLIT_SEARCH_MIN = 0.25
 const SPLIT_SEARCH_MAX = 0.75
 /** Each side must hold at least this share of the page's items to be a column. */
 const MIN_COLUMN_SHARE = 0.15
+/**
+ * A RAIL IS NOT A COLUMN. A right-aligned run of dates and cities ("Jul 2017 - Jun 2021", "Gurugram") has plenty of items
+ * and almost no text; read as a second column it moved every date to the end of the page, so each role lost its dates and
+ * the experience total fell to zero. A narrow side column is rejected only when it is BOTH small (under this share of the
+ * page's characters) AND made of dates and place names. Size alone is the wrong test: a real sidebar on a dense page can
+ * be just as small (a three-page career measured 12%) and must stay a column.
+ */
+const MIN_COLUMN_CHAR_SHARE = 0.15
+const RAIL_SHARE = 0.75
+/** A date, a date range, an open-ended word, or a one- or two-word capitalised place name. */
+const RAIL_ITEM = /^(?:(?:[A-Za-z]{3,9}\.?['’]?\s*)?(?:19|20)?\d{2,4}\b.*|present|current|till date|to date|ongoing|[A-Z][a-z]{2,14}(?: [A-Z][a-z]{2,14})?)$/i
+const isRailText = (t: string) => RAIL_ITEM.test(t.trim())
 /** Two runs are on the same line if their baselines are within this × median height. */
 const LINE_TOLERANCE = 0.5
 /** An x-position seen on at least this many lines is an alignment guide. */
@@ -120,6 +132,17 @@ function toLines(items: LayoutItem[]): { y: number; items: LayoutItem[] }[] {
 function findColumnSplits(items: LayoutItem[], width: number): number[] {
   if (items.length < 8) return []
   const splits: number[] = []
+  const chars = (xs: LayoutItem[]) => xs.reduce((n, i) => n + i.text.trim().length, 0)
+  const totalChars = chars(items)
+  const isColumn = (mid: number) => {
+    const left = items.filter((i) => i.x + i.w <= mid)
+    const right = items.filter((i) => i.x >= mid)
+    const share = MIN_COLUMN_SHARE * items.length
+    if (left.length < share || right.length < share) return false
+    const small = (side: LayoutItem[]) => chars(side) < MIN_COLUMN_CHAR_SHARE * totalChars
+    const rail = (side: LayoutItem[]) => side.filter((i) => isRailText(i.text)).length >= RAIL_SHARE * side.length
+    return !(small(left) && rail(left)) && !(small(right) && rail(right))
+  }
   const lo = Math.round(width * SPLIT_SEARCH_MIN)
   const hi = Math.round(width * SPLIT_SEARCH_MAX)
   let run: number[] = []
@@ -128,10 +151,7 @@ function findColumnSplits(items: LayoutItem[], width: number): number[] {
     if (crosses) {
       if (run.length) {
         const mid = run[Math.floor(run.length / 2)]
-        const left = items.filter((i) => i.x + i.w <= mid).length
-        const right = items.filter((i) => i.x >= mid).length
-        const share = MIN_COLUMN_SHARE * items.length
-        if (left >= share && right >= share) splits.push(mid)
+        if (isColumn(mid)) splits.push(mid)
         run = []
       }
     } else {
@@ -140,10 +160,7 @@ function findColumnSplits(items: LayoutItem[], width: number): number[] {
   }
   if (run.length) {
     const mid = run[Math.floor(run.length / 2)]
-    const left = items.filter((i) => i.x + i.w <= mid).length
-    const right = items.filter((i) => i.x >= mid).length
-    const share = MIN_COLUMN_SHARE * items.length
-    if (left >= share && right >= share) splits.push(mid)
+    if (isColumn(mid)) splits.push(mid)
   }
   return splits
 }
@@ -175,12 +192,23 @@ function countAlignedColumns(rows: { items: LayoutItem[] }[], width: number): nu
  * whole page and destroyed the layout in the process.
  */
 function rowText(items: LayoutItem[]): string {
-  return items
-    .sort((a, b) => a.x - b.x)
-    .map((i) => i.text)
-    .join(' ')
-    .replace(/[ \t ]+/g, ' ')
-    .trim()
+  const sorted = items.sort((a, b) => a.x - b.x)
+  /**
+   * A wide gap between two runs on one line is a COLUMN of the row — "Senior Analyst" ⟷ "Gurugram", "ICICI Bank" ⟷
+   * "Jun 2025 – Present" — and is kept as a tab. Joining everything with one space read a right-aligned city as part of
+   * the job title ("Senior Analyst Gurugram"). The threshold is relative to the glyph height, so a 7 pt dense résumé
+   * and a 14 pt airy one both keep ordinary word gaps as spaces.
+   */
+  let out = ''
+  for (const [k, it] of sorted.entries()) {
+    if (k > 0) {
+      const prev = sorted[k - 1]
+      const gap = it.x - (prev.x + prev.w)
+      out += gap > Math.max(prev.h, it.h, 8) * 3 ? '\t' : ' '
+    }
+    out += it.text
+  }
+  return out.replace(/[ \u00a0]+/g, ' ').replace(/ ?\t ?/g, '\t').trim()
 }
 
 export function buildPage(items: LayoutItem[], width: number, height: number): LayoutPage {

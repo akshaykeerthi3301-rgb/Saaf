@@ -100,3 +100,9 @@ bench/corpus/samples/
 .tmp-key/
 .tmp-probe/
 scripts/extension-e2e/shots/
+
+# Parser audit output and the volunteers' résumés — real people's data, NEVER tracked.
+# (output/ holds the audit reports; indian_volunteers/ holds consented, redacted CVs.)
+output/
+tests/fixtures/resumes/indian_volunteers/*
+!tests/fixtures/resumes/indian_volunteers/.gitkeep
