@@ -106,7 +106,8 @@ rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
 # ⚠️ /output holds the audit reports (the founder's own résumé details) and /tests holds the volunteers' résumés
 # (tests/fixtures/resumes/indian_volunteers/) — both are gitignored, and rsync does not read .gitignore. Added 2026-10-15,
 # BEFORE the first deploy that could have carried them.
-find $SP -path '*corpus*' -o -path '*/output/*' -o -path '*indian_volunteers*' -o -name '.env*' -o -name '*.pem'   # must print nothing
+rm -rf $SP/.vercel/output   # a stale `vercel build` folder can sit in .vercel/ and is copied with it; the CLI must build from source
+find $SP \( -path '*corpus*' -o -path "$SP/output" -o -path "$SP/tests" -o -path '*indian_volunteers*' -o -name '.env*' -o -name '*.pem' \) -print   # must print nothing
 test -e $SP/src/app/api/extension/score/route.ts && echo "api route staged" || echo "BROKEN: an exclude ate a route"
 diff <(find . -path ./node_modules -prune -o -path ./.git -prune -o -path ./.next -prune -o -type f -print | grep '^\./src/' | sort) \
      <(cd $SP && find . -type f | grep '^\./src/' | sort) >/dev/null \
