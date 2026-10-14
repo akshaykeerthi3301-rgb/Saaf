@@ -4,7 +4,7 @@
 
 ## 🔶 2026-10-15 — résumé parsing: audited, hardened, still not live
 
-**Live vs written:** all of this is **written and tested on your laptop only** — nothing is committed, nothing is deployed, and the website's upload still uses the old reader. (So a résumé made with 'Print to PDF' is still turned away there today.)
+**Live vs written:** **committed on the local branch `resume-engine` (2 commits) and wired into the upload — but NOT pushed and NOT deployed.** The live website still has the old reader (so a résumé made with 'Print to PDF' is still turned away there today). Once deployed it starts in 'shadow' mode: the old reader keeps answering, and only scans/Print-to-PDF files behave differently (they are read instead of refused).
 
 **What changed since the last note:** the new reader was cross-checked six ways and fixed wherever it was wrong (full list: PROJECT-STATE Stage BN, Round 2). On 120 made-up résumés with known answers it now gets every check right; the honest first-sight score on a set I had not tuned for was **98.3%**. Four of your own résumés also score 83 → 90 in the ATS checker because dates are now read correctly.
 
@@ -13,7 +13,8 @@
 **You need to:**
 1. **Open `output/reports/pilot_audit_sheet.csv`** and mark your 9 résumés OK / WRONG / MISSING (about 2–3 hours). It now also shows how each total was found, your career gaps (your MBA gap is labelled 'falls inside a period of study'), and warnings. This is the only real answer key we can get. It is not tracked by git — it holds your details.
 2. **The volunteer folder is still empty** (`tests/fixtures/resumes/indian_volunteers/`). About 30 people's redacted résumés + written consent are what would let us claim anything about Indian résumés beyond yours.
-3. Say **'commit and wire it in'** when you want it live. I would run it beside the old reader first and compare, as the plan says. Two things to know first: three new software packages were added (`tesseract.js`, `@tesseract.js-data/eng`, `@napi-rs/canvas`), and I have **not** checked that the scanned-file reader runs on Vercel's servers.
+3. **Deploy it** when you are ready (docs/RUNBOOK.md — push the branch/merge, then the anchored rsync + 3 checks). Then the first thing to do: upload a scanned or 'Print to PDF' résumé on the live site. If it reads, good; if it shows the old 'no text' message, the scan reader is not running on Vercel — set `RESUME_ENGINE=off` and tell me; nothing else is affected. I verified the packaging with a production build here, but **not on Vercel itself**.
+4. After a week in shadow mode, ask me to read the `resume_engine_shadow` log lines; if the new reader agrees or fills gaps, we set `RESUME_ENGINE=primary`.
 
 ---
 

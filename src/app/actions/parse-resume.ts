@@ -11,6 +11,9 @@ import { readResumeWithModel } from '@/lib/parse/llm'
 import { MAX_RESUME_BYTES, TOO_LARGE_MESSAGE } from '@/lib/parse/constants'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { parseResume as parseWithEngine, type EngineOptions } from '@/lib/parse/engine'
+import { engineMode, engineWarnings, overlay, shadowLogLine } from '@/lib/parse/engine-bridge'
+import type { ParsedResume } from '@/lib/types/parsed-resume'
 
 const ACCEPTED = {
   'application/pdf': 'pdf',
@@ -37,6 +40,25 @@ const schema = z.object({
  * Keyed on the user — see TAILOR_ROLE_LIMIT in tailor.ts for why not the IP.
  */
 const PARSE_MODEL_LIMIT = { scope: 'parse-resume-model', limit: 5, windowMs: 10 * 60_000 }
+
+/**
+ * Local OCR is CPU work on OUR server (3–10 s a page), so it is metered like the model is — three scans per ten minutes,
+ * per user. Past it the file gets the old "no text found" message, exactly as before the OCR existed.
+ */
+const PARSE_OCR_LIMIT = { scope: 'parse-resume-ocr', limit: 3, windowMs: 10 * 60_000 }
+
+/**
+ * The new engine (src/lib/parse/engine.ts), run so that it can NEVER break an upload: any failure — a file it cannot open,
+ * OCR that cannot start on this host — is swallowed and the old reader's answer stands. Its text is handed back through
+ * `onText` for the scan rescue below.
+ */
+async function tryEngine(buffer: Buffer, opts: EngineOptions): Promise<ParsedResume | null> {
+  try {
+    return await parseWithEngine(buffer, opts)
+  } catch {
+    return null
+  }
+}
 
 export type ParseResumeResponse =
   | ({ ok: true; suggestedRole?: string } & ParseResult)
@@ -79,7 +101,21 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
-    const text = kind === 'pdf' ? await pdfToText(buffer) : await docxToText(buffer)
+    let text = kind === 'pdf' ? await pdfToText(buffer) : await docxToText(buffer)
+
+    const mode = engineMode()
+    let engine: ParsedResume | null = null
+    let rescuedByOcr = false
+    if (text.trim().length < 50 && kind === 'pdf' && mode !== 'off' && checkRateLimit(user.id, PARSE_OCR_LIMIT).ok) {
+      // No text layer: a scan, or a file made with "Print to PDF". Read it HERE, in this process — the file never goes to
+      // a third party — and carry on with the ordinary pipeline on the recognised text.
+      let ocrText = ''
+      engine = await tryEngine(buffer, { ocr: 'auto', onText: (t) => (ocrText = t) })
+      if (ocrText.trim().length >= 50) {
+        text = ocrText
+        rescuedByOcr = true
+      }
+    }
 
     if (text.trim().length < 50) {
       // Almost always a scanned PDF with no text layer.
@@ -117,6 +153,17 @@ export async function parseResume(formData: FormData): Promise<ParseResumeRespon
     } else {
       const model = await readResumeWithModel(text)
       read = model ? mergeModelRead(deterministic, model) : deterministic
+    }
+
+    if (mode !== 'off') {
+      const t0 = Date.now()
+      engine ??= await tryEngine(buffer, { ocr: 'never' }) // OCR only to rescue a file with no text, never to second-guess one that has it
+      if (engine) {
+        console.info(shadowLogLine(read.fields, engine, Date.now() - t0))
+        const notes = engineWarnings(engine)
+        if (mode === 'primary') read = { fields: overlay(read.fields, engine), warnings: [...read.warnings, ...notes] }
+        else if (rescuedByOcr) read = { ...read, warnings: [...read.warnings, ...notes.filter((n) => /text recognition/.test(n))] }
+      }
     }
 
     // Offered as the target role only if the index holds postings for it —

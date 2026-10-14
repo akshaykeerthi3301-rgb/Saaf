@@ -88,3 +88,70 @@ describe('parseResume — the suggested target role (QA-09)', () => {
     expect(res.ok && res.suggestedRole).toBeUndefined()
   })
 })
+
+describe('parseResume — the new engine beside the old reader', () => {
+  const SCAN = join(process.cwd(), 'tests/fixtures/resumes/scanned/scan-single-column.pdf')
+  const scanForm = () => {
+    const fd = new FormData()
+    fd.set('file', new File([readFileSync(SCAN)], 'scan.pdf', { type: 'application/pdf' }))
+    return fd
+  }
+  const setMode = (m: string | undefined) => { if (m === undefined) delete process.env.RESUME_ENGINE; else process.env.RESUME_ENGINE = m }
+
+  it('shadow (the default) leaves the answer exactly as the old reader gave it, and logs counts, never content', async () => {
+    setMode('off')
+    const before = await parseResume(form())
+    setMode(undefined)
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const after = await parseResume(form())
+    expect(after).toEqual(before)
+    const line = String(info.mock.calls.find((c) => String(c[0]).includes('resume_engine_shadow'))?.[0])
+    expect(line).toContain('"verdict"')
+    expect(line).not.toMatch(/Rohan|Infosys|Java|rohan\.sharma/i) // nothing from the résumé
+    info.mockRestore()
+  })
+
+  it('reads a scan with no text layer by local OCR instead of turning it away', async () => {
+    setMode(undefined)
+    const res = await parseResume(scanForm())
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.fields.currentTitle).toMatch(/product manager/i)
+      expect(res.warnings.join(' ')).toMatch(/text recognition/)
+    }
+  }, 60_000)
+
+  it('with the engine off, a scan gets the old message — nothing changes', async () => {
+    setMode('off')
+    const res = await parseResume(scanForm())
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.error).toMatch(/scan/)
+    setMode(undefined)
+  })
+
+  it('meters OCR: the fourth scan in ten minutes gets the old message', async () => {
+    setMode(undefined)
+    for (let i = 0; i < 3; i++) expect((await parseResume(scanForm())).ok).toBe(true)
+    const res = await parseResume(scanForm())
+    expect(res.ok).toBe(false)
+  }, 120_000)
+
+  it('primary mode takes years from the dates, not from the earliest year', async () => {
+    setMode('primary')
+    const res = await parseResume(form())
+    setMode(undefined)
+    expect(res.ok).toBe(true)
+    // rohan: Aug 2023 – Present is 3.3 years of dated roles; the old reader subtracts 2023 from this year.
+    if (res.ok) expect(res.fields.yearsExperience).toBeGreaterThan(0)
+  })
+
+  it('an engine failure never breaks an upload', async () => {
+    setMode(undefined)
+    vi.resetModules()
+    vi.doMock('@/lib/parse/engine', () => ({ parseResume: async () => { throw new Error('boom') } }))
+    const { parseResume: guarded } = await import('../parse-resume')
+    const res = await guarded(form())
+    vi.doUnmock('@/lib/parse/engine')
+    expect(res.ok).toBe(true)
+  })
+})

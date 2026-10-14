@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 import { cspReportOnly } from "./src/lib/csp";
 
 const nextConfig: NextConfig = {
+  // The local OCR (src/lib/parse/ocr.ts) uses a native canvas, a worker thread and a WASM engine. Bundling any of them
+  // breaks them, so they load from node_modules at run time.
+  serverExternalPackages: ["tesseract.js", "@napi-rs/canvas"],
+  // …and the files they open BY PATH (the English language data, the WASM core, the worker script) are invisible to the
+  // file tracer unless named — the same trap that once broke every PDF upload (see src/lib/parse/pdf.ts).
+  outputFileTracingIncludes: {
+    "/start": ["./node_modules/@tesseract.js-data/eng/4.0.0/**", "./node_modules/tesseract.js/src/**", "./node_modules/tesseract.js-core/**"],
+  },
   experimental: {
     serverActions: {
       // Next's own default is 1MB. The client only blocks résumés over

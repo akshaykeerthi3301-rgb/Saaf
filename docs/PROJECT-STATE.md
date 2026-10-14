@@ -3347,11 +3347,18 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 **Totals 2026-10-15:** 173 test files / 2,152 tests pass (was 167 / 2,091); `tsc` clean; ESLint 0 errors on `src scripts bench ingest` (the 1,190 errors `npm run lint` reports are all inside `.claude/`, not ours).
 
 **Known limits (do not read the numbers without these):**
-1. The engine is **not wired into `parse-resume.ts`** — no user sees any of this.
+1. ~~The engine is not wired into `parse-resume.ts`~~ — **wired 2026-10-15 on branch `resume-engine` (see Round 3 below), but NOT DEPLOYED, so no user sees any of this yet.**
 2. The model path (`useModel`) was **never exercised** in any measurement above; everything is deterministic.
 3. Stress careers are **invented by me**; their realism is bounded by what I thought of. Only the founder's 9 résumés are real, and they have no hand-checked answers yet (the sheet is `output/reports/pilot_audit_sheet.csv`). The volunteer corpus is empty.
 4. OCR is English only; Hindi/regional résumés are untested; OCR **on Vercel serverless is unverified** (WASM size and time) — it has only run on the founder's laptop (~3 s/page).
 5. `Manager, Strategy`-style commas are handled by a word list, not understood. `real-2` (a company-first header with no title line) still reads the company as the title.
 6. `next build` was not run; the engine is not imported by the app, so it should be unaffected — unverified.
 7. 'Stale' relies on file metadata; a scanner stamps the scan date.
+
+**Round 3 — wired in, beside the old reader (2026-10-15, branch `resume-engine`, two commits, NOT pushed, NOT deployed).**
+- **Three modes** (`RESUME_ENGINE`, default `shadow`): `off` = the old reader alone; `shadow` = the old reader answers, the engine runs beside it and one log line of verdicts (same/differ/only_old/only_new/neither per field, plus enums and counts — a test proves no résumé text can appear in it); `primary` = the engine's title, employer, years and city replace the old reader's where it found them. A typo in the variable can never promote the engine (`PRIMARY` → shadow).
+- **The one behaviour change in shadow:** a PDF with no text layer (a scan, or 'Print to PDF') is read by local OCR and carried through the ordinary pipeline instead of being turned away; the candidate is told it was read by text recognition. Metered 3 per 10 min per user (past it, the old message). Any engine failure is swallowed — the upload cannot be broken by it (tested with the engine forced to throw).
+- **Packaging, the part that could have broken every upload (cf. the pdfjs worker incident):** `next.config.ts` marks `tesseract.js` and `@napi-rs/canvas` external and names the files they open by path for `/start` (language data, WASM core, worker). **MEASURED from a production `next build` trace:** `/start` carries the English data, 15 WASM files, the worker script and canvas — **519 files, 124 MB** (limit 250 MB); the Linux x64 canvas binary is in the lockfile. **NOT verified:** that it actually runs on Vercel (a local build is not a Vercel build; cold start and the 3–10 s/page OCR time on a serverless CPU are unknown). That is why the first thing to do after deploying is upload a scan and read the Vercel log.
+- Verified locally: `tsc` clean, ESLint 0 errors, 173 test files / 2,164 tests, `next build` passes, ATS bench 0 misses.
+- **To turn it on for real:** deploy (RUNBOOK), watch the `resume_engine_shadow` lines for a week; if title/employer/years verdicts are `same` or `only_new` wherever the old reader was right, set `RESUME_ENGINE=primary`. To turn the OCR off instantly: `RESUME_ENGINE=off`.
 
