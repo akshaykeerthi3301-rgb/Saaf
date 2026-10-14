@@ -4,7 +4,7 @@
 
 ## 🔶 2026-10-15 — résumé parsing: audited, hardened, still not live
 
-**Live vs written:** **committed on the local branch `resume-engine` (2 commits) and wired into the upload — but NOT pushed and NOT deployed.** The live website still has the old reader (so a résumé made with 'Print to PDF' is still turned away there today). Once deployed it starts in 'shadow' mode: the old reader keeps answering, and only scans/Print-to-PDF files behave differently (they are read instead of refused).
+**Live vs written: DEPLOYED 2026-10-15, `dpl_Ah1RsuccifHXz8FkL7YbDsrZu19Z`, serving https://jobinko.in** (status Ready; anonymous checks passed: public pages 200, signed-in pages 307 → /signin, /api/dev-signin 404, icons PNG). It is running in 'shadow' mode: the old reader keeps answering every upload; only scans and 'Print to PDF' files behave differently (they are now read instead of refused). **NOT verified live:** that the scan reader actually runs on Vercel — nobody has uploaded a scan there yet. Git: not pushed to GitHub/GitLab.
 
 **What changed since the last note:** the new reader was cross-checked six ways and fixed wherever it was wrong (full list: PROJECT-STATE Stage BN, Round 2). On 120 made-up résumés with known answers it now gets every check right; the honest first-sight score on a set I had not tuned for was **98.3%**. Four of your own résumés also score 83 → 90 in the ATS checker because dates are now read correctly.
 
@@ -13,7 +13,7 @@
 **You need to:**
 1. **Open `output/reports/pilot_audit_sheet.csv`** and mark your 9 résumés OK / WRONG / MISSING (about 2–3 hours). It now also shows how each total was found, your career gaps (your MBA gap is labelled 'falls inside a period of study'), and warnings. This is the only real answer key we can get. It is not tracked by git — it holds your details.
 2. **The volunteer folder is still empty** (`tests/fixtures/resumes/indian_volunteers/`). About 30 people's redacted résumés + written consent are what would let us claim anything about Indian résumés beyond yours.
-3. **Deploy it** when you are ready (docs/RUNBOOK.md — push the branch/merge, then the anchored rsync + 3 checks). Then the first thing to do: upload a scanned or 'Print to PDF' résumé on the live site. If it reads, good; if it shows the old 'no text' message, the scan reader is not running on Vercel — set `RESUME_ENGINE=off` and tell me; nothing else is affected. I verified the packaging with a production build here, but **not on Vercel itself**.
+3. **~~Deploy it~~ — done. Now do the test that matters: sign in to https://jobinko.in and upload a scanned or 'Print to PDF' résumé** (the file `uw-law.pdf` from `bench/corpus/samples/` is one; or print any résumé via File → Print → Save as PDF on a Windows PC). If it reads, good; if it shows the old 'no text' message, the scan reader is not running on Vercel — set `RESUME_ENGINE=off` and tell me; nothing else is affected. I verified the packaging with a production build here, but **not on Vercel itself**.
 4. After a week in shadow mode, ask me to read the `resume_engine_shadow` log lines; if the new reader agrees or fills gaps, we set `RESUME_ENGINE=primary`.
 
 ---

@@ -1153,7 +1153,7 @@ Plan, evidence and metrics: `docs/RESUME-PARSING-BLUEPRINT.md`. Sprint 1 = TASK-
 - [ ] **TASK-265** — Fill the profile from `ParsedResume`; 'check' chip on unverified fields; abstained fields stay empty and never block
   Files: `src/lib/first-run.ts`, profile screens
   Verify: browser walk: upload → each field filled or flagged
-- [ ] **TASK-266** (PARTLY DONE 2026-10-15, branch `resume-engine`, NOT DEPLOYED: `src/lib/parse/engine-bridge.ts` + `parse-resume.ts` — `RESUME_ENGINE=off|shadow|primary`, default shadow; scans are read by local OCR in every mode but `off`; the shadow log line carries verdicts only. What is missing is the founder deploying it and reading the log) — Shadow mode behind a flag (new path beside old on live uploads, differences logged, user sees old)
+- [ ] **TASK-266** (PARTLY DONE 2026-10-15, DEPLOYED `dpl_Ah1RsuccifHXz8FkL7YbDsrZu19Z`, scan upload unverified live: `src/lib/parse/engine-bridge.ts` + `parse-resume.ts` — `RESUME_ENGINE=off|shadow|primary`, default shadow; scans are read by local OCR in every mode but `off`; the shadow log line carries verdicts only. What is missing is the founder deploying it and reading the log) — Shadow mode behind a flag (new path beside old on live uploads, differences logged, user sees old)
   Files: `src/app/actions/parse-resume.ts`
   Verify: a live upload logs old-vs-new; user-visible result unchanged
 - [ ] **TASK-267** — Collect the 100 résumés along the quotas; consent text for volunteers
