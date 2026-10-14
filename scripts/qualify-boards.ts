@@ -29,6 +29,9 @@
  *   npx tsx scripts/qualify-boards.ts --limit 500
  *   npx tsx scripts/qualify-boards.ts --limit 2000 --provider workday
  *   npx tsx scripts/qualify-boards.ts --limit 100 --dry     (writes nothing)
+ *   npx tsx scripts/qualify-boards.ts --provider workable --errors
+ *       re-probes ONLY candidates whose last probe failed for a transient reason
+ *       (rate limit, 5xx, timeout) — never the 404s that mean "no such board".
  */
 // One page of Workday results is all a qualification decision needs: the
 // question is "does this tenant post in India at all", not "how many". Two
@@ -75,6 +78,26 @@ const REVIEW_ABOVE = 250
 const CONCURRENCY = 8
 /** Courtesy pause after each probe, per worker. */
 const DELAY_MS = 150
+
+/**
+ * A failed probe worth repeating: the answer was "slow down" or "try later", not
+ * "this board does not exist". The 2026-09-07 sweep recorded 4,009 Workable
+ * candidates as HTTP 429 — Workable rate-limited the 8-wide probe — so they were
+ * never actually evaluated, and `probedAt` alone made later runs skip them.
+ */
+const isTransient = (error?: string) =>
+  !!error && /HTTP (429|500|502|503|504)|timeout|aborted|fetch failed/i.test(error)
+
+/**
+ * Providers that rate-limit a probe sweep get a slower, narrower pace. Workable
+ * answered the default 8 workers × 150 ms with HTTP 429 for 4,009 of 6,555
+ * candidates, so it runs one request at a time with a longer pause and backs off
+ * further whenever it is told to slow down.
+ */
+const SLOW_PROVIDERS: Record<string, { concurrency: number; delayMs: number }> = {
+  workable: { concurrency: 1, delayMs: 1500 },
+}
+const BACKOFF_ON_429_MS = 20_000
 
 type Probed = Candidate & {
   probedAt?: string
@@ -283,6 +306,7 @@ async function main() {
   const only = flag('--provider')
   const dry = args.includes('--dry')
   const reprobe = args.includes('--reprobe')
+  const errorsOnly = args.includes('--errors')
 
   // Offline name repair. No network, no probes.
   //
@@ -383,7 +407,7 @@ async function main() {
   const pending = candidates.filter((c) =>
     (!only || c.provider === only) &&
     !inRegistry.has(`${c.provider}:${c.token.toLowerCase()}`) &&
-    (reprobe || !c.probedAt)
+    (reprobe || !c.probedAt || (errorsOnly && isTransient(c.error)))
   )
 
   // Shuffled, deliberately. candidates.json is sorted by provider then slug, so
@@ -422,7 +446,8 @@ async function main() {
     writeFileSync(CANDIDATES, JSON.stringify(candidates, null, 2))
   }
 
-  await pool(queue, CONCURRENCY, async (c) => {
+  const pace = (only && SLOW_PROVIDERS[only]) || { concurrency: CONCURRENCY, delayMs: DELAY_MS }
+  await pool(queue, pace.concurrency, async (c) => {
     try {
       const hit = await probe(c)
       c.probedAt = new Date().toISOString()
@@ -460,7 +485,7 @@ async function main() {
       checkpoint()
       console.log(`  … ${done}/${queue.length} probed · ${qualified.length} qualified`)
     }
-    await sleep(DELAY_MS)
+    await sleep(c.error && /HTTP 429/.test(c.error) ? BACKOFF_ON_429_MS : pace.delayMs)
   })
 
   console.log(
