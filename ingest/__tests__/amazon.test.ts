@@ -15,7 +15,7 @@ const sample = {
 }
 
 describe('amazon careers feed', () => {
-  afterEach(() => { delete process.env.CAREER_SITE_AMAZON })
+  afterEach(() => { delete process.env.CAREER_SITES })
 
   it('turns a posting into a role: dated, with the qualifications in the body', () => {
     const [r, ...rest] = parseAmazon(sample)
@@ -30,7 +30,7 @@ describe('amazon careers feed', () => {
     expect(r.description).not.toMatch(/<br/)
   })
 
-  it('is OFF unless CAREER_SITE_AMAZON=1: no request, and an INCOMPLETE empty read so nothing is pruned', async () => {
+  it('is OFF unless CAREER_SITES lists it: no request, and an INCOMPLETE empty read so nothing is pruned', async () => {
     const orig = globalThis.fetch
     let called = false
     globalThis.fetch = (() => { called = true; throw new Error('network used') }) as typeof fetch
@@ -42,7 +42,7 @@ describe('amazon careers feed', () => {
   })
 
   it('pages until a short page, and reports complete', async () => {
-    process.env.CAREER_SITE_AMAZON = '1'
+    process.env.CAREER_SITES = 'amazon'
     const mk = (n: number) => ({ hits: 150, jobs: Array.from({ length: n }, (_, i) => ({ id_icims: String(Math.random() + i), job_path: `/p/${i}`, title: 't', location: 'IN, KA, Bengaluru', posted_date: 'x' })) })
     const pages = [mk(100), mk(50)]
     const orig = globalThis.fetch

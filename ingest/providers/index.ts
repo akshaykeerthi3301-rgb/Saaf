@@ -1,5 +1,6 @@
 import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
 import { amazonAdapter } from './amazon'
+import { oracleHcmAdapter } from './oraclehcm'
 import { employmentTypeFrom, payFromAshby, payFromGreenhouse, payFromLever, payFromRecruitee, workModeFrom, workModeFromFlags } from './fields'
 
 type Rec = Record<string, unknown>
@@ -382,7 +383,7 @@ ADAPTERS.push({
   parseDetailPostedAt: (raw) => str(rec(rec(raw).jobPostingInfo).startDate) || null,
 })
 
-ADAPTERS.push(amazonAdapter)
+ADAPTERS.push(amazonAdapter, oracleHcmAdapter)
 
 export const adapterFor = (p: string) => ADAPTERS.find((a) => a.provider === p)
 export * from './types'

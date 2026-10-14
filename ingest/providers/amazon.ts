@@ -1,5 +1,6 @@
 import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
 import { employmentTypeFrom } from './fields'
+import { careerSiteOn } from './career-switch'
 
 /**
  * Amazon's own careers site (amazon.jobs) — the first COMPANY career site read
@@ -12,11 +13,9 @@ import { employmentTypeFrom } from './fields'
  * `/internal*` (MEASURED 2026-10-15), no login or token is bypassed, and the
  * apply link sends the candidate to Amazon. ⚠️ AMAZON'S SITE TERMS WERE NOT FOUND
  * (amazon.jobs/en/terms 404s; /en/legal 404s), so "forbidden or not" is UNREAD —
- * the founder chose to build it anyway, behind the switch below.
+ * the founder chose to build it anyway, behind the CAREER_SITES switch (career-switch.ts).
  *
- * ⚠️ OFF BY DEFAULT. Nothing is fetched unless CAREER_SITE_AMAZON=1. Unset it to
- * stop; the adapter then reports an INCOMPLETE empty read, so run.ts keeps the
- * stored roles and prunes nothing.
+ * ⚠️ OFF BY DEFAULT. Nothing is fetched unless CAREER_SITES includes "amazon".
  *
  * The token is the country filter ("IND"); one board per country. The listing
  * already carries the whole posting, so there is no per-posting detail call.
@@ -80,7 +79,7 @@ export const amazonAdapter: Adapter = {
   parse: (raw) => parseAmazon(raw),
 
   fetchAll: async (country, opts): Promise<FetchResult> => {
-    if (process.env.CAREER_SITE_AMAZON !== '1') return { roles: [], complete: false }
+    if (!careerSiteOn('amazon')) return { roles: [], complete: false }
 
     const roles: NormalisedRole[] = []
     let total = Infinity
