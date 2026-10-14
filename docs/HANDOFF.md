@@ -2,6 +2,21 @@
 
 ---
 
+## 🔶 2026-10-15 — job-volume plan written (a document, nothing live)
+
+**Live vs written:** `docs/job_scaling_blueprint.md` is **written only**. No code, database update or deploy was made.
+
+**What it says:** 5 million jobs cannot be reached lawfully; about 1 million is the ceiling anywhere. The plan is a ladder: ~50k on the free setup → ~156k on a paid database → ~1M after finding ~20,000 companies.
+
+**You need to decide (§0 of the blueprint):**
+1. Accept the ladder instead of 5M.
+2. Keep LinkedIn/Naukri locked (my recommendation) or ask a lawyer about reversing it.
+3. Pay for Supabase Pro ($25/month) — nothing past ~50k jobs fits the free database. Vercel Pro ($20/month) is **not** needed for more jobs; it is needed only if you start charging users, because Vercel's free plan is non-commercial. ~~Advertising a paid plan also needs Vercel Pro~~ — that was folded into this item by mistake and is a separate, later decision.
+4. Allow non-India jobs (changes the India-first promise).
+5. Later, after I test the options: which always-on machine runs the nightly update (GitHub's is disabled on your account).
+
+---
+
 ## 🔶 2026-10-15 — résumé parsing: audited, hardened, still not live
 
 **Live vs written: DEPLOYED 2026-10-15, `dpl_Ah1RsuccifHXz8FkL7YbDsrZu19Z`, serving https://jobinko.in** (status Ready; anonymous checks passed: public pages 200, signed-in pages 307 → /signin, /api/dev-signin 404, icons PNG). It is running in 'shadow' mode: the old reader keeps answering every upload; only scans and 'Print to PDF' files behave differently (they are now read instead of refused). **NOT verified live:** that the scan reader actually runs on Vercel — nobody has uploaded a scan there yet. Git: not pushed to GitHub/GitLab.
