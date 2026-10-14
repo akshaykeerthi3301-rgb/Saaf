@@ -30,7 +30,7 @@ export type FetchResult = { roles: NormalisedRole[]; complete: boolean }
 
 export type Provider =
   | 'greenhouse' | 'lever' | 'ashby' | 'workable' | 'recruitee' | 'smartrecruiters'
-  | 'workday'
+  | 'workday' | 'amazon'
 
 export type Adapter = {
   provider: Provider
