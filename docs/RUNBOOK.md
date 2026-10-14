@@ -96,14 +96,17 @@ SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
 # one should also go. `.env`/`.env.*` likewise: every one, at any depth.
 rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
   --exclude '/.claude' --exclude '/productos' --exclude '/saaf-ai' --exclude '/docs' \
-  --exclude '/bench' --exclude '/extension' \
+  --exclude '/bench' --exclude '/extension' --exclude '/tests' --exclude '/output' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
 
 # Prove it before you deploy. THREE checks, and the second two exist because a
 # missing file deploys as a 404 rather than as an error — nothing fails, the
 # endpoint is simply not there.
-find $SP -path '*corpus*' -o -name '.env*' -o -name '*.pem'   # must print nothing
+# ⚠️ /output holds the audit reports (the founder's own résumé details) and /tests holds the volunteers' résumés
+# (tests/fixtures/resumes/indian_volunteers/) — both are gitignored, and rsync does not read .gitignore. Added 2026-10-15,
+# BEFORE the first deploy that could have carried them.
+find $SP -path '*corpus*' -o -path '*/output/*' -o -path '*indian_volunteers*' -o -name '.env*' -o -name '*.pem'   # must print nothing
 test -e $SP/src/app/api/extension/score/route.ts && echo "api route staged" || echo "BROKEN: an exclude ate a route"
 diff <(find . -path ./node_modules -prune -o -path ./.git -prune -o -path ./.next -prune -o -type f -print | grep '^\./src/' | sort) \
      <(cd $SP && find . -type f | grep '^\./src/' | sort) >/dev/null \

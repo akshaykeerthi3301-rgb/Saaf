@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { buildStress, AS_OF, type StressDoc } from '../../../../bench/make-stress'
-import { scoreDoc } from '../../../../bench/score-parse'
-import { parseResume } from '../engine'
+import { buildStress, AS_OF, type StressDoc } from './make-stress'
+import { scoreDoc } from './score-parse'
+import { parseResume } from '../src/lib/parse/engine'
 
 /**
  * The stress corpus as a gate: 24 invented careers × 5 layouts, each with hand-declared answers (bench/make-stress.ts).

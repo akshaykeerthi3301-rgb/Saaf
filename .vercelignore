@@ -59,3 +59,9 @@
 # it, so uploading it only adds weight. Its one dependency on the web app is the
 # /api/extension/score URL, which is a string in service-worker.js, not an import.
 /extension/
+
+# ⚠️ PERSONAL DATA, same class as /bench/ above. /output/ holds the résumé-parser audit reports, which quote the founder's
+# own résumés line by line; /tests/ holds fixtures including tests/fixtures/resumes/indian_volunteers/, where consenting
+# volunteers' redacted résumés are placed. Both are gitignored — and this file existing means .gitignore no longer applies.
+/output/
+/tests/

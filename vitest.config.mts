@@ -11,7 +11,7 @@ export default defineConfig({
     // the wrong pattern there puts somebody's salary expectation into a form a
     // stranger reads, which is a worse failure than any wrong score.
     include: [
-      'src/**/*.test.ts', 'ingest/**/*.test.ts', 'scripts/**/*.test.ts',
+      'src/**/*.test.ts', 'ingest/**/*.test.ts', 'scripts/**/*.test.ts', 'bench/**/*.test.ts',
       'extension/**/*.test.ts',
     ],
   },
