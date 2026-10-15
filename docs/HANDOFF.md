@@ -2,6 +2,21 @@
 
 ---
 
+## 🔶 2026-10-15 (last) — management-roles fill is LIVE in the database; 400 MB cannot be reached this way
+
+**Live vs written:** the management-level jobs are **in your database** (open jobs 37,568; database **234.8 MB** of 500). The **code is still NOT deployed** (branch `scale-free-plan`).
+
+**What happened:** I built the "management roles above ₹12 LPA" rule (stated pay if the posting has it, otherwise a guess from the job title) and ran it on the big employers I had held back plus 13 newly found career-site employers. It admitted only **579 jobs** — Kotak 50, Tata Capital 152, Adani 170, Aster 49, Marriott 49, Hilton 36, Havells 21 and the rest. **That is the honest ceiling:** there are not tens of thousands of lawfully readable management openings, so about **165 MB stays unused**. I did not pad it with non-management jobs.
+
+**Your decision (pick one, or say "leave it"):**
+1. **Widen the rule** to senior individual-contributor titles (principal, staff, architect, lead) — they also pay above ₹12 LPA and would add the most.
+2. **Lower the pay line** or allow "Assistant Manager" at corporate employers.
+3. **Build a reader per big employer** (Google, Infosys, TCS, Wipro, Cognizant, Accenture, HCL). None publishes a public job feed; each is its own project and needs a terms check.
+
+**Still needs you from earlier:** deploy + `CAREER_SITES=amazon,oraclehcm` in Vercel; terms review; check the feed tomorrow.
+
+---
+
 ## 🔶 2026-10-15 (later) — free-plan job fill is LOADED in your database; the code is NOT deployed
 
 **Live vs written:** the jobs are **live in your database** (open jobs 21,785 → **36,990**, +70%; database 194 → 231 MB of 500). The **code that reads Amazon and Oracle career sites is written but NOT deployed** (branch `scale-free-plan`, tests 2,172 passing). One database change (`0053`) is applied and verified.
