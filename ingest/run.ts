@@ -138,6 +138,11 @@ const cityFrom = (loc: string) => loc.split(',')[0]?.trim() || null
  * registry/boards.json (ingest/management.ts). Read from the file, not the boards
  * table, so no migration is needed; a board without the key keeps every corporate role.
  */
+/** Career sites the ingest must never read (registry/excluded-sites.json): non-public postings. */
+function loadExcludedSites(): Set<string> {
+  try { return new Set((JSON.parse(readFileSync('registry/excluded-sites.json', 'utf8')) as { tokens: string[] }).tokens) } catch { return new Set() }
+}
+
 function loadAdmitPolicies(): Map<string, string> {
   const boards = JSON.parse(readFileSync('registry/boards.json', 'utf8')) as (Board & { admit?: string })[]
   return new Map(boards.filter((b) => b.admit).map((b) => [`${b.provider}:${b.token}`, b.admit as string]))
@@ -254,6 +259,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
   const budgetMs = opts.budgetMs ?? INGEST_BUDGET_MS
   await syncRegistry()
   const policies = loadAdmitPolicies()
+  const excluded = loadExcludedSites()
 
   // One cheap probe, once per run. max_years arrives with migration 0018, and
   // migrations here are applied by hand in the Supabase SQL editor — so there
@@ -297,13 +303,14 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
   // `id` breaks the tie. last_ingested_at is not unique (a run stamps dozens of
   // boards within the same millisecond), and paging an unstable order returns
   // some rows twice and others never.
-  const boards = await pageAll<{ id: string; provider: string; token: string; company_name: string }>(
+  const allBoards = await pageAll<{ id: string; provider: string; token: string; company_name: string }>(
     (from, to) =>
       db.from('boards').select('id, provider, token, company_name').eq('active', true)
         .order('last_ingested_at', { ascending: true, nullsFirst: true })
         .order('id', { ascending: true })
         .range(from, to)
   )
+  const boards = allBoards.filter((b) => !excluded.has(b.token.toLowerCase()))
 
   let indexed = 0
   let ok = 0

@@ -1,0 +1,27 @@
+{
+  "why": "Career-site names that say the postings are not for the public (internal, private, agency, contractor, restricted, non-public, targeted). The ingest never reads these, whether or not the boards table still lists them. Decided 2026-10-15.",
+  "tokens": [
+    "pwc.wd3.myworkdayjobs.com/nonpublic_postings",
+    "maersk.wd3.myworkdayjobs.com/maersk_manual",
+    "ms.wd5.myworkdayjobs.com/private",
+    "bpinternational.wd3.myworkdayjobs.com/bpprivateexternalcareerssite",
+    "athene.wd5.myworkdayjobs.com/apollononpubliccareersite",
+    "wf.wd1.myworkdayjobs.com/wellsfargojobstargeted",
+    "simcorp.wd3.myworkdayjobs.com/simcorp_private",
+    "novartis.wd3.myworkdayjobs.com/internal_careers_for_acquired_entities",
+    "nttlimited.wd3.myworkdayjobs.com/internal_employees_not_on_workday",
+    "alliance.wd3.myworkdayjobs.com/nissanprivateexternal",
+    "nutreco.wd3.myworkdayjobs.com/shv_internal_job_board",
+    "sandvik.wd3.myworkdayjobs.com/sandvik_internal_for_nonwd_employees",
+    "abglobal.wd1.myworkdayjobs.com/privatealliancebernsteincareers",
+    "globalhr.wd5.myworkdayjobs.com/private_posting_no_tmp",
+    "deepwater.wd1.myworkdayjobs.com/privateexternalcareersite",
+    "countryfinancial.wd5.myworkdayjobs.com/countryagencyexternal",
+    "chevron.wd5.myworkdayjobs.com/externalcareersite_private",
+    "mastercard.wd1.myworkdayjobs.com/contractorconversion",
+    "abbott.wd5.myworkdayjobs.com/agency",
+    "amgen.wd1.myworkdayjobs.com/agency",
+    "vanguard.wd5.myworkdayjobs.com/contractors_restricted",
+    "fmr.wd1.myworkdayjobs.com/targeted"
+  ]
+}
