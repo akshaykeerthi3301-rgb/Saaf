@@ -1,11 +1,96 @@
 [
   {
     "provider": "smartrecruiters",
+    "token": "endeavoritsolution",
+    "company_name": "Endeavor IT Solution",
+    "roles": 8478,
+    "india": 8476,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcbt.fa.em2.oraclecloud.com/CX_1001",
+    "company_name": "Kotak Mahindra Bank",
+    "roles": 4099,
+    "india": 4099,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "webleetechnologies",
+    "company_name": "Weblee Technologies",
+    "roles": 3861,
+    "india": 3861,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcdt.fa.us2.oraclecloud.com/CX",
+    "company_name": "Aster DM Healthcare",
+    "roles": 2430,
+    "india": 2430,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "amazon",
+    "token": "IND",
+    "company_name": "Amazon",
+    "roles": 2386,
+    "india": 2386,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eofh.fa.em2.oraclecloud.com/CX_3001",
+    "company_name": "Tata Capital",
+    "roles": 2296,
+    "india": 2296,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "squircleitconsultingservicespvtltd",
+    "company_name": "Squircle It Consulting Services Pvt  Ltd",
+    "roles": 1784,
+    "india": 1782,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eibd.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Adani",
+    "roles": 980,
+    "india": 980,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejwl.fa.us2.oraclecloud.com/CX",
+    "company_name": "Marriott",
+    "roles": 892,
+    "india": 892,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "smartrecruiters",
     "token": "accorhotel",
     "company_name": "AccorHotel",
     "roles": 6114,
     "india": 740,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejgk.fa.em2.oraclecloud.com/CX_3R",
+    "company_name": "KPMG India",
+    "roles": 599,
+    "india": 599,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -16,12 +101,29 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "emit.fa.ca3.oraclecloud.com/CX_2001",
+    "company_name": "WSP",
+    "roles": 492,
+    "india": 492,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "nagarro1",
     "company_name": "Nagarro",
     "roles": 885,
     "india": 462,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efet.fa.us2.oraclecloud.com/CX_1009",
+    "company_name": "Hilton",
+    "roles": 408,
+    "india": 408,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "workable",
@@ -48,6 +150,30 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "jpmc.fa.oraclecloud.com/CX_1001",
+    "company_name": "JPMorgan Chase",
+    "roles": 307,
+    "india": 307,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "jobsforhumanity",
+    "company_name": "Jobs for Humanity",
+    "roles": 3207,
+    "india": 294,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egup.fa.us2.oraclecloud.com/CX",
+    "company_name": "Vertiv",
+    "roles": 277,
+    "india": 277,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "egisgroup",
     "company_name": "Egis Group",
@@ -62,6 +188,14 @@
     "roles": 358,
     "india": 202,
     "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdjq.fa.us2.oraclecloud.com/CX_",
+    "company_name": "Emerson",
+    "roles": 194,
+    "india": 194,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -79,6 +213,22 @@
     "india": 177
   },
   {
+    "provider": "oraclehcm",
+    "token": "emcm.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "WM",
+    "roles": 167,
+    "india": 167,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egua.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Conduent",
+    "roles": 163,
+    "india": 163,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workable",
     "token": "apna",
     "company_name": "Apna",
@@ -94,6 +244,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ehpv.fa.em2.oraclecloud.com/CX",
+    "company_name": "DP World",
+    "roles": 153,
+    "india": 153,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "greenhouse",
     "token": "capco",
     "company_name": "Capco",
@@ -102,12 +260,28 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "eofe.fa.us2.oraclecloud.com/BNY",
+    "company_name": "BNY",
+    "roles": 145,
+    "india": 145,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "renesaselectronics",
     "company_name": "Renesas Electronics",
     "roles": 897,
     "india": 140,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edbz.fa.us2.oraclecloud.com/CX",
+    "company_name": "Texas Instruments",
+    "roles": 138,
+    "india": 138,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -134,6 +308,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hcfa.fa.us2.oraclecloud.com/AmnealCareers",
+    "company_name": "Amneal",
+    "roles": 115,
+    "india": 115,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "soprasteria1",
     "company_name": "Sopra Steria",
@@ -158,6 +340,22 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "iadugs.fa.ocs.oraclecloud.com/CX",
+    "company_name": "Legrand",
+    "roles": 108,
+    "india": 108,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edox.fa.ap1.oraclecloud.com/CX_3001",
+    "company_name": "SBIC",
+    "roles": 107,
+    "india": 107,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "wabtec",
     "company_name": "Wabtec",
@@ -172,6 +370,14 @@
     "roles": 1268,
     "india": 102,
     "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ibqbjb.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Honeywell",
+    "roles": 99,
+    "india": 99,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "greenhouse",
@@ -190,6 +396,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hctz.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "onsemi",
+    "roles": 96,
+    "india": 96,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "ramboll3",
     "company_name": "Ramboll",
@@ -204,6 +418,22 @@
     "roles": 872,
     "india": 95,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcxs.fa.us2.oraclecloud.com/CX",
+    "company_name": "Kroll",
+    "roles": 94,
+    "india": 94,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebxr.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "DTCC",
+    "roles": 90,
+    "india": 90,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "workable",
@@ -222,12 +452,28 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hdpc.fa.us2.oraclecloud.com/LateralHiring",
+    "company_name": "Goldman Sachs",
+    "roles": 79,
+    "india": 79,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "greenhouse",
     "token": "purestorage",
     "company_name": "Everpure",
     "roles": 320,
     "india": 77,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcld.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Mashreq",
+    "roles": 77,
+    "india": 77,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "recruitee",
@@ -278,12 +524,44 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hccz.fa.em3.oraclecloud.com/CX_2",
+    "company_name": "Pearson",
+    "roles": 71,
+    "india": 71,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "sikaag",
     "company_name": "Sika AG",
     "roles": 669,
     "india": 70,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egmk.fa.us6.oraclecloud.com/CX",
+    "company_name": "Calderys",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "epyc.fa.us2.oraclecloud.com/CLH",
+    "company_name": "Clean Harbors",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egug.fa.us2.oraclecloud.com/CX",
+    "company_name": "American Express",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -421,6 +699,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hcmn.fa.ap1.oraclecloud.com/CX_1001",
+    "company_name": "MUFG Pension & Market Services",
+    "roles": 57,
+    "india": 57,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "linkedin3",
     "company_name": "LinkedIn",
@@ -443,6 +729,22 @@
     "roles": 57,
     "india": 57,
     "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edsv.fa.us2.oraclecloud.com/CX",
+    "company_name": "McDermott",
+    "roles": 56,
+    "india": 56,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "icfcjb.fa.ocs.oraclecloud.com/Aerospace",
+    "company_name": "Honeywell Aerospace",
+    "roles": 56,
+    "india": 56,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -517,6 +819,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "eabw.fa.us2.oraclecloud.com/CX",
+    "company_name": "Mouser",
+    "roles": 49,
+    "india": 49,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "drreddyslaboratorieslimited",
     "company_name": "Dr Reddy's Laboratories Limited",
@@ -564,6 +874,14 @@
     "india": 44
   },
   {
+    "provider": "oraclehcm",
+    "token": "egay.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "NOV",
+    "roles": 44,
+    "india": 44,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "colliers1",
     "company_name": "Colliers",
@@ -600,6 +918,14 @@
     "token": "wundermanthompson",
     "company_name": "VML",
     "roles": 434,
+    "india": 43,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcib.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "Hill International",
+    "roles": 43,
     "india": 43,
     "qualifiedAt": "2026-10-15"
   },
@@ -707,6 +1033,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hczw.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "CSC",
+    "roles": 39,
+    "india": 39,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "freshworks",
     "company_name": "Freshworks",
@@ -736,6 +1070,14 @@
     "roles": 141,
     "india": 37,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ibwujb.fa.ocs.oraclecloud.com/CX_1001",
+    "company_name": "Ralliant",
+    "roles": 37,
+    "india": 37,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "workable",
@@ -802,6 +1144,22 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ialmme.fa.ocs.oraclecloud.com/ciklum",
+    "company_name": "Ciklum",
+    "roles": 33,
+    "india": 33,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekkk.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "UnitedLex",
+    "roles": 33,
+    "india": 33,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "greenhouse",
     "token": "fictiv",
     "company_name": "Fictiv",
@@ -816,6 +1174,30 @@
     "roles": 40,
     "india": 31,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdow.fa.us6.oraclecloud.com/CX_1001",
+    "company_name": "Newmark",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejta.fa.us6.oraclecloud.com/CX",
+    "company_name": "Fortive",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebwg.fa.us2.oraclecloud.com/CX",
+    "company_name": "ACI Worldwide",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -856,6 +1238,14 @@
     "roles": 48,
     "india": 30,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehth.fa.em2.oraclecloud.com/CX",
+    "company_name": "Garrett Motion",
+    "roles": 30,
+    "india": 30,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -1073,6 +1463,30 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "hcut.fa.ap2.oraclecloud.com/CX_1",
+    "company_name": "APL Logistics",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iaaviz.fa.ocs.oraclecloud.com/Jobs",
+    "company_name": "Icertis",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcog.fa.em2.oraclecloud.com/CX_2001",
+    "company_name": "Intertek",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "sgs",
     "company_name": "Sgs",
@@ -1111,6 +1525,14 @@
     "roles": 38,
     "india": 23,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdga.fa.em3.oraclecloud.com/Lucyelectric",
+    "company_name": "Lucy Electric",
+    "roles": 23,
+    "india": 23,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -1167,6 +1589,14 @@
     "roles": 45,
     "india": 22,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eczd.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Yum!",
+    "roles": 22,
+    "india": 22,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -1239,6 +1669,22 @@
     "roles": 136,
     "india": 21,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efds.fa.em5.oraclecloud.com/Ford",
+    "company_name": "Ford",
+    "roles": 21,
+    "india": 21,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebfr.fa.us2.oraclecloud.com/jobs",
+    "company_name": "Oceaneering",
+    "roles": 21,
+    "india": 21,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "workable",
@@ -1711,6 +2157,14 @@
     "roles": 138,
     "india": 19,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ecyq.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "DNV",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -2268,6 +2722,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "iblyjb.fa.ocs.oraclecloud.com/cytel",
+    "company_name": "Cytel",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "gsbsolutions1",
     "company_name": "Gsbsolutions1",
@@ -2522,6 +2984,14 @@
     "roles": 27,
     "india": 16,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eeug.fa.us6.oraclecloud.com/CX",
+    "company_name": "Diebold Nixdorf",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "recruitee",
@@ -3002,6 +3472,14 @@
     "india": 14
   },
   {
+    "provider": "oraclehcm",
+    "token": "eduu.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "ICU Medical",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workable",
     "token": "a2mac1",
     "company_name": "A2MAC1",
@@ -3174,6 +3652,30 @@
     "token": "phdata",
     "company_name": "phData",
     "roles": 44,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcxg.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Technip Energies",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ecqf.fa.em2.oraclecloud.com/CX",
+    "company_name": "Ipsos",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "fda.fa.us1.oraclecloud.com/CX_1",
+    "company_name": "Manitowoc",
+    "roles": 13,
     "india": 13,
     "qualifiedAt": "2026-10-15"
   },
@@ -3399,6 +3901,14 @@
     "company_name": "Fampay",
     "roles": 12,
     "india": 12
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efpv.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "Infoblox",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -3686,6 +4196,30 @@
     "company_name": "Epifi",
     "roles": 11,
     "india": 11
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egmn.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Harmonic",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eoje.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "Black Box",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcwp.fa.us2.oraclecloud.com/CX_8001",
+    "company_name": "Coherent",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -4311,6 +4845,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ecnf.fa.us2.oraclecloud.com/CX",
+    "company_name": "Tradeweb",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "framestore",
     "company_name": "Framestore",
@@ -4612,6 +5154,14 @@
     "roles": 28,
     "india": 8,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekug.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "KLDiscovery",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -5018,6 +5568,22 @@
     "roles": 37,
     "india": 7,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iaings.fa.ocs.oraclecloud.com/CX",
+    "company_name": "Sinch",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehtl.fa.us6.oraclecloud.com/CX",
+    "company_name": "Resideo",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "smartrecruiters",
@@ -6153,6 +6719,30 @@
     "roles": 40,
     "india": 5,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekkf.fa.em2.oraclecloud.com/CX",
+    "company_name": "Samsonite",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eetz.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "GP Strategies",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egcu.fa.us6.oraclecloud.com/CX",
+    "company_name": "Masimo",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "recruitee",
@@ -9285,6 +9875,22 @@
     "india": 2
   },
   {
+    "provider": "oraclehcm",
+    "token": "ejwe.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "DAMAC",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebhz.fa.us2.oraclecloud.com/Onity",
+    "company_name": "Onity",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "deephealth",
     "company_name": "Deephealth",
@@ -11268,6 +11874,30 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ehtl.fa.us6.oraclecloud.com/CX_2",
+    "company_name": "Resideo",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efcs.fa.em3.oraclecloud.com/CX_1",
+    "company_name": "Galadari Brothers",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eobe.fa.em2.oraclecloud.com/CX_1001",
+    "company_name": "Stats Perform",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "scioteq",
     "company_name": "Scioteq",
@@ -12202,578 +12832,119 @@
   },
   {
     "provider": "oraclehcm",
-    "token": "ejgk.fa.em2.oraclecloud.com/CX_3R",
-    "company_name": "KPMG India",
-    "roles": 599,
-    "india": 599,
-    "qualifiedAt": "2026-10-15"
+    "token": "iaceiz.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Digitide",
+    "roles": 1890,
+    "india": 1890,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "emit.fa.ca3.oraclecloud.com/CX_2001",
-    "company_name": "WSP",
-    "roles": 492,
-    "india": 492,
-    "qualifiedAt": "2026-10-15"
+    "token": "iabgcp.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Havells",
+    "roles": 723,
+    "india": 723,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "egup.fa.us2.oraclecloud.com/CX",
-    "company_name": "Vertiv",
-    "roles": 277,
-    "india": 277,
-    "qualifiedAt": "2026-10-15"
+    "token": "iaagiz.fa.ocs.oraclecloud.com/bristlecone",
+    "company_name": "Bristlecone",
+    "roles": 149,
+    "india": 149,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "hdjq.fa.us2.oraclecloud.com/CX_",
-    "company_name": "Emerson",
-    "roles": 194,
-    "india": 194,
-    "qualifiedAt": "2026-10-15"
+    "token": "eeih.fa.us2.oraclecloud.com/CX_6",
+    "company_name": "The Hackett Group",
+    "roles": 127,
+    "india": 127,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "emcm.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "WM",
-    "roles": 167,
-    "india": 167,
-    "qualifiedAt": "2026-10-15"
+    "token": "ebdt.fa.us2.oraclecloud.com/CX_9003",
+    "company_name": "Apps Associates",
+    "roles": 34,
+    "india": 34,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "egua.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "Conduent",
-    "roles": 163,
-    "india": 163,
-    "qualifiedAt": "2026-10-15"
+    "token": "hdid.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Jefferies",
+    "roles": 27,
+    "india": 27,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "ehpv.fa.em2.oraclecloud.com/CX",
-    "company_name": "DP World",
-    "roles": 153,
-    "india": 153,
-    "qualifiedAt": "2026-10-15"
+    "token": "iablcp.fa.ocs.oraclecloud.com/TejasNetworks",
+    "company_name": "Tejas Networks",
+    "roles": 18,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "eofe.fa.us2.oraclecloud.com/BNY",
-    "company_name": "BNY",
-    "roles": 145,
-    "india": 145,
-    "qualifiedAt": "2026-10-15"
+    "token": "eifn.fa.us6.oraclecloud.com/CX_1001",
+    "company_name": "Datavail",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "edbz.fa.us2.oraclecloud.com/CX",
-    "company_name": "Texas Instruments",
-    "roles": 138,
-    "india": 138,
-    "qualifiedAt": "2026-10-15"
+    "token": "iabqiz.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Vikram Solar",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "hcfa.fa.us2.oraclecloud.com/AmnealCareers",
-    "company_name": "Amneal",
-    "roles": 115,
-    "india": 115,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iadugs.fa.ocs.oraclecloud.com/CX",
-    "company_name": "Legrand",
-    "roles": 108,
-    "india": 108,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "edox.fa.ap1.oraclecloud.com/CX_3001",
-    "company_name": "SBIC",
-    "roles": 107,
-    "india": 107,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ibqbjb.fa.ocs.oraclecloud.com/CX_1",
-    "company_name": "Honeywell",
-    "roles": 99,
-    "india": 99,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hctz.fa.us2.oraclecloud.com/CX_1001",
-    "company_name": "onsemi",
-    "roles": 96,
-    "india": 96,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcxs.fa.us2.oraclecloud.com/CX",
-    "company_name": "Kroll",
-    "roles": 94,
-    "india": 94,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebxr.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "DTCC",
-    "roles": 90,
-    "india": 90,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hdpc.fa.us2.oraclecloud.com/LateralHiring",
-    "company_name": "Goldman Sachs",
-    "roles": 79,
-    "india": 79,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcld.fa.em2.oraclecloud.com/CX_1",
-    "company_name": "Mashreq",
-    "roles": 77,
-    "india": 77,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hccz.fa.em3.oraclecloud.com/CX_2",
-    "company_name": "Pearson",
-    "roles": 71,
-    "india": 71,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "egmk.fa.us6.oraclecloud.com/CX",
-    "company_name": "Calderys",
-    "roles": 69,
-    "india": 69,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "epyc.fa.us2.oraclecloud.com/CLH",
-    "company_name": "Clean Harbors",
-    "roles": 69,
-    "india": 69,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "egug.fa.us2.oraclecloud.com/CX",
-    "company_name": "American Express",
-    "roles": 69,
-    "india": 69,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcmn.fa.ap1.oraclecloud.com/CX_1001",
-    "company_name": "MUFG Pension & Market Services",
-    "roles": 57,
-    "india": 57,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "edsv.fa.us2.oraclecloud.com/CX",
-    "company_name": "McDermott",
-    "roles": 56,
-    "india": 56,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "icfcjb.fa.ocs.oraclecloud.com/Aerospace",
-    "company_name": "Honeywell Aerospace",
-    "roles": 56,
-    "india": 56,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eabw.fa.us2.oraclecloud.com/CX",
-    "company_name": "Mouser",
-    "roles": 49,
-    "india": 49,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "egay.fa.us6.oraclecloud.com/CX_1",
-    "company_name": "NOV",
-    "roles": 44,
-    "india": 44,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcib.fa.us2.oraclecloud.com/CX_1001",
-    "company_name": "Hill International",
-    "roles": 43,
-    "india": 43,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hczw.fa.us2.oraclecloud.com/CX_1001",
-    "company_name": "CSC",
-    "roles": 39,
-    "india": 39,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ibwujb.fa.ocs.oraclecloud.com/CX_1001",
-    "company_name": "Ralliant",
-    "roles": 37,
-    "india": 37,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ialmme.fa.ocs.oraclecloud.com/ciklum",
-    "company_name": "Ciklum",
-    "roles": 33,
-    "india": 33,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ekkk.fa.us6.oraclecloud.com/CX_1",
-    "company_name": "UnitedLex",
-    "roles": 33,
-    "india": 33,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hdow.fa.us6.oraclecloud.com/CX_1001",
-    "company_name": "Newmark",
-    "roles": 31,
-    "india": 31,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ejta.fa.us6.oraclecloud.com/CX",
-    "company_name": "Fortive",
-    "roles": 31,
-    "india": 31,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebwg.fa.us2.oraclecloud.com/CX",
-    "company_name": "ACI Worldwide",
-    "roles": 31,
-    "india": 31,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ehth.fa.em2.oraclecloud.com/CX",
-    "company_name": "Garrett Motion",
-    "roles": 30,
-    "india": 30,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcut.fa.ap2.oraclecloud.com/CX_1",
-    "company_name": "APL Logistics",
-    "roles": 24,
-    "india": 24,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iaaviz.fa.ocs.oraclecloud.com/Jobs",
-    "company_name": "Icertis",
-    "roles": 24,
-    "india": 24,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcog.fa.em2.oraclecloud.com/CX_2001",
-    "company_name": "Intertek",
-    "roles": 24,
-    "india": 24,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hdga.fa.em3.oraclecloud.com/Lucyelectric",
-    "company_name": "Lucy Electric",
-    "roles": 23,
-    "india": 23,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eczd.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "Yum!",
-    "roles": 22,
-    "india": 22,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "efds.fa.em5.oraclecloud.com/Ford",
-    "company_name": "Ford",
-    "roles": 21,
-    "india": 21,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebfr.fa.us2.oraclecloud.com/jobs",
-    "company_name": "Oceaneering",
-    "roles": 21,
-    "india": 21,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ecyq.fa.em2.oraclecloud.com/CX_1",
-    "company_name": "DNV",
-    "roles": 19,
-    "india": 19,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iblyjb.fa.ocs.oraclecloud.com/cytel",
-    "company_name": "Cytel",
-    "roles": 17,
-    "india": 17,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eeug.fa.us6.oraclecloud.com/CX",
-    "company_name": "Diebold Nixdorf",
-    "roles": 16,
-    "india": 16,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eduu.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "ICU Medical",
-    "roles": 14,
-    "india": 14,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcxg.fa.em2.oraclecloud.com/CX_1",
-    "company_name": "Technip Energies",
-    "roles": 13,
-    "india": 13,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ecqf.fa.em2.oraclecloud.com/CX",
-    "company_name": "Ipsos",
-    "roles": 13,
-    "india": 13,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "fda.fa.us1.oraclecloud.com/CX_1",
-    "company_name": "Manitowoc",
-    "roles": 13,
-    "india": 13,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "efpv.fa.us6.oraclecloud.com/CX_1",
-    "company_name": "Infoblox",
-    "roles": 12,
-    "india": 12,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "egmn.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "Harmonic",
-    "roles": 11,
-    "india": 11,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eoje.fa.us2.oraclecloud.com/CX_1001",
-    "company_name": "Black Box",
-    "roles": 11,
-    "india": 11,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hcwp.fa.us2.oraclecloud.com/CX_8001",
-    "company_name": "Coherent",
-    "roles": 11,
-    "india": 11,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ecnf.fa.us2.oraclecloud.com/CX",
-    "company_name": "Tradeweb",
+    "token": "ibzdjb.fa.ocs.oraclecloud.com/SolsticeAdvancedMaterials",
+    "company_name": "Solstice Advanced Materials",
     "roles": 9,
     "india": 9,
-    "qualifiedAt": "2026-10-15"
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "ekug.fa.us6.oraclecloud.com/CX_2001",
-    "company_name": "KLDiscovery",
-    "roles": 8,
-    "india": 8,
-    "qualifiedAt": "2026-10-15"
+    "token": "ebwi.fa.us2.oraclecloud.com/careers",
+    "company_name": "Liquidity Services",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "iaings.fa.ocs.oraclecloud.com/CX",
-    "company_name": "Sinch",
-    "roles": 7,
-    "india": 7,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ehtl.fa.us6.oraclecloud.com/CX",
-    "company_name": "Resideo",
-    "roles": 7,
-    "india": 7,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ekkf.fa.em2.oraclecloud.com/CX",
-    "company_name": "Samsonite",
-    "roles": 5,
-    "india": 5,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eetz.fa.us6.oraclecloud.com/CX_2001",
-    "company_name": "GP Strategies",
-    "roles": 5,
-    "india": 5,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "egcu.fa.us6.oraclecloud.com/CX",
-    "company_name": "Masimo",
-    "roles": 5,
-    "india": 5,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ejwe.fa.em2.oraclecloud.com/CX_1",
-    "company_name": "DAMAC",
-    "roles": 2,
-    "india": 2,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebhz.fa.us2.oraclecloud.com/Onity",
-    "company_name": "Onity",
-    "roles": 2,
-    "india": 2,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ehtl.fa.us6.oraclecloud.com/CX_2",
-    "company_name": "Resideo",
+    "token": "iaagmj.fa.ocs.oraclecloud.com/GG",
+    "company_name": "Golden Goose",
     "roles": 1,
     "india": 1,
-    "qualifiedAt": "2026-10-15"
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
-    "token": "efcs.fa.em3.oraclecloud.com/CX_1",
-    "company_name": "Galadari Brothers",
+    "token": "eipv.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "Teekay",
     "roles": 1,
     "india": 1,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eobe.fa.em2.oraclecloud.com/CX_1001",
-    "company_name": "Stats Perform",
-    "roles": 1,
-    "india": 1,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "jpmc.fa.oraclecloud.com/CX_1001",
-    "company_name": "JPMorgan Chase",
-    "roles": 307,
-    "india": 307,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "amazon",
-    "token": "IND",
-    "company_name": "Amazon",
-    "roles": 2386,
-    "india": 2386,
-    "qualifiedAt": "2026-10-15"
-  },
-  {
-    "provider": "smartrecruiters",
-    "token": "endeavoritsolution",
-    "company_name": "Endeavor IT Solution",
-    "roles": 8478,
-    "india": 8476,
-    "qualifiedAt": "2026-09-07"
-  },
-  {
-    "provider": "smartrecruiters",
-    "token": "webleetechnologies",
-    "company_name": "Weblee Technologies",
-    "roles": 3861,
-    "india": 3861,
-    "qualifiedAt": "2026-09-07"
-  },
-  {
-    "provider": "smartrecruiters",
-    "token": "squircleitconsultingservicespvtltd",
-    "company_name": "Squircle It Consulting Services Pvt  Ltd",
-    "roles": 1784,
-    "india": 1782,
-    "qualifiedAt": "2026-09-07"
-  },
-  {
-    "provider": "smartrecruiters",
-    "token": "jobsforhumanity",
-    "company_name": "Jobs for Humanity",
-    "roles": 3207,
-    "india": 294,
-    "qualifiedAt": "2026-09-07"
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   }
 ]
