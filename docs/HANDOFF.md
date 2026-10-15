@@ -2,6 +2,18 @@
 
 ---
 
+## 🔶 2026-10-16 — the strongest MBA recruiters now load every corporate role; one cleanup needs your OK
+
+**Live vs written:** in your database now — **43,516 open jobs, 267 MB of 500**. The code is **still NOT deployed** (branch `scale-free-plan`).
+
+**Done:** PwC, Barclays, Citi, Morgan Stanley, State Street, MUFG, Mastercard, BlackRock, Capital One, Diageo, Mars, Salesforce, Cisco, Intel, Amgen, AstraZeneca, GSK, Maersk and the rest of my 38-employer shortlist now load **every corporate role**, not just management and trainee ones (+2,940 jobs). The list is my judgement — tell me names to add or take out.
+
+**One thing needs your OK — a mistake of mine to clean up.** Earlier I loaded some career sites whose own names say the postings are not for the public (PwC "NonPublic_Postings", Morgan Stanley "private", Vanguard "contractors_restricted", several "agency" and "internal" sites — 22 in all). The ingest now skips them. But the jobs already stored from them (several hundred) are still in your database, and I was **blocked** from switching those sites off and deleting those jobs without your say-so. **Say "approve the cleanup" and I will do it** (it only touches those 22 sites and their jobs).
+
+**Still open from before:** deploy the branch + `CAREER_SITES=amazon,oraclehcm` in Vercel; check the feed tomorrow; terms review; no "MBA / campus" filter exists in the app yet (say if you want one).
+
+---
+
 ## 🔶 2026-10-15 (MBA / IIM / IIT fresher jobs) — a missed class of employers found and loaded
 
 **Live vs written:** ~3,000 new jobs are **in your database** (open jobs 40,576; database **249.8 MB** of 500). The code is **still NOT deployed** (branch `scale-free-plan`).
