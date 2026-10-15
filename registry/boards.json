@@ -2201,7 +2201,7 @@
   {
     "provider": "workday",
     "token": "pwc.wd3.myworkdayjobs.com/NonPublic_Postings",
-    "company_name": "Pwc",
+    "company_name": "PwC",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2210,7 +2210,7 @@
   {
     "provider": "workday",
     "token": "astrazeneca.wd3.myworkdayjobs.com/Careers",
-    "company_name": "Astrazeneca",
+    "company_name": "AstraZeneca",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2219,7 +2219,7 @@
   {
     "provider": "workday",
     "token": "alliancedata.wd5.myworkdayjobs.com/breadfinancial_India",
-    "company_name": "Alliancedata",
+    "company_name": "Alliance Data",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2255,7 +2255,7 @@
   {
     "provider": "workday",
     "token": "jci.wd5.myworkdayjobs.com/JCI",
-    "company_name": "JCI",
+    "company_name": "Johnson Controls",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2318,7 +2318,7 @@
   {
     "provider": "workday",
     "token": "aresmgmt.wd1.myworkdayjobs.com/External",
-    "company_name": "Aresmgmt",
+    "company_name": "Ares Management",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2363,7 +2363,7 @@
   {
     "provider": "workday",
     "token": "lbg.wd3.myworkdayjobs.com/Lloyds_Technology_Centre",
-    "company_name": "Lbg",
+    "company_name": "Lloyds Banking Group",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2471,7 +2471,7 @@
   {
     "provider": "workday",
     "token": "amat.wd1.myworkdayjobs.com/external",
-    "company_name": "Amat",
+    "company_name": "Applied Materials",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2525,7 +2525,7 @@
   {
     "provider": "workday",
     "token": "blackrock.wd1.myworkdayjobs.com/BlackRock_Professional",
-    "company_name": "Black Rock",
+    "company_name": "BlackRock",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2579,7 +2579,7 @@
   {
     "provider": "workday",
     "token": "citicclsa.wd3.myworkdayjobs.com/External",
-    "company_name": "Citicclsa",
+    "company_name": "CLSA",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2588,7 +2588,7 @@
   {
     "provider": "workday",
     "token": "hp.wd5.myworkdayjobs.com/EXTEU-AC-CareerSite",
-    "company_name": "Hp",
+    "company_name": "HP",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2633,7 +2633,7 @@
   {
     "provider": "workday",
     "token": "ms.wd5.myworkdayjobs.com/private",
-    "company_name": "Ms",
+    "company_name": "Morgan Stanley",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2705,7 +2705,7 @@
   {
     "provider": "workday",
     "token": "firstam.wd1.myworkdayjobs.com/faicareers",
-    "company_name": "Firstam",
+    "company_name": "First American",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2714,7 +2714,7 @@
   {
     "provider": "workday",
     "token": "ms.wd5.myworkdayjobs.com/external",
-    "company_name": "Ms",
+    "company_name": "Morgan Stanley",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2741,7 +2741,7 @@
   {
     "provider": "workday",
     "token": "pwc.wd3.myworkdayjobs.com/global_experienced_careers",
-    "company_name": "Pwc",
+    "company_name": "PwC",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2750,7 +2750,7 @@
   {
     "provider": "workday",
     "token": "astrazeneca.wd3.myworkdayjobs.com/broadbean_external",
-    "company_name": "Astrazeneca",
+    "company_name": "AstraZeneca",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2768,7 +2768,7 @@
   {
     "provider": "workday",
     "token": "michelinhr.wd3.myworkdayjobs.com/michelin",
-    "company_name": "Michelinhr",
+    "company_name": "Michelin",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2813,7 +2813,7 @@
   {
     "provider": "workday",
     "token": "nab.wd3.myworkdayjobs.com/nab_careers",
-    "company_name": "Nab",
+    "company_name": "NAB",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2840,7 +2840,7 @@
   {
     "provider": "workday",
     "token": "geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite",
-    "company_name": "Geaerospace",
+    "company_name": "GE Aerospace",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -2876,7 +2876,7 @@
   {
     "provider": "workday",
     "token": "mufgub.wd3.myworkdayjobs.com/mufg-careers",
-    "company_name": "Mufgub",
+    "company_name": "MUFG",
     "roles": 20,
     "india": 20,
     "qualifiedAt": "2026-10-15",
@@ -3167,7 +3167,7 @@
   {
     "provider": "workday",
     "token": "kimberlyclark.wd1.myworkdayjobs.com/GLOBAL",
-    "company_name": "Kimberlyclark",
+    "company_name": "Kimberly-Clark",
     "roles": 19,
     "india": 19,
     "qualifiedAt": "2026-10-15",
@@ -3248,7 +3248,7 @@
   {
     "provider": "workday",
     "token": "fnz.wd3.myworkdayjobs.com/fnz_careers",
-    "company_name": "Fnz",
+    "company_name": "FNZ",
     "roles": 20,
     "india": 19,
     "qualifiedAt": "2026-10-15",
@@ -3383,7 +3383,7 @@
   {
     "provider": "workday",
     "token": "nttglobaldatacenters.wd501.myworkdayjobs.com/External",
-    "company_name": "Nttglobaldatacenters",
+    "company_name": "NTT Global Data Centers",
     "roles": 20,
     "india": 19,
     "qualifiedAt": "2026-10-15",
@@ -3723,7 +3723,7 @@
   {
     "provider": "workday",
     "token": "bdx.wd1.myworkdayjobs.com/external_career_site_india",
-    "company_name": "Bdx",
+    "company_name": "BD",
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15",
@@ -3831,7 +3831,7 @@
   {
     "provider": "workday",
     "token": "gehc.wd5.myworkdayjobs.com/gehc_externalsite",
-    "company_name": "Gehc",
+    "company_name": "GE HealthCare",
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15",
@@ -3885,7 +3885,7 @@
   {
     "provider": "workday",
     "token": "nttlimited.wd3.myworkdayjobs.com/NTT_Careers",
-    "company_name": "Nttlimited",
+    "company_name": "NTT Limited",
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15",
@@ -3894,7 +3894,7 @@
   {
     "provider": "workday",
     "token": "pwc.wd3.myworkdayjobs.com/crm_experienced_careers_site",
-    "company_name": "Pwc",
+    "company_name": "PwC",
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15",
@@ -3903,7 +3903,7 @@
   {
     "provider": "workday",
     "token": "msd.wd5.myworkdayjobs.com/searchjobs",
-    "company_name": "Msd",
+    "company_name": "MSD",
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15",
@@ -4208,7 +4208,7 @@
   {
     "provider": "workday",
     "token": "statestreet.wd1.myworkdayjobs.com/equest",
-    "company_name": "Statestreet",
+    "company_name": "State Street",
     "roles": 20,
     "india": 17,
     "qualifiedAt": "2026-10-15",
@@ -4226,7 +4226,7 @@
   {
     "provider": "workday",
     "token": "fifththird.wd5.myworkdayjobs.com/53careers",
-    "company_name": "Fifththird",
+    "company_name": "Fifth Third Bank",
     "roles": 20,
     "india": 17,
     "qualifiedAt": "2026-10-15",
@@ -4280,7 +4280,7 @@
   {
     "provider": "workday",
     "token": "mufgub.wd3.myworkdayjobs.com/mufg-earlycareers",
-    "company_name": "Mufgub",
+    "company_name": "MUFG",
     "roles": 19,
     "india": 17,
     "qualifiedAt": "2026-10-15",
@@ -4307,7 +4307,7 @@
   {
     "provider": "workday",
     "token": "kimberlyclark.wd1.myworkdayjobs.com/LinkedIn",
-    "company_name": "Kimberlyclark",
+    "company_name": "Kimberly-Clark",
     "roles": 17,
     "india": 17,
     "qualifiedAt": "2026-10-15",
@@ -4316,7 +4316,7 @@
   {
     "provider": "workday",
     "token": "hpe.wd5.myworkdayjobs.com/Jobsathpe",
-    "company_name": "Hpe",
+    "company_name": "HPE",
     "roles": 20,
     "india": 17,
     "qualifiedAt": "2026-10-15",
@@ -4615,7 +4615,7 @@
   {
     "provider": "workday",
     "token": "hpe.wd5.myworkdayjobs.com/ACJobSite",
-    "company_name": "Hpe",
+    "company_name": "HPE",
     "roles": 20,
     "india": 16,
     "qualifiedAt": "2026-10-15",
@@ -4633,7 +4633,7 @@
   {
     "provider": "workday",
     "token": "cmegroup.wd1.myworkdayjobs.com/cme_careers",
-    "company_name": "Cmegroup",
+    "company_name": "CME Group",
     "roles": 16,
     "india": 16,
     "qualifiedAt": "2026-10-15",
@@ -4678,7 +4678,7 @@
   {
     "provider": "workday",
     "token": "jj.wd5.myworkdayjobs.com/jj",
-    "company_name": "Jj",
+    "company_name": "Johnson & Johnson",
     "roles": 20,
     "india": 16,
     "qualifiedAt": "2026-10-15",
@@ -4714,7 +4714,7 @@
   {
     "provider": "workday",
     "token": "mmc.wd1.myworkdayjobs.com/careers",
-    "company_name": "Mmc",
+    "company_name": "Marsh McLennan",
     "roles": 20,
     "india": 16,
     "qualifiedAt": "2026-10-15",
@@ -4759,7 +4759,7 @@
   {
     "provider": "workday",
     "token": "hpe.wd5.myworkdayjobs.com/wfmathpe",
-    "company_name": "Hpe",
+    "company_name": "HPE",
     "roles": 20,
     "india": 16,
     "qualifiedAt": "2026-10-15",
@@ -5011,7 +5011,7 @@
   {
     "provider": "workday",
     "token": "hp.wd5.myworkdayjobs.com/externalcareersite",
-    "company_name": "Hp",
+    "company_name": "HP",
     "roles": 20,
     "india": 15,
     "qualifiedAt": "2026-10-15",
@@ -5029,7 +5029,7 @@
   {
     "provider": "workday",
     "token": "fis.wd5.myworkdayjobs.com/SearchJobs",
-    "company_name": "Fis",
+    "company_name": "FIS",
     "roles": 20,
     "india": 15,
     "qualifiedAt": "2026-10-15",
@@ -5056,7 +5056,7 @@
   {
     "provider": "workday",
     "token": "mmc.wd1.myworkdayjobs.com/mmc",
-    "company_name": "Mmc",
+    "company_name": "Marsh McLennan",
     "roles": 20,
     "india": 15,
     "qualifiedAt": "2026-10-15",
@@ -5342,7 +5342,7 @@
   {
     "provider": "workday",
     "token": "statestreet.wd1.myworkdayjobs.com/global",
-    "company_name": "Statestreet",
+    "company_name": "State Street",
     "roles": 20,
     "india": 14,
     "qualifiedAt": "2026-10-15",
@@ -5369,7 +5369,7 @@
   {
     "provider": "workday",
     "token": "gsk.wd5.myworkdayjobs.com/gskcareers",
-    "company_name": "Gsk",
+    "company_name": "GSK",
     "roles": 20,
     "india": 14,
     "qualifiedAt": "2026-10-15",
@@ -5727,7 +5727,7 @@
   {
     "provider": "workday",
     "token": "kimberlyclark.wd1.myworkdayjobs.com/equest",
-    "company_name": "Kimberlyclark",
+    "company_name": "Kimberly-Clark",
     "roles": 13,
     "india": 13,
     "qualifiedAt": "2026-10-15",
@@ -5985,7 +5985,7 @@
   {
     "provider": "workday",
     "token": "gevernova.wd5.myworkdayjobs.com/Vernova_ExternalSite",
-    "company_name": "Gevernova",
+    "company_name": "GE Vernova",
     "roles": 20,
     "india": 12,
     "qualifiedAt": "2026-10-15",
@@ -6030,7 +6030,7 @@
   {
     "provider": "workday",
     "token": "gevernova.wd5.myworkdayjobs.com/Only_Confidential_Executive_Recruiting",
-    "company_name": "Gevernova",
+    "company_name": "GE Vernova",
     "roles": 20,
     "india": 12,
     "qualifiedAt": "2026-10-15",
@@ -6102,7 +6102,7 @@
   {
     "provider": "workday",
     "token": "ig.wd103.myworkdayjobs.com/EXT_IG",
-    "company_name": "Ig",
+    "company_name": "IG",
     "roles": 12,
     "india": 12,
     "qualifiedAt": "2026-10-15",
@@ -6511,7 +6511,7 @@
   {
     "provider": "workday",
     "token": "keybank.wd5.myworkdayjobs.com/External_Career_Site",
-    "company_name": "Keybank",
+    "company_name": "KeyBank",
     "roles": 16,
     "india": 11,
     "qualifiedAt": "2026-10-15",
@@ -7015,7 +7015,7 @@
   {
     "provider": "workday",
     "token": "dowjones.wd1.myworkdayjobs.com/News_Corp_Careers",
-    "company_name": "Dowjones",
+    "company_name": "Dow Jones",
     "roles": 10,
     "india": 10,
     "qualifiedAt": "2026-10-15",
@@ -7341,7 +7341,7 @@
   {
     "provider": "workday",
     "token": "nttlimited.wd3.myworkdayjobs.com/internal_employees_not_on_workday",
-    "company_name": "Nttlimited",
+    "company_name": "NTT Limited",
     "roles": 20,
     "india": 9,
     "qualifiedAt": "2026-10-15",
@@ -9179,7 +9179,7 @@
   {
     "provider": "workday",
     "token": "tysonfoods.wd5.myworkdayjobs.com/TYIT",
-    "company_name": "Tysonfoods",
+    "company_name": "Tyson Foods",
     "roles": 6,
     "india": 6,
     "qualifiedAt": "2026-10-15",
@@ -9242,7 +9242,7 @@
   {
     "provider": "workday",
     "token": "woodmac.wd3.myworkdayjobs.com/woodmaccareers",
-    "company_name": "Woodmac",
+    "company_name": "Wood Mackenzie",
     "roles": 9,
     "india": 6,
     "qualifiedAt": "2026-10-15",
@@ -9287,7 +9287,7 @@
   {
     "provider": "workday",
     "token": "lplfinancial.wd1.myworkdayjobs.com/external",
-    "company_name": "Lplfinancial",
+    "company_name": "LPL Financial",
     "roles": 6,
     "india": 6,
     "qualifiedAt": "2026-10-15",
@@ -10188,7 +10188,7 @@
   {
     "provider": "workday",
     "token": "hl.wd1.myworkdayjobs.com/Lateral",
-    "company_name": "Hl",
+    "company_name": "Houlihan Lokey",
     "roles": 6,
     "india": 5,
     "qualifiedAt": "2026-10-15",
@@ -11151,7 +11151,7 @@
   {
     "provider": "workday",
     "token": "jci.wd5.myworkdayjobs.com/JCI_Confidential",
-    "company_name": "Jci",
+    "company_name": "Johnson Controls",
     "roles": 4,
     "india": 4,
     "qualifiedAt": "2026-10-15",
@@ -11178,7 +11178,7 @@
   {
     "provider": "workday",
     "token": "cbh.wd12.myworkdayjobs.com/CherryBekaertEarlyCareers",
-    "company_name": "Cbh",
+    "company_name": "CBH",
     "roles": 4,
     "india": 4,
     "qualifiedAt": "2026-10-15",
@@ -11205,7 +11205,7 @@
   {
     "provider": "workday",
     "token": "astrazeneca.wd3.myworkdayjobs.com/alexion",
-    "company_name": "Astrazeneca",
+    "company_name": "AstraZeneca",
     "roles": 4,
     "india": 4,
     "qualifiedAt": "2026-10-15",
@@ -11331,7 +11331,7 @@
   {
     "provider": "workday",
     "token": "jj.wd5.myworkdayjobs.com/DisplacedEmployees",
-    "company_name": "Jj",
+    "company_name": "Johnson & Johnson",
     "roles": 5,
     "india": 4,
     "qualifiedAt": "2026-10-15",
@@ -12605,7 +12605,7 @@
   {
     "provider": "workday",
     "token": "mckesson.wd3.myworkdayjobs.com/External_Careers",
-    "company_name": "Mckesson",
+    "company_name": "McKesson",
     "roles": 3,
     "india": 3,
     "qualifiedAt": "2026-10-15",
@@ -12668,7 +12668,7 @@
   {
     "provider": "workday",
     "token": "wgu.wd5.myworkdayjobs.com/external",
-    "company_name": "Wgu",
+    "company_name": "Western Governors University",
     "roles": 3,
     "india": 3,
     "qualifiedAt": "2026-10-15",
@@ -12722,7 +12722,7 @@
   {
     "provider": "workday",
     "token": "hl.wd1.myworkdayjobs.com/Corporate",
-    "company_name": "Hl",
+    "company_name": "Houlihan Lokey",
     "roles": 4,
     "india": 3,
     "qualifiedAt": "2026-10-15",
@@ -12911,7 +12911,7 @@
   {
     "provider": "workday",
     "token": "rockwellautomation.wd1.myworkdayjobs.com/External-Rockwell-Automation-Early-Careers",
-    "company_name": "Rockwellautomation",
+    "company_name": "Rockwell Automation",
     "roles": 3,
     "india": 3,
     "qualifiedAt": "2026-10-15",
@@ -14289,7 +14289,7 @@
   {
     "provider": "workday",
     "token": "cbh.wd12.myworkdayjobs.com/cherrybekaert",
-    "company_name": "Cbh",
+    "company_name": "CBH",
     "roles": 7,
     "india": 2,
     "qualifiedAt": "2026-10-15",
@@ -14424,7 +14424,7 @@
   {
     "provider": "workday",
     "token": "cumminggroup.wd1.myworkdayjobs.com/CGC",
-    "company_name": "Cumminggroup",
+    "company_name": "Cummins",
     "roles": 3,
     "india": 2,
     "qualifiedAt": "2026-10-15",
@@ -14541,7 +14541,7 @@
   {
     "provider": "workday",
     "token": "synchronyfinancial.wd5.myworkdayjobs.com/careers",
-    "company_name": "Synchronyfinancial",
+    "company_name": "Synchrony",
     "roles": 11,
     "india": 2,
     "qualifiedAt": "2026-10-15",
@@ -17162,7 +17162,7 @@
   {
     "provider": "workday",
     "token": "pwc.wd3.myworkdayjobs.com/Global_Campus_Careers",
-    "company_name": "Pwc",
+    "company_name": "PwC",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
@@ -17369,7 +17369,7 @@
   {
     "provider": "workday",
     "token": "sunlife.wd3.myworkdayjobs.com/experienced",
-    "company_name": "Sunlife",
+    "company_name": "Sun Life",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
@@ -17378,7 +17378,7 @@
   {
     "provider": "workday",
     "token": "sunlife.wd3.myworkdayjobs.com/experienced-jobs",
-    "company_name": "Sunlife",
+    "company_name": "Sun Life",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
@@ -17441,7 +17441,7 @@
   {
     "provider": "workday",
     "token": "jci.wd5.myworkdayjobs.com/TUPU",
-    "company_name": "Jci",
+    "company_name": "Johnson Controls",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
@@ -17702,7 +17702,7 @@
   {
     "provider": "workday",
     "token": "fmr.wd1.myworkdayjobs.com/targeted",
-    "company_name": "Fmr",
+    "company_name": "Fidelity Investments",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
@@ -17711,7 +17711,7 @@
   {
     "provider": "workday",
     "token": "dowjones.wd1.myworkdayjobs.com/WSJ_External_Career",
-    "company_name": "Dowjones",
+    "company_name": "Dow Jones",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
