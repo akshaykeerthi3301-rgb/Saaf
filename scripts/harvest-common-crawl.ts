@@ -155,8 +155,27 @@ function workdayToken(u: URL): string | null {
   return `${host}/${site}`
 }
 
+/**
+ * Common Crawl's index server drops connections and answers 502/504 often — measured
+ * 2026-10-15, where the same query failed three times and then worked. Retried a few
+ * times with a pause, so a flaky server is not mistaken for "this crawl does not carry
+ * the host" (which crawlPages treats as silence).
+ */
+async function fetchRetry(url: string, init: RequestInit, tries = 4): Promise<Response> {
+  let last: unknown
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, init)
+      if (res.status < 500) return res
+      last = new Error(`HTTP ${res.status}`)
+    } catch (e) { last = e }
+    await new Promise((r) => setTimeout(r, 5000 * (i + 1)))
+  }
+  throw last
+}
+
 async function collections(n: number): Promise<string[]> {
-  const res = await fetch(`${CDX}/collinfo.json`, { headers: { 'User-Agent': USER_AGENT } })
+  const res = await fetchRetry(`${CDX}/collinfo.json`, { headers: { 'User-Agent': USER_AGENT } })
   const all = (await res.json()) as { id: string }[]
   return all.slice(0, n).map((c) => c.id)
 }
@@ -174,7 +193,7 @@ async function* crawlPages(crawl: string, pattern: string): AsyncGenerator<strin
 
   let pages = 1
   try {
-    const meta = await fetch(`${base}&showNumPages=true`, { headers: { 'User-Agent': USER_AGENT } })
+    const meta = await fetchRetry(`${base}&showNumPages=true`, { headers: { 'User-Agent': USER_AGENT } })
     if (meta.ok) pages = Number(((await meta.json()) as { pages?: number }).pages ?? 1)
   } catch {
     return // this crawl does not carry this host; not an error
@@ -183,7 +202,7 @@ async function* crawlPages(crawl: string, pattern: string): AsyncGenerator<strin
   for (let page = 0; page < pages; page++) {
     let body: string
     try {
-      const res = await fetch(`${base}&page=${page}`, {
+      const res = await fetchRetry(`${base}&page=${page}`, {
         headers: { 'User-Agent': USER_AGENT },
         signal: AbortSignal.timeout(180_000),
       })

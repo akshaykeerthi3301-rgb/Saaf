@@ -27,6 +27,8 @@ export const AGENCY_NAMES = [
   // The four boards held out of the registry until 2026-10-15 (registry/needs-review.json: 8,476 / 3,861 / 1,782 / 294 India roles each, against a
   // median of 5). The founder admitted them to fill the free database; listing them is what keeps the "leave out staffing agencies" switch honest.
   'Endeavor IT Solution', 'Weblee Technologies', 'Squircle IT Consulting Services', 'Jobs for Humanity',
+  // Recruitment firms that arrived with the 2026-10-15 Workable re-probe (names say so: talent / resources / recruitment services).
+  'Eram Talent', 'Apt Resources', 'Experts Plus Recruitment Services',
 ] as const
 
 const KEYS = new Set(AGENCY_NAMES.map((n) => normaliseCompany(n)).filter(Boolean))
