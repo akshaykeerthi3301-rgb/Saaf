@@ -51,6 +51,15 @@
     "admit": "management"
   },
   {
+    "provider": "oraclehcm",
+    "token": "iaceiz.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Digitide",
+    "roles": 1890,
+    "india": 1890,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "squircleitconsultingservicespvtltd",
     "company_name": "Squircle It Consulting Services Pvt  Ltd",
@@ -83,6 +92,15 @@
     "roles": 6114,
     "india": 740,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iabgcp.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Havells",
+    "roles": 723,
+    "india": 723,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "oraclehcm",
@@ -261,6 +279,15 @@
   },
   {
     "provider": "oraclehcm",
+    "token": "iaagiz.fa.ocs.oraclecloud.com/bristlecone",
+    "company_name": "Bristlecone",
+    "roles": 149,
+    "india": 149,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "oraclehcm",
     "token": "eofe.fa.us2.oraclecloud.com/BNY",
     "company_name": "BNY",
     "roles": 145,
@@ -282,6 +309,15 @@
     "roles": 138,
     "india": 138,
     "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eeih.fa.us2.oraclecloud.com/CX_6",
+    "company_name": "The Hackett Group",
+    "roles": 127,
+    "india": 127,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "smartrecruiters",
@@ -1128,6 +1164,15 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ebdt.fa.us2.oraclecloud.com/CX_9003",
+    "company_name": "Apps Associates",
+    "roles": 34,
+    "india": 34,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
     "provider": "greenhouse",
     "token": "ethoslife",
     "company_name": "Ethos Life",
@@ -1358,6 +1403,15 @@
     "roles": 58,
     "india": 27,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdid.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Jefferies",
+    "roles": 27,
+    "india": 27,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "greenhouse",
@@ -2127,6 +2181,717 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workday",
+    "token": "intel.wd1.myworkdayjobs.com/external",
+    "company_name": "Intel",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "zillow.wd5.myworkdayjobs.com/zillow_group_external",
+    "company_name": "Zillow",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pwc.wd3.myworkdayjobs.com/NonPublic_Postings",
+    "company_name": "Pwc",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "astrazeneca.wd3.myworkdayjobs.com/Careers",
+    "company_name": "Astrazeneca",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "alliancedata.wd5.myworkdayjobs.com/breadfinancial_India",
+    "company_name": "Alliancedata",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "genpact.wd108.myworkdayjobs.com/External_Careers",
+    "company_name": "Genpact",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "vanguard.wd5.myworkdayjobs.com/vanguard_external",
+    "company_name": "Vanguard",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kone.wd3.myworkdayjobs.com/careers",
+    "company_name": "Kone",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jci.wd5.myworkdayjobs.com/JCI",
+    "company_name": "JCI",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nexdine.wd1.myworkdayjobs.com/nexdine",
+    "company_name": "Nexdine",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fiserv.wd5.myworkdayjobs.com/EXT",
+    "company_name": "Fiserv",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "amgen.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Amgen",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mastercard.wd1.myworkdayjobs.com/CorporateCareers",
+    "company_name": "Mastercard",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "labcorp.wd1.myworkdayjobs.com/external",
+    "company_name": "Labcorp",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dexcom.wd1.myworkdayjobs.com/Dexcom",
+    "company_name": "Dexcom",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aresmgmt.wd1.myworkdayjobs.com/External",
+    "company_name": "Aresmgmt",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "slihrms.wd3.myworkdayjobs.com/Linxon",
+    "company_name": "Slihrms",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sec.wd3.myworkdayjobs.com/samsung_careers",
+    "company_name": "Sec",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "maersk.wd3.myworkdayjobs.com/Maersk_Careers",
+    "company_name": "Maersk",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "regeneron.wd1.myworkdayjobs.com/careers",
+    "company_name": "Regeneron",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lbg.wd3.myworkdayjobs.com/Lloyds_Technology_Centre",
+    "company_name": "Lbg",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "niagarawater.wd5.myworkdayjobs.com/niagara",
+    "company_name": "Niagarawater",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cadence.wd1.myworkdayjobs.com/external_careers",
+    "company_name": "Cadence",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "disney.wd5.myworkdayjobs.com/disneycareer",
+    "company_name": "Disney",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lowes.wd5.myworkdayjobs.com/lws_external_cs",
+    "company_name": "Lowes",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hrone.wd1.myworkdayjobs.com/central_transport",
+    "company_name": "Hrone",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "albemarle.wd5.myworkdayjobs.com/external",
+    "company_name": "Albemarle",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "myhr.wd3.myworkdayjobs.com/PlanseeGroup_Career",
+    "company_name": "Myhr",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ptc.wd1.myworkdayjobs.com/ptc",
+    "company_name": "Ptc",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "maersk.wd3.myworkdayjobs.com/Maersk_Manual",
+    "company_name": "Maersk",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "flextronics.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Flextronics",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jiostar.wd102.myworkdayjobs.com/JioStar",
+    "company_name": "JioStar",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "amat.wd1.myworkdayjobs.com/external",
+    "company_name": "Amat",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "modmed.wd501.myworkdayjobs.com/ModMed12",
+    "company_name": "Modmed",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "onetp.wd1.myworkdayjobs.com/teleperformance",
+    "company_name": "Onetp",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "o9solutions.wd5.myworkdayjobs.com/o9SolutionsExternal",
+    "company_name": "O9 Solutions",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ecolab.wd1.myworkdayjobs.com/ecolab_external",
+    "company_name": "Ecolab",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kencogroup.wd12.myworkdayjobs.com/kenco",
+    "company_name": "Kencogroup",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "blackrock.wd1.myworkdayjobs.com/BlackRock_Professional",
+    "company_name": "Black Rock",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "abbott.wd5.myworkdayjobs.com/abbottcareers",
+    "company_name": "Abbott",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "copart.wd12.myworkdayjobs.com/copart",
+    "company_name": "Copart",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "paloaltonetworks.wd5.myworkdayjobs.com/panwexternalcareers",
+    "company_name": "Paloaltonetworks",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "genpact.wd108.myworkdayjobs.com/campussite",
+    "company_name": "Genpact",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nasdaq.wd1.myworkdayjobs.com/global_external_site",
+    "company_name": "Nasdaq",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "citicclsa.wd3.myworkdayjobs.com/External",
+    "company_name": "Citicclsa",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hp.wd5.myworkdayjobs.com/EXTEU-AC-CareerSite",
+    "company_name": "Hp",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "carters.wd1.myworkdayjobs.com/CartersCareers",
+    "company_name": "Carters",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "svb.wd5.myworkdayjobs.com/firstcitizensindia",
+    "company_name": "Svb",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "invesco.wd1.myworkdayjobs.com/ivz",
+    "company_name": "Invesco",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ebay.wd5.myworkdayjobs.com/apply",
+    "company_name": "Ebay",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ms.wd5.myworkdayjobs.com/private",
+    "company_name": "Ms",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cubic.wd1.myworkdayjobs.com/cubic_global_careers",
+    "company_name": "Cubic",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "veralto.wd1.myworkdayjobs.com/eskojobs",
+    "company_name": "Veralto",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "oaktree.wd1.myworkdayjobs.com/Oaktree",
+    "company_name": "Oaktree",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "browserstack.wd3.myworkdayjobs.com/external",
+    "company_name": "Browserstack",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "academy.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Academy",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "omnissa.wd501.myworkdayjobs.com/Omnissa_External_Career_Site",
+    "company_name": "Omnissa",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ccc.wd5.myworkdayjobs.com/ccc_External",
+    "company_name": "Ccc",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "firstam.wd1.myworkdayjobs.com/faicareers",
+    "company_name": "Firstam",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ms.wd5.myworkdayjobs.com/external",
+    "company_name": "Ms",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ezcorp.wd12.myworkdayjobs.com/ezcorp",
+    "company_name": "Ez Corp",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "zebra.wd501.myworkdayjobs.com/Zebra_careers",
+    "company_name": "Zebra",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pwc.wd3.myworkdayjobs.com/global_experienced_careers",
+    "company_name": "Pwc",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "astrazeneca.wd3.myworkdayjobs.com/broadbean_external",
+    "company_name": "Astrazeneca",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "momentive.wd1.myworkdayjobs.com/MC",
+    "company_name": "Momentive",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "michelinhr.wd3.myworkdayjobs.com/michelin",
+    "company_name": "Michelinhr",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "meijer.wd5.myworkdayjobs.com/meijer_stores_hourly",
+    "company_name": "Meijer",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "basspro.wd1.myworkdayjobs.com/careers",
+    "company_name": "Basspro",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "baxter.wd1.myworkdayjobs.com/baxter",
+    "company_name": "Baxter",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "target.wd5.myworkdayjobs.com/targetcareers",
+    "company_name": "Target",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nab.wd3.myworkdayjobs.com/nab_careers",
+    "company_name": "Nab",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "stryker.wd1.myworkdayjobs.com/strykercareers",
+    "company_name": "Stryker",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "arcticwolf.wd1.myworkdayjobs.com/External",
+    "company_name": "Arcticwolf",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite",
+    "company_name": "Geaerospace",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "disney.wd5.myworkdayjobs.com/disneycareerdc",
+    "company_name": "Disney",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "thgrp.wd12.myworkdayjobs.com/HeritageConstructionMaterials",
+    "company_name": "Thgrp",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nike.wd1.myworkdayjobs.com/nke",
+    "company_name": "Nike",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mufgub.wd3.myworkdayjobs.com/mufg-careers",
+    "company_name": "Mufgub",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "meijer.wd5.myworkdayjobs.com/Fresh_Thyme_Stores_External_Career_Site",
+    "company_name": "Meijer",
+    "roles": 20,
+    "india": 20,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "greenhouse",
     "token": "fivetran",
     "company_name": "Fivetran ",
@@ -2391,6 +3156,276 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workday",
+    "token": "diageo.wd3.myworkdayjobs.com/Diageo_Careers",
+    "company_name": "Diageo",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kimberlyclark.wd1.myworkdayjobs.com/GLOBAL",
+    "company_name": "Kimberlyclark",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "broadcom.wd1.myworkdayjobs.com/External_Career",
+    "company_name": "Broadcom",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "myhrhome.wd1.myworkdayjobs.com/OneMainCareers",
+    "company_name": "Myhrhome",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "globe.wd3.myworkdayjobs.com/Mynt",
+    "company_name": "Globe",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "copeland.wd5.myworkdayjobs.com/copeland_external_careers_page",
+    "company_name": "Copeland",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "micron.wd1.myworkdayjobs.com/external",
+    "company_name": "Micron",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "brightli.wd5.myworkdayjobs.com/BrightliTalent",
+    "company_name": "Brightli",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "smithnephew.wd5.myworkdayjobs.com/External",
+    "company_name": "Smithnephew",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "saputo.wd5.myworkdayjobs.com/Saputo_External_Careers",
+    "company_name": "Saputo",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fnz.wd3.myworkdayjobs.com/fnz_careers",
+    "company_name": "Fnz",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "trintech.wd501.myworkdayjobs.com/Trintech",
+    "company_name": "Trintech",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "canadiansolar.wd5.myworkdayjobs.com/canadiansolar",
+    "company_name": "Canadiansolar",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ivytech.wd1.myworkdayjobs.com/Ivy_Tech_Careers",
+    "company_name": "IvyTech",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "factset.wd108.myworkdayjobs.com/FactSetCareers",
+    "company_name": "FactSet",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nvent.wd5.myworkdayjobs.com/nvent",
+    "company_name": "Nvent",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bhs.wd1.myworkdayjobs.com/careers",
+    "company_name": "Bhs",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "r1rcm.wd1.myworkdayjobs.com/r1rcm",
+    "company_name": "R1rcm",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "soti.wd3.myworkdayjobs.com/careers",
+    "company_name": "Soti",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "equinix.wd1.myworkdayjobs.com/External",
+    "company_name": "Equinix",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "flowserve.wd1.myworkdayjobs.com/applied",
+    "company_name": "Flowserve",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fluenceenergy.wd12.myworkdayjobs.com/fluenceenergy-jobs",
+    "company_name": "Fluenceenergy",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "simon.wd1.myworkdayjobs.com/Simon",
+    "company_name": "Simon",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "workday.wd5.myworkdayjobs.com/Workday",
+    "company_name": "Workday",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bpinternational.wd3.myworkdayjobs.com/bpprivateexternalcareerssite",
+    "company_name": "Bpinternational",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nttglobaldatacenters.wd501.myworkdayjobs.com/External",
+    "company_name": "Nttglobaldatacenters",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aegistherapies.wd1.myworkdayjobs.com/AegisCareers",
+    "company_name": "Aegistherapies",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "claytonhomes.wd1.myworkdayjobs.com/ClaytonCareers",
+    "company_name": "Claytonhomes",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "athene.wd5.myworkdayjobs.com/apollononpubliccareersite",
+    "company_name": "Athene",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gea.wd3.myworkdayjobs.com/GEACareers",
+    "company_name": "GEA",
+    "roles": 20,
+    "india": 19,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "g2",
     "company_name": "G2",
@@ -2489,6 +3524,15 @@
     "company_name": "Zeta",
     "roles": 19,
     "india": 18
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iablcp.fa.ocs.oraclecloud.com/TejasNetworks",
+    "company_name": "Tejas Networks",
+    "roles": 18,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "workable",
@@ -2657,6 +3701,231 @@
     "roles": 20,
     "india": 18,
     "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workday",
+    "token": "clearwateranalytics.wd1.myworkdayjobs.com/Clearwater_Analytics_Careers",
+    "company_name": "Clearwater Analytics",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aspentech.wd5.myworkdayjobs.com/aspentech",
+    "company_name": "Aspentech",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bdx.wd1.myworkdayjobs.com/external_career_site_india",
+    "company_name": "Bdx",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "clarivate.wd3.myworkdayjobs.com/clarivate_careers",
+    "company_name": "Clarivate",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "riministreet.wd1.myworkdayjobs.com/riministreet",
+    "company_name": "Riministreet",
+    "roles": 18,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "globalhr.wd5.myworkdayjobs.com/rec_rtx_ext_gateway",
+    "company_name": "Globalhr",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pfizer.wd1.myworkdayjobs.com/PfizerCareers",
+    "company_name": "Pfizer",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pointquestgroup.wd108.myworkdayjobs.com/careerspointquestgroup",
+    "company_name": "Pointquestgroup",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "capitalone.wd12.myworkdayjobs.com/Capital_One",
+    "company_name": "Capital One",
+    "roles": 19,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "eisneramper.wd1.myworkdayjobs.com/eisneramper_external",
+    "company_name": "Eisneramper",
+    "roles": 19,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "barclays.wd3.myworkdayjobs.com/External_Career_Site_Barclays",
+    "company_name": "Barclays",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sbmmanagement.wd108.myworkdayjobs.com/SBM",
+    "company_name": "Sbmmanagement",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "viavisolutions.wd1.myworkdayjobs.com/careers",
+    "company_name": "Viavisolutions",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mars.wd3.myworkdayjobs.com/External",
+    "company_name": "Mars",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gehc.wd5.myworkdayjobs.com/gehc_externalsite",
+    "company_name": "Gehc",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "galderma.wd3.myworkdayjobs.com/broadbean_external",
+    "company_name": "Galderma",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "zoetis.wd5.myworkdayjobs.com/broadbean_external",
+    "company_name": "Zoetis",
+    "roles": 18,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kaleris.wd501.myworkdayjobs.com/kaleris_careers",
+    "company_name": "Kaleris",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rockwoolgroup.wd3.myworkdayjobs.com/rockwool",
+    "company_name": "Rockwoolgroup",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandoz.wd103.myworkdayjobs.com/Sandoz_Careers",
+    "company_name": "Sandoz",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nttlimited.wd3.myworkdayjobs.com/NTT_Careers",
+    "company_name": "Nttlimited",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pwc.wd3.myworkdayjobs.com/crm_experienced_careers_site",
+    "company_name": "Pwc",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "msd.wd5.myworkdayjobs.com/searchjobs",
+    "company_name": "Msd",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "asmglobal.wd1.myworkdayjobs.com/careers",
+    "company_name": "Asmglobal",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "meijer.wd5.myworkdayjobs.com/Meijer_Stores_Leadership",
+    "company_name": "Meijer",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "greenhouse",
@@ -2872,6 +4141,186 @@
     "roles": 19,
     "india": 17,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "web.wd1.myworkdayjobs.com/externalcareersite",
+    "company_name": "Web",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "issgovernance.wd1.myworkdayjobs.com/ISScareers",
+    "company_name": "Issgovernance",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "barrywehmiller.wd1.myworkdayjobs.com/BWCareers",
+    "company_name": "Barrywehmiller",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "crowe.wd12.myworkdayjobs.com/external_careers",
+    "company_name": "Crowe",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "finastra.wd3.myworkdayjobs.com/FINC",
+    "company_name": "Finastra",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "johnsonbrothers.wd5.myworkdayjobs.com/JohnsonBrothers",
+    "company_name": "Johnson Brothers",
+    "roles": 19,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bakertilly.wd5.myworkdayjobs.com/btcareers",
+    "company_name": "Bakertilly",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "statestreet.wd1.myworkdayjobs.com/equest",
+    "company_name": "Statestreet",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "russell.wd5.myworkdayjobs.com/russellinvestments",
+    "company_name": "Russell",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fifththird.wd5.myworkdayjobs.com/53careers",
+    "company_name": "Fifththird",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "newperkinelmer.wd1.myworkdayjobs.com/External",
+    "company_name": "Newperkinelmer",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "broadridge.wd5.myworkdayjobs.com/Careers",
+    "company_name": "Broadridge",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mgpru.wd3.myworkdayjobs.com/mandgprudential",
+    "company_name": "Mgpru",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "heidelbergmaterials.wd3.myworkdayjobs.com/global_hm_career_site",
+    "company_name": "Heidelbergmaterials",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "synnex.wd5.myworkdayjobs.com/tdsynnexcareers",
+    "company_name": "Synnex",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mufgub.wd3.myworkdayjobs.com/mufg-earlycareers",
+    "company_name": "Mufgub",
+    "roles": 19,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hendricks.wd1.myworkdayjobs.com/Hendricks_External_Career_Site",
+    "company_name": "Hendricks",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cisco.wd5.myworkdayjobs.com/Cisco_Careers",
+    "company_name": "Cisco",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kimberlyclark.wd1.myworkdayjobs.com/LinkedIn",
+    "company_name": "Kimberlyclark",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hpe.wd5.myworkdayjobs.com/Jobsathpe",
+    "company_name": "Hpe",
+    "roles": 20,
+    "india": 17,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -3146,6 +4595,195 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "workday",
+    "token": "procore.wd12.myworkdayjobs.com/Procore_External_Careers",
+    "company_name": "Procore",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tsys.wd1.myworkdayjobs.com/TSYS",
+    "company_name": "TSYS",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hpe.wd5.myworkdayjobs.com/ACJobSite",
+    "company_name": "Hpe",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "edwards.wd5.myworkdayjobs.com/EdwardsCareers",
+    "company_name": "Edwards",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cmegroup.wd1.myworkdayjobs.com/cme_careers",
+    "company_name": "Cmegroup",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "thermofisher.wd5.myworkdayjobs.com/ThermoFisherCareers",
+    "company_name": "Thermo Fisher",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "altera.wd1.myworkdayjobs.com/Altera",
+    "company_name": "Altera",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wexinc.wd5.myworkdayjobs.com/wexinc",
+    "company_name": "Wex Inc",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "meijer.wd5.myworkdayjobs.com/Meijer",
+    "company_name": "Meijer",
+    "roles": 17,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jj.wd5.myworkdayjobs.com/jj",
+    "company_name": "Jj",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jabil.wd5.myworkdayjobs.com/jabil_careers",
+    "company_name": "Jabil",
+    "roles": 18,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "claytonhomes.wd1.myworkdayjobs.com/Arbor",
+    "company_name": "Claytonhomes",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "advanceauto.wd5.myworkdayjobs.com/AdvanceExternalCareers",
+    "company_name": "Advanceauto",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mmc.wd1.myworkdayjobs.com/careers",
+    "company_name": "Mmc",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "andersonsinc.wd1.myworkdayjobs.com/TheAndersonsCareers",
+    "company_name": "Andersonsinc",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "generac.wd5.myworkdayjobs.com/ExternalCareers",
+    "company_name": "Generac",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nxp.wd3.myworkdayjobs.com/careers",
+    "company_name": "Nxp",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ingredion.wd1.myworkdayjobs.com/IngredionCareers",
+    "company_name": "Ingredion",
+    "roles": 18,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hpe.wd5.myworkdayjobs.com/wfmathpe",
+    "company_name": "Hpe",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lozier.wd5.myworkdayjobs.com/lozier_careers",
+    "company_name": "Lozier",
+    "roles": 17,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allegion.wd5.myworkdayjobs.com/careers",
+    "company_name": "Allegion",
+    "roles": 20,
+    "india": 16,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "ema",
     "company_name": "Ema",
@@ -3239,6 +4877,15 @@
     "company_name": "Nium",
     "roles": 41,
     "india": 15
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eifn.fa.us6.oraclecloud.com/CX_1001",
+    "company_name": "Datavail",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "smartrecruiters",
@@ -3351,6 +4998,105 @@
     "roles": 20,
     "india": 15,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "zoetis.wd5.myworkdayjobs.com/zoetis_intl",
+    "company_name": "Zoetis",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hp.wd5.myworkdayjobs.com/externalcareersite",
+    "company_name": "Hp",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aes.wd1.myworkdayjobs.com/aes_us",
+    "company_name": "Aes",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fis.wd5.myworkdayjobs.com/SearchJobs",
+    "company_name": "Fis",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "humana.wd5.myworkdayjobs.com/CenterWell_External_Career_Site",
+    "company_name": "Humana",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "daveandbusters.wd1.myworkdayjobs.com/dave_and_busters_careers",
+    "company_name": "Daveand Busters",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mmc.wd1.myworkdayjobs.com/mmc",
+    "company_name": "Mmc",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dyson.wd3.myworkdayjobs.com/dyson_careers",
+    "company_name": "Dyson",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "evonik.wd3.myworkdayjobs.com/external_careers",
+    "company_name": "Evonik",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "arrow.wd1.myworkdayjobs.com/ec",
+    "company_name": "Arrow",
+    "roles": 20,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "takraf.wd103.myworkdayjobs.com/TAKRAF_external_careers",
+    "company_name": "TAKRAF",
+    "roles": 15,
+    "india": 15,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "greenhouse",
@@ -3574,6 +5320,105 @@
     "roles": 14,
     "india": 14,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "arrow.wd1.myworkdayjobs.com/ac",
+    "company_name": "Arrow",
+    "roles": 20,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "exclusivenetworks.wd103.myworkdayjobs.com/Exclusive-Networks-Career",
+    "company_name": "Exclusive Networks",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "statestreet.wd1.myworkdayjobs.com/global",
+    "company_name": "Statestreet",
+    "roles": 20,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "comcast.wd115.myworkdayjobs.com/Comcast_Careers",
+    "company_name": "Comcast",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ilitch.wd5.myworkdayjobs.com/LC",
+    "company_name": "Ilitch",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gsk.wd5.myworkdayjobs.com/gskcareers",
+    "company_name": "Gsk",
+    "roles": 20,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "path.wd1.myworkdayjobs.com/External",
+    "company_name": "Path",
+    "roles": 16,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dinebrands.wd503.myworkdayjobs.com/RestaurantCareerSite",
+    "company_name": "Dinebrands",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allegion.wd5.myworkdayjobs.com/EarlyTalent_Careers",
+    "company_name": "Allegion",
+    "roles": 20,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aep.wd1.myworkdayjobs.com/AEPCareerSite",
+    "company_name": "AEP",
+    "roles": 20,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "flutterbe.wd3.myworkdayjobs.com/Group_External",
+    "company_name": "Flutterbe",
+    "roles": 15,
+    "india": 14,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -3808,6 +5653,105 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "workday",
+    "token": "poet.wd1.myworkdayjobs.com/POET",
+    "company_name": "POET",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ringcentral.wd1.myworkdayjobs.com/RingCentral_Careers",
+    "company_name": "Ring Central",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sglottery.wd5.myworkdayjobs.com/ScientificGamesExternalCareers",
+    "company_name": "Sglottery",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "qualifacts.wd5.myworkdayjobs.com/Qualifacts_External_Careers",
+    "company_name": "Qualifacts",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "athene.wd5.myworkdayjobs.com/Apollo_Careers",
+    "company_name": "Athene",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hysteryale.wd1.myworkdayjobs.com/Hyster-YaleCareers",
+    "company_name": "Hyster Yale",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wasatchproperty.wd1.myworkdayjobs.com/MarketStarCareers",
+    "company_name": "Wasatchproperty",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "accenture.wd103.myworkdayjobs.com/AvanadeCareers",
+    "company_name": "Accenture",
+    "roles": 19,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kimberlyclark.wd1.myworkdayjobs.com/equest",
+    "company_name": "Kimberlyclark",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "flsmidth.wd3.myworkdayjobs.com/FLS_Global",
+    "company_name": "Flsmidth",
+    "roles": 20,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "trimedx.wd1.myworkdayjobs.com/TMX",
+    "company_name": "Trimedx",
+    "roles": 18,
+    "india": 13,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "gen-digital",
     "company_name": "Gen Digital",
@@ -4037,6 +5981,132 @@
     "roles": 12,
     "india": 12,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "gevernova.wd5.myworkdayjobs.com/Vernova_ExternalSite",
+    "company_name": "Gevernova",
+    "roles": 20,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "strada.wd12.myworkdayjobs.com/careers",
+    "company_name": "Strada",
+    "roles": 16,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "arabellesolutions.wd3.myworkdayjobs.com/Arabelle_Solutions",
+    "company_name": "Arabelle Solutions",
+    "roles": 18,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "saks.wd1.myworkdayjobs.com/careers_at_saks",
+    "company_name": "Saks",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "candescent.wd501.myworkdayjobs.com/Hiring",
+    "company_name": "Candescent",
+    "roles": 13,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gevernova.wd5.myworkdayjobs.com/Only_Confidential_Executive_Recruiting",
+    "company_name": "Gevernova",
+    "roles": 20,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "2020companies.wd1.myworkdayjobs.com/External_Careers",
+    "company_name": "2020companies",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pentair.wd5.myworkdayjobs.com/Pentair_Careers",
+    "company_name": "Pentair",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "blackline.wd108.myworkdayjobs.com/BlackLineCareers",
+    "company_name": "Black Line",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "graybar.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Graybar",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "smithfieldfoods.wd1.myworkdayjobs.com/careers",
+    "company_name": "Smithfieldfoods",
+    "roles": 13,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "servicetitan.wd1.myworkdayjobs.com/servicetitan",
+    "company_name": "Servicetitan",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gia.wd1.myworkdayjobs.com/GIA-India",
+    "company_name": "Gia",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ig.wd103.myworkdayjobs.com/EXT_IG",
+    "company_name": "Ig",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -4358,6 +6428,123 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workday",
+    "token": "armaninollp.wd1.myworkdayjobs.com/Armanino_India",
+    "company_name": "Armaninollp",
+    "roles": 20,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "salesforce.wd12.myworkdayjobs.com/external_career_site",
+    "company_name": "Salesforce",
+    "roles": 20,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "youthvillages.wd1.myworkdayjobs.com/youthvillagescareers",
+    "company_name": "Youthvillages",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "iqvia.wd1.myworkdayjobs.com/IQVIA",
+    "company_name": "IQVIA",
+    "roles": 20,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bakerhughes.wd5.myworkdayjobs.com/BakerHughes",
+    "company_name": "Baker Hughes",
+    "roles": 20,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "semtech.wd1.myworkdayjobs.com/SemtechCareers",
+    "company_name": "Semtech",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "masterbrand.wd12.myworkdayjobs.com/Careers",
+    "company_name": "Masterbrand",
+    "roles": 19,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cae.wd3.myworkdayjobs.com/career",
+    "company_name": "Cae",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mypath.wd115.myworkdayjobs.com/mypathcareers",
+    "company_name": "Mypath",
+    "roles": 14,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "keybank.wd5.myworkdayjobs.com/External_Career_Site",
+    "company_name": "Keybank",
+    "roles": 16,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "monotype.wd1.myworkdayjobs.com/Monotype",
+    "company_name": "Monotype",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "equiniti.wd3.myworkdayjobs.com/opportunities",
+    "company_name": "Equiniti",
+    "roles": 20,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "saabusa.wd1.myworkdayjobs.com/saab_careers",
+    "company_name": "Saabusa",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "elevenlabs",
     "company_name": "Elevenlabs",
@@ -4508,6 +6695,15 @@
     "roles": 63,
     "india": 10,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iabqiz.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Vikram Solar",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
   },
   {
     "provider": "recruitee",
@@ -4709,6 +6905,132 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workday",
+    "token": "ntst.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Ntst",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "epiqsystems.wd503.myworkdayjobs.com/Epiq_Careers",
+    "company_name": "Epiqsystems",
+    "roles": 12,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "townepark.wd5.myworkdayjobs.com/ext",
+    "company_name": "Townepark",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fico.wd1.myworkdayjobs.com/External",
+    "company_name": "Fico",
+    "roles": 11,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "comscore.wd5.myworkdayjobs.com/External",
+    "company_name": "Comscore",
+    "roles": 11,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "exclusivenetworks.wd103.myworkdayjobs.com/broadbean_external",
+    "company_name": "Exclusivenetworks",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "q2ebanking.wd5.myworkdayjobs.com/Q2",
+    "company_name": "Q2ebanking",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "evolent.wd1.myworkdayjobs.com/External",
+    "company_name": "Evolent",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pacelabs.wd108.myworkdayjobs.com/Careers",
+    "company_name": "Pacelabs",
+    "roles": 11,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "veralto.wd1.myworkdayjobs.com/hachjobs",
+    "company_name": "Veralto",
+    "roles": 13,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cochlear.wd3.myworkdayjobs.com/Cochlear_Careers",
+    "company_name": "Cochlear",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "outsystems.wd503.myworkdayjobs.com/OutSystems",
+    "company_name": "Out Systems",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dowjones.wd1.myworkdayjobs.com/News_Corp_Careers",
+    "company_name": "Dowjones",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bydeluxe.wd5.myworkdayjobs.com/Deluxe_External",
+    "company_name": "Bydeluxe",
+    "roles": 10,
+    "india": 10,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "jellyfishcareers",
     "company_name": "Jellyfishcareers",
@@ -4853,6 +7175,15 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "oraclehcm",
+    "token": "ibzdjb.fa.ocs.oraclecloud.com/SolsticeAdvancedMaterials",
+    "company_name": "Solstice Advanced Materials",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
     "provider": "recruitee",
     "token": "framestore",
     "company_name": "Framestore",
@@ -4970,6 +7301,150 @@
     "roles": 11,
     "india": 9,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "convatec.wd1.myworkdayjobs.com/ConvaTec",
+    "company_name": "Conva Tec",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "maersk.wd3.myworkdayjobs.com/APMT_Careers",
+    "company_name": "Maersk",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "valmet.wd103.myworkdayjobs.com/External",
+    "company_name": "Valmet",
+    "roles": 10,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "generalmotors.wd5.myworkdayjobs.com/Careers_GM",
+    "company_name": "Generalmotors",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nttlimited.wd3.myworkdayjobs.com/internal_employees_not_on_workday",
+    "company_name": "Nttlimited",
+    "roles": 20,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "accelleron.wd3.myworkdayjobs.com/Accelleron",
+    "company_name": "Accelleron",
+    "roles": 12,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allegion.wd5.myworkdayjobs.com/Manufacturing_Careers",
+    "company_name": "Allegion",
+    "roles": 13,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "destinationpet.wd5.myworkdayjobs.com/dpec",
+    "company_name": "Destinationpet",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "infios.wd502.myworkdayjobs.com/infios",
+    "company_name": "Infios",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cpsi.wd1.myworkdayjobs.com/CPSI",
+    "company_name": "CPSI",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "borgwarner.wd5.myworkdayjobs.com/BorgWarner_Careers",
+    "company_name": "Borg Warner",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "northwest.wd1.myworkdayjobs.com/Northwest_Careers",
+    "company_name": "Northwest",
+    "roles": 20,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "phinia.wd5.myworkdayjobs.com/PHINIA_Careers",
+    "company_name": "PHINIA",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ferguson.wd1.myworkdayjobs.com/ferguson_experienced",
+    "company_name": "Ferguson",
+    "roles": 10,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "csgi.wd5.myworkdayjobs.com/csgcareers",
+    "company_name": "Csgi",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "relx.wd3.myworkdayjobs.com/ReedExhibitions",
+    "company_name": "Relx",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -5378,6 +7853,132 @@
     "roles": 8,
     "india": 8,
     "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workday",
+    "token": "travelex.wd107.myworkdayjobs.com/TravelexCareers",
+    "company_name": "Travelex",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "heartlandhomeservices.wd5.myworkdayjobs.com/Masters",
+    "company_name": "Heartlandhomeservices",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wastequip.wd108.myworkdayjobs.com/Wastequip_Careers",
+    "company_name": "Wastequip",
+    "roles": 10,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aoins.wd5.myworkdayjobs.com/AutoOwners",
+    "company_name": "Aoins",
+    "roles": 14,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hrhub.wd3.myworkdayjobs.com/Euronext_Career_Page",
+    "company_name": "Hrhub",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "trustmark.wd1.myworkdayjobs.com/healthfitnesscareers",
+    "company_name": "Trustmark",
+    "roles": 9,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tempurpedic.wd108.myworkdayjobs.com/Tempur-Sealy-Careers",
+    "company_name": "Tempurpedic",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "forcepoint.wd1.myworkdayjobs.com/engineering-external-careers1",
+    "company_name": "Forcepoint",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "elevancehealth.wd1.myworkdayjobs.com/carelonglobal_in",
+    "company_name": "Elevancehealth",
+    "roles": 13,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fmc.wd12.myworkdayjobs.com/FMC",
+    "company_name": "FMC",
+    "roles": 9,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "abcfinancial.wd5.myworkdayjobs.com/abcfinancialservices",
+    "company_name": "Abcfinancial",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "alcority.wd1.myworkdayjobs.com/TraditionsHealth",
+    "company_name": "Alcority",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "circle.wd1.myworkdayjobs.com/circle",
+    "company_name": "Circle",
+    "roles": 9,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cgb.wd5.myworkdayjobs.com/CGB_Careers",
+    "company_name": "CGB",
+    "roles": 11,
+    "india": 8,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -5816,6 +8417,168 @@
     "roles": 7,
     "india": 7,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "calix.wd1.myworkdayjobs.com/ExternalInternational",
+    "company_name": "Calix",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "essity.wd3.myworkdayjobs.com/job_opportunities",
+    "company_name": "Essity",
+    "roles": 8,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "phigroup.wd12.myworkdayjobs.com/phihealthcareers",
+    "company_name": "Phigroup",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "greystar.wd1.myworkdayjobs.com/External",
+    "company_name": "Greystar",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "welocalize.wd1.myworkdayjobs.com/Welocalize",
+    "company_name": "Welocalize",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "esab.wd5.myworkdayjobs.com/esabcareers",
+    "company_name": "Esab",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "equitylifestyleproperties.wd5.myworkdayjobs.com/els",
+    "company_name": "Equitylifestyleproperties",
+    "roles": 8,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "americanredcross.wd1.myworkdayjobs.com/American_Red_Cross_Careers",
+    "company_name": "American Red Cross",
+    "roles": 11,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/sandvik-jobs",
+    "company_name": "Sandvik",
+    "roles": 8,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pultegroup.wd1.myworkdayjobs.com/PGI",
+    "company_name": "Pultegroup",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "trellix.wd1.myworkdayjobs.com/EnterpriseCareers",
+    "company_name": "Trellix",
+    "roles": 9,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "thgrp.wd12.myworkdayjobs.com/Envita",
+    "company_name": "Thgrp",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "essity.wd3.myworkdayjobs.com/HMS_Job_Opportunities",
+    "company_name": "Essity",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hntb.wd5.myworkdayjobs.com/HNTB_Careers",
+    "company_name": "HNTB",
+    "roles": 20,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "communitybrands.wd1.myworkdayjobs.com/momentive_external_careers",
+    "company_name": "Communitybrands",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bcone.wd1.myworkdayjobs.com/Bristlecone",
+    "company_name": "Bcone",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dollartree.wd5.myworkdayjobs.com/dollartreeus",
+    "company_name": "Dollartree",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "abcsupply.wd1.myworkdayjobs.com/ABCSupplyCareers",
+    "company_name": "ABC Supply",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -6367,6 +9130,222 @@
     "roles": 6,
     "india": 6,
     "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workday",
+    "token": "clarioclinical.wd1.myworkdayjobs.com/clarioclinical_careers",
+    "company_name": "Clarioclinical",
+    "roles": 12,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tti.wd1.myworkdayjobs.com/Milwaukee",
+    "company_name": "Tti",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "imerys.wd3.myworkdayjobs.com/IMERYS-Careers",
+    "company_name": "IMERYS",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "relx.wd3.myworkdayjobs.com/RiskSolutions",
+    "company_name": "Relx",
+    "roles": 15,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "blackstone.wd1.myworkdayjobs.com/BX_External_Site",
+    "company_name": "Blackstone",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tysonfoods.wd5.myworkdayjobs.com/TYIT",
+    "company_name": "Tysonfoods",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ghr.wd1.myworkdayjobs.com/lateral-ba_continuum",
+    "company_name": "Ghr",
+    "roles": 20,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aviagen.wd1.myworkdayjobs.com/aviagen-careers",
+    "company_name": "Aviagen",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "armacell.wd3.myworkdayjobs.com/career-armacell",
+    "company_name": "Armacell",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tbc.wd12.myworkdayjobs.com/lyriccareers",
+    "company_name": "Tbc",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "newbalance.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Newbalance",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "quickenloans.wd5.myworkdayjobs.com/rocket_careers",
+    "company_name": "Quickenloans",
+    "roles": 8,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "woodmac.wd3.myworkdayjobs.com/woodmaccareers",
+    "company_name": "Woodmac",
+    "roles": 9,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hhs.wd12.myworkdayjobs.com/HHS1HourlyJobs",
+    "company_name": "Hhs",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "firststudent.wd1.myworkdayjobs.com/firststudent",
+    "company_name": "Firststudent",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "forcepoint.wd1.myworkdayjobs.com/external-careers",
+    "company_name": "Forcepoint",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gafsgi.wd5.myworkdayjobs.com/GAF_Careers",
+    "company_name": "Gafsgi",
+    "roles": 7,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lplfinancial.wd1.myworkdayjobs.com/external",
+    "company_name": "Lplfinancial",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rhe.wd3.myworkdayjobs.com/r1111",
+    "company_name": "Rhe",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mobility.wd503.myworkdayjobs.com/Mobility",
+    "company_name": "Mobility",
+    "roles": 18,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wastequip.wd108.myworkdayjobs.com/External_Careers_No_Job_Boards",
+    "company_name": "Wastequip",
+    "roles": 8,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "colemanwm.wd1.myworkdayjobs.com/Coleman_Careers",
+    "company_name": "Colemanwm",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cip.wd103.myworkdayjobs.com/CIPFS_Careers",
+    "company_name": "Cip",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "movadogroup.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Movadogroup",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -7142,6 +10121,249 @@
     "roles": 5,
     "india": 5,
     "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workday",
+    "token": "hamiltoncountyindiana.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Hamiltoncountyindiana",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tsc.wd12.myworkdayjobs.com/TSC-Careers",
+    "company_name": "TSC",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nexstar.wd5.myworkdayjobs.com/nexstar",
+    "company_name": "Nexstar",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sasser.wd108.myworkdayjobs.com/Sasser",
+    "company_name": "Sasser",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tti.wd1.myworkdayjobs.com/teamtti-jobs",
+    "company_name": "Tti",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "assurant.wd1.myworkdayjobs.com/assurant_careers",
+    "company_name": "Assurant",
+    "roles": 10,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nutreco.wd3.myworkdayjobs.com/SHV_Internal_Job_Board",
+    "company_name": "Nutreco",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hl.wd1.myworkdayjobs.com/Lateral",
+    "company_name": "Hl",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gh.wd1.myworkdayjobs.com/gh",
+    "company_name": "Gh",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jrjnet.wd5.myworkdayjobs.com/JC",
+    "company_name": "Jrjnet",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ciena.wd5.myworkdayjobs.com/careers",
+    "company_name": "Ciena",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "brookshires.wd108.myworkdayjobs.com/BGC",
+    "company_name": "Brookshires",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "disa.wd5.myworkdayjobs.com/disa_external_career_site",
+    "company_name": "Disa",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allegion.wd5.myworkdayjobs.com/SAT",
+    "company_name": "Allegion",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "manh.wd5.myworkdayjobs.com/External",
+    "company_name": "Manh",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "skyzone.wd12.myworkdayjobs.com/skyzone",
+    "company_name": "Skyzone",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "littelfuse.wd1.myworkdayjobs.com/littelfuse-careers",
+    "company_name": "Littelfuse",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ufpi.wd503.myworkdayjobs.com/ufpi",
+    "company_name": "Ufpi",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "catalent.wd1.myworkdayjobs.com/External",
+    "company_name": "Catalent",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "veralto.wd1.myworkdayjobs.com/VeraltoCorporateJobs",
+    "company_name": "Veralto",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "transperfect.wd5.myworkdayjobs.com/transperfect",
+    "company_name": "Transperfect",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rhsc.wd5.myworkdayjobs.com/renaissancebenefits",
+    "company_name": "Rhsc",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pcg.wd1.myworkdayjobs.com/PCG_External_Careers",
+    "company_name": "PCG",
+    "roles": 6,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "toppanmerrill.wd5.myworkdayjobs.com/Toppan_Merrill",
+    "company_name": "Toppan Merrill",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cambria.wd1.myworkdayjobs.com/cambria_careers",
+    "company_name": "Cambria",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "selinc.wd1.myworkdayjobs.com/SEL",
+    "company_name": "Selinc",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "intownsuites.wd503.myworkdayjobs.com/Intown_careers",
+    "company_name": "Intownsuites",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -7927,6 +11149,267 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "workday",
+    "token": "jci.wd5.myworkdayjobs.com/JCI_Confidential",
+    "company_name": "Jci",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allstate.wd5.myworkdayjobs.com/Allstate_Careers",
+    "company_name": "Allstate",
+    "roles": 6,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nutreco.wd3.myworkdayjobs.com/Nutreco_External",
+    "company_name": "Nutreco",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cbh.wd12.myworkdayjobs.com/CherryBekaertEarlyCareers",
+    "company_name": "Cbh",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "covestro.wd3.myworkdayjobs.com/cov_external",
+    "company_name": "Covestro",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "huntsman.wd1.myworkdayjobs.com/Huntsman",
+    "company_name": "Huntsman",
+    "roles": 5,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "astrazeneca.wd3.myworkdayjobs.com/alexion",
+    "company_name": "Astrazeneca",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "moog.wd5.myworkdayjobs.com/moog_external_career_site",
+    "company_name": "Moog",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "unitedchurchhomes.wd1.myworkdayjobs.com/uchcareers",
+    "company_name": "Unitedchurchhomes",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "vsp.wd1.myworkdayjobs.com/DoctorCareers",
+    "company_name": "Vsp",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "keppel.wd3.myworkdayjobs.com/KeppelCareers",
+    "company_name": "Keppel",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/Sandvik_Internal_for_nonWD_employees",
+    "company_name": "Sandvik",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ansira.wd1.myworkdayjobs.com/ansira_careers",
+    "company_name": "Ansira",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "vandrunenfarms.wd1.myworkdayjobs.com/VDFCareers",
+    "company_name": "Vandrunenfarms",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hrone.wd1.myworkdayjobs.com/Pam_Transport",
+    "company_name": "Hrone",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hospicecom.wd5.myworkdayjobs.com/Volunteer",
+    "company_name": "Hospicecom",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "valet.wd1.myworkdayjobs.com/Career_Site",
+    "company_name": "Valet",
+    "roles": 12,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "shell.wd3.myworkdayjobs.com/proactive",
+    "company_name": "Shell",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ocdc.wd501.myworkdayjobs.com/careers",
+    "company_name": "Ocdc",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "elemica.wd501.myworkdayjobs.com/Elemica_Careers",
+    "company_name": "Elemica",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jj.wd5.myworkdayjobs.com/DisplacedEmployees",
+    "company_name": "Jj",
+    "roles": 5,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "zoll.wd5.myworkdayjobs.com/zollmedicalcorp",
+    "company_name": "Zoll",
+    "roles": 6,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "blackstone.wd1.myworkdayjobs.com/blackstone_careers",
+    "company_name": "Blackstone",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allegromicro.wd5.myworkdayjobs.com/allegrocareers",
+    "company_name": "Allegromicro",
+    "roles": 5,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pinebridge.wd5.myworkdayjobs.com/PineBridge_Career_Site",
+    "company_name": "Pine Bridge",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mchapusa.wd5.myworkdayjobs.com/MCHAP_External",
+    "company_name": "Mchapusa",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "boeing.wd1.myworkdayjobs.com/external_subsidiary",
+    "company_name": "Boeing",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "csagroup.wd3.myworkdayjobs.com/csagroup",
+    "company_name": "Csagroup",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "volarisgroup.wd3.myworkdayjobs.com/Incadea",
+    "company_name": "Volarisgroup",
+    "roles": 4,
+    "india": 4,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
     "provider": "ashby",
     "token": "cognition",
     "company_name": "Cognition",
@@ -8582,6 +12065,15 @@
     "india": 3
   },
   {
+    "provider": "oraclehcm",
+    "token": "ebwi.fa.us2.oraclecloud.com/careers",
+    "company_name": "Liquidity Services",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
     "provider": "recruitee",
     "token": "gustileder",
     "company_name": "Gustileder",
@@ -9082,6 +12574,348 @@
     "roles": 3,
     "india": 3,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "enovix.wd12.myworkdayjobs.com/External",
+    "company_name": "Enovix",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ferring.wd3.myworkdayjobs.com/ferring",
+    "company_name": "Ferring",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "inizio.wd3.myworkdayjobs.com/cso",
+    "company_name": "Inizio",
+    "roles": 5,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mckesson.wd3.myworkdayjobs.com/External_Careers",
+    "company_name": "Mckesson",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "globalhr.wd5.myworkdayjobs.com/Private_Posting_No_TMP",
+    "company_name": "Globalhr",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "owensborohealth.wd1.myworkdayjobs.com/OwensboroHealth",
+    "company_name": "Owensboro Health",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "suse.wd3.myworkdayjobs.com/Jobsatsuse",
+    "company_name": "Suse",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "situsamc.wd1.myworkdayjobs.com/situsamc",
+    "company_name": "Situsamc",
+    "roles": 7,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ovationhealthcare.wd5.myworkdayjobs.com/ovationhealthcare",
+    "company_name": "Ovationhealthcare",
+    "roles": 4,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "roquette.wd3.myworkdayjobs.com/External",
+    "company_name": "Roquette",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wgu.wd5.myworkdayjobs.com/external",
+    "company_name": "Wgu",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pattersoncompanies.wd501.myworkdayjobs.com/pdco",
+    "company_name": "Pattersoncompanies",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jotun.wd3.myworkdayjobs.com/jotun_careers",
+    "company_name": "Jotun",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cnoinc.wd5.myworkdayjobs.com/Careers",
+    "company_name": "Cnoinc",
+    "roles": 7,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fractal.wd1.myworkdayjobs.com/careers",
+    "company_name": "Fractal",
+    "roles": 20,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dowjones.wd1.myworkdayjobs.com/Dow_Jones_Career",
+    "company_name": "Dow Jones",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hl.wd1.myworkdayjobs.com/Corporate",
+    "company_name": "Hl",
+    "roles": 4,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "virainsight.wd108.myworkdayjobs.com/Vira_Insight",
+    "company_name": "Vira Insight",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "serviceexperts.wd108.myworkdayjobs.com/SE",
+    "company_name": "Serviceexperts",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "brenntag.wd3.myworkdayjobs.com/brenntag_jobs",
+    "company_name": "Brenntag",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sees.wd1.myworkdayjobs.com/Sees_Candies",
+    "company_name": "Sees",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nidec.wd1.myworkdayjobs.com/nidec",
+    "company_name": "Nidec",
+    "roles": 4,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "acciona.wd3.myworkdayjobs.com/acciona_employment_channel",
+    "company_name": "Acciona",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hntb.wd5.myworkdayjobs.com/HNTB_University_Careers",
+    "company_name": "Hntb",
+    "roles": 10,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "talentmanagementsolution.wd3.myworkdayjobs.com/JonasSoftwareUSA",
+    "company_name": "Talentmanagementsolution",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "innocap.wd10.myworkdayjobs.com/Innocap-External-Career-Site",
+    "company_name": "Innocap",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wlt.wd3.myworkdayjobs.com/wl_careers",
+    "company_name": "Wlt",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nrpgroup.wd1.myworkdayjobs.com/NRP",
+    "company_name": "Nrpgroup",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aptos.wd108.myworkdayjobs.com/Aptos",
+    "company_name": "Aptos",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "deepwater.wd1.myworkdayjobs.com/privateexternalcareersite",
+    "company_name": "Deepwater",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "theshieldco.wd115.myworkdayjobs.com/external_careers",
+    "company_name": "Theshieldco",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cinemark.wd1.myworkdayjobs.com/cinemark",
+    "company_name": "Cinemark",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tidalwaveautospa.wd1.myworkdayjobs.com/TWAS",
+    "company_name": "Tidalwaveautospa",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hmhw.wd12.myworkdayjobs.com/HMH_Careers",
+    "company_name": "Hmhw",
+    "roles": 5,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kbi.wd5.myworkdayjobs.com/Outlet_Careers",
+    "company_name": "Kbi",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fox.wd1.myworkdayjobs.com/Domestic",
+    "company_name": "Fox",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "countryfinancial.wd5.myworkdayjobs.com/COUNTRYAgencyExternal",
+    "company_name": "Countryfinancial",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rockwellautomation.wd1.myworkdayjobs.com/External-Rockwell-Automation-Early-Careers",
+    "company_name": "Rockwellautomation",
+    "roles": 3,
+    "india": 3,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -10433,6 +14267,420 @@
     "roles": 2,
     "india": 2,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "medable.wd503.myworkdayjobs.com/explore-career-opportunities",
+    "company_name": "Medable",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "masco.wd1.myworkdayjobs.com/masco",
+    "company_name": "Masco",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cbh.wd12.myworkdayjobs.com/cherrybekaert",
+    "company_name": "Cbh",
+    "roles": 7,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "relx.wd3.myworkdayjobs.com/elsevierjobs",
+    "company_name": "Relx",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ur.wd1.myworkdayjobs.com/URcareers",
+    "company_name": "Ur",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cdk.wd1.myworkdayjobs.com/CDK",
+    "company_name": "CDK",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "draper.wd5.myworkdayjobs.com/draper_careers",
+    "company_name": "Draper",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bpinternational.wd3.myworkdayjobs.com/bpcwcareerssite",
+    "company_name": "Bpinternational",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kindercare.wd5.myworkdayjobs.com/externalcareersite",
+    "company_name": "Kindercare",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "livenation.wd503.myworkdayjobs.com/LNExternalSite",
+    "company_name": "Livenation",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "chevron.wd5.myworkdayjobs.com/ExternalCareerSite_Private",
+    "company_name": "Chevron",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "relx.wd3.myworkdayjobs.com/relx",
+    "company_name": "Relx",
+    "roles": 8,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rocket.wd5.myworkdayjobs.com/rocket_careers",
+    "company_name": "Rocket",
+    "roles": 5,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "brambles.wd5.myworkdayjobs.com/Brambles_Careers",
+    "company_name": "Brambles",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mastercard.wd1.myworkdayjobs.com/contractorconversion",
+    "company_name": "Mastercard",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nature.wd108.myworkdayjobs.com/ExternalCareers",
+    "company_name": "Nature",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "alkami.wd12.myworkdayjobs.com/alkami",
+    "company_name": "Alkami",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cumminggroup.wd1.myworkdayjobs.com/CGC",
+    "company_name": "Cumminggroup",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bb.wd3.myworkdayjobs.com/QNX",
+    "company_name": "Bb",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "luminegrp.wd3.myworkdayjobs.com/SpatialNetworX",
+    "company_name": "Luminegrp",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/dormerpramet-jobs",
+    "company_name": "Sandvik",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "greystar.wd1.myworkdayjobs.com/International_Career_Site",
+    "company_name": "Greystar",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wri.wd501.myworkdayjobs.com/WRI_India",
+    "company_name": "Wri",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "uniphore.wd503.myworkdayjobs.com/Uniphore",
+    "company_name": "Uniphore",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "telstra.wd3.myworkdayjobs.com/telstra_careers",
+    "company_name": "Telstra",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "snapchat.wd1.myworkdayjobs.com/snap",
+    "company_name": "Snapchat",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "roche.wd3.myworkdayjobs.com/roche-ext",
+    "company_name": "Roche",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "shusa.wd5.myworkdayjobs.com/External",
+    "company_name": "Shusa",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "twiglobal.wd3.myworkdayjobs.com/TWI_External_Career_Site",
+    "company_name": "Twiglobal",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "redaptive.wd12.myworkdayjobs.com/Redaptive-Careers",
+    "company_name": "Redaptive",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "synchronyfinancial.wd5.myworkdayjobs.com/careers",
+    "company_name": "Synchronyfinancial",
+    "roles": 11,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "luminegrp.wd3.myworkdayjobs.com/TOMIA",
+    "company_name": "Luminegrp",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "harriscomputer.wd3.myworkdayjobs.com/HAG",
+    "company_name": "Harriscomputer",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "propertyguru.wd105.myworkdayjobs.com/PropertyGuru",
+    "company_name": "Property Guru",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wri.wd501.myworkdayjobs.com/WRI",
+    "company_name": "WRI",
+    "roles": 3,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "premierresearch.wd12.myworkdayjobs.com/premierresearch",
+    "company_name": "Premierresearch",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "abbott.wd5.myworkdayjobs.com/Agency",
+    "company_name": "Abbott",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "frenckengroup.wd103.myworkdayjobs.com/External",
+    "company_name": "Frenckengroup",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "modaxo.wd3.myworkdayjobs.com/Trellint",
+    "company_name": "Modaxo",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "murex.wd3.myworkdayjobs.com/MurexCareerPage1",
+    "company_name": "Murex",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "myhana.wd5.myworkdayjobs.com/mauijim",
+    "company_name": "Myhana",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "acrt.wd1.myworkdayjobs.com/ACRT_Careers",
+    "company_name": "ACRT",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "alkegen.wd5.myworkdayjobs.com/alkegen",
+    "company_name": "Alkegen",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "livenation.wd503.myworkdayjobs.com/TMExternalSite",
+    "company_name": "Livenation",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "snapchat.wd1.myworkdayjobs.com/sourced",
+    "company_name": "Snapchat",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "topbuild.wd501.myworkdayjobs.com/di_external",
+    "company_name": "Topbuild",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   },
   {
     "provider": "ashby",
@@ -11898,6 +16146,24 @@
     "qualifiedAt": "2026-10-15"
   },
   {
+    "provider": "oraclehcm",
+    "token": "iaagmj.fa.ocs.oraclecloud.com/GG",
+    "company_name": "Golden Goose",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eipv.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "Teekay",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "management"
+  },
+  {
     "provider": "recruitee",
     "token": "scioteq",
     "company_name": "Scioteq",
@@ -12831,120 +17097,903 @@
     "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "oraclehcm",
-    "token": "iaceiz.fa.ocs.oraclecloud.com/CX_1",
-    "company_name": "Digitide",
-    "roles": 1890,
-    "india": 1890,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iabgcp.fa.ocs.oraclecloud.com/CX_1",
-    "company_name": "Havells",
-    "roles": 723,
-    "india": 723,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iaagiz.fa.ocs.oraclecloud.com/bristlecone",
-    "company_name": "Bristlecone",
-    "roles": 149,
-    "india": 149,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eeih.fa.us2.oraclecloud.com/CX_6",
-    "company_name": "The Hackett Group",
-    "roles": 127,
-    "india": 127,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebdt.fa.us2.oraclecloud.com/CX_9003",
-    "company_name": "Apps Associates",
-    "roles": 34,
-    "india": 34,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "hdid.fa.us2.oraclecloud.com/CX_1",
-    "company_name": "Jefferies",
-    "roles": 27,
-    "india": 27,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iablcp.fa.ocs.oraclecloud.com/TejasNetworks",
-    "company_name": "Tejas Networks",
-    "roles": 18,
-    "india": 18,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "eifn.fa.us6.oraclecloud.com/CX_1001",
-    "company_name": "Datavail",
-    "roles": 15,
-    "india": 15,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "iabqiz.fa.ocs.oraclecloud.com/CX_1",
-    "company_name": "Vikram Solar",
-    "roles": 10,
-    "india": 10,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ibzdjb.fa.ocs.oraclecloud.com/SolsticeAdvancedMaterials",
-    "company_name": "Solstice Advanced Materials",
-    "roles": 9,
-    "india": 9,
-    "qualifiedAt": "2026-10-15",
-    "admit": "management"
-  },
-  {
-    "provider": "oraclehcm",
-    "token": "ebwi.fa.us2.oraclecloud.com/careers",
-    "company_name": "Liquidity Services",
+    "provider": "workday",
+    "token": "usfoods.wd1.myworkdayjobs.com/usfoodscareersexternal",
+    "company_name": "Usfoods",
     "roles": 3,
-    "india": 3,
+    "india": 1,
     "qualifiedAt": "2026-10-15",
-    "admit": "management"
+    "admit": "mba-or-management"
   },
   {
-    "provider": "oraclehcm",
-    "token": "iaagmj.fa.ocs.oraclecloud.com/GG",
-    "company_name": "Golden Goose",
+    "provider": "workday",
+    "token": "mitel.wd3.myworkdayjobs.com/mitelcareers",
+    "company_name": "Mitel",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
-    "admit": "management"
+    "admit": "mba-or-management"
   },
   {
-    "provider": "oraclehcm",
-    "token": "eipv.fa.us6.oraclecloud.com/CX_2001",
-    "company_name": "Teekay",
+    "provider": "workday",
+    "token": "flutterbe.wd3.myworkdayjobs.com/Junglee_Games",
+    "company_name": "Flutterbe",
     "roles": 1,
     "india": 1,
     "qualifiedAt": "2026-10-15",
-    "admit": "management"
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aptos.wd108.myworkdayjobs.com/Revionics",
+    "company_name": "Aptos",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "eisneramper.wd1.myworkdayjobs.com/eisneramperearlycareers",
+    "company_name": "Eisneramper",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "terex.wd1.myworkdayjobs.com/terexcareers",
+    "company_name": "Terex",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bgfoods.wd1.myworkdayjobs.com/BG_Foods_Careers",
+    "company_name": "BG Foods",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pwc.wd3.myworkdayjobs.com/Global_Campus_Careers",
+    "company_name": "Pwc",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "newbalance.wd1.myworkdayjobs.com/APAC",
+    "company_name": "Newbalance",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tsc.wd12.myworkdayjobs.com/TSC-Careers-IC",
+    "company_name": "Tsc",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cree.wd108.myworkdayjobs.com/ext",
+    "company_name": "Cree",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/coromant-jobs",
+    "company_name": "Sandvik",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "shakeshack.wd5.myworkdayjobs.com/External",
+    "company_name": "Shakeshack",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "albemarle.wd5.myworkdayjobs.com/KetjenExternal",
+    "company_name": "Albemarle",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fhiworks.wd1.myworkdayjobs.com/FHI",
+    "company_name": "Fhiworks",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "meredith.wd5.myworkdayjobs.com/ext",
+    "company_name": "Meredith",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "epicorsoftware.wd5.myworkdayjobs.com/epicorjobs",
+    "company_name": "Epicorsoftware",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nortekinc.wd503.myworkdayjobs.com/nortekdcc",
+    "company_name": "Nortekinc",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lyten.wd503.myworkdayjobs.com/Lyten_External_Career_Site",
+    "company_name": "Lyten",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pretiumenterpriseservices.wd1.myworkdayjobs.com/PR",
+    "company_name": "Pretiumenterpriseservices",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "huhtamaki.wd103.myworkdayjobs.com/DirectsExternal",
+    "company_name": "Huhtamaki",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "equisoft.wd10.myworkdayjobs.com/external",
+    "company_name": "Equisoft",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "elekta.wd3.myworkdayjobs.com/elekta_careers",
+    "company_name": "Elekta",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "pae.wd1.myworkdayjobs.com/Amentum_Careers",
+    "company_name": "Pae",
+    "roles": 15,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "adtran.wd3.myworkdayjobs.com/ADTRAN",
+    "company_name": "ADTRAN",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jbtm.wd108.myworkdayjobs.com/JBT_Marel_Career_Site",
+    "company_name": "Jbtm",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "amgen.wd1.myworkdayjobs.com/agency",
+    "company_name": "Amgen",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "menasha.wd12.myworkdayjobs.com/MenashaCorp",
+    "company_name": "Menasha",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "agilonhealth.wd1.myworkdayjobs.com/external",
+    "company_name": "Agilonhealth",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "altusgroup.wd3.myworkdayjobs.com/AltusGroup",
+    "company_name": "Altus Group",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sunlife.wd3.myworkdayjobs.com/experienced",
+    "company_name": "Sunlife",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sunlife.wd3.myworkdayjobs.com/experienced-jobs",
+    "company_name": "Sunlife",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dtna.wd5.myworkdayjobs.com/DTNA_external",
+    "company_name": "DTNA",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "maryfreebed.wd12.myworkdayjobs.com/MFB",
+    "company_name": "Maryfreebed",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "mastercard.wd1.myworkdayjobs.com/CampusApplyOnly",
+    "company_name": "Mastercard",
+    "roles": 4,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "citi.wd5.myworkdayjobs.com/Citi_Early_Careers_Events_Site",
+    "company_name": "Citi",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "luminegrp.wd3.myworkdayjobs.com/Quortex",
+    "company_name": "Luminegrp",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "boydcorp.wd12.myworkdayjobs.com/boyd_careers",
+    "company_name": "Boydcorp",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "jci.wd5.myworkdayjobs.com/TUPU",
+    "company_name": "Jci",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "avisbudget.wd1.myworkdayjobs.com/abg_careers",
+    "company_name": "Avisbudget",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "terminix.wd1.myworkdayjobs.com/terminix",
+    "company_name": "Terminix",
+    "roles": 5,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hyva.wd3.myworkdayjobs.com/HyvaGroup",
+    "company_name": "Hyva",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gpcom.wd501.myworkdayjobs.com/GPC",
+    "company_name": "Gpcom",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cengage.wd5.myworkdayjobs.com/cengageemeacareers",
+    "company_name": "Cengage",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "allstate.wd5.myworkdayjobs.com/sourcing_event",
+    "company_name": "Allstate",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "agoc.wd5.myworkdayjobs.com/External",
+    "company_name": "Agoc",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ensemblehp.wd5.myworkdayjobs.com/ensemblehealthpartnerscareers",
+    "company_name": "Ensemblehp",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "forrester.wd501.myworkdayjobs.com/careers",
+    "company_name": "Forrester",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "expresswashconcepts.wd108.myworkdayjobs.com/Express_Wash_Concepts_External_Careers",
+    "company_name": "Express Wash Concepts",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "lnw.wd5.myworkdayjobs.com/GroverGamingExternalCareerSite",
+    "company_name": "Lnw",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fhiworks.wd1.myworkdayjobs.com/FHI-Warehouse",
+    "company_name": "Fhiworks",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "masco.wd1.myworkdayjobs.com/Behr",
+    "company_name": "Masco",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/walter-jobs",
+    "company_name": "Sandvik",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sentryinsurance.wd1.myworkdayjobs.com/SentryCareers",
+    "company_name": "Sentryinsurance",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "regalrexnord.wd1.myworkdayjobs.com/Student_and_EarlyCareer",
+    "company_name": "Regalrexnord",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "airasia.wd3.myworkdayjobs.com/Careers",
+    "company_name": "Airasia",
+    "roles": 3,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "interiorlogicgroup.wd5.myworkdayjobs.com/CareersatILG",
+    "company_name": "Interiorlogicgroup",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "alvotech.wd103.myworkdayjobs.com/Alvotech_Careers",
+    "company_name": "Alvotech",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "tcbrands.wd1.myworkdayjobs.com/TravisMathew-Careers",
+    "company_name": "Tcbrands",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "vanguard.wd5.myworkdayjobs.com/contractors_restricted",
+    "company_name": "Vanguard",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cip.wd103.myworkdayjobs.com/CIP_TT",
+    "company_name": "Cip",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "organon.wd5.myworkdayjobs.com/SearchJobs",
+    "company_name": "Organon",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "wje.wd1.myworkdayjobs.com/Careers",
+    "company_name": "Wje",
+    "roles": 6,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "phcgroup.wd3.myworkdayjobs.com/scimed_careers",
+    "company_name": "Phcgroup",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "akumincorp.wd5.myworkdayjobs.com/akumincareers",
+    "company_name": "Akumincorp",
+    "roles": 3,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "kyriba.wd5.myworkdayjobs.com/Kyriba-Careers",
+    "company_name": "Kyriba",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/cimatron-jobs",
+    "company_name": "Sandvik",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "fmr.wd1.myworkdayjobs.com/targeted",
+    "company_name": "Fmr",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "dowjones.wd1.myworkdayjobs.com/WSJ_External_Career",
+    "company_name": "Dowjones",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gensler.wd1.myworkdayjobs.com/genslercareers",
+    "company_name": "Gensler",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "gadventures.wd3.myworkdayjobs.com/GAdventures",
+    "company_name": "G Adventures",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "nextlinkinternet.wd503.myworkdayjobs.com/Telecom-Jobs",
+    "company_name": "Nextlinkinternet",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "spe.wd1.myworkdayjobs.com/SonypicturesEntertainment",
+    "company_name": "Spe",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "aes.wd1.myworkdayjobs.com/aes_clean_energy",
+    "company_name": "Aes",
+    "roles": 15,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "phcgroup.wd3.myworkdayjobs.com/ascensia_careers",
+    "company_name": "Phcgroup",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cgg.wd103.myworkdayjobs.com/viridiencareers",
+    "company_name": "Cgg",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "amerivet.wd5.myworkdayjobs.com/amerivet",
+    "company_name": "Amerivet",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "btisolutions.wd12.myworkdayjobs.com/External",
+    "company_name": "Btisolutions",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "connorgp.wd12.myworkdayjobs.com/CG",
+    "company_name": "Connorgp",
+    "roles": 5,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cadence.wd1.myworkdayjobs.com/OpenEye_Careers",
+    "company_name": "Cadence",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "trustage.wd1.myworkdayjobs.com/TruStage",
+    "company_name": "Tru Stage",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "onelinxens.wd3.myworkdayjobs.com/External_Careers",
+    "company_name": "Onelinxens",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "usuro.wd1.myworkdayjobs.com/UrologyIndiana_Career",
+    "company_name": "Usuro",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "hexcel.wd5.myworkdayjobs.com/hexcelcareers",
+    "company_name": "Hexcel",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "chathamfinancial.wd501.myworkdayjobs.com/ChathamFinancial",
+    "company_name": "Chatham Financial",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "corrohealth.wd1.myworkdayjobs.com/Corro",
+    "company_name": "Corrohealth",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "vantiva.wd103.myworkdayjobs.com/vantiva",
+    "company_name": "Vantiva",
+    "roles": 2,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "rrhs.wd5.myworkdayjobs.com/acm",
+    "company_name": "Rrhs",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "flutterbe.wd3.myworkdayjobs.com/flutterint_external",
+    "company_name": "Flutterbe",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "booster.wd5.myworkdayjobs.com/Booster_Careers",
+    "company_name": "Booster",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "toryburch.wd1.myworkdayjobs.com/toryburchcareers",
+    "company_name": "Toryburch",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "ace.wd5.myworkdayjobs.com/careers",
+    "company_name": "Ace",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "belkin.wd5.myworkdayjobs.com/Belkin_Careers",
+    "company_name": "Belkin",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "crosscountrymortgage.wd1.myworkdayjobs.com/ccmcareers",
+    "company_name": "Crosscountrymortgage",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "bb.wd3.myworkdayjobs.com/BlackBerry",
+    "company_name": "Bb",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "sandvik.wd3.myworkdayjobs.com/sigmanest-jobs",
+    "company_name": "Sandvik",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "talentmanagementsolution.wd3.myworkdayjobs.com/VestaOther",
+    "company_name": "Talentmanagementsolution",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "cgg.wd103.myworkdayjobs.com/viridiengraduate",
+    "company_name": "Cgg",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "outfrontmedia.wd1.myworkdayjobs.com/outfrontmedia",
+    "company_name": "Outfrontmedia",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
+  },
+  {
+    "provider": "workday",
+    "token": "newbalance.wd1.myworkdayjobs.com/careers-uk",
+    "company_name": "Newbalance",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15",
+    "admit": "mba-or-management"
   }
 ]
