@@ -14,6 +14,7 @@ import { createClient } from '@supabase/supabase-js'
 import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult } from './providers'
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
+import { managementAbove12L } from './management'
 import { pool } from './pool'
 import { closureChanges, collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
 import { chunk, pageAll } from './paging'
@@ -132,6 +133,16 @@ const cityFrom = (loc: string) => loc.split(',')[0]?.trim() || null
  * Deactivation is a fact the ingest learned, and the registry file has no
  * standing to overrule it.
  */
+/**
+ * Boards that opt in to an admission rule via `"admit": "management"` in
+ * registry/boards.json (ingest/management.ts). Read from the file, not the boards
+ * table, so no migration is needed; a board without the key keeps every corporate role.
+ */
+function loadAdmitPolicies(): Map<string, string> {
+  const boards = JSON.parse(readFileSync('registry/boards.json', 'utf8')) as (Board & { admit?: string })[]
+  return new Map(boards.filter((b) => b.admit).map((b) => [`${b.provider}:${b.token}`, b.admit as string]))
+}
+
 async function syncRegistry(): Promise<void> {
   const boards = JSON.parse(readFileSync('registry/boards.json', 'utf8')) as Board[]
 
@@ -242,6 +253,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
   const started = Date.now()
   const budgetMs = opts.budgetMs ?? INGEST_BUDGET_MS
   await syncRegistry()
+  const policies = loadAdmitPolicies()
 
   // One cheap probe, once per run. max_years arrives with migration 0018, and
   // migrations here are applied by hand in the Supabase SQL editor — so there
@@ -341,9 +353,11 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       // right company but only posted gig work today is not "the wrong
       // company" and must not be deactivated over it.
       const indiaRaw = roles.filter((r) => resolveInIndia(r.locationRaw))
+      const admit = policies.get(`${b.provider}:${b.token}`)
       const kept = indiaRaw
         .map((r) => ({ ...r, title: normaliseTitle(r.title) }))
         .filter((r) => isCorporateRole(r.title) && !isJunkPosting(r.title))
+        .filter((r) => admit !== 'management' || managementAbove12L(r))
       const droppedGig = indiaRaw.length - kept.length
 
       /**
@@ -583,7 +597,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       else partial++
 
       ok++
-      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} non-corporate dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${complete ? '' : '  PARTIAL'}`)
+      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} ${policies.get(`${b.provider}:${b.token}`) ? 'outside the admission rule or non-corporate' : 'non-corporate'} dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${complete ? '' : '  PARTIAL'}`)
     } catch (e) {
       // One board failing must never halt the run — the registry compounding is
       // the moat, and a provider outage is not a reason to lose a day.
