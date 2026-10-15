@@ -17995,5 +17995,13 @@
     "india": 1,
     "qualifiedAt": "2026-10-15",
     "admit": "mba-or-management"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdpc.fa.us2.oraclecloud.com/CampusHiring",
+    "company_name": "Goldman Sachs (Campus)",
+    "roles": 79,
+    "india": 79,
+    "qualifiedAt": "2026-10-15"
   }
 ]

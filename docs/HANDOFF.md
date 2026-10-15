@@ -2,6 +2,21 @@
 
 ---
 
+## 🔶 2026-10-15 (MBA / IIM / IIT fresher jobs) — a missed class of employers found and loaded
+
+**Live vs written:** ~3,000 new jobs are **in your database** (open jobs 40,576; database **249.8 MB** of 500). The code is **still NOT deployed** (branch `scale-free-plan`).
+
+**What I found:** my earlier job-reader had been marking big banks, consultancies and FMCG companies as "no India jobs" because they list India city by city (Mastercard, Citi, Barclays, PwC, Genpact…). I fixed it and re-checked 6,604 company career sites: **471 new employers**, loaded under a rule that keeps management roles (₹12 LPA+) **or** trainee / graduate / campus / early-career / associate / business-analyst roles. New in your index: PwC 447, Amgen 218, Genpact 187, State Street 119, HPE 106, Barclays 97, Morgan Stanley 89, MUFG 83, and hundreds more.
+
+**Honest limit:** the IIMs and IITs hire through campus placement cells, not public job pages, so the "campus hiring" proper is mostly not online. What these employers do publish is the year-round graduate / trainee / associate lane — that is what was loaded. Before this, the apparent "MBA jobs" in your index were mostly two staffing boards (Endeavor 2,642, Weblee 318).
+
+**You need to:**
+1. **Choose how much more to load** (about 150 MB is still unused): (a) let in every corporate role at the strongest MBA recruiters (PwC, Barclays, Mastercard, Citi, Morgan Stanley…) — the biggest addition; (b) add senior individual-contributor titles; (c) keep as is.
+2. **Deploy the branch** and set `CAREER_SITES=amazon,oraclehcm` in Vercel (still open from earlier).
+3. There is **no "MBA / campus" filter in the app yet** — say if you want one built.
+
+---
+
 ## 🔶 2026-10-15 (last) — management-roles fill is LIVE in the database; 400 MB cannot be reached this way
 
 **Live vs written:** the management-level jobs are **in your database** (open jobs 37,568; database **234.8 MB** of 500). The **code is still NOT deployed** (branch `scale-free-plan`).
