@@ -236,8 +236,32 @@ export function workdayName(token: string): { name: string; proven: boolean } {
  * Costs one extra request and is therefore made ONLY for boards that already
  * qualified — a few hundred calls, not fourteen thousand.
  */
+/**
+ * An Oracle career site's own name — "Westpac Group", "Careers at Findex -",
+ * "JPMC Candidate Experience page" — trimmed of the boilerplate around the company.
+ * The tenant id in the host is opaque ("ebuu"), so this is the only real name.
+ * Falls back to the host's first label, which is at least stable.
+ */
+async function oracleSiteName(token: string): Promise<string> {
+  const [host, site] = [token.slice(0, token.indexOf('/')), token.slice(token.indexOf('/') + 1)]
+  try {
+    const res = await fetch(`https://${host}/hcmRestApi/resources/latest/recruitingCESites?onlyData=true&q=SiteNumber=%22${site}%22`, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' }, signal: AbortSignal.timeout(12000),
+    })
+    if (res.ok) {
+      const name = ((await res.json()) as { items?: { SiteName?: string }[] }).items?.[0]?.SiteName
+      const clean = (name ?? '')
+        .replace(/\b(candidate experience( page)?|careers?( site| page| portal)?|jobs?|external|portal)\b/gi, ' ')
+        .replace(/\bat\b/gi, ' ').replace(/[-–|:]+\s*$/g, '').replace(/\s+/g, ' ').trim()
+      if (clean.length > 1) return clean
+    }
+  } catch { /* fall through */ }
+  return titleise(host.split('.')[0])
+}
+
 async function companyName(provider: string, token: string, roles: NormalisedRole[]): Promise<string> {
   if (provider === 'workday') return workdayName(token).name
+  if (provider === 'oraclehcm') return oracleSiteName(token)
   const fallback = titleise(token)
   try {
     if (provider === 'greenhouse') {

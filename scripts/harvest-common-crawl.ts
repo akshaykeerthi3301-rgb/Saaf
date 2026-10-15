@@ -82,7 +82,23 @@ const HOSTS: {
   { provider: 'smartrecruiters', pattern: 'jobs.smartrecruiters.com/*', token: (u) => firstSegment(u) },
   { provider: 'recruitee', pattern: '*.recruitee.com/*', token: (u) => subdomain(u, 'recruitee.com') },
   { provider: 'workday', pattern: '*.myworkdayjobs.com/*', token: workdayToken },
+  // Oracle Recruiting Cloud career sites. Run with --provider oraclehcm: it is a
+  // company-career-site provider, off in the ingest unless CAREER_SITES lists it.
+  { provider: 'oraclehcm', pattern: '*.oraclecloud.com/hcmUI/CandidateExperience/*', token: oracleToken },
 ]
+
+/**
+ * Oracle Recruiting Cloud: "host/siteNumber".
+ *   ebuu.fa.ap1.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/123
+ * The tenant is an opaque four-letter id, so the company name comes later, from
+ * the site's own `SiteName` (scripts/qualify-boards.ts).
+ */
+function oracleToken(u: URL): string | null {
+  const host = u.hostname.toLowerCase()
+  if (!/^[a-z0-9]+\.fa\.[a-z0-9-]+\.oraclecloud\.com$/.test(host) && !/^[a-z0-9-]+\.fa\.oraclecloud\.com$/.test(host)) return null
+  const m = u.pathname.match(/\/hcmUI\/CandidateExperience\/[A-Za-z_-]+\/sites\/([A-Za-z0-9_]+)/)
+  return m ? `${host}/${m[1]}` : null
+}
 
 /** Path segments that are never a company. */
 const RESERVED = new Set([
