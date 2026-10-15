@@ -30,5 +30,61 @@
     "roles": 3207,
     "india": 294,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcbt.fa.em2.oraclecloud.com/CX_1001",
+    "company_name": "Kotak Mahindra Bank",
+    "roles": 4099,
+    "india": 4099,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcdt.fa.us2.oraclecloud.com/CX",
+    "company_name": "Aster DM Healthcare",
+    "roles": 2430,
+    "india": 2430,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eofh.fa.em2.oraclecloud.com/CX_3001",
+    "company_name": "Tata Capital",
+    "roles": 2296,
+    "india": 2296,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iaamcp.fa.ocs.oraclecloud.com/CSB",
+    "company_name": "(unidentified branch-network employer, Kerala)",
+    "roles": 1773,
+    "india": 1773,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eibd.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Adani",
+    "roles": 980,
+    "india": 980,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejwl.fa.us2.oraclecloud.com/CX",
+    "company_name": "Marriott",
+    "roles": 892,
+    "india": 892,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efet.fa.us2.oraclecloud.com/CX_1009",
+    "company_name": "Hilton",
+    "roles": 408,
+    "india": 408,
+    "qualifiedAt": "2026-10-15"
   }
 ]

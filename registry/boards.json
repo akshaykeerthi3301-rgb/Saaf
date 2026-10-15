@@ -1,6 +1,70 @@
 [
   {
     "provider": "smartrecruiters",
+    "token": "accorhotel",
+    "company_name": "AccorHotel",
+    "roles": 6114,
+    "india": 740,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "boschgroup",
+    "company_name": "Bosch Group",
+    "roles": 4815,
+    "india": 546,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "nagarro1",
+    "company_name": "Nagarro",
+    "roles": 885,
+    "india": 462,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "rentokil-initial",
+    "company_name": "Rentokil Initial",
+    "roles": 797,
+    "india": 385,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "aecom2",
+    "company_name": "Aecom",
+    "roles": 5248,
+    "india": 340,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "eurofins",
+    "company_name": "Eurofins",
+    "roles": 2556,
+    "india": 332,
+    "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "smartrecruiters",
+    "token": "egisgroup",
+    "company_name": "Egis Group",
+    "roles": 1605,
+    "india": 233,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workable",
+    "token": "capgemini-insurance",
+    "company_name": "Capgemini",
+    "roles": 358,
+    "india": 202,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "smartrecruiters",
     "token": "assystem",
     "company_name": "Assystem",
     "roles": 927,
@@ -102,6 +166,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "eramtalent-1",
+    "company_name": "Eram Talent",
+    "roles": 1268,
+    "india": 102,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "greenhouse",
     "token": "okta",
     "company_name": "Okta",
@@ -132,6 +204,14 @@
     "roles": 872,
     "india": 95,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "unisongroup",
+    "company_name": "Unison Group",
+    "roles": 209,
+    "india": 90,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "greenhouse",
@@ -212,6 +292,14 @@
     "roles": 68,
     "india": 68,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "mullers-solutions-1",
+    "company_name": "Müller`s Solutions",
+    "roles": 788,
+    "india": 67,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "greenhouse",
@@ -349,6 +437,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "exponent-energy",
+    "company_name": "Exponent Energy",
+    "roles": 57,
+    "india": 57,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "intuitive",
     "company_name": "Intuitive",
@@ -371,6 +467,14 @@
     "roles": 392,
     "india": 53,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "lakshyadigitalglobal",
+    "company_name": "Lakshya Digital",
+    "roles": 55,
+    "india": 53,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "greenhouse",
@@ -437,6 +541,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "datamark-inc",
+    "company_name": "Datamark, Inc.",
+    "roles": 81,
+    "india": 46,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "greenhouse",
     "token": "digitalocean98",
     "company_name": "DigitalOcean",
@@ -484,6 +596,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "greenhouse",
+    "token": "wundermanthompson",
+    "company_name": "VML",
+    "roles": 434,
+    "india": 43,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "smartrecruiters",
     "token": "swiggy",
     "company_name": "Swiggy",
@@ -521,6 +641,22 @@
     "roles": 447,
     "india": 42,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "apt-resources",
+    "company_name": "Apt Resources",
+    "roles": 598,
+    "india": 42,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "innovaccer-analytics",
+    "company_name": "Innovaccer Analytics",
+    "roles": 84,
+    "india": 42,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "greenhouse",
@@ -600,6 +736,14 @@
     "roles": 141,
     "india": 37,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "keywords-intl1",
+    "company_name": "Keywords Studios",
+    "roles": 272,
+    "india": 37,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "greenhouse",
@@ -985,6 +1129,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "genusagencyai",
+    "company_name": "Global Pacific Support",
+    "roles": 213,
+    "india": 23,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "greenhouse",
     "token": "66degrees",
     "company_name": "66degrees",
@@ -1095,6 +1247,14 @@
     "roles": 78,
     "india": 21,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "accellor",
+    "company_name": "Accellor",
+    "roles": 43,
+    "india": 21,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "greenhouse",
@@ -2037,6 +2197,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workday",
+    "token": "vishay.wd3.myworkdayjobs.com/VishayCareers",
+    "company_name": "Vishay",
+    "roles": 20,
+    "india": 18,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "greenhouse",
     "token": "druva",
     "company_name": "Druva",
@@ -2154,6 +2322,14 @@
     "roles": 17,
     "india": 17,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "jove",
+    "company_name": "JoVE",
+    "roles": 110,
+    "india": 17,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -2388,6 +2564,22 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "intellecthq",
+    "company_name": "Intellect",
+    "roles": 390,
+    "india": 16,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "fuku",
+    "company_name": "Fuku",
+    "roles": 698,
+    "india": 16,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "workday",
     "token": "electrolux.wd3.myworkdayjobs.com/electroluxcareersite",
     "company_name": "Electrolux",
@@ -2474,6 +2666,14 @@
     "roles": 17,
     "india": 16,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "conmed.wd5.myworkdayjobs.com/conmed",
+    "company_name": "Conmed",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -2601,6 +2801,30 @@
     "roles": 20,
     "india": 15,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "evidence-action",
+    "company_name": "Evidence Action",
+    "roles": 35,
+    "india": 15,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "ajaia",
+    "company_name": "AJAIA",
+    "roles": 99,
+    "india": 15,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "youtrip",
+    "company_name": "YouTrip",
+    "roles": 51,
+    "india": 15,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -2794,6 +3018,22 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "robusta",
+    "company_name": "robusta",
+    "roles": 105,
+    "india": 14,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "interpath-advisory",
+    "company_name": "Interpath Advisory",
+    "roles": 117,
+    "india": 14,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "workday",
     "token": "automationanywhere.wd5.myworkdayjobs.com/AutomationAnywhereJobs",
     "company_name": "Automation Anywhere",
@@ -2930,6 +3170,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "greenhouse",
+    "token": "phdata",
+    "company_name": "phData",
+    "roles": 44,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "techbizglobal",
     "company_name": "Techbizglobal",
@@ -2952,6 +3200,22 @@
     "roles": 21,
     "india": 13,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "covergo",
+    "company_name": "CoverGo",
+    "roles": 233,
+    "india": 13,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "digital-368",
+    "company_name": "Digital",
+    "roles": 224,
+    "india": 13,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -3032,6 +3296,14 @@
     "roles": 13,
     "india": 13,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "freudenberg.wd3.myworkdayjobs.com/freudenberg-group",
+    "company_name": "Freudenberg",
+    "roles": 20,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -3175,6 +3447,14 @@
     "roles": 12,
     "india": 12,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "fioneer",
+    "company_name": "SAP Fioneer",
+    "roles": 167,
+    "india": 12,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -3430,6 +3710,14 @@
     "roles": 53,
     "india": 11,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "techfirefly",
+    "company_name": "Tech Firefly",
+    "roles": 30,
+    "india": 11,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -3783,6 +4071,30 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "blue-altair",
+    "company_name": "Blue Altair",
+    "roles": 12,
+    "india": 10,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "blackstone-eit-2",
+    "company_name": "BlackStone eIT",
+    "roles": 164,
+    "india": 10,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "envalior",
+    "company_name": "Envalior",
+    "roles": 46,
+    "india": 10,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "workday",
     "token": "pinnaclegroup.wd1.myworkdayjobs.com/PinnacleGroup",
     "company_name": "Pinnacle Group",
@@ -4028,6 +4340,30 @@
     "roles": 159,
     "india": 9,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "tryzensglobal",
+    "company_name": "Tryzens Global",
+    "roles": 17,
+    "india": 9,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "richpanel-1",
+    "company_name": "Richpanel",
+    "roles": 12,
+    "india": 9,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "uworld",
+    "company_name": "UWorld, LLC",
+    "roles": 41,
+    "india": 9,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -4350,6 +4686,46 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "zealgroup",
+    "company_name": "Zeal Group",
+    "roles": 88,
+    "india": 8,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "partner-one-capital",
+    "company_name": "Partner One Software Inc",
+    "roles": 81,
+    "india": 8,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "deepsource",
+    "company_name": "DeepSource Technologies",
+    "roles": 73,
+    "india": 8,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "teltonika",
+    "company_name": "Teltonika",
+    "roles": 207,
+    "india": 8,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "astrome-technologies",
+    "company_name": "Astrome Technologies",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workday",
     "token": "franklintempleton.wd5.myworkdayjobs.com/Invitation-Only",
     "company_name": "Franklintempleton",
@@ -4444,6 +4820,14 @@
     "roles": 20,
     "india": 8,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "cisive.wd108.myworkdayjobs.com/Cisive",
+    "company_name": "Cisive",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -4754,6 +5138,38 @@
     "roles": 119,
     "india": 7,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "unifize",
+    "company_name": "Unifize",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "royal-ocean-marine",
+    "company_name": "Royal Ocean Marine",
+    "roles": 223,
+    "india": 7,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "quantumloopai",
+    "company_name": "QuantumLoopAI",
+    "roles": 23,
+    "india": 7,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "quanticate",
+    "company_name": "Quanticate",
+    "roles": 12,
+    "india": 7,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -5243,6 +5659,38 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "infotel-uk",
+    "company_name": "Infotel UK",
+    "roles": 9,
+    "india": 6,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "deltaexchange",
+    "company_name": "Delta Exchange",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "raspberrypifoundation",
+    "company_name": "Raspberry Pi Foundation",
+    "roles": 9,
+    "india": 6,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "arbor-education-3",
+    "company_name": "Arbor Education",
+    "roles": 19,
+    "india": 6,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workday",
     "token": "victaulic.wd1.myworkdayjobs.com/victaulic_careers",
     "company_name": "Victaulic",
@@ -5337,6 +5785,22 @@
     "roles": 6,
     "india": 6,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "richemont.wd3.myworkdayjobs.com/richemont",
+    "company_name": "Richemont",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workday",
+    "token": "condenast.wd115.myworkdayjobs.com/CondeCareers",
+    "company_name": "Condenast",
+    "roles": 6,
+    "india": 6,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -5866,6 +6330,46 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "maker-lab",
+    "company_name": "Maker Lab",
+    "roles": 23,
+    "india": 5,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "rockstar-3",
+    "company_name": "Rockstar",
+    "roles": 136,
+    "india": 5,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "acclaro",
+    "company_name": "Acclaro",
+    "roles": 30,
+    "india": 5,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "innovationteam",
+    "company_name": "InnovationTeam",
+    "roles": 52,
+    "india": 5,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "scalesource-1",
+    "company_name": "Scalesource",
+    "roles": 135,
+    "india": 5,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
     "provider": "workday",
     "token": "azelis.wd3.myworkdayjobs.com/Azelis_Careers",
     "company_name": "Azelis",
@@ -6040,6 +6544,14 @@
     "roles": 5,
     "india": 5,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "rehlko.wd12.myworkdayjobs.com/Reh",
+    "company_name": "Rehlko",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -6657,6 +7169,70 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "fe-fundinfo",
+    "company_name": "FE fundinfo",
+    "roles": 19,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "itrs",
+    "company_name": "ITRS",
+    "roles": 19,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "flosum",
+    "company_name": "Flosum",
+    "roles": 169,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "cimmyt-1",
+    "company_name": "CIMMYT",
+    "roles": 52,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "v2-ai",
+    "company_name": "V2 AI",
+    "roles": 11,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "esselenvironmental",
+    "company_name": "Essel",
+    "roles": 463,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "experts-plus",
+    "company_name": "Experts Plus Recruitment Services",
+    "roles": 154,
+    "india": 4,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "teleport-careers",
+    "company_name": "Teleport",
+    "roles": 70,
+    "india": 4,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workday",
     "token": "lseg.wd3.myworkdayjobs.com/careers",
     "company_name": "Lseg",
@@ -6751,6 +7327,14 @@
     "roles": 5,
     "india": 4,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workday",
+    "token": "erm.wd3.myworkdayjobs.com/erm_experiencedprofessionals",
+    "company_name": "Erm",
+    "roles": 20,
+    "india": 4,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "ashby",
@@ -7385,6 +7969,22 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "greenhouse",
+    "token": "astropakllc",
+    "company_name": "ASTRO PAK",
+    "roles": 24,
+    "india": 3,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "greenhouse",
+    "token": "roku",
+    "company_name": "Roku",
+    "roles": 118,
+    "india": 3,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "lever",
     "token": "kenko",
     "company_name": "Kenko",
@@ -7604,6 +8204,142 @@
     "roles": 281,
     "india": 3,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "marcura",
+    "company_name": "Marcura",
+    "roles": 18,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "sogeclair",
+    "company_name": "SOGECLAIR",
+    "roles": 136,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "rystad-energy",
+    "company_name": "Rystad Energy",
+    "roles": 14,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "zifo",
+    "company_name": "Zifo",
+    "roles": 45,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "knorex",
+    "company_name": "KNOREX",
+    "roles": 6,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "groundtruth",
+    "company_name": "GroundTruth",
+    "roles": 6,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "breachlock",
+    "company_name": "BreachLock",
+    "roles": 13,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "serko-ltd",
+    "company_name": "Serko Ltd",
+    "roles": 21,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "protera",
+    "company_name": "Protera",
+    "roles": 12,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "lucidya",
+    "company_name": "Lucidya",
+    "roles": 46,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "enable-data",
+    "company_name": "Enable Data Incorporated",
+    "roles": 4,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "coretek-services",
+    "company_name": "Coretek Services",
+    "roles": 11,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "surglobal",
+    "company_name": "Sur",
+    "roles": 85,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "fairmoney",
+    "company_name": "FairMoney",
+    "roles": 49,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "flatgigs",
+    "company_name": "Flatgigs",
+    "roles": 104,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "luxasia",
+    "company_name": "LUXASIA",
+    "roles": 169,
+    "india": 3,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "syntiant",
+    "company_name": "Syntiant",
+    "roles": 9,
+    "india": 3,
+    "qualifiedAt": "2026-10-15"
   },
   {
     "provider": "workday",
@@ -8534,6 +9270,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "greenhouse",
+    "token": "bamfam",
+    "company_name": "The BAM Companies",
+    "roles": 6,
+    "india": 2,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "lever",
     "token": "pocketfm",
     "company_name": "Pocketfm",
@@ -8795,6 +9539,150 @@
     "roles": 6,
     "india": 2,
     "qualifiedAt": "2026-09-07"
+  },
+  {
+    "provider": "workable",
+    "token": "gramian",
+    "company_name": "Gramian Consulting Group",
+    "roles": 316,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "interpolitan-money",
+    "company_name": "Interpolitan Money",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "nacrecapital",
+    "company_name": "Nacre Capital",
+    "roles": 25,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "tecsys",
+    "company_name": "Tecsys Inc.",
+    "roles": 34,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "blankstate",
+    "company_name": "Blankstate",
+    "roles": 4,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "next-job-abroad",
+    "company_name": "Next Job Abroad",
+    "roles": 3784,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "ratehawk",
+    "company_name": "RateHawk",
+    "roles": 65,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "pairedrecruiting",
+    "company_name": "Paired",
+    "roles": 180,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "niva-health-2",
+    "company_name": "NIVA Health",
+    "roles": 83,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "ottimate",
+    "company_name": "Ottimate",
+    "roles": 13,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "wisevu",
+    "company_name": "Wisevu",
+    "roles": 13,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "iglooinsure",
+    "company_name": "Igloo",
+    "roles": 49,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "agility",
+    "company_name": "Agility",
+    "roles": 16,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "peoplecert",
+    "company_name": "PEOPLECERT",
+    "roles": 76,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "wrisk",
+    "company_name": "Wrisk",
+    "roles": 7,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "goglobal",
+    "company_name": "GoGlobal",
+    "roles": 98,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "twocircles",
+    "company_name": "Two Circles",
+    "roles": 37,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "kaizenams",
+    "company_name": "Kaizen Asset Management Services",
+    "roles": 27,
+    "india": 2,
+    "qualifiedAt": "2026-10-14"
   },
   {
     "provider": "workday",
@@ -10372,6 +11260,14 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "greenhouse",
+    "token": "nextgenventures",
+    "company_name": "NextGen Ventures",
+    "roles": 8,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "recruitee",
     "token": "scioteq",
     "company_name": "Scioteq",
@@ -10785,6 +11681,174 @@
     "qualifiedAt": "2026-09-07"
   },
   {
+    "provider": "workable",
+    "token": "gigmos",
+    "company_name": "Gigmo Solutions",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "itsacheckmate-dot-com",
+    "company_name": "Checkmate",
+    "roles": 3,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "hyprwork",
+    "company_name": "Hyprwork",
+    "roles": 44,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "destinusgroup",
+    "company_name": "Destinus",
+    "roles": 174,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "tyk-technologies",
+    "company_name": "Tyk Technologies",
+    "roles": 25,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "eandd",
+    "company_name": "Elevate and Delegate",
+    "roles": 77,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "ttech",
+    "company_name": "T-Tech",
+    "roles": 8,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "imtf",
+    "company_name": "IMTF",
+    "roles": 9,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "euromonitor",
+    "company_name": "Euromonitor",
+    "roles": 73,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "fullstackacademy",
+    "company_name": "Fullstack Academy",
+    "roles": 21,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "seekho",
+    "company_name": "Seekho",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "humanmade",
+    "company_name": "Human Made, makers of Altis DXP",
+    "roles": 18,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "oxforddynamics",
+    "company_name": "Oxford Dynamics",
+    "roles": 4,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "aperture-london",
+    "company_name": "Aperture",
+    "roles": 45,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "naehas",
+    "company_name": "Naehas",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "samacoaching",
+    "company_name": "Sama",
+    "roles": 12,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "pixelogicmedia",
+    "company_name": "Pixelogic Media Partners, LLC",
+    "roles": 36,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "shield-1",
+    "company_name": "SHIELD",
+    "roles": 15,
+    "india": 1,
+    "qualifiedAt": "2026-10-14"
+  },
+  {
+    "provider": "workable",
+    "token": "accurant",
+    "company_name": "Accurant International",
+    "roles": 3,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workable",
+    "token": "fabulousco",
+    "company_name": "Fabulous",
+    "roles": 31,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "workable",
+    "token": "fundingsocieties",
+    "company_name": "Funding Societies | Modalku Group",
+    "roles": 87,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
     "provider": "workday",
     "token": "kardex.wd103.myworkdayjobs.com/kardex",
     "company_name": "Kardex",
@@ -11105,51 +12169,579 @@
     "qualifiedAt": "2026-09-07"
   },
   {
-    "provider": "smartrecruiters",
-    "token": "accorhotel",
-    "company_name": "AccorHotel",
-    "roles": 6114,
-    "india": 740,
-    "qualifiedAt": "2026-09-07"
+    "provider": "workday",
+    "token": "lifung.wd3.myworkdayjobs.com/NeoTangent",
+    "company_name": "Lifung",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "smartrecruiters",
-    "token": "boschgroup",
-    "company_name": "Bosch Group",
-    "roles": 4815,
-    "india": 546,
-    "qualifiedAt": "2026-09-07"
+    "provider": "workday",
+    "token": "eset.wd3.myworkdayjobs.com/ESET_External",
+    "company_name": "ESET",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "smartrecruiters",
-    "token": "nagarro1",
-    "company_name": "Nagarro",
-    "roles": 885,
-    "india": 462,
-    "qualifiedAt": "2026-09-07"
+    "provider": "workday",
+    "token": "bpinternational.wd3.myworkdayjobs.com/bpEarlyCareers",
+    "company_name": "Bpinternational",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "workable",
-    "token": "rentokil-initial",
-    "company_name": "Rentokil Initial",
-    "roles": 797,
-    "india": 385,
-    "qualifiedAt": "2026-09-07"
+    "provider": "workday",
+    "token": "itron.wd5.myworkdayjobs.com/Early_Careers",
+    "company_name": "Itron",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "smartrecruiters",
-    "token": "aecom2",
-    "company_name": "Aecom",
-    "roles": 5248,
-    "india": 340,
-    "qualifiedAt": "2026-09-07"
+    "provider": "oraclehcm",
+    "token": "ejgk.fa.em2.oraclecloud.com/CX_3R",
+    "company_name": "KPMG India",
+    "roles": 599,
+    "india": 599,
+    "qualifiedAt": "2026-10-15"
   },
   {
-    "provider": "smartrecruiters",
-    "token": "eurofins",
-    "company_name": "Eurofins",
-    "roles": 2556,
-    "india": 332,
-    "qualifiedAt": "2026-09-07"
+    "provider": "oraclehcm",
+    "token": "emit.fa.ca3.oraclecloud.com/CX_2001",
+    "company_name": "WSP",
+    "roles": 492,
+    "india": 492,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egup.fa.us2.oraclecloud.com/CX",
+    "company_name": "Vertiv",
+    "roles": 277,
+    "india": 277,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdjq.fa.us2.oraclecloud.com/CX_",
+    "company_name": "Emerson",
+    "roles": 194,
+    "india": 194,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "emcm.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "WM",
+    "roles": 167,
+    "india": 167,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egua.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Conduent",
+    "roles": 163,
+    "india": 163,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehpv.fa.em2.oraclecloud.com/CX",
+    "company_name": "DP World",
+    "roles": 153,
+    "india": 153,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eofe.fa.us2.oraclecloud.com/BNY",
+    "company_name": "BNY",
+    "roles": 145,
+    "india": 145,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edbz.fa.us2.oraclecloud.com/CX",
+    "company_name": "Texas Instruments",
+    "roles": 138,
+    "india": 138,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcfa.fa.us2.oraclecloud.com/AmnealCareers",
+    "company_name": "Amneal",
+    "roles": 115,
+    "india": 115,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iadugs.fa.ocs.oraclecloud.com/CX",
+    "company_name": "Legrand",
+    "roles": 108,
+    "india": 108,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edox.fa.ap1.oraclecloud.com/CX_3001",
+    "company_name": "SBIC",
+    "roles": 107,
+    "india": 107,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ibqbjb.fa.ocs.oraclecloud.com/CX_1",
+    "company_name": "Honeywell",
+    "roles": 99,
+    "india": 99,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hctz.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "onsemi",
+    "roles": 96,
+    "india": 96,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcxs.fa.us2.oraclecloud.com/CX",
+    "company_name": "Kroll",
+    "roles": 94,
+    "india": 94,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebxr.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "DTCC",
+    "roles": 90,
+    "india": 90,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdpc.fa.us2.oraclecloud.com/LateralHiring",
+    "company_name": "Goldman Sachs",
+    "roles": 79,
+    "india": 79,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcld.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Mashreq",
+    "roles": 77,
+    "india": 77,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hccz.fa.em3.oraclecloud.com/CX_2",
+    "company_name": "Pearson",
+    "roles": 71,
+    "india": 71,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egmk.fa.us6.oraclecloud.com/CX",
+    "company_name": "Calderys",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "epyc.fa.us2.oraclecloud.com/CLH",
+    "company_name": "Clean Harbors",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egug.fa.us2.oraclecloud.com/CX",
+    "company_name": "American Express",
+    "roles": 69,
+    "india": 69,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcmn.fa.ap1.oraclecloud.com/CX_1001",
+    "company_name": "MUFG Pension & Market Services",
+    "roles": 57,
+    "india": 57,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "edsv.fa.us2.oraclecloud.com/CX",
+    "company_name": "McDermott",
+    "roles": 56,
+    "india": 56,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "icfcjb.fa.ocs.oraclecloud.com/Aerospace",
+    "company_name": "Honeywell Aerospace",
+    "roles": 56,
+    "india": 56,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eabw.fa.us2.oraclecloud.com/CX",
+    "company_name": "Mouser",
+    "roles": 49,
+    "india": 49,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egay.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "NOV",
+    "roles": 44,
+    "india": 44,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcib.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "Hill International",
+    "roles": 43,
+    "india": 43,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hczw.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "CSC",
+    "roles": 39,
+    "india": 39,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ibwujb.fa.ocs.oraclecloud.com/CX_1001",
+    "company_name": "Ralliant",
+    "roles": 37,
+    "india": 37,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ialmme.fa.ocs.oraclecloud.com/ciklum",
+    "company_name": "Ciklum",
+    "roles": 33,
+    "india": 33,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekkk.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "UnitedLex",
+    "roles": 33,
+    "india": 33,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdow.fa.us6.oraclecloud.com/CX_1001",
+    "company_name": "Newmark",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejta.fa.us6.oraclecloud.com/CX",
+    "company_name": "Fortive",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebwg.fa.us2.oraclecloud.com/CX",
+    "company_name": "ACI Worldwide",
+    "roles": 31,
+    "india": 31,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehth.fa.em2.oraclecloud.com/CX",
+    "company_name": "Garrett Motion",
+    "roles": 30,
+    "india": 30,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcut.fa.ap2.oraclecloud.com/CX_1",
+    "company_name": "APL Logistics",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iaaviz.fa.ocs.oraclecloud.com/Jobs",
+    "company_name": "Icertis",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcog.fa.em2.oraclecloud.com/CX_2001",
+    "company_name": "Intertek",
+    "roles": 24,
+    "india": 24,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hdga.fa.em3.oraclecloud.com/Lucyelectric",
+    "company_name": "Lucy Electric",
+    "roles": 23,
+    "india": 23,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eczd.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Yum!",
+    "roles": 22,
+    "india": 22,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efds.fa.em5.oraclecloud.com/Ford",
+    "company_name": "Ford",
+    "roles": 21,
+    "india": 21,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebfr.fa.us2.oraclecloud.com/jobs",
+    "company_name": "Oceaneering",
+    "roles": 21,
+    "india": 21,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ecyq.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "DNV",
+    "roles": 19,
+    "india": 19,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iblyjb.fa.ocs.oraclecloud.com/cytel",
+    "company_name": "Cytel",
+    "roles": 17,
+    "india": 17,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eeug.fa.us6.oraclecloud.com/CX",
+    "company_name": "Diebold Nixdorf",
+    "roles": 16,
+    "india": 16,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eduu.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "ICU Medical",
+    "roles": 14,
+    "india": 14,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcxg.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "Technip Energies",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ecqf.fa.em2.oraclecloud.com/CX",
+    "company_name": "Ipsos",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "fda.fa.us1.oraclecloud.com/CX_1",
+    "company_name": "Manitowoc",
+    "roles": 13,
+    "india": 13,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efpv.fa.us6.oraclecloud.com/CX_1",
+    "company_name": "Infoblox",
+    "roles": 12,
+    "india": 12,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egmn.fa.us2.oraclecloud.com/CX_1",
+    "company_name": "Harmonic",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eoje.fa.us2.oraclecloud.com/CX_1001",
+    "company_name": "Black Box",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "hcwp.fa.us2.oraclecloud.com/CX_8001",
+    "company_name": "Coherent",
+    "roles": 11,
+    "india": 11,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ecnf.fa.us2.oraclecloud.com/CX",
+    "company_name": "Tradeweb",
+    "roles": 9,
+    "india": 9,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekug.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "KLDiscovery",
+    "roles": 8,
+    "india": 8,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "iaings.fa.ocs.oraclecloud.com/CX",
+    "company_name": "Sinch",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehtl.fa.us6.oraclecloud.com/CX",
+    "company_name": "Resideo",
+    "roles": 7,
+    "india": 7,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ekkf.fa.em2.oraclecloud.com/CX",
+    "company_name": "Samsonite",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eetz.fa.us6.oraclecloud.com/CX_2001",
+    "company_name": "GP Strategies",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "egcu.fa.us6.oraclecloud.com/CX",
+    "company_name": "Masimo",
+    "roles": 5,
+    "india": 5,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ejwe.fa.em2.oraclecloud.com/CX_1",
+    "company_name": "DAMAC",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ebhz.fa.us2.oraclecloud.com/Onity",
+    "company_name": "Onity",
+    "roles": 2,
+    "india": 2,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "ehtl.fa.us6.oraclecloud.com/CX_2",
+    "company_name": "Resideo",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "efcs.fa.em3.oraclecloud.com/CX_1",
+    "company_name": "Galadari Brothers",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "eobe.fa.em2.oraclecloud.com/CX_1001",
+    "company_name": "Stats Perform",
+    "roles": 1,
+    "india": 1,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "oraclehcm",
+    "token": "jpmc.fa.oraclecloud.com/CX_1001",
+    "company_name": "JPMorgan Chase",
+    "roles": 307,
+    "india": 307,
+    "qualifiedAt": "2026-10-15"
+  },
+  {
+    "provider": "amazon",
+    "token": "IND",
+    "company_name": "Amazon",
+    "roles": 2386,
+    "india": 2386,
+    "qualifiedAt": "2026-10-15"
   }
 ]

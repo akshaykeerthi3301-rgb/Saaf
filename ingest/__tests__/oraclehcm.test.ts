@@ -45,6 +45,16 @@ describe('oracle hcm career sites', () => {
     } finally { globalThis.fetch = orig }
   })
 
+  it('refuses a tenant whose India filter does not narrow the list', async () => {
+    process.env.CAREER_SITES = 'oraclehcm'
+    const orig = globalThis.fetch
+    const first = { items: [{ TotalJobsCount: 78431, locationsFacet: [{ Name: 'India', Id: 7, TotalCount: 14895 }], requisitionList: [] }] }
+    const unfiltered = { items: [{ TotalJobsCount: 78431, requisitionList: [{ Id: '1', Title: 't', PrimaryLocation: 'United States' }] }] }
+    const pages = [first, unfiltered]
+    globalThis.fetch = (async () => ({ ok: true, text: async () => JSON.stringify(pages.shift()) })) as unknown as typeof fetch
+    try { await expect(adapterFor('oraclehcm')!.fetchAll!(TOKEN)).rejects.toThrow(/filter not applied/) } finally { globalThis.fetch = orig }
+  })
+
   it('refuses a WAF block page rather than parsing or retrying around it', async () => {
     process.env.CAREER_SITES = 'oraclehcm'
     const orig = globalThis.fetch

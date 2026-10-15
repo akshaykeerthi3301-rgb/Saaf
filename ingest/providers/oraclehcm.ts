@@ -55,11 +55,12 @@ async function getJson(url: string): Promise<Rec> {
 }
 
 /** The country-level "India" entry of the locations facet, or null when the employer lists none. */
-export function indiaFacetId(first: unknown): string | null {
+export function indiaFacet(first: unknown): { id: string; count: number } | null {
   const facets = arr(rec(arr(rec(first).items)[0]).locationsFacet)
   const hit = facets.find((f) => str(f.Name).toLowerCase() === 'india')
-  return hit ? String(hit.Id) : null
+  return hit ? { id: String(hit.Id), count: Number(hit.TotalCount ?? 0) } : null
 }
+export const indiaFacetId = (first: unknown) => indiaFacet(first)?.id ?? null
 
 export function parseOracle(raw: unknown, token: string): NormalisedRole[] {
   const { host, site } = parts(token)
@@ -88,15 +89,22 @@ export const oracleHcmAdapter: Adapter = {
 
   fetchAll: async (token, opts): Promise<FetchResult> => {
     if (!careerSiteOn('oraclehcm')) return { roles: [], complete: false }
-    const india = indiaFacetId(await getJson(listUrl(token, 1, 0)))
-    if (!india) return { roles: [], complete: true }
+    const facet = indiaFacet(await getJson(listUrl(token, 1, 0)))
+    if (!facet) return { roles: [], complete: true }
+    const india = facet.id
 
     const roles: NormalisedRole[] = []
     let total = Infinity
     for (let page = 0; page < MAX_PAGES; page++) {
       if (opts?.deadline && Date.now() > opts.deadline) return { roles, complete: false }
       const body = await getJson(listUrl(token, PAGE, page * PAGE, india))
-      if (page === 0) total = Number(rec(arr(body.items)[0]).TotalJobsCount ?? 0)
+      if (page === 0) {
+        total = Number(rec(arr(body.items)[0]).TotalJobsCount ?? 0)
+        // ⚠️ A tenant whose location filter does not apply answers with EVERY job it has —
+        // eubt.fa.us6 (a test tenant) offered 14,895 India jobs and returned 78,431 jobs
+        // worldwide, which paged 10,000 non-India rows. Refuse rather than read them.
+        if (total > facet.count * 1.1 + 5) throw new Error(`India filter not applied (${total} returned, ${facet.count} expected)`)
+      }
       const batch = parseOracle(body, token)
       roles.push(...batch)
       if (batch.length < PAGE || roles.length >= total) return { roles, complete: true }
