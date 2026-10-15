@@ -302,4 +302,8 @@ async function main() {
   console.log(`\n  Next: npx tsx scripts/qualify-boards.ts --limit 500`)
 }
 
-main().catch((e) => { console.error(e); process.exit(1) })
+// Guarded: an unguarded main() ran a full harvest when this file was merely imported
+// (2026-10-15), which would have rewritten candidates.json under a running qualify sweep.
+if (process.argv[1]?.includes('harvest-common-crawl')) {
+  main().catch((e) => { console.error(e); process.exit(1) })
+}

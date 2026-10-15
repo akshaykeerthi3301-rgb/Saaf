@@ -2,6 +2,22 @@
 
 ---
 
+## 🔶 2026-10-15 (later) — free-plan job fill is LOADED in your database; the code is NOT deployed
+
+**Live vs written:** the jobs are **live in your database** (open jobs 21,785 → **36,990**, +70%; database 194 → 231 MB of 500). The **code that reads Amazon and Oracle career sites is written but NOT deployed** (branch `scale-free-plan`, tests 2,172 passing). One database change (`0053`) is applied and verified.
+
+**What is in:** +131 more companies (re-checking the ones Workable had refused), **Amazon's own careers site (1,750 India jobs)**, **67 employers on Oracle's career platform** (JPMorgan, Honeywell, Goldman Sachs, American Express, KPMG, BNY, Texas Instruments, Emerson…), and the **four staffing boards you chose (8,326 jobs)** — those are on the "staffing agency" list, so the existing switch can hide them.
+
+**You need to:**
+1. **Deploy the branch** (RUNBOOK) **and add one setting in Vercel: `CAREER_SITES` = `amazon,oraclehcm`.** Without both, tonight's automatic update cannot refresh Amazon/Oracle jobs (they stay, they just go stale).
+2. **Decide the seven big employers I held back (~12,000 jobs):** Kotak 4,099 · Aster Healthcare 2,430 · Tata Capital 2,296 · an unidentified Kerala branch network 1,773 · Adani 980 · Marriott 892 · Hilton 408. They fit in the free database (≈169 MB of headroom) but are mostly branch/sales/hospital roles. Say "admit all", "admit these: …" or "leave out".
+3. **Terms:** Amazon's site terms could not be found, and the Oracle-hosted employers' terms are unread. Fine for now by your decision; have a lawyer read them before a public launch.
+4. Tomorrow, sign in and check that the feed shows Amazon / Honeywell / JPMorgan jobs (I could not do this — new matches are calculated by tonight's update).
+
+**Not done:** Microsoft's careers feed turned me away after one request, so I did not use it. Google, Infosys, TCS, Wipro, Flipkart, Cognizant have no public job feed I could use lawfully; each would need its own reader and a terms check.
+
+---
+
 ## 🔶 2026-10-15 — job-volume plan written (a document, nothing live)
 
 **Live vs written:** `docs/job_scaling_blueprint.md` is **written only**. No code, database update or deploy was made.
