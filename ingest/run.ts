@@ -14,7 +14,7 @@ import { createClient } from '@supabase/supabase-js'
 import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult } from './providers'
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
-import { managementAbove12L } from './management'
+import { managementAbove12L, mbaOrManagement } from './management'
 import { pool } from './pool'
 import { closureChanges, collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
 import { chunk, pageAll } from './paging'
@@ -358,6 +358,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
         .map((r) => ({ ...r, title: normaliseTitle(r.title) }))
         .filter((r) => isCorporateRole(r.title) && !isJunkPosting(r.title))
         .filter((r) => admit !== 'management' || managementAbove12L(r))
+        .filter((r) => admit !== 'mba-or-management' || mbaOrManagement(r))
       const droppedGig = indiaRaw.length - kept.length
 
       /**

@@ -1,6 +1,7 @@
 import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
 import { amazonAdapter } from './amazon'
 import { oracleHcmAdapter } from './oraclehcm'
+import { isIndianLocation } from '../../src/lib/taxonomy/locations'
 import { employmentTypeFrom, payFromAshby, payFromGreenhouse, payFromLever, payFromRecruitee, workModeFrom, workModeFromFlags } from './fields'
 
 type Rec = Record<string, unknown>
@@ -268,34 +269,50 @@ async function wdPost(token: string, body: unknown): Promise<Rec> {
  * `searchText: 'India'`, returns 280 rows of which only 2 are actually located
  * in India — it matches any description that mentions the word.
  */
-async function wdIndiaFacet(token: string): Promise<string | null> {
-  const body = await wdPost(token, { appliedFacets: {}, limit: 1, offset: 0, searchText: '' })
+export type WdFacet = { param: string; ids: string[] }
 
+/** Pure: the India facet of a tenant's first response, or null. Exported for the test. */
+export function pickIndiaFacet(body: Rec): WdFacet | null {
   // THE PARAMETER NAME IS NOT FIXED EITHER. NVIDIA groups locations under
   // `locationHierarchy1`; Adobe uses `locationCountry` and `locations`. Looking
   // only for the first found NVIDIA's 244 postings and reported Adobe — which
   // has India roles — as having none. So: any group, anywhere in the facets,
   // holding a value named exactly "India".
   const hits: { param: string; id: string; count: number }[] = []
+  const cities = new Map<string, { id: string; count: number }[]>()
   for (const facet of arr(body.facets)) {
     for (const group of arr(facet.values)) {
       const param = str(group.facetParameter)
       if (!param) continue
       for (const v of arr(group.values)) {
-        if (str(v.descriptor).trim().toLowerCase() !== 'india') continue
-        hits.push({ param, id: str(v.id), count: Number(v.count ?? 0) })
+        const name = str(v.descriptor).trim()
+        if (name.toLowerCase() === 'india') hits.push({ param, id: str(v.id), count: Number(v.count ?? 0) })
+        // The second shape, found 2026-10-15: NO country-level entry, only one per place —
+        // Mastercard "Gurgaon, India" / "Hyderabad, India", Citi "Bangalore Karnataka India",
+        // Barclays and PwC plain "Pune", "Mumbai". The exact-"India" test above called all
+        // four "posts nothing in India", and so did the 2026-09-07 sweep for ~6,700 Workday
+        // candidates — among them the banks, consultancies and FMCG firms that recruit from
+        // the IIMs and IITs. A place counts when the location taxonomy says it is Indian.
+        else if (name && isIndianLocation(name)) cities.set(param, [...(cities.get(param) ?? []), { id: str(v.id), count: Number(v.count ?? 0) }])
       }
     }
   }
-  if (hits.length === 0) return null
+  if (hits.length > 0) {
+    // A country-level group beats a city-level one, and where a tenant offers
+    // both, the one carrying more postings wins — "India" as a country holds
+    // every city under it, "India, Bengaluru" holds one.
+    hits.sort((a, b) =>
+      Number(/country|hierarchy1/i.test(b.param)) - Number(/country|hierarchy1/i.test(a.param)) ||
+      b.count - a.count)
+    return { param: hits[0].param, ids: [hits[0].id] }
+  }
+  // All the Indian places of the group that has the most of them.
+  const best = [...cities.entries()].sort((a, b) => b[1].length - a[1].length)[0]
+  return best ? { param: best[0], ids: best[1].map((c) => c.id) } : null
+}
 
-  // A country-level group beats a city-level one, and where a tenant offers
-  // both, the one carrying more postings wins — "India" as a country holds
-  // every city under it, "India, Bengaluru" holds one.
-  hits.sort((a, b) =>
-    Number(/country|hierarchy1/i.test(b.param)) - Number(/country|hierarchy1/i.test(a.param)) ||
-    b.count - a.count)
-  return `${hits[0].param}|${hits[0].id}`
+async function wdIndiaFacet(token: string): Promise<WdFacet | null> {
+  return pickIndiaFacet(await wdPost(token, { appliedFacets: {}, limit: 1, offset: 0, searchText: '' }))
 }
 
 /**
@@ -330,7 +347,6 @@ ADAPTERS.push({
     // answer, so run.ts is entitled to deactivate the board on it.
     if (!facet) return { roles: [], complete: true }
 
-    const [param, id] = facet.split('|')
     const out: NormalisedRole[] = []
     let total = Infinity
     let complete = false
@@ -342,7 +358,7 @@ ADAPTERS.push({
       // the entire registry.
       if (opts?.deadline && Date.now() > opts.deadline) return { roles: out, complete: false }
       const body = await wdPost(token, {
-        appliedFacets: { [param]: [id] },
+        appliedFacets: { [facet.param]: facet.ids },
         limit: WD_PAGE,
         offset: page * WD_PAGE,
         searchText: '',

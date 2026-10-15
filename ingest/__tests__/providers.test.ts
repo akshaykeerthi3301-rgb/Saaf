@@ -267,3 +267,18 @@ describe('paging adapters honour a deadline', () => {
     expect(roles).toHaveLength(30)
   })
 })
+
+import { pickIndiaFacet } from '../providers'
+describe('workday India facet', () => {
+  const facets = (values: { descriptor: string; id: string; count: number }[], param = 'locations') => ({ facets: [{ facetParameter: 'x', values: [{ facetParameter: param, values }] }] })
+  it('takes a country-level "India" entry when there is one', () => {
+    expect(pickIndiaFacet(facets([{ descriptor: 'Germany', id: 'g', count: 5 }, { descriptor: 'India', id: 'in', count: 90 }]))).toEqual({ param: 'locations', ids: ['in'] })
+  })
+  it('falls back to every Indian place when there is no country entry (Mastercard, Citi, Barclays shapes)', () => {
+    const got = pickIndiaFacet(facets([{ descriptor: 'Gurgaon, India', id: 'a', count: 38 }, { descriptor: 'Hyderabad, India', id: 'b', count: 8 }, { descriptor: 'Pune', id: 'c', count: 3 }, { descriptor: 'Amsterdam, Netherlands', id: 'n', count: 9 }, { descriptor: 'Indianapolis', id: 'x', count: 1 }]))
+    expect(got).toEqual({ param: 'locations', ids: ['a', 'b', 'c'] })
+  })
+  it('reports null when the tenant lists nothing Indian', () => {
+    expect(pickIndiaFacet(facets([{ descriptor: 'London', id: 'l', count: 9 }]))).toBeNull()
+  })
+})

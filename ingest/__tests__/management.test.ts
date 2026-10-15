@@ -25,3 +25,23 @@ describe('management roles above 12 LPA (title guess)', () => {
     expect(annualInr({ min: 1, max: 2, currency: 'INR', period: 'hour' })).toBeNull()
   })
 })
+
+import { mbaFresherRole, mbaOrManagement } from '../management'
+describe('MBA / IIM / IIT fresher roles', () => {
+  const fresh = ['Management Trainee - Finance', 'Graduate Engineer Trainee', 'Campus Hire - Business Analyst', 'Associate - Investment Banking', 'Associate Consultant', 'Business Analyst', 'Summer Analyst, Global Markets',
+    'Associate Product Manager (APM)', 'Early Careers Programme - Strategy', 'Leadership Development Programme', 'Rotational Analyst', 'Strategy Analyst']
+  const notFresh = ['Senior Associate', 'Associate Director', 'Senior Business Analyst', 'Lead Strategy Analyst', 'Software Engineer II', 'Vice President', 'Product Manager', 'Head of Strategy', 'Principal Consultant', 'Data Scientist']
+  it.each(fresh)('keeps %s', (title) => expect(mbaFresherRole({ title })).toBe(true))
+  it.each(notFresh)('drops %s', (title) => expect(mbaFresherRole({ title })).toBe(false))
+
+  it('reads a named school only beside a fresher cue', () => {
+    expect(mbaFresherRole({ title: 'Product Analyst', description: 'Open to freshers from IIM, IIT or other top B-schools.' })).toBe(true)
+    expect(mbaFresherRole({ title: 'Software Engineer', description: 'IIT graduates preferred; 8+ years of experience.' })).toBe(false)
+  })
+
+  it('the combined rule keeps a senior manager AND a management trainee', () => {
+    expect(mbaOrManagement({ title: 'Senior Manager - Finance' })).toBe(true)
+    expect(mbaOrManagement({ title: 'Management Trainee' })).toBe(true)
+    expect(mbaOrManagement({ title: 'Teller' })).toBe(false)
+  })
+})

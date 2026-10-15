@@ -68,3 +68,44 @@ export function managementAbove12L(role: { title: string; pay?: RolePay | null }
   if (/\bmanager\b/i.test(t)) return FUNCTION.test(t)
   return false
 }
+
+/**
+ * "MBA / IIM / IIT fresher" roles — the second admission rule (founder, 2026-10-15),
+ * used with the management rule by boards flagged `"admit": "mba-or-management"`.
+ *
+ * Campus hiring at the IIMs and IITs runs through placement cells, not public boards,
+ * so what a public career page offers is the year-round early-career lane: trainee and
+ * graduate programmes, rotational and leadership-development schemes, summer
+ * analyst/associate roles, APM, and the entry titles consultancies and banks give MBAs
+ * (Associate, Associate Consultant, Business/Strategy Analyst). Titles are read first;
+ * where a posting carries its description, a named school or degree (MBA, PGDM, IIM,
+ * IIT, B-school) counts too, but only beside a fresher cue — "IIT preferred" on a senior
+ * engineer role is not a fresher role.
+ *
+ * Senior and managerial titles are not fresher roles whatever else they say.
+ */
+const SENIORISH = /\b(senior|sr|lead|principal|manager|mgr|director|vp|avp|svp|evp|head|staff|architect|chief|partner|president|specialist ii|ii|iii|iv)\b/i
+const FRESHER_TITLE = new RegExp([
+  String.raw`\b(management|graduate|business|operations|technical|engineer(ing)?|sales|finance|commercial|general)\s+trainees?\b`,
+  String.raw`\btrainees?\b`, String.raw`\bmt\b`, String.raw`\b(campus|early[- ]careers?|early[- ]talent|new[- ]grad|university grad\w*)\b`,
+  String.raw`\bgraduate\b`, String.raw`\brotational\b`, String.raw`\bleadership (development|programme|program)\b`,
+  String.raw`\bsummer\s+(analyst|associate|intern\w*)\b`, String.raw`\bapprentice\w*\b`, String.raw`\byoung professional\b`,
+  String.raw`\bassociate consultant\b`,
+  String.raw`\bassociate\b`, String.raw`\b(business|strategy|financial|research|investment|summer)\s+analyst\b`,
+].join('|'), 'i')
+const SCHOOL_CUE = /\b(mba|pgdm|iims?|iits?|b-?schools?)\b/i
+const FRESHER_CUE = /\b(freshers?|0\s*(-|to)\s*[0-3]\s*years?|recent graduates?|new graduates?|campus|graduate programme?|trainee|entry[- ]level)\b/i
+
+export function mbaFresherRole(role: { title: string; description?: string }): boolean {
+  const t = role.title
+  // An Associate Product Manager is the entry rung of a product career, though "manager" is in it.
+  if (/\b(apm|associate product manager)\b/i.test(t)) return true
+  if (SENIORISH.test(t)) return false
+  if (FRESHER_TITLE.test(t)) return true
+  const d = role.description ?? ''
+  return SCHOOL_CUE.test(d) && FRESHER_CUE.test(d)
+}
+
+/** The rule behind `"admit": "mba-or-management"`. */
+export const mbaOrManagement = (role: { title: string; description?: string; pay?: RolePay | null }): boolean =>
+  managementAbove12L(role) || mbaFresherRole(role)
