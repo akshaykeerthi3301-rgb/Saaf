@@ -2,6 +2,14 @@
 
 ---
 
+## ▶ NEXT SESSION STARTS HERE — government funding (decided 2026-10-16)
+
+**Read first:** `docs/FUNDING-READINESS.md` (the honest read, the real KSUM and Startup India numbers, §7 your answers and the dated steps). **Where things stand:** no company yet; you are in Kerala; no co-founder or advisor; 5–8 real users; no college chosen. **First moves, in order:** (1) a CA about the company form (OPC vs Pvt Ltd vs LLP — you have no co-founder), (2) DPIIT recognition and a KSUM Unique ID, (3) a lawyer's one-page note on the data sources, (4) pick one Kerala college or community and get the first 100 users. **What Claude can draft in the session:** the questions for your CA, the KSUM Idea Grant application, a one-page investor/grant deck, the user-interview write-up.
+
+**The product is in a stable state to build that on:** deployed (`dpl_95hSK2RqJPCErXzdDHD9pE7ukk8E`, jobinko.in), 32,133 open jobs after the first weekly clean-up, `CAREER_SITES` set, the weekly job scheduled Sundays 20:00 UTC. Nothing is half-done: no branch is unmerged (`main` is the live code), no database change is pending. **Open, none urgent:** GitLab runner secrets, the terms review (Amazon and the Oracle-hosted employers), checking the signed-in feed, an optional −26-line tidy (TASK-319).
+
+---
+
 ## ✅ 2026-10-16 (night) — the weekly job ran: 10,711 old jobs gone; the site was redeployed with the fix
 
 **Live:** the first weekly run happened on your word. **Open jobs 42,844 → 32,133** (10,711 deleted — the 25% cap), no duplicates, 24,640 new listings that week. The first attempt hit the database's time limit and changed nothing; I rebuilt it in small batches, applied that, and **redeployed** (`dpl_95hSK2RqJPCErXzdDHD9pE7ukk8E`). About 6,900 jobs older than 90 days are still waiting; Sunday's scheduled run takes them. The database size still reads ~268 MB (Postgres reuses freed space instead of shrinking), so the room is there for new jobs.
