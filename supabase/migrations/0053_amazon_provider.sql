@@ -5,7 +5,7 @@
 -- /internal* is disallowed), nothing is bypassed — EXCEPT that Amazon's site
 -- terms could not be located, so whether they forbid automated collection is
 -- UNREAD. The founder chose to build it on 2026-10-15; every career-site provider is
--- off unless the environment variable CAREER_SITES lists it (ingest/providers/career-switch.ts).
+-- off unless the environment variable CAREER_SITES lists it (careerSiteOn in ingest/providers/types.ts).
 --
 -- amazon:    token is the country filter, e.g. IND.
 -- oraclehcm: Oracle Recruiting Cloud (/hcmRestApi/.../recruitingCEJobRequisitions),

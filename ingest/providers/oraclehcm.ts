@@ -1,6 +1,5 @@
-import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
+import { toText, str, USER_AGENT, careerSiteOn, type Adapter, type FetchResult, type NormalisedRole } from './types'
 import { workModeFrom } from './fields'
-import { careerSiteOn } from './career-switch'
 
 /**
  * Oracle Recruiting Cloud (Oracle HCM) career sites — one platform, many large
@@ -60,7 +59,6 @@ export function indiaFacet(first: unknown): { id: string; count: number } | null
   const hit = facets.find((f) => str(f.Name).toLowerCase() === 'india')
   return hit ? { id: String(hit.Id), count: Number(hit.TotalCount ?? 0) } : null
 }
-export const indiaFacetId = (first: unknown) => indiaFacet(first)?.id ?? null
 
 export function parseOracle(raw: unknown, token: string): NormalisedRole[] {
   const { host, site } = parts(token)

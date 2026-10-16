@@ -1,6 +1,5 @@
-import { toText, str, USER_AGENT, type Adapter, type FetchResult, type NormalisedRole } from './types'
+import { toText, str, USER_AGENT, careerSiteOn, type Adapter, type FetchResult, type NormalisedRole } from './types'
 import { employmentTypeFrom } from './fields'
-import { careerSiteOn } from './career-switch'
 
 /**
  * Amazon's own careers site (amazon.jobs) — the first COMPANY career site read
@@ -13,7 +12,7 @@ import { careerSiteOn } from './career-switch'
  * `/internal*` (MEASURED 2026-10-15), no login or token is bypassed, and the
  * apply link sends the candidate to Amazon. ⚠️ AMAZON'S SITE TERMS WERE NOT FOUND
  * (amazon.jobs/en/terms 404s; /en/legal 404s), so "forbidden or not" is UNREAD —
- * the founder chose to build it anyway, behind the CAREER_SITES switch (career-switch.ts).
+ * the founder chose to build it anyway, behind the CAREER_SITES switch (careerSiteOn in types.ts).
  *
  * ⚠️ OFF BY DEFAULT. Nothing is fetched unless CAREER_SITES includes "amazon".
  *

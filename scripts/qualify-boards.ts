@@ -94,9 +94,7 @@ const isTransient = (error?: string) =>
  * candidates, so it runs one request at a time with a longer pause and backs off
  * further whenever it is told to slow down.
  */
-const SLOW_PROVIDERS: Record<string, { concurrency: number; delayMs: number }> = {
-  workable: { concurrency: 1, delayMs: 1500 },
-}
+const WORKABLE_PACE = { concurrency: 1, delayMs: 1500 }
 const BACKOFF_ON_429_MS = 20_000
 
 type Probed = Candidate & {
@@ -470,7 +468,7 @@ async function main() {
     writeFileSync(CANDIDATES, JSON.stringify(candidates, null, 2))
   }
 
-  const pace = (only && SLOW_PROVIDERS[only]) || { concurrency: CONCURRENCY, delayMs: DELAY_MS }
+  const pace = (only === 'workable' && WORKABLE_PACE) || { concurrency: CONCURRENCY, delayMs: DELAY_MS }
   await pool(queue, pace.concurrency, async (c) => {
     try {
       const hit = await probe(c)

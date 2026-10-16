@@ -17,7 +17,7 @@ import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from
 import { managementAbove12L, mbaOrManagement } from './management'
 import { isStalePosting } from './lifecycle'
 import { pool } from './pool'
-import { closureChanges, collapseRepeats, repostHistory, repostKeyOf, crossBoardKey, dropHeldBySiblings } from './dedupe'
+import { closureChanges, collapseRepeats, repostHistory, repostKeyOf, dropHeldBySiblings } from './dedupe'
 import { chunk, pageAll } from './paging'
 
 const PRUNE_DAYS = 30
@@ -321,7 +321,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
     if (!ids.length) return new Set()
     const rows = await pageAll<{ title: string; location_raw: string | null }>((from, to) =>
       db.from('roles').select('title, location_raw').in('board_id', ids).is('closed_at', null).order('id').range(from, to))
-    return new Set(rows.map((r) => crossBoardKey(r.title, r.location_raw ?? '')))
+    return new Set(rows.map((r) => repostKeyOf(r.title, r.location_raw ?? '')))
   }
 
   let indexed = 0
@@ -576,7 +576,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
           retiredCopies += orphans.length
 
           // Copies THIS board stored before a smaller-id sibling started holding the posting.
-          const crossCopies = stored.filter((r) => held.has(crossBoardKey(r.title, r.location_raw ?? ''))).map((r) => r.id)
+          const crossCopies = stored.filter((r) => held.has(repostKeyOf(r.title, r.location_raw ?? ''))).map((r) => r.id)
           for (const id of crossCopies) orphanIds.add(id)
           for (const part of chunk(crossCopies, 100)) {
             const { error: cErr } = await db.from('roles').delete().in('id', part)
@@ -743,6 +743,7 @@ export async function runAll() {
 }
 
 // CLI entry point: `npm run ingest`. Skipped when imported by the cron route.
+// INGEST_ONLY=1 runs just the ingest (no recompute, no digest emails) with INGEST_BUDGET_MS — what the long runner calls.
 if (process.argv[1]?.includes('ingest/run')) {
-  runAll().catch((e) => { console.error(e); process.exit(1) })
+  ;(process.env.INGEST_ONLY ? runIngest() : runAll()).catch((e) => { console.error(e); process.exit(1) })
 }

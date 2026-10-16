@@ -9,9 +9,9 @@ import type { RolePay } from './providers/fields'
  * all its corporate roles. Postings almost never state pay, so this is an
  * INFORMED GUESS from the title, with stated pay overriding the guess.
  *
- *   1. Stated pay wins. Annualised in ₹ (year × 1, month × 12; USD × 85, EUR × 92,
- *      GBP × 105 — a rough fixed rate, this is a screen not a payroll). Kept when the
- *      top of the range reaches ₹12 LPA, dropped when it does not.
+ *   1. Stated pay wins. Annualised in ₹ (year × 1, month × 12). Kept when the top of the
+ *      range reaches ₹12 LPA, dropped when it does not. Pay in another currency is no
+ *      evidence either way — a posting in India that states pay almost always states ₹.
  *   2. Otherwise the title decides:
  *        director · VP/AVP/SVP · general manager/GM/DGM/AGM · chief · president · partner
  *          → kept (₹25 LPA+ in practice in India)
@@ -29,16 +29,12 @@ import type { RolePay } from './providers/fields'
  * wording, taken literally; widen it here if "senior" was meant.
  */
 
-const FX: Record<string, number> = { INR: 1, USD: 85, EUR: 92, GBP: 105 }
-
-/** Annual ₹ for a stated range, or null when the currency is not one we convert. */
+/** Annual ₹ for a stated range; null when the pay is not in ₹ or not per year/month (no evidence). */
 export function annualInr(pay: RolePay | null | undefined): number | null {
-  if (!pay) return null
+  if (!pay || (pay.currency || '').toUpperCase() !== 'INR') return null
   const top = pay.max ?? pay.min
-  const fx = FX[(pay.currency || '').toUpperCase()]
-  if (top == null || !fx) return null
   const perYear = pay.period === 'year' ? 1 : pay.period === 'month' ? 12 : null
-  return perYear == null ? null : top * fx * perYear
+  return top == null || perYear == null ? null : top * perYear
 }
 
 const STRONG = /\b(director|vice president|vp|svp|evp|avp|general manager|gm|dgm|agm|chief|president|partner|managing director|cxo|ceo|cfo|cto|coo|cmo)\b/i
@@ -85,14 +81,7 @@ export function managementAbove12L(role: { title: string; pay?: RolePay | null }
  * Senior and managerial titles are not fresher roles whatever else they say.
  */
 const SENIORISH = /\b(senior|sr|lead|principal|manager|mgr|director|vp|avp|svp|evp|head|staff|architect|chief|partner|president|specialist ii|ii|iii|iv)\b/i
-const FRESHER_TITLE = new RegExp([
-  String.raw`\b(management|graduate|business|operations|technical|engineer(ing)?|sales|finance|commercial|general)\s+trainees?\b`,
-  String.raw`\btrainees?\b`, String.raw`\bmt\b`, String.raw`\b(campus|early[- ]careers?|early[- ]talent|new[- ]grad|university grad\w*)\b`,
-  String.raw`\bgraduate\b`, String.raw`\brotational\b`, String.raw`\bleadership (development|programme|program)\b`,
-  String.raw`\bsummer\s+(analyst|associate|intern\w*)\b`, String.raw`\bapprentice\w*\b`, String.raw`\byoung professional\b`,
-  String.raw`\bassociate consultant\b`,
-  String.raw`\bassociate\b`, String.raw`\b(business|strategy|financial|research|investment|summer)\s+analyst\b`,
-].join('|'), 'i')
+const FRESHER_TITLE = /\b(trainees?|mt|campus|early[- ]careers?|early[- ]talent|new[- ]grad|university grad\w*|graduate|rotational|leadership (development|programme|program)|summer\s+(analyst|associate|intern\w*)|apprentice\w*|young professional|associate|(business|strategy|financial|research|investment|summer)\s+analyst)\b/i
 const SCHOOL_CUE = /\b(mba|pgdm|iims?|iits?|b-?schools?)\b/i
 const FRESHER_CUE = /\b(freshers?|0\s*(-|to)\s*[0-3]\s*years?|recent graduates?|new graduates?|campus|graduate programme?|trainee|entry[- ]level)\b/i
 

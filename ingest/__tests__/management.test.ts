@@ -18,9 +18,9 @@ describe('management roles above 12 LPA (title guess)', () => {
     expect(managementAbove12L({ title: 'Director - Product', pay: { min: 700_000, max: 900_000, currency: 'INR', period: 'year' } })).toBe(false)
   })
 
-  it('annualises pay: monthly × 12, USD at the fixed screening rate; unknown currency is no evidence', () => {
+  it('annualises ₹ pay (monthly × 12); another currency is no evidence', () => {
     expect(annualInr({ min: null, max: 100_000, currency: 'INR', period: 'month' })).toBe(1_200_000)
-    expect(annualInr({ min: 20_000, max: 30_000, currency: 'USD', period: 'year' })).toBe(2_550_000)
+    expect(annualInr({ min: 20_000, max: 30_000, currency: 'USD', period: 'year' })).toBeNull() // another currency is no evidence
     expect(annualInr({ min: 1, max: 2, currency: 'XYZ', period: 'year' })).toBeNull()
     expect(annualInr({ min: 1, max: 2, currency: 'INR', period: 'hour' })).toBeNull()
   })

@@ -41,7 +41,7 @@ export function survivorId(externalIds: string[]): string {
 /** What the copies of one posting say about when it was first listed. */
 export type RepostInfo = { count: number; firstPostedAt: string }
 
-const repostKey = (title: string, location: string) => `${title.toLowerCase()}||${location.toLowerCase()}`
+const repostKey = (title: string, location: string) => `${title.toLowerCase().trim()}||${location.toLowerCase().trim()}`
 
 /** The key repostHistory uses, for the caller to look a survivor up by. */
 export const repostKeyOf = repostKey
@@ -146,9 +146,6 @@ export function closureChanges(
  * Any maintenance script that removes these duplicates must keep the same row — the one on
  * the smallest board id.
  */
-export const crossBoardKey = (title: string, location: string) =>
-  `${title.toLowerCase().trim()}||${location.toLowerCase().trim()}`
-
 export function dropHeldBySiblings<T extends { title: string; locationRaw: string }>(roles: T[], held: Set<string>): T[] {
-  return held.size === 0 ? roles : roles.filter((r) => !held.has(crossBoardKey(r.title, r.locationRaw)))
+  return held.size === 0 ? roles : roles.filter((r) => !held.has(repostKey(r.title, r.locationRaw)))
 }

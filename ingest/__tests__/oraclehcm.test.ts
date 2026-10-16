@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { adapterFor } from '../providers'
-import { indiaFacetId, parseOracle } from '../providers/oraclehcm'
+import { indiaFacet, parseOracle } from '../providers/oraclehcm'
 
 const TOKEN = 'jpmc.fa.oraclecloud.com/CX_1001'
 const list = {
@@ -15,8 +15,8 @@ describe('oracle hcm career sites', () => {
   afterEach(() => { delete process.env.CAREER_SITES })
 
   it('finds the country-level India facet, not the city rows under it', () => {
-    expect(indiaFacetId(list)).toBe('300000000289360')
-    expect(indiaFacetId({ items: [{ locationsFacet: [{ Name: 'Germany', Id: 2 }] }] })).toBeNull()
+    expect(indiaFacet(list)).toEqual({ id: '300000000289360', count: 307 })
+    expect(indiaFacet({ items: [{ locationsFacet: [{ Name: 'Germany', Id: 2 }] }] })).toBeNull()
   })
 
   it('turns requisitions into roles, with the employer-hosted apply link', () => {
