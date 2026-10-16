@@ -3,7 +3,7 @@ import { cronRoute } from '@/lib/cron-route'
 /**
  * The weekly housekeeping: list what arrived this week, remove duplicates, delete the oldest.
  *
- * All the work is one database function, `weekly_housekeeping` (migration 0054), called from
+ * The work is a few small database functions (migration 0055) looped over by
  * ingest/weekly.ts — it counts the new listings BEFORE it deletes anything, removes
  * cross-site duplicates (smallest board id kept), then deletes postings older than the window,
  * oldest first, at most a quarter of the index per run, and writes the week's row in
@@ -16,5 +16,6 @@ export const maxDuration = 60
 
 export const GET = cronRoute('weekly', async () => {
   const { runWeekly } = await import('../../../../../ingest/weekly')
-  return runWeekly()
+  // 45 s of the function's 60: stop cleanly and carry on next run rather than be killed mid-batch.
+  return runWeekly(45_000)
 })
