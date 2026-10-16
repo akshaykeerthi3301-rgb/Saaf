@@ -72,6 +72,26 @@ All four together are capped at ₹15 lakh. Applications open in calls ("Kerala 
 
 1. **Legal on sources** (above). 2. **Job seekers do not pay** — in India the buyer is usually the employer, the college, or a coaching brand; your paid plan needs a payer who is not the candidate. 3. **Distribution** — the best product loses to the one students already use. 4. **Single point of failure** — the system was built mostly by an AI assistant and one founder; write down how you would keep it running if a tool changed. 5. **Auto-apply** — it can get candidates banned by employers; keep it off by default, as it is.
 
-## 7. What I need from you (UNKNOWN today)
+## 7. Your answers (2026-10-16) and what they change
 
-Is there a registered company, and where? Are you based in Kerala? Is there any co-founder or advisor? How many real people have used it beyond you? Which college or community could you reach in two weeks? Answer these and this plan becomes dates and names.
+You told me: **no registered company · based in Kerala · no co-founder or advisor · 5–8 real users besides you · no college or community chosen yet.** Honest reading: you are at the very start of the funding road, and every answer is fixable in weeks except the second one, which is already a point in your favour — Kerala has the most founder-friendly state startup machinery in India.
+
+**What this changes**
+
+1. **You can apply for the KSUM Idea Grant before you have a company** — incorporation and the KSUM ID are needed only before the money is paid (OBSERVED). The catch: that grant is for "ideation / design / proof of concept", and Jobinko is further along than that. Frame it truthfully as *validating the product with real users* (and say so in the pitch); if KSUM considers you past that stage, the Productisation Grant (₹7 lakh) is the right door, but it needs the company and the KSUM ID first.
+2. **The company form is your first real decision, because you have no co-founder.** My understanding — **ask a CA to confirm** — is that a Private Limited needs two directors and two shareholders; a One Person Company lets one person own it and can be converted later; an LLP needs two partners. KSUM accepts Pvt Ltd, LLP and OPC for the Idea Grant; the Productisation and later grants name Pvt Ltd or LLP. DPIIT's page lists Private Limited, Partnership, LLP and Cooperative — **whether an OPC qualifies for DPIIT recognition is unverified; ask.** The cleanest route is usually a Private Limited with a trusted second director holding a small stake.
+3. **No co-founder or advisor is the weakest part of the story.** Investors and KSUM's committee score "team" first. Cheapest fixes: ask KSUM for a mentor at the Idea Day, find one technical advisor who can say yes to "could this run without the founder's AI assistant for a month?", and look for a co-founder with sales or campus distribution rather than another builder. If you give advisory shares, keep them small and vesting (typically well under 1% each) — confirm the numbers with your CA.
+4. **5–8 users is a starting line, not traction.** The next number to chase is 100 people who each upload a résumé, then 500. Keep a list of the 5–8 now: what they used, what they said, whether they came back. Those quotes are your first pitch slide.
+5. **"No college chosen" is the cheapest problem to solve.** KSUM's own guidelines route student grants through college innovation centres (IEDCs). Pick **one** target this week from: the placement cell of an MBA programme near you (IIM Kozhikode or a Kerala B-school), the placement cell of an engineering college with a strong IEDC, or a Technopark/Infopark community. Offer them something concrete: "a free scored shortlist and a résumé check for your final-year batch, 30 minutes in a hall".
+
+**Dated steps (starting today, 16 Oct)**
+
+| By | Step |
+|---|---|
+| 23 Oct | Meet a CA: choose OPC / Pvt Ltd / LLP, check DPIIT eligibility for it, get a quote and a timeline. Choose the college or community and send one message to a person there. |
+| 6 Nov | Company incorporated or in process; draft the one-page lawyer note on data sources. Write up the 5–8 users' stories. |
+| 20 Nov | DPIIT recognition filed; KSUM registration (Unique ID) filed; first campus session done; target 50 sign-ups. |
+| 4 Dec | Apply in KSUM's next open call (Idea Grant now; Productisation once you hold the ID and the company). Target 100 users with a saved résumé. |
+| January | Name three incubators on the Startup India Seed Fund portal; apply once DPIIT-recognised (the two-year clock runs from incorporation, so do not wait). |
+
+I will happily draft the CA questions, the KSUM application and the one-page deck whenever you say. The only thing I cannot do is the company paperwork itself.

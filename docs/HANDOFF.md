@@ -2,6 +2,14 @@
 
 ---
 
+## ✅ 2026-10-16 (night) — the weekly job ran: 10,711 old jobs gone; the site was redeployed with the fix
+
+**Live:** the first weekly run happened on your word. **Open jobs 42,844 → 32,133** (10,711 deleted — the 25% cap), no duplicates, 24,640 new listings that week. The first attempt hit the database's time limit and changed nothing; I rebuilt it in small batches, applied that, and **redeployed** (`dpl_95hSK2RqJPCErXzdDHD9pE7ukk8E`). About 6,900 jobs older than 90 days are still waiting; Sunday's scheduled run takes them. The database size still reads ~268 MB (Postgres reuses freed space instead of shrinking), so the room is there for new jobs.
+
+**You need to:** (1) the funding steps in `docs/FUNDING-READINESS.md` §7 — this week: sit with a CA about the company form (you have no co-founder, which matters for a Private Limited), and pick one Kerala college or community; (2) the earlier opens: GitLab runner secrets, the terms review, check the signed-in feed.
+
+---
+
 ## 🔶 2026-10-16 (evening) — `CAREER_SITES` is set and live; a funding plan is written
 
 **Live:** the setting is in Vercel Production and the site was redeployed (`dpl_6Cjae6F7VDToYLFjcwF96kqXqUbh`, jobinko.in). Amazon and Oracle jobs can now refresh. **Not changed:** the weekly job's first run is still Sunday 20:00 UTC.
