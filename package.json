@@ -20,6 +20,8 @@
     "registry:qualify": "tsx scripts/qualify-boards.ts",
     "registry:workday": "tsx scripts/discover-workday.ts",
     "ingest": "tsx --env-file=.env.local ingest/run.ts",
+    "ingest:only": "tsx --env-file=.env.local ingest/ingest-only.ts",
+    "weekly": "tsx --env-file=.env.local ingest/weekly.ts",
     "audit:security": "bash scripts/security-audit.sh",
     "verify:onboarding": "tsx --env-file=.env.local scripts/verify-onboarding.ts",
     "bench": "tsx scripts/bench-ats.ts",

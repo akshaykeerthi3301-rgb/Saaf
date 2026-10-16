@@ -2,6 +2,21 @@
 
 ---
 
+## 🔶 2026-10-16 (Phase 21 closed) — duplicates gone, weekly freshness job built; deploy to switch it on
+
+**Live vs written:** in your database now: the 448 duplicates are **deleted**, and the weekly function (`weekly_housekeeping`) and its history table are **created and locked down** (only the server can run it). **Written but NOT deployed** (branch `scale-free-plan`): the weekly schedule, the rule that stops old and duplicate jobs coming in, the Amazon/Oracle/Workday readers and every ingest change from the last two days. Phase 21: **36 of 43 tasks done; the 7 left all need you.**
+
+**What the weekly job does** (Sundays 20:00 UTC once deployed): (1) lists what arrived that week — total, by source, the 25 employers with the most; (2) removes any duplicate; (3) deletes the oldest jobs — posted more than **90 days** ago, oldest first, never one you track in an application, **at most a quarter of the index per week**. The ingest also refuses jobs older than 90 days, so deleted ones don't come back. Today 17,641 of 42,844 jobs (41%) are older than 90 days, so the first run deletes ~10,600 and the next week the rest. 90 days is my choice — tell me if you want 60 or 120.
+
+**You need to (in this order):**
+1. **Deploy the branch** (RUNBOOK) and in Vercel add `CAREER_SITES` = `amazon,oraclehcm` (TASK-297).
+2. **Run `npm run weekly` once yourself** after deploying and read the numbers it prints; then the Sunday schedule takes over (TASK-315). I held back the first deletion on purpose: the old live code would re-add what it removed.
+3. **Optional, but it fixes a real gap:** the nightly update on Vercel only reads ~60 boards a night; the full registry has ~2,000. `.gitlab-ci.yml` runs the whole thing in ~30 minutes. To switch it on: GitLab → Settings → CI/CD → Variables, add `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (masked + protected — never paste it to me), then add a daily pipeline schedule (TASK-291).
+4. **Tomorrow:** sign in and check the feed shows Amazon / PwC / Barclays jobs (TASK-300).
+5. **Have a lawyer read** Amazon's and the Oracle-hosted employers' terms before a public launch (TASK-299).
+
+---
+
 ## 🔶 2026-10-16 (later) — cleanup done; duplicate rule written; 448 duplicates await your yes
 
 **Live vs written:** the non-public-site cleanup is **done in your database** (23 boards switched off, 254 jobs deleted — as you approved). The **duplicate rule is written but NOT deployed** (branch `scale-free-plan`). **448 duplicate jobs are still stored.**

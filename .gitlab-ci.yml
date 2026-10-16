@@ -1,0 +1,28 @@
+# The long-running nightly ingest (GitHub Actions is disabled on this account, HTTP 422).
+#
+# WHY THIS EXISTS: Vercel's cron gives the ingest 60 seconds, which reads about 60 boards a
+# night — a sweep of the ~2,000-board registry then takes weeks. The same code read all 2,006
+# boards in ~28 minutes when run by hand (2026-10-15). This runs it as a scheduled GitLab
+# pipeline instead.
+#
+# TO TURN IT ON (founder-only — secrets never go in chat or in this file):
+#   1. GitLab → Settings → CI/CD → Variables, add as MASKED + PROTECTED:
+#        NEXT_PUBLIC_SUPABASE_URL        (the project URL)
+#        SUPABASE_SERVICE_ROLE_KEY       (⚠️ bypasses row security — runner only, never Vercel/browser)
+#   2. GitLab → Build → Pipeline schedules → New schedule: daily, ~02:30 IST, branch `main`.
+#   3. Watch the first run; then remove the "/api/cron/ingest" entry from vercel.json.
+# The free tier's compute-minute allowance is UNREAD (TBD): ~30 minutes a night is ~900 a month.
+# A failed pipeline emails the project owner — that is the failure alert.
+
+ingest:
+  image: node:22
+  timeout: 90 minutes
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  cache:
+    key: npm
+    paths: [.npm/]
+  script:
+    - npm ci --cache .npm --prefer-offline
+    # Called directly, not through `npm run ingest:only`, which reads a local .env.local that does not exist here.
+    - CAREER_SITES=amazon,oraclehcm INGEST_BUDGET_MS=3000000 npx tsx ingest/ingest-only.ts

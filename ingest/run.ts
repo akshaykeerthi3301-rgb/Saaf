@@ -15,6 +15,7 @@ import { ADAPTERS, USER_AGENT, adapterFor, type NormalisedRole, type FetchResult
 import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gates/extract'
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 import { managementAbove12L, mbaOrManagement } from './management'
+import { isStalePosting } from './lifecycle'
 import { pool } from './pool'
 import { closureChanges, collapseRepeats, repostHistory, repostKeyOf, crossBoardKey, dropHeldBySiblings } from './dedupe'
 import { chunk, pageAll } from './paging'
@@ -408,12 +409,17 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       const droppedDupes = byExternalId.length - collapsed.length
       // The same posting on a sibling career site of this employer — see dropHeldBySiblings.
       const held = await heldBySiblings(b)
-      const india = dropHeldBySiblings(collapsed, held)
-      const droppedCross = collapsed.length - india.length
+      const unheld = dropHeldBySiblings(collapsed, held)
+      const droppedCross = collapsed.length - unheld.length
 
       // Fetched only for roles we are actually keeping.
-      const noDescription = await fillDescriptions(b.provider, b.token, india, deadline)
+      const noDescription = await fillDescriptions(b.provider, b.token, unheld, deadline)
       if (noDescription) undescribed += noDescription
+
+      // Older than the window (ingest/lifecycle.ts) — judged AFTER the detail call, because a Workday
+      // listing carries no date until then. The weekly job deletes what is already stored.
+      const india = unheld.filter((r) => !isStalePosting(r.postedAt))
+      const droppedOld = unheld.length - india.length
 
       /**
        * What this board already stores, read BEFORE the upsert.
@@ -629,7 +635,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       else partial++
 
       ok++
-      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} ${policies.get(`${b.provider}:${b.token}`) ? 'outside the admission rule or non-corporate' : 'non-corporate'} dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${droppedCross ? `  (${droppedCross} already held by a sibling career site)` : ''}${complete ? '' : '  PARTIAL'}`)
+      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} ${policies.get(`${b.provider}:${b.token}`) ? 'outside the admission rule or non-corporate' : 'non-corporate'} dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${droppedCross ? `  (${droppedCross} already held by a sibling career site)` : ''}${droppedOld ? `  (${droppedOld} older than the posting window)` : ''}${complete ? '' : '  PARTIAL'}`)
     } catch (e) {
       // One board failing must never halt the run — the registry compounding is
       // the moat, and a provider outage is not a reason to lose a day.
