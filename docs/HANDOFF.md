@@ -2,6 +2,18 @@
 
 ---
 
+## ✅ 2026-10-16 — DEPLOYED (`dpl_9yXqkHwsTX8jRwJ1J2AV5AgsorSA`, live at https://jobinko.in)
+
+**Live vs written:** everything from the last two days is now **live**: the new employers' jobs (PwC, Barclays, Amazon, JPMorgan…), the duplicate rule, the 90-day age rule and the weekly job. Checked as a visitor: public pages load, signed-in pages redirect, the weekly route is locked (401), and a search for PwC and for Amazon returns real jobs. **Not checked:** any signed-in screen.
+
+**Two things are still yours:**
+1. **Switch on Amazon/Oracle refreshing:** in Vercel → Project `saaf` → Settings → Environment Variables, add `CAREER_SITES` = `amazon,oraclehcm` (Production), then redeploy. Say "set it" and I will do both. Until then those jobs stay but go stale.
+2. **The weekly job's first run is Sunday 01:30 IST (Monday)**; it deletes up to ~10,600 jobs older than 90 days, then the rest the week after. If you would rather watch it, say "run the weekly now" and I will run it and show you the report; or change the 90 days first.
+
+**Still open, unchanged:** GitLab runner secrets (the nightly update on Vercel only reads ~60 boards a night), the terms review, and checking the signed-in feed tomorrow.
+
+---
+
 ## 🔶 2026-10-16 (Phase 21 closed) — duplicates gone, weekly freshness job built; deploy to switch it on
 
 **Live vs written:** in your database now: the 448 duplicates are **deleted**, and the weekly function (`weekly_housekeeping`) and its history table are **created and locked down** (only the server can run it). **Written but NOT deployed** (branch `scale-free-plan`): the weekly schedule, the rule that stops old and duplicate jobs coming in, the Amazon/Oracle/Workday readers and every ingest change from the last two days. Phase 21: **36 of 43 tasks done; the 7 left all need you.**

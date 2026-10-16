@@ -1175,7 +1175,7 @@ Plan, evidence and metrics: `docs/RESUME-PARSING-BLUEPRINT.md`. Sprint 1 = TASK-
   Files: `src/app/api/cron/`
   Verify: two green canaries recorded
 
-## Phase 21 — Job-volume scaling (PLANNED 2026-10-15; 36 of 43 done; the 7 open (TASK-289, 290, 291, 297, 299, 300, 315) all need the founder or tonight's run) — `docs/job_scaling_blueprint.md`
+## Phase 21 — Job-volume scaling (PLANNED 2026-10-15; 36 of 43 done; DEPLOYED 2026-10-16 (`dpl_9yXqkHwsTX8jRwJ1J2AV5AgsorSA`); the 7 open (TASK-289, 290, 291, 297 [CAREER_SITES], 299, 300, 315) all need the founder or tonight's run) — `docs/job_scaling_blueprint.md`
 
 Founder directive was 5M jobs; measured answer is a lawful ladder to ~1M (R0 28,751 → R1 ~156k → R2 ~1M). Nothing here is built or live.
 
@@ -1251,7 +1251,7 @@ Founder directive was 5M jobs; measured answer is a lawful ladder to ~1M (R0 28,
 - [x] **TASK-296** — Admit the four held staffing boards (founder, 2026-10-15) and list them on the agency switch
   Files: `registry/boards.json`, `src/lib/taxonomy/agencies.ts`
   Verify: 8,326 India roles kept (Endeavor 4,606 · Weblee 2,121 · Squircle 1,334 · Jobs for Humanity 265)
-- [ ] **TASK-297** — FOUNDER: deploy the branch (RUNBOOK) and set `CAREER_SITES=amazon,oraclehcm` in Vercel, or the nightly run cannot refresh Amazon/Oracle jobs
+- [ ] **TASK-297** — (DEPLOYED 2026-10-16, `dpl_9yXqkHwsTX8jRwJ1J2AV5AgsorSA`, serving jobinko.in; STILL OPEN: set `CAREER_SITES=amazon,oraclehcm` in Vercel and redeploy, or the nightly run cannot refresh Amazon/Oracle jobs) FOUNDER: deploy the branch (RUNBOOK) and set `CAREER_SITES=amazon,oraclehcm` in Vercel
   Files: Vercel environment
   Verify: nightly ingest log shows Amazon and Oracle boards ok
 - [x] **TASK-298** — (DONE: the founder chose rules and then 'every corporate role at the strongest MBA recruiters' (TASK-309); the unidentified Kerala branch network stays held) FOUNDER: decide the seven held bulk employers (Kotak 4,099, Aster 2,430, Tata Capital 2,296, unidentified Kerala branch network 1,773, Adani 980, Marriott 892, Hilton 408 India jobs)
