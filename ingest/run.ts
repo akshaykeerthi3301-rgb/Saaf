@@ -16,7 +16,7 @@ import { extractAll, mentionsUnreadExperience, resolveInIndia } from '../src/gat
 import { classifyFunction, isCorporateRole, isJunkPosting, normaliseTitle } from './classify'
 import { managementAbove12L, mbaOrManagement } from './management'
 import { pool } from './pool'
-import { closureChanges, collapseRepeats, repostHistory, repostKeyOf } from './dedupe'
+import { closureChanges, collapseRepeats, repostHistory, repostKeyOf, crossBoardKey, dropHeldBySiblings } from './dedupe'
 import { chunk, pageAll } from './paging'
 
 const PRUNE_DAYS = 30
@@ -312,6 +312,17 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
   )
   const boards = allBoards.filter((b) => !excluded.has(b.token.toLowerCase()))
 
+  /** Postings a smaller-id sibling board of the same employer already stores (empty when it has none). */
+  const heldBySiblings = async (b: { id: string; company_name: string }): Promise<Set<string>> => {
+    const ids = allBoards
+      .filter((o) => o.id < b.id && o.company_name.toLowerCase() === b.company_name.toLowerCase())
+      .map((o) => o.id)
+    if (!ids.length) return new Set()
+    const rows = await pageAll<{ title: string; location_raw: string | null }>((from, to) =>
+      db.from('roles').select('title, location_raw').in('board_id', ids).is('closed_at', null).order('id').range(from, to))
+    return new Set(rows.map((r) => crossBoardKey(r.title, r.location_raw ?? '')))
+  }
+
   let indexed = 0
   let ok = 0
   let skipped = 0
@@ -393,8 +404,12 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       const byExternalId = [...new Map(kept.map((r) => [r.externalId, r])).values()]
 
       // See ingest/dedupe.ts — the rule and the reason it must be stable.
-      const india = collapseRepeats(byExternalId)
-      const droppedDupes = byExternalId.length - india.length
+      const collapsed = collapseRepeats(byExternalId)
+      const droppedDupes = byExternalId.length - collapsed.length
+      // The same posting on a sibling career site of this employer — see dropHeldBySiblings.
+      const held = await heldBySiblings(b)
+      const india = dropHeldBySiblings(collapsed, held)
+      const droppedCross = collapsed.length - india.length
 
       // Fetched only for roles we are actually keeping.
       const noDescription = await fillDescriptions(b.provider, b.token, india, deadline)
@@ -553,6 +568,15 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
             if (oErr) throw oErr
           }
           retiredCopies += orphans.length
+
+          // Copies THIS board stored before a smaller-id sibling started holding the posting.
+          const crossCopies = stored.filter((r) => held.has(crossBoardKey(r.title, r.location_raw ?? ''))).map((r) => r.id)
+          for (const id of crossCopies) orphanIds.add(id)
+          for (const part of chunk(crossCopies, 100)) {
+            const { error: cErr } = await db.from('roles').delete().in('id', part)
+            if (cErr) throw cErr
+          }
+          retiredCopies += crossCopies.length
         }
       }
 
@@ -605,7 +629,7 @@ export async function runIngest(opts: { budgetMs?: number } = {}) {
       else partial++
 
       ok++
-      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} ${policies.get(`${b.provider}:${b.token}`) ? 'outside the admission rule or non-corporate' : 'non-corporate'} dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${complete ? '' : '  PARTIAL'}`)
+      console.log(`  ${complete ? '✓' : '~'} ${b.company_name.padEnd(16)} ${String(india.length).padStart(4)} kept / ${roles.length}${droppedGig ? `  (${droppedGig} ${policies.get(`${b.provider}:${b.token}`) ? 'outside the admission rule or non-corporate' : 'non-corporate'} dropped)` : ''}${droppedDupes ? `  (${droppedDupes} repeat postings collapsed)` : ''}${droppedCross ? `  (${droppedCross} already held by a sibling career site)` : ''}${complete ? '' : '  PARTIAL'}`)
     } catch (e) {
       // One board failing must never halt the run — the registry compounding is
       // the moat, and a provider outage is not a reason to lose a day.

@@ -126,3 +126,29 @@ export function closureChanges(
     reopened: stored.filter((r) => r.closed_at && listed.has(r.external_id)).map((r) => r.id),
   }
 }
+
+/**
+ * ACROSS BOARDS — the same posting listed on two career sites of one employer.
+ *
+ * collapseRepeats works inside one board. An employer with several career sites
+ * (PwC has four, State Street two, Mastercard three) can list the same job on each,
+ * and every copy is a separate row. Measured 2026-10-16 over the live index: 520 extra
+ * rows in 483 groups (1.2% of open jobs).
+ *
+ * THE RULE, AND WHY IT HAS TO BE THIS ONE: among boards of the SAME company_name, the
+ * board with the smallest id is the one that holds a posting; every other board skips a
+ * posting (same title + location) that a smaller-id sibling already stores. Without a
+ * fixed winner, two boards would each see the other's copy and both drop it, or both keep
+ * it — the failure ingest/dedupe.ts collapseRepeats documents (195 duplicates became 660).
+ * It converges in one extra run: a bigger-id board that stored a copy first deletes it
+ * once the smaller-id board has its own.
+ *
+ * Any maintenance script that removes these duplicates must keep the same row — the one on
+ * the smallest board id.
+ */
+export const crossBoardKey = (title: string, location: string) =>
+  `${title.toLowerCase().trim()}||${location.toLowerCase().trim()}`
+
+export function dropHeldBySiblings<T extends { title: string; locationRaw: string }>(roles: T[], held: Set<string>): T[] {
+  return held.size === 0 ? roles : roles.filter((r) => !held.has(crossBoardKey(r.title, r.locationRaw)))
+}

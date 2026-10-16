@@ -2,6 +2,19 @@
 
 ---
 
+## 🔶 2026-10-16 (later) — cleanup done; duplicate rule written; 448 duplicates await your yes
+
+**Live vs written:** the non-public-site cleanup is **done in your database** (23 boards switched off, 254 jobs deleted — as you approved). The **duplicate rule is written but NOT deployed** (branch `scale-free-plan`). **448 duplicate jobs are still stored.**
+
+**Your decisions, recorded:** no MBA / campus filter in the app — those jobs show up and get scored like any other (nothing to build); duplicates get removed and a function stops new ones.
+
+**You need to:**
+1. **Say "delete the 448 duplicates"** — I counted them (none is in anyone's application tracker). I keep one copy of each (the one on the employer's first career site) and delete the rest. The safety check blocked me from doing it without your explicit words naming that step.
+2. Deploy the branch and set `CAREER_SITES=amazon,oraclehcm` in Vercel (still open) — the duplicate rule only starts working after that.
+3. Check the feed tomorrow as a signed-in user.
+
+---
+
 ## 🔶 2026-10-16 — the strongest MBA recruiters now load every corporate role; one cleanup needs your OK
 
 **Live vs written:** in your database now — **43,516 open jobs, 267 MB of 500**. The code is **still NOT deployed** (branch `scale-free-plan`).

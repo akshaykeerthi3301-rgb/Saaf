@@ -137,3 +137,18 @@ describe('closureChanges', () => {
     expect(closureChanges(stored, new Set(), new Set()).gone).toEqual(['1', '2'])
   })
 })
+
+
+import { crossBoardKey, dropHeldBySiblings } from '../dedupe'
+describe('duplicates across an employer\'s career sites', () => {
+  const role = (title: string, locationRaw: string) => ({ title, locationRaw })
+  it('drops a posting a sibling site already holds, comparing title and location without case', () => {
+    const held = new Set([crossBoardKey('Senior Associate', 'Mumbai, India')])
+    const out = dropHeldBySiblings([role('senior associate ', 'MUMBAI, India'), role('Senior Associate', 'Pune, India'), role('Manager', 'Mumbai, India')], held)
+    expect(out.map((r) => r.title + '|' + r.locationRaw)).toEqual(['Senior Associate|Pune, India', 'Manager|Mumbai, India'])
+  })
+  it('keeps everything when no sibling holds anything', () => {
+    const rs = [role('A', 'X'), role('B', 'Y')]
+    expect(dropHeldBySiblings(rs, new Set())).toBe(rs)
+  })
+})
