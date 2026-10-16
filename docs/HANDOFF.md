@@ -2,6 +2,16 @@
 
 ---
 
+## 🔶 2026-10-16 (evening) — `CAREER_SITES` is set and live; a funding plan is written
+
+**Live:** the setting is in Vercel Production and the site was redeployed (`dpl_6Cjae6F7VDToYLFjcwF96kqXqUbh`, jobinko.in). Amazon and Oracle jobs can now refresh. **Not changed:** the weekly job's first run is still Sunday 20:00 UTC.
+
+**Written, not a decision yet:** `docs/FUNDING-READINESS.md` — my honest read (not ready for investors; ready for grants after paperwork) and a 6-month government-first plan with the real KSUM and Startup India numbers.
+
+**You need to:** answer five questions at the end of that document (is there a company, where; are you in Kerala; any co-founder/advisor; how many real users; which college you could reach in two weeks). Then the first four steps are: Pvt Ltd, DPIIT recognition, KSUM Unique ID, a lawyer's one-page note on the data sources.
+
+---
+
 ## ✅ 2026-10-16 — DEPLOYED (`dpl_9yXqkHwsTX8jRwJ1J2AV5AgsorSA`, live at https://jobinko.in)
 
 **Live vs written:** everything from the last two days is now **live**: the new employers' jobs (PwC, Barclays, Amazon, JPMorgan…), the duplicate rule, the 90-day age rule and the weekly job. Checked as a visitor: public pages load, signed-in pages redirect, the weekly route is locked (401), and a search for PwC and for Amazon returns real jobs. **Not checked:** any signed-in screen.
