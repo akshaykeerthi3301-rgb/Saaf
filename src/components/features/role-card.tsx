@@ -48,7 +48,9 @@ type Props = {
   interest?: unknown
 }
 
-const TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-muted-foreground' } as const
+const TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-score-low' } as const
+/** What holds a score back, said about the ROLE's fit and never about the person. */
+const GAP = { Role: 'Title differs', Skills: 'Some skills missing', Experience: 'Experience differs' } as const
 const chip = 'inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium'
 const WORK_MODE = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' } as const
 const EMPLOYMENT = { fulltime: 'Full-time', parttime: 'Part-time', contract: 'Contract', intern: 'Internship', temporary: 'Temporary' } as const
@@ -83,6 +85,11 @@ export function RoleCard({
     share('Experience') >= 0.9 ? 'Experience fits' : null,
     stage?.label ?? null,
   ].filter((t): t is string => Boolean(t)).slice(0, 2)
+
+  // A score below the high band names the ONE thing holding it back, from the same stored arithmetic. Without
+  // it a 42% is a bare verdict; with it, it is a fact about the posting. The full reasoning stays in the detail.
+  const weakest = band === 'high' ? undefined : bars.filter((b) => b.share < 0.5).sort((a, b) => a.share - b.share)[0]
+  const gap = weakest ? GAP[weakest.label] : null
 
   const facts: { icon: typeof MapPin; text: string }[] = [
     city ? { icon: MapPin, text: city } : null,
@@ -126,6 +133,7 @@ export function RoleCard({
           {/* Phone: the panel on the right is hidden, so the ring rides beside the title. */}
           <div className="flex shrink-0 flex-col items-center gap-1 sm:hidden">
             <ScoreRing score={score} size={48} stroke={4} />
+            <span className={`max-w-16 text-center text-[11px] font-semibold leading-3 ${TONE[band]}`}>{bandFor(score)}</span>
           </div>
         </div>
 
@@ -147,9 +155,10 @@ export function RoleCard({
       <div className="hidden w-44 shrink-0 flex-col items-center justify-center gap-2 border-l border-border bg-secondary/50 p-4 sm:flex" aria-label="Match score">
         <ScoreRing score={score} size={76} stroke={6} />
         <span className={`text-center text-xs font-bold uppercase leading-4 tracking-[0.08em] ${TONE[band]}`}>{bandFor(score)}</span>
-        {ticks.length ? (
+        {ticks.length || gap ? (
           <ul className="mt-1 w-full space-y-1 border-t border-border pt-2.5 text-xs font-medium text-primary">
             {ticks.map((t) => <li key={t} className="flex items-center gap-1.5"><span className="text-score-high" aria-hidden="true">✓</span>{t}</li>)}
+            {gap ? <li className="flex items-center gap-1.5 text-muted-foreground"><span aria-hidden="true">–</span>{gap}</li> : null}
           </ul>
         ) : null}
       </div>

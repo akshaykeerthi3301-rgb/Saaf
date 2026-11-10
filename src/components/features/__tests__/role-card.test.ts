@@ -70,6 +70,14 @@ describe('the role card keeps to its budget', () => {
     expect(count(h, /✓/g)).toBeLessThanOrEqual(2)
   })
 
+  it('names the one thing holding a below-top score back, and says nothing on a top score', () => {
+    // Budget change, on purpose (2026-11-10, UI makeover): ONE neutral line, in the score panel, never a paragraph.
+    expect(html()).not.toContain('Some skills missing') // 81 is the high band
+    const mid = html({ score: 62 })
+    expect(mid).toContain('Some skills missing') // skills 4 of 20 is the weakest component
+    expect(count(mid, /Some skills missing|Title differs|Experience differs/g)).toBe(1)
+  })
+
   it('keeps the actions: hide, track and quick apply', () => {
     const h = html()
     for (const t of ['data-t="hide"', 'data-t="track"', 'data-t="apply"']) expect(h).toContain(t)
