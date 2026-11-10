@@ -97,6 +97,7 @@ SP=/tmp/saaf-deploy && rm -rf $SP && mkdir -p $SP
 rsync -a --exclude '.git' --exclude 'node_modules' --exclude '.next' \
   --exclude '/.claude' --exclude '/productos' --exclude '/saaf-ai' --exclude '/docs' \
   --exclude '/bench' --exclude '/extension' --exclude '/tests' --exclude '/output' \
+  --exclude '/brag-output-*' \
   --exclude 'registry/candidates.json' --exclude '.env' --exclude '.env.*' \
   ./ $SP/
 

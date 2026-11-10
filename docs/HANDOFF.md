@@ -2,6 +2,19 @@
 
 ---
 
+## ✅ 2026-11-10 14:03 IST — the UI makeover is LIVE on jobinko.in
+
+Deployed at your word, `dpl_EYUbu8UuBRMJ4RsdupFJe4hd9hUr`. Checked on the live
+site: the landing page, the ATS checker and the public jobs page show the new
+light blue look. **Not checked on the live site:** anything behind sign-in, and
+the dark theme — both were checked only on the local copy. **You need to:** sign
+in on jobinko.in and look at your feed once; and decide whether to push the code
+to GitHub/GitLab (it is not pushed — this computer holds the only copy of the
+last eight commits). To undo the deploy, Vercel can roll back to the previous
+one (`dpl_95hSK2RqJPCErXzdDHD9pE7ukk8E`) in one click.
+
+*The entry below was written before the deploy; "nothing is live" in it is superseded.*
+
 ## 🔶 2026-11-10 (later) — the UI makeover is built and waiting for your eyes
 
 **Nothing is live.** "Live" means on jobinko.in, and jobinko.in still shows the

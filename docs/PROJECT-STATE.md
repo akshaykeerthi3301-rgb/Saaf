@@ -3713,3 +3713,19 @@ then the component that lost the most points. Measured on the test account's
 feed: 24 skills, 7 experience, 2 experience-bar-unclear, 2 title, 2 location.
 (4) ~~The app icon still draws "S"~~ — it draws "J". Lint 0 errors, typecheck
 clean, 180 test files pass, build passes.
+
+### Deployed 2026-11-10 14:03 IST — the UI makeover is live (`dpl_EYUbu8UuBRMJ4RsdupFJe4hd9hUr`)
+
+~~Nothing here is live.~~ The founder looked at it locally and said "ok commit to
+domain". `ui-makeover` was fast-forwarded into `main` (`8fc7c7c`) and deployed by
+the RUNBOOK's staged copy; all three pre-deploy checks passed (nothing private
+staged, the extension route present, `src/` complete). `/brag-output-*` was added
+to the rsync excludes for this run — **the RUNBOOK's list should carry it too.**
+Vercel reports Ready, target production, aliased to jobinko.in and www.
+
+**Verified by opening the live site:** `/`, `/tools/ats-checker` and `/jobs` on
+jobinko.in render the light blue palette; the live `--brand` and `--score-low`
+read back as the new values and `<html>` carries no `dark` class.
+**Unverified on production:** every signed-in screen (the feed, tracker, profile,
+studios) — they were checked on the local server only — and the dark theme.
+Not pushed to GitHub or GitLab: `main` on this machine is ahead of both remotes.
