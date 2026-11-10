@@ -283,10 +283,13 @@ ring, band word, up to two ticks for what is strong. On a phone the panel is
 hidden and the ring rides beside the title **with its band word under it**
 (since 2026-11-10; before, a phone showed a bare percentage).
 
-**A score below the high band names the one thing holding it back** — "Some
-skills missing", "Experience differs", "Title differs" — from the same stored
-arithmetic as the ticks, as one muted line (in the score panel on desktop, under
-the company line on a phone). Never a paragraph: the full
+**A score below the high band names the one thing holding it back** — from
+`scoreGap` in `src/lib/score-bars.ts`: the scorer's own cap when there is one
+("Experience differs", or "Experience bar unclear" when the bar could not be
+read — that is not a finding about the person), otherwise the part that lost the
+most points ("Some skills missing", "Title differs", "Location differs", …). One
+muted line: in the score panel on desktop, under the company line on a phone.
+Never a paragraph: the full
 reasoning opens in the job's detail. The 2026-10-09 rebuild had removed every
 reason from the card's face, which left a low score as a bare verdict and broke
 this system's oldest rule (*never a score without its reason*). The card's

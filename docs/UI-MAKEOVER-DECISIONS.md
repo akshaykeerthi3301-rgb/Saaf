@@ -227,9 +227,16 @@ it now also sits under the company line.
 colours, and it under-read one highlight as 4.03 when the exact figure is 4.64.
 The test file is the exact figure; the in-page pass is the wide net.
 
-**Still unverified:** the three tools that write with AI when opened (tailor a
-résumé, build a cover letter, analyse fit) were not opened, to avoid spending
-model calls; `/start/confirm`, `/start/matching` and the upload step; the browser
-extension's panel; the share-card image and app icon; anything under real
-sunlight, on a real phone, or by a colour-blind person; tap-target sizes on any
-page except the feed.
+**Pass 3 — the four follow-ups (same day).**
+
+| What | Result |
+|---|---|
+| The three AI tools, opened from a job's detail, light and dark, by eye | Tailor step 1, "How well you fit" and the cover-letter studio all render cleanly. The letter preview stays a white page in dark, as designed. Later steps of the tailor (which generate a résumé) were not run |
+| `/resume` at 360 px | No longer scrolls sideways (page width 360 of 360). A long file name now wraps; `truncate` cannot shrink a cell in that kind of table |
+| Reason on every below-top card | **37 of 37** on the test account's feed (was 34): 24 "Some skills missing", 7 "Experience differs", 2 "Experience bar unclear", 2 "Title differs", 2 "Location differs". The reason is now the score's own cap when there is one, otherwise the part that lost the most points — `scoreGap` in `src/lib/score-bars.ts` |
+| App icon | Draws **J** on the brand blue (`/icons/192` opened) |
+
+**Still unverified:** steps 2–3 of the résumé tailor; `/start/confirm`,
+`/start/matching` and the upload step; the browser extension's panel; the
+share-card image; anything under real sunlight, on a real phone, or by a
+colour-blind person; tap-target sizes on any page except the feed.

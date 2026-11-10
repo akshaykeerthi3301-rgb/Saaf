@@ -5,7 +5,7 @@ import { bandFor } from '@/components/ui/fit-ring'
 import { ScoreRing, ringBand } from '@/components/ui/score-ring'
 import { isEarlyPosting, isEasyApply, titleSeniority } from '@/lib/job-facts'
 import { postedAgo, postedOn } from '@/lib/day'
-import { scoreBars } from '@/lib/score-bars'
+import { scoreBars, scoreGap } from '@/lib/score-bars'
 import type { ReactNode } from 'react'
 import type { RepostChip } from '@/lib/repost'
 import type { StageChip } from '@/lib/company-stage'
@@ -49,8 +49,6 @@ type Props = {
 }
 
 const TONE = { high: 'text-score-high', mid: 'text-score-mid', low: 'text-score-low' } as const
-/** What holds a score back, said about the ROLE's fit and never about the person. */
-const GAP = { Role: 'Title differs', Skills: 'Some skills missing', Experience: 'Experience differs' } as const
 const chip = 'inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium'
 const WORK_MODE = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' } as const
 const EMPLOYMENT = { fulltime: 'Full-time', parttime: 'Part-time', contract: 'Contract', intern: 'Internship', temporary: 'Temporary' } as const
@@ -88,8 +86,7 @@ export function RoleCard({
 
   // A score below the high band names the ONE thing holding it back, from the same stored arithmetic. Without
   // it a 42% is a bare verdict; with it, it is a fact about the posting. The full reasoning stays in the detail.
-  const weakest = band === 'high' ? undefined : bars.filter((b) => b.share < 0.5).sort((a, b) => a.share - b.share)[0]
-  const gap = weakest ? GAP[weakest.label] : null
+  const gap = band === 'high' ? null : scoreGap(breakdown)
 
   const facts: { icon: typeof MapPin; text: string }[] = [
     city ? { icon: MapPin, text: city } : null,

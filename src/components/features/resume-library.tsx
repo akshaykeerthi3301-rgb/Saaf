@@ -116,7 +116,7 @@ export function ResumeLibrary({ resumes }: { resumes: SavedResume[] }) {
                       </span>
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
-                          <a href={`/resume/edit/${r.id}`} onClick={(e) => e.stopPropagation()} className="truncate font-semibold text-primary hover:underline">{r.label}</a>
+                          <a href={`/resume/edit/${r.id}`} onClick={(e) => e.stopPropagation()} className="wrap-anywhere font-semibold text-primary hover:underline">{r.label}</a>
                           {r.isPrimary ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-score-high/15 px-2 py-0.5 text-[11px] font-semibold text-score-high">
                               <Star className="size-3" aria-hidden="true" /> Primary

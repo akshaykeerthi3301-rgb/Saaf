@@ -71,11 +71,21 @@ describe('the role card keeps to its budget', () => {
   })
 
   it('names the one thing holding a below-top score back, and says nothing on a top score', () => {
-    // Budget change, on purpose (2026-11-10, UI makeover): ONE neutral line, in the score panel, never a paragraph.
-    expect(html()).not.toContain('Some skills missing') // 81 is the high band
+    // Budget change, on purpose (2026-11-10, UI makeover): ONE neutral line per layout, never a paragraph.
+    const reasons = /Some skills missing|Title differs|Experience differs|Experience bar unclear|Location differs/g
+    expect(html()).not.toMatch(reasons) // 81 is the high band
     const mid = html({ score: 62 })
-    expect(mid).toContain('Some skills missing') // skills 4 of 20 is the weakest component
-    expect(count(mid, /Some skills missing|Title differs|Experience differs/g)).toBe(2) // once per layout: the phone line and the desktop panel, never both visible
+    expect(mid).toContain('Some skills missing') // skills lost the most points: 16 of 20
+    expect(count(mid, reasons)).toBe(2) // once per layout: the phone line and the desktop panel, never both visible
+
+    // A capped score is held down by the cap, whatever else is weak — and an unread bar is not a finding about the person.
+    const capped = (note: string) => ({ ...breakdown, components: [...breakdown.components, comp('cap', 50, 65, note)] })
+    expect(html({ score: 50, breakdown: capped('You are under the experience bar this posting states.') })).toContain('Experience differs')
+    expect(html({ score: 50, breakdown: capped('This posting states an experience bar we could not read reliably.') })).toContain('Experience bar unclear')
+
+    // Held back by something outside the three bars: still a reason, and a true one.
+    const far = { ...breakdown, components: [comp('title', 28, 28), comp('skills', 20, 20), comp('location', 0, 10)] }
+    expect(html({ score: 70, breakdown: far })).toContain('Location differs')
   })
 
   it('keeps the actions: hide, track and quick apply', () => {

@@ -30,13 +30,15 @@ background. One problem turned up (amber labels slightly too faint in a job's
 detail) and was fixed. Pop-ups, the filter drawer and the theme switch were
 tried. Low-score cards were seen and look as intended.
 
-**What was not checked:** the three tools that write with AI when you open them
-(tailor résumé, cover letter, analyse fit) — opening them spends model calls;
-two onboarding steps; the browser extension; a real phone outdoors.
+**Third pass, same day:** the three AI tools were opened and look right in both
+themes; the Résumé page no longer scrolls sideways on a phone; every card below
+the top band now says why (37 of 37, was 34); the app icon shows "J".
 
-**Small things found:** the Résumé page scrolls sideways on a phone (it did before this work too). The app icon still shows the letter "S" from the old
-name. The security header (CSP) is in report-only mode today; before it is made
-strict, the tiny theme script needs adding to its allow-list.
+**What was not checked:** the later steps of the résumé tailor (they generate a
+résumé), two onboarding steps, the browser extension, a real phone outdoors.
+
+**Still to know:** the security header (CSP) is in report-only mode today; before
+it is made strict, the tiny theme script needs adding to its allow-list.
 
 ---
 

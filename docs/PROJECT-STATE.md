@@ -3702,3 +3702,14 @@ clicked through all three states. Seven pop-ups and the filter drawer measured
 clean. Found, pre-existing, not fixed: `/resume` scrolls sideways at 360 px.
 Still unverified: the three AI tools (not opened, to avoid model calls),
 `/start/confirm` and `/start/matching`, the extension panel, a real phone.
+
+**Stage CB, third pass (2026-11-10, same branch, still not merged or deployed).**
+The four follow-ups. (1) The three AI tools were opened from a job's detail in
+both themes and render cleanly; the tailor's generating steps were not run.
+(2) `/resume` no longer scrolls sideways at 360 px. (3) ~~3 of 37 below-top cards
+show no reason~~ — 37 of 37 now do: the reason reads the scorer's `cap` component
+first (it is literally what held the number down, and it was the missing case),
+then the component that lost the most points. Measured on the test account's
+feed: 24 skills, 7 experience, 2 experience-bar-unclear, 2 title, 2 location.
+(4) ~~The app icon still draws "S"~~ — it draws "J". Lint 0 errors, typecheck
+clean, 180 test files pass, build passes.
