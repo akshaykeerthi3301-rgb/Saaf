@@ -5,7 +5,7 @@
    2026-09-07 and its tokens, its CSS modules and its unlayered global rules
    were deleted in the same commit.
 
-   What is here now is Tailwind v4 plus the shadcn tokens exported in saaf-ai/:
+   What is here now is Tailwind v4 plus the shadcn token names:
    --background, --foreground, --primary, --accent, --radius and the rest.
    Every screen reads them through Tailwind classes; nothing reads a raw
    variable except the two font families below, which Tailwind's own font-sans
@@ -69,182 +69,174 @@
   --radius-2xl: calc(var(--radius) * 1.8);
 }
 
+/* THE PALETTE — "FIRST LIGHT", 2026-11-10 (ROADMAP TASK-323).
+   ---------------------------------------------------------------------------
+   Replaces the zinc + indigo→violet system of 2026-09-23 (TASK-107), whose
+   --brand-2 ran at oklch chroma 0.288 and which the founder called "stressful
+   to the eyes". Every value below is argued in docs/UI-MAKEOVER-DECISIONS.md
+   and every contrast ratio it depends on is MEASURED on each test run by
+   src/app/__tests__/theme-contrast.test.ts — not asserted in a comment.
+
+   The rules the values follow:
+   · One hue family. Ink, ground and accent all sit at hue 250–255 (a quiet
+     blue). No chroma above 0.13 except the two colours that must be noticed:
+     the error red and the score bands.
+   · Blue, because green, amber and red-adjacent hues are SPOKEN FOR by the
+     score ring. An accent in any of them would read as a match outcome.
+   · No gradient, no glow, no glass. docs/DESIGN.md banned all three in
+     writing before TASK-107 shipped them.
+   · A low score is NOT the error colour. --score-low is a neutral slate; it
+     shared a value with --destructive until this pass.
+   · --input is a real boundary (3:1, WCAG 1.4.11). --border stays a hairline
+     for dividers, where no contrast minimum applies.
+
+   BOTH THEMES ARE LIVE. Light is the default; `.dark` is applied before first
+   paint by the inline script in src/app/layout.tsx when the device asks for
+   dark or the candidate chose it. :root is no longer dead code. */
+
 :root {
   color-scheme: light;
 
-  /* ---- shadcn / Tailwind tokens ------------------------------------------ */
-  --background: oklch(0.975 0.008 240);
-  --foreground: oklch(0.22 0.025 250);
+  --background: oklch(0.975 0.006 250);
+  --foreground: oklch(0.24 0.03 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.025 250);
+  --card-foreground: oklch(0.24 0.03 255);
 
   /* ---- paper ------------------------------------------------------------
      A PRINTED PAGE, AND THE ONE SET OF TOKENS THAT DELIBERATELY DOES NOT
      INVERT. The résumé preview is a picture of the .docx the candidate is
      about to download, and that document is black text on white in every
-     theme — a dark-mode "preview" showing white-on-black would misrepresent
-     the file they receive. So these carry identical values in :root and .dark
-     rather than being exempted from the parity rule: a token that is the same
-     in both themes is a decision recorded in the palette, whereas a raw
-     `bg-white` in a component is the same decision hidden in a class list
-     where nobody can find it. src/app/__tests__/theme-tokens.test.ts enforces
-     that distinction, and caught exactly this. */
+     theme. Identical values in :root and .dark, recorded as a decision in the
+     palette rather than hidden as a raw `bg-white` in a component.
+     src/app/__tests__/theme-tokens.test.ts enforces the distinction. */
   --paper: oklch(1 0 0);
   --paper-ink: oklch(0.27 0.01 250);
   --paper-muted: oklch(0.52 0.012 250);
   --paper-rule: oklch(0.87 0.008 250);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.025 250);
-  --primary: oklch(0.22 0.04 250);
-  --primary-foreground: oklch(0.985 0.005 240);
-  --secondary: oklch(0.95 0.014 235);
-  --secondary-foreground: oklch(0.28 0.035 250);
-  --muted: oklch(0.95 0.014 235);
-  --muted-foreground: oklch(0.5 0.025 245);
-  --accent: oklch(0.54 0.12 163);
-  --accent-foreground: oklch(0.98 0.01 160);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.89 0.018 235);
-  --input: oklch(0.89 0.018 235);
-  --ring: oklch(0.54 0.12 163);
-  --chart-1: oklch(0.54 0.12 163);
-  --chart-2: oklch(0.22 0.04 250);
-  --chart-3: oklch(0.5 0.025 245);
-  --chart-4: oklch(0.7 0.03 235);
-  --chart-5: oklch(0.89 0.018 235);
+  --popover-foreground: oklch(0.24 0.03 255);
+
+  /* --primary is the INK: headings and the solid button. */
+  --primary: oklch(0.24 0.045 255);
+  --primary-foreground: oklch(0.985 0.004 250);
+  --secondary: oklch(0.95 0.01 250);
+  --secondary-foreground: oklch(0.3 0.035 255);
+  --muted: oklch(0.95 0.01 250);
+  --muted-foreground: oklch(0.47 0.025 255);
+
+  /* The one accent. Used as TEXT (links, eyebrows) as often as a fill. */
+  --accent: oklch(0.48 0.13 255);
+  --accent-foreground: oklch(0.985 0.004 250);
+  /* System errors only. Never a match outcome. */
+  --destructive: oklch(0.53 0.2 27);
+
+  --border: oklch(0.89 0.012 250);
+  --input: oklch(0.62 0.02 255);
+  --ring: oklch(0.48 0.13 255);
+
+  --chart-1: oklch(0.48 0.13 255);
+  --chart-2: oklch(0.24 0.045 255);
+  --chart-3: oklch(0.47 0.025 255);
+  --chart-4: oklch(0.7 0.03 250);
+  --chart-5: oklch(0.89 0.012 250);
   --radius: 0.8rem;
-  --sidebar: oklch(0.985 0.005 240);
-  --sidebar-foreground: oklch(0.22 0.025 250);
-  --sidebar-primary: oklch(0.22 0.04 250);
-  --sidebar-primary-foreground: oklch(0.985 0.005 240);
-  --sidebar-accent: oklch(0.95 0.014 235);
-  --sidebar-accent-foreground: oklch(0.28 0.035 250);
-  --sidebar-border: oklch(0.89 0.018 235);
-  --sidebar-ring: oklch(0.54 0.12 163);
 
-  /* Glass reads as the card colour at partial opacity, so the .glass utility
-     works in both themes without either one naming a colour of its own. */
-  --glass: oklch(1 0 0 / 72%);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.24 0.03 255);
+  --sidebar-primary: oklch(0.48 0.13 255);
+  --sidebar-primary-foreground: oklch(0.985 0.004 250);
+  --sidebar-accent: oklch(0.95 0.01 250);
+  --sidebar-accent-foreground: oklch(0.3 0.035 255);
+  --sidebar-border: oklch(0.89 0.012 250);
+  --sidebar-ring: oklch(0.48 0.13 255);
 
-  /* Brand gradient ends (indigo → violet) and the three score bands the match
-     ring colours by. Added 2026-09-23 with the dark default; see .dark. */
-  --brand: oklch(0.511 0.262 276.966);
-  --brand-2: oklch(0.496 0.265 301.924);
-  --brand-foreground: oklch(0.985 0 0);
-  --score-high: oklch(0.596 0.145 163.225);
-  --score-mid: oklch(0.666 0.179 58.318);
-  --score-low: oklch(0.577 0.245 27.325);
+  /* The action colour (Apply, Send, the active tab) and its label. Flat — the
+     gradient these two once formed is gone. --brand-2 survives as the quieter
+     sibling the résumé tailor uses to mark a changed line. */
+  --brand: oklch(0.48 0.13 255);
+  --brand-2: oklch(0.47 0.1 225);
+  --brand-foreground: oklch(0.985 0.004 250);
+
+  /* The score bands: high / mid / low. Teal-green, ochre, slate — chosen to
+     stay apart with the red–green axis removed (measured), and never red. */
+  --score-high: oklch(0.4 0.1 165);
+  --score-mid: oklch(0.53 0.13 65);
+  --score-low: oklch(0.53 0.03 265);
 
   /* The only raw variables any screen reads. Tailwind v4's font-sans and
-     font-mono utilities resolve through these names, so setting them here is
-     what points those utilities at the two self-hosted faces wired up in
-     layout.tsx. */
+     font-mono utilities resolve through these names. */
   --font-sans: var(--font-public-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
 }
 
-/* DARK MODE — ADDED 2026-09-08, OPT-IN, AND LIGHT IS STILL THE DEFAULT.
-   ---------------------------------------------------------------------------
-   The note that stood here said dark mode was off deliberately, because the
-   saaf-ai export declared a `dark` variant and never defined values for it. The
-   defect it described was real: on a machine set to dark, ink flipped to
-   near-white while --background stayed light, so the landing page's primary
-   call to action rendered as pale text on a pale button. Invisible, green
-   build. Half a dark mode is worse than none.
-
-   ⚠️ THAT WARNING IS WHY THE BLOCK BELOW DEFINES EVERY TOKEN :root DEFINES, IN
-   ONE PASS — all 33, not the handful a given screen happens to read. A parity
-   check enforces it; if you add a token to :root, add it here in the same edit.
-
-   ~~⚠️ NOTHING APPLIES `.dark` YET.~~ **SWITCHED ON 2026-09-23** (founder
-   direction, the Jobright-parity pass): src/app/layout.tsx sets `dark` on
-   <html>, so this block IS the shipped system and :root is the fallback a
-   future light toggle would use. Every token still has both values.
-
-   THE LOOK (2026-09-08, superseded by the zinc values below): a true OLED
-   ground (#000) with surfaces lifted just off it, and
-   hairlines carried as low-alpha WHITE rather than as a grey. `--border` is
-   `oklch(1 0 0 / 8%)`, so `border-border` composites over whatever sits
-   beneath it — which is what makes a 1px edge read as a micro-border on black
-   instead of as a grey line drawn on top of it. Screens get this for free:
-   every one of the 35 files that render UI already reads these tokens and not
-   one hardcodes a colour, so there is nothing to convert.
-   --------------------------------------------------------------------------- */
+/* DARK — the same system at night. A deep ink-blue ground rather than black,
+   and an off-white rather than pure white for text: full contrast (measured),
+   without the glare of #fff on #000. Dim is not calm; nothing here is dimmed.
+   ⚠️ EVERY TOKEN :root DEFINES IS DEFINED HERE. A parity test enforces it —
+   the half-palette defect (a pale label on a pale button, green build) already
+   shipped once. Add to both in the same edit. */
 
 .dark {
   color-scheme: dark;
 
-  /* THE ZINC SYSTEM, 2026-09-23. Founder direction: the Jobright-style dark
-     workspace — zinc-950 ground (#09090b), zinc-900 surfaces (#18181b),
-     zinc-800 edges (#27272a), indigo→violet as the one chromatic family.
-     Replaces the OLED #000 palette of 2026-09-08, which was never switched on. */
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.02 255);
+  --foreground: oklch(0.95 0.008 250);
+  --card: oklch(0.215 0.022 255);
+  --card-foreground: oklch(0.95 0.008 250);
 
-  /* Identical to the light values, deliberately — see the note in :root. The
-     document does not have a dark mode, so neither does its preview. */
+  /* Identical to the light values, deliberately — see the note in :root. */
   --paper: oklch(1 0 0);
   --paper-ink: oklch(0.27 0.01 250);
   --paper-muted: oklch(0.52 0.012 250);
   --paper-rule: oklch(0.87 0.008 250);
 
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.215 0.022 255);
+  --popover-foreground: oklch(0.95 0.008 250);
 
-  /* --primary is the INK in this system — headings, and the fill of a solid
-     button. It inverts wholesale: light ink on dark ground, dark label on a
-     light button. Getting this pair backwards is precisely the pale-on-pale
-     failure recorded above. */
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.141 0.005 285.823);
+  /* The ink inverts wholesale: light ink on dark ground, dark label on a light
+     button. Getting this pair backwards is the pale-on-pale failure above. */
+  --primary: oklch(0.95 0.008 250);
+  --primary-foreground: oklch(0.17 0.02 255);
+  --secondary: oklch(0.275 0.022 255);
+  --secondary-foreground: oklch(0.92 0.008 250);
+  --muted: oklch(0.275 0.022 255);
+  --muted-foreground: oklch(0.74 0.02 255);
 
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.92 0.004 286.32);
-  --muted: oklch(0.274 0.006 286.033);
-  /* zinc-400: 7.8:1 on zinc-950, 6.4:1 on a zinc-900 card. */
-  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.78 0.1 250);
+  --accent-foreground: oklch(0.17 0.02 255);
+  --destructive: oklch(0.72 0.16 22);
 
-  /* indigo-400 as the accent, because the accent is used as TEXT (eyebrows,
-     links) as often as a fill, and indigo-500 is 4.3:1 on zinc-950. */
-  --accent: oklch(0.673 0.182 276.935);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.704 0.191 22.216);
-
-  /* Hairlines as low-alpha white — composites to ~#27272a over the ground. */
+  /* Hairlines as low-alpha white, so a 1px edge composites into whatever it
+     sits on instead of reading as a grey line drawn on top. */
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.673 0.182 276.935);
+  --input: oklch(1 0 0 / 40%);
+  --ring: oklch(0.78 0.1 250);
 
-  --chart-1: oklch(0.673 0.182 276.935);
-  --chart-2: oklch(0.627 0.265 303.9);
-  --chart-3: oklch(0.705 0.015 286.067);
-  --chart-4: oklch(0.442 0.017 285.786);
+  --chart-1: oklch(0.78 0.1 250);
+  --chart-2: oklch(0.78 0.09 215);
+  --chart-3: oklch(0.74 0.02 255);
+  --chart-4: oklch(0.45 0.02 255);
   --chart-5: oklch(1 0 0 / 15%);
 
-  --sidebar: oklch(0.141 0.005 285.823);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.585 0.233 277.117);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.17 0.02 255);
+  --sidebar-foreground: oklch(0.95 0.008 250);
+  --sidebar-primary: oklch(0.76 0.11 250);
+  --sidebar-primary-foreground: oklch(0.17 0.02 255);
+  --sidebar-accent: oklch(0.275 0.022 255);
+  --sidebar-accent-foreground: oklch(0.95 0.008 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.673 0.182 276.935);
+  --sidebar-ring: oklch(0.78 0.1 250);
 
-  /* zinc-900 at 80% — the `bg-zinc-900/80 backdrop-blur-md` of the brief. */
-  --glass: oklch(0.21 0.006 285.885 / 80%);
+  /* A light, desaturated blue with a DARK label — a saturated fill on a dark
+     ground is the glare this pass removes. */
+  --brand: oklch(0.76 0.11 250);
+  --brand-2: oklch(0.78 0.09 215);
+  --brand-foreground: oklch(0.17 0.02 255);
 
-  /* indigo-500 → purple-600, the gradient on the logo, primary actions and
-     the high score ring. White label on either end clears 4.5:1. */
-  --brand: oklch(0.585 0.233 277.117);
-  --brand-2: oklch(0.558 0.288 302.321);
-  --brand-foreground: oklch(0.985 0 0);
-  /* emerald-400 / amber-400 / red-400: the ring bands (>= 85, 60–84, < 60). */
-  --score-high: oklch(0.765 0.177 163.223);
-  --score-mid: oklch(0.828 0.189 84.429);
-  --score-low: oklch(0.704 0.191 22.216);
+  --score-high: oklch(0.82 0.14 165);
+  --score-mid: oklch(0.8 0.13 80);
+  --score-low: oklch(0.7 0.02 255);
 }
 
 @layer base {
@@ -257,60 +249,65 @@
   }
 }
 
-/* Motion and glass, as utilities rather than as values typed into components.
+/* Motion, as tokens rather than as values typed into components.
    ---------------------------------------------------------------------------
-   ⚠️ SPRING FEEL WITHOUT A SPRING LIBRARY, ON PURPOSE. Framer Motion is ~34 KB
-   gzipped and requires 'use client' on anything it animates. This app defers
-   PostHog (87 KB) and Sentry (140 KB) to idle in writing, for a candidate on
-   mobile data at 11pm, and several animated surfaces here are deliberately
-   SERVER components — src/app/(app)/today/page.tsx records measuring 4.27 MB of
-   HTML when its list rendered in full, and converting cards to client
-   components to animate them walks straight back into that.
+   ⚠️ NO ANIMATION LIBRARY, ON PURPOSE. Framer Motion is ~34 KB gzipped and
+   requires 'use client' on anything it animates; several animated surfaces here
+   are deliberately SERVER components (src/app/(app)/today/page.tsx records
+   4.27 MB of HTML when its list rendered in full).
 
-   `--ease-spring` is a cubic-bezier whose control points overshoot past 1, so
-   it settles with the small bounce a spring gives. It is not interruptible
-   physics; it is the 90% of the feel that costs nothing. Reach for a real
-   spring library only when something genuinely needs to be interrupted
-   mid-flight — a drag, a gesture — which nothing here does.
+   ONE EASING, AND IT DOES NOT OVERSHOOT. The spring curve that stood here
+   (control point 1.56) bounced past its target; nothing used it, and a bounce
+   is the opposite of the calm this system is for. Things here move a short
+   distance, quickly, and stop: 120ms for a colour, 200ms for a position.
    --------------------------------------------------------------------------- */
 @theme {
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* FOCUS IS ALWAYS VISIBLE — one rule, deliberately OUTSIDE every @layer so it
+   outranks the `outline-none` utility 60-odd components carry. Their own
+   focus styling was `ring-ring/40`, a 40%-alpha ring that does not reach the
+   3:1 WCAG 1.4.11 asks of a focus indicator. --ring on both grounds is
+   measured in theme-contrast.test.ts. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* TOUCH TARGETS. On a touch device every control is at least 44×44 CSS px
+   (WCAG 2.5.5; the brief's floor). 84% of India's web traffic is a phone and
+   the modal viewport is 360px wide — see docs/UI-MAKEOVER-DECISIONS.md §1.
+   `pointer: coarse` leaves the denser desktop layout alone. Links inside
+   running text are exempt, as WCAG exempts them. */
+@media (pointer: coarse) {
+  button, [role='button'], [role='tab'], [role='menuitem'], summary, select,
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden']),
+  nav a {
+    min-height: 44px;
+  }
+  button, [role='button'], a[class*='rounded-'], a[class*='inline-flex'] {
+    min-width: 44px;
+  }
+  /* A link drawn as a control (it has a radius) rather than as running text. */
+  a[class*='rounded-'], a[class*='inline-flex'] {
+    min-height: 44px;
+  }
+  a[class*='rounded-']:not([class*='flex'], [class*='block'], [class*='grid']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 @layer utilities {
-  /* Glassmorphic surface. Reads --glass, which each theme defines as its own
-     card colour at partial opacity — so this utility names no colour itself
-     and inverts with the theme for free.
-
-     backdrop-filter is progressively enhanced: a browser without it simply
-     renders the translucent background, which is legible rather than broken. */
-  .glass {
-    background-color: var(--glass);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    backdrop-filter: blur(16px) saturate(180%);
+  /* A card that can be opened: the edge firms up on hover, and stays firm
+     while selected. An edge, not a glow — no shadow is painted. */
+  .edge-hover {
+    transition: border-color 120ms var(--ease-out-quint);
   }
-
-  /* The brand gradient as a surface: logo badge, primary actions. */
-  .bg-brand-gradient {
-    background-image: linear-gradient(135deg, var(--brand), var(--brand-2));
-    color: var(--brand-foreground);
-  }
-  .text-brand-gradient {
-    background-image: linear-gradient(135deg, var(--accent), var(--brand-2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  /* The hover halo: a brand-tinted edge and a soft glow beneath. */
-  .glow-hover {
-    transition: box-shadow 200ms var(--ease-out-quint), border-color 200ms var(--ease-out-quint);
-  }
-  .glow-hover:hover, .glow-selected {
-    border-color: color-mix(in oklch, var(--brand) 55%, transparent);
-    box-shadow:
-      0 0 0 1px color-mix(in oklch, var(--brand) 35%, transparent),
-      0 10px 40px -12px color-mix(in oklch, var(--brand) 55%, transparent);
+  .edge-hover:hover, .edge-selected {
+    border-color: var(--ring);
   }
 
   /* Two range inputs stacked into one dual-handle slider. The inputs ignore
@@ -349,7 +346,6 @@
   /* Respect the platform setting. A candidate who has asked their OS to reduce
      motion has asked every product on it, including this one. */
   @media (prefers-reduced-motion: reduce) {
-    .glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;

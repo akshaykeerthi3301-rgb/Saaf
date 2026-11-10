@@ -6,8 +6,8 @@ import type { MetadataRoute } from 'next'
  * offline mode and no background work. `start_url` is the feed, which sends a signed-out
  * visitor to sign in like any other visit.
  *
- * Colours are the dark theme's own: --background is oklch(0.141 …) ≈ #0b0b12 and the brand
- * is the indigo the whole app uses. They are literals because a manifest cannot read CSS.
+ * Colours are the light theme's --background, oklch(0.975 0.006 250) ≈ #F4F7FB (the default
+ * since 2026-11-10). They are literals because a manifest cannot read CSS.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -17,8 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/today',
     scope: '/',
     display: 'standalone',
-    background_color: '#0b0b12',
-    theme_color: '#0b0b12',
+    background_color: '#F4F7FB',
+    theme_color: '#F4F7FB',
     icons: [
       { src: '/icons/192', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icons/512', sizes: '512x512', type: 'image/png', purpose: 'any' },

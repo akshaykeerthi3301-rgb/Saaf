@@ -51,10 +51,22 @@ export const metadata: Metadata = {
   },
 }
 
+/** `saaf.theme` is 'light' | 'dark' when chosen, absent for auto. Kept tiny: it blocks first paint. */
+const THEME_SCRIPT = `try{var t=localStorage.getItem('saaf.theme');if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // `dark` is the shipped system since 2026-09-23 — see the .dark block in globals.css.
-    <html lang="en" className={`dark ${publicSans.variable} ${jetbrainsMono.variable}`}>
+    // Light is the default; `dark` is added before first paint by the script
+    // below when the device asks for it or the candidate chose it (ThemeToggle).
+    // suppressHydrationWarning covers exactly that one class.
+    <html lang="en" suppressHydrationWarning className={`${publicSans.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        {/* Inline and blocking on purpose: a deferred script would paint the
+            light palette first and flash on every dark-mode load. ⚠️ The CSP in
+            next.config.ts is report-only today; enforcing it needs this
+            script's hash (or a nonce) added to script-src. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <AnalyticsProvider />
         {children}

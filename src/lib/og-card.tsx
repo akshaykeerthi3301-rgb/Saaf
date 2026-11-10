@@ -31,7 +31,7 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: '#F1F4F8',
+          backgroundColor: '#F4F7FB',
           padding: '72px',
           fontFamily: 'sans-serif',
         }}
@@ -45,15 +45,15 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
               width: '52px',
               height: '52px',
               borderRadius: '14px',
-              backgroundColor: '#28304A',
-              color: '#F1F4F8',
+              backgroundColor: '#102034',
+              color: '#F4F7FB',
               fontSize: '30px',
               fontWeight: 600,
             }}
           >
             S
           </div>
-          <div style={{ fontSize: '30px', fontWeight: 600, color: '#28304A', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '30px', fontWeight: 600, color: '#102034', letterSpacing: '-0.02em' }}>
             Jobinko
           </div>
         </div>
@@ -63,21 +63,21 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
             style={{
               fontSize: '68px',
               fontWeight: 600,
-              color: '#28304A',
+              color: '#102034',
               letterSpacing: '-0.045em',
               lineHeight: 1.05,
             }}
           >
             {headline}
           </div>
-          <div style={{ fontSize: '32px', color: '#6E7689', marginTop: '24px', lineHeight: 1.35 }}>
+          <div style={{ fontSize: '32px', color: '#525C69', marginTop: '24px', lineHeight: 1.35 }}>
             {sub}
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#12876A' }} />
-          <div style={{ fontSize: '26px', color: '#12876A', fontWeight: 600 }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#215DA5' }} />
+          <div style={{ fontSize: '26px', color: '#215DA5', fontWeight: 600 }}>
             Free · No sign-up · Nothing stored
           </div>
         </div>
@@ -90,12 +90,12 @@ export function ogCard({ headline, sub }: { headline: string; sub: string }) {
 /**
  * The installable app's home-screen icon (src/app/icons/[size]/route.tsx), drawn here —
  * the one satori file allowed to hold literal colours — so no binary has to be checked in
- * and no route file carries a hex. The gradient is the brand's own indigo → violet.
+ * and no route file carries a hex. The fill is --brand (light), oklch(0.48 0.13 255).
  */
 export function appIcon(size: number) {
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#215DA5' }}>
         <div style={{ color: '#FFFFFF', fontSize: size * 0.62, fontWeight: 800, fontFamily: 'sans-serif', lineHeight: 1 }}>S</div>
       </div>
     ),
