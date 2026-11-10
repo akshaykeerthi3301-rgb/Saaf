@@ -152,7 +152,7 @@ const eslintConfig = defineConfig([
   // same reason. Both exclusions come OUT when the port lands and its screens
   // live under src/ — at which point its real defects (bare <a> to a route,
   // unused imports) get fixed rather than ignored.
-  globalIgnores([".next/**", ".vercel/**", "out/**", "build/**", "next-env.d.ts", "saaf-ai/**"]),
+  globalIgnores([".next/**", ".vercel/**", "out/**", "build/**", "next-env.d.ts", "saaf-ai/**", "brag-output-*/**"]),
 ]);
 
 export default eslintConfig;
