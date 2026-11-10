@@ -75,7 +75,7 @@ describe('the role card keeps to its budget', () => {
     expect(html()).not.toContain('Some skills missing') // 81 is the high band
     const mid = html({ score: 62 })
     expect(mid).toContain('Some skills missing') // skills 4 of 20 is the weakest component
-    expect(count(mid, /Some skills missing|Title differs|Experience differs/g)).toBe(1)
+    expect(count(mid, /Some skills missing|Title differs|Experience differs/g)).toBe(2) // once per layout: the phone line and the desktop panel, never both visible
   })
 
   it('keeps the actions: hide, track and quick apply', () => {

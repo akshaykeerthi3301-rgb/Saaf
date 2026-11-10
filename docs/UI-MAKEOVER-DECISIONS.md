@@ -116,7 +116,7 @@ INFERRED, from `docs/PRODUCT.md` ("the itemised score that shows its working") a
 | D7 | **Dark is ink-blue (`oklch(0.17 0.02 255)`), not black, with off-white text (`0.95`).** Body text 16.5:1. Nothing is dimmed. | Brief §8 "dim is not calm"; measured ratios in §3 | MEASURED |
 | D8 | **Dark action button: light blue with a dark label** (8.96:1), not a saturated fill with white text (old: 4.38:1 — a fail). | Measured | MEASURED |
 | D9 | **A low score is slate, not red.** `--score-low` had the *same value* as `--destructive` in both palettes, against DESIGN.md's own rule. A test now forbids it. | DESIGN.md "a low score is a correct answer, not a failure" | MEASURED |
-| D10 | **The ring is one flat colour per band; the number is printed in ink.** Bands are teal-green / ochre / slate. Separation with the red-green axis removed is now ≥ ΔE 0.084 (light) and ≥ 0.104 (dark); the test floor is 0.08. Colour is the third cue after the arc length and the printed number, and the band word is the fourth. | 1.5 | MEASURED |
+| D10 | **The ring is one flat colour per band; the number is printed in ink.** Bands are teal-green / ochre / slate. Separation with the red-green axis removed is now ≥ ΔE 0.094 (light) and ≥ 0.104 (dark); the test floor is 0.08. Colour is the third cue after the arc length and the printed number, and the band word is the fourth. | 1.5 | MEASURED |
 | D11 | **A below-top score names one reason on the card** ("Some skills missing", "Experience differs", "Title differs") from the stored arithmetic. One line, never a paragraph; the card's budget test was changed on purpose. | 1.3, 1.4; DESIGN.md "never a score without its reason" — which the 2026-10-09 card rebuild had quietly broken | INFERRED from documented product rules |
 | D12 | **Phones now show the band word under the ring.** Before, the 360 px card showed a bare percentage — on the device 84% of users have. | 1.1 | OBSERVED (before/after at 360 px) |
 | D13 | **`--input` is a real boundary: 3.39–3.81:1.** It was 1.29–1.58:1. `--border` stays a hairline for dividers, where no minimum applies. | WCAG 2.2 SC 1.4.11 | MEASURED |
@@ -150,14 +150,15 @@ From `npx vitest run src/app/__tests__/theme-contrast.test.ts --reporter=verbose
 | **Label on the action button** | 4.5 | 6.31 | 8.96 | **4.38 ✗** |
 | **"Changed" marker (`brand-2`) on card** | 4.5 | 6.53 | 9.00 | **3.20 ✗** |
 | Error text on page / card | 4.5 | 5.45 / 5.85 | 7.18 / 6.58 | pass |
-| Band word high, on card / score panel | 4.5 | 8.57 / 7.98 | 10.62 / 9.83 | pass |
-| Band word mid, on card / score panel | 4.5 | 5.45 / 5.08 | 9.26 / 8.57 | pass |
+| Band word high, on card / score panel | 4.5 | 10.17 / 9.46 | 10.62 / 9.83 | pass |
+| Band word mid, on card / score panel | 4.5 | 6.19 / 5.76 | 9.26 / 8.57 | pass |
 | Band word low, on card / score panel | 4.5 | 5.29 / 4.92 | 6.56 / 6.07 | pass |
 | Résumé preview text / secondary | 4.5 | 15.06 / 5.50 | same | pass |
 | **Field boundary on page / card** | 3 | 3.39 / 3.64 | 3.81 / 3.81 | **1.47 / 1.58 ✗** |
 | Focus ring on page / card | 3 | 6.13 / 6.59 | 9.61 / 8.80 | pass |
 | Action button against page / card | 3 | 6.13 / 6.59 | 8.96 / 8.20 | pass |
-| Ring arc on its track: high / mid / low | 3 | 7.42 / 4.72 / 4.57 | 8.99 / 7.84 / 5.55 | pass |
+| Amber text on its own tint: chip on a card / highlight on the page | 4.5 | 4.96 / 4.64 | 6.88 / 7.75 | — |
+| Ring arc on its track: high / mid / low | 3 | 8.79 / 5.35 / 4.57 | 8.99 / 7.84 / 5.55 | pass |
 
 The old **light** palette failed 14 pairs (it was never shown to anyone).
 
@@ -165,9 +166,9 @@ The old **light** palette failed 14 pairs (it was never shown to anyone).
 
 | Vision | Light: high↔mid · mid↔low · high↔low | Dark |
 |---|---|---|
-| Normal | 0.207 · 0.151 · 0.160 | 0.184 · 0.180 · 0.185 |
-| Protanopia (simulated) | 0.084 · 0.138 · 0.124 | 0.120 · 0.161 · 0.172 |
-| Deuteranopia (simulated) | 0.163 · 0.143 · 0.132 | 0.104 · 0.187 · 0.130 |
+| Normal | 0.208 · 0.149 · 0.186 | 0.184 · 0.180 · 0.185 |
+| Protanopia (simulated) | 0.094 · 0.146 · 0.157 | 0.120 · 0.161 · 0.172 |
+| Deuteranopia (simulated) | 0.171 · 0.138 · 0.168 | 0.104 · 0.187 · 0.130 |
 
 Simulation: Machado, Oliveira & Fernandes (2009), severity 1.0. A simulation is a model, not a person: **not tested with a colour-blind user.**
 
@@ -197,20 +198,38 @@ Each was a question the brief's research could not settle. The recommendation wa
 
 ## 5. What was looked at
 
-Opened in the Browser pane on the local dev server, signed in through `/api/dev-signin`, 2026-11-10. Files in `docs/ui-makeover/`. "Desktop" is a 1280 px viewport, saved at the pane's 800 px rendering.
+Local dev server, signed in through `/api/dev-signin`, 2026-11-10, in two passes.
+Screenshots are in `docs/ui-makeover/`. "Desktop" is a 1280 px viewport.
 
-| Screen | Desktop light | Desktop dark | 360 px light | 360 px dark |
-|---|---|---|---|---|
-| Feed `/today` | ✓ | ✓ | ✓ | ✓ |
-| Job detail (opened from the feed) | ✓ | — | — | — |
-| Application tracker `/applications` | ✓ (small) | ✓ | ✓ | ✓ |
-| Profile `/profile` | ✓ | — | ✓ | — |
-| Landing `/` | ✓ | — | ✓ | ✓ |
-| ATS checker `/tools/ats-checker` | ✓ (small) | — | ✓ | — |
-| Résumé library `/resume` | ✓ (small) | — | — | — |
-| Public jobs `/jobs` | ✓ (small) | — | — | — |
-| Sign-in `/signin` | — | seen once at ~500 px, signed out | — | — |
+**Pass 1 — by eye.** Feed, job detail, tracker, profile, résumé list, landing,
+public jobs, ATS checker; five of them at 360 px; feed, tracker and landing in
+dark.
 
-**Unverified — not opened:** onboarding (`/start/*`), the tailor and cover-letter studios, `/copilot`, `/interview-prep`, `/coaching`, `/outreach`, `/today/explore`, the résumé editor, the role/city SEO pages, `/blog`, `/compare`, `/privacy`, `/terms`, `/audit`, every modal and drawer, the theme switch being clicked (its script path was exercised by setting the stored value and reloading), the browser extension's panel, the share-card image and the app icon. They read the same tokens, which is why the palette reaches them; that is a reason to expect them to be right, not evidence that they are. **A mid-score or low-score card was not seen in the browser** — the founder's feed held only 81–86% roles; the reason line is covered by a unit test only.
+**Pass 2 — every route, measured in the page.** Each route was loaded in the
+browser at 360 px, switched to each theme, and every visible piece of text had
+its real rendered colour compared with the real background behind it.
 
-The definition of done asked for every touched screen at both widths. Because the palette touches all 34 routes, that was not met: 9 routes were opened, 5 of them at 360 px.
+| What | Result |
+|---|---|
+| Routes loaded | **32 of 34**, both themes (`/start/upload` redirected to `/start` for a signed-in account; `/start/confirm` and `/start/matching` were not opened, in case loading them re-ran onboarding) |
+| Text below the contrast floor | **0 in dark. 1 kind in light**: the amber "missing skill" chip and highlight in the job detail (4.42:1). Fixed by deepening the light amber and green; now 4.96 and 4.64, and both pairs are in the test |
+| Text under 11 px | 0 |
+| Sideways scrolling at 360 px | 1 page: `/resume` (its table). **Not caused by this work and not fixed** |
+| Pop-ups opened and measured, both themes | account menu, feedback, inbox, "Add a job", a tracker card's Details, "Add résumé", the All-filters drawer — all clean |
+| Theme switch, clicked | Dark → Light → Auto each changed the page and the saved choice correctly |
+| Low and middling score cards, seen | 39% and 47–49% in slate, 73% in ochre. Of 37 below-top cards, 34 show a reason; **3 show none** — no single one of the three parts is under half, so the card says nothing rather than guess |
+
+Two things this second pass found and fixed: the amber contrast above, and that
+**the reason line was desktop-only** — on a phone the score panel is hidden, so
+it now also sits under the company line.
+
+⚠️ **A limit of the in-page measurement:** on very faint tints the browser rounds
+colours, and it under-read one highlight as 4.03 when the exact figure is 4.64.
+The test file is the exact figure; the in-page pass is the wide net.
+
+**Still unverified:** the three tools that write with AI when opened (tailor a
+résumé, build a cover letter, analyse fit) were not opened, to avoid spending
+model calls; `/start/confirm`, `/start/matching` and the upload step; the browser
+extension's panel; the share-card image and app icon; anything under real
+sunlight, on a real phone, or by a colour-blind person; tap-target sizes on any
+page except the feed.

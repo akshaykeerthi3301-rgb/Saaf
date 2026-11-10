@@ -129,6 +129,8 @@ export function RoleCard({
               <span className="font-semibold text-primary">{company}</span>
               {gist ? <span> / {gist}</span> : null}
             </p>
+            {/* Phone: the score panel is hidden, so the reason rides here. */}
+            {gap ? <p className="mt-1 text-xs text-muted-foreground sm:hidden">{gap}</p> : null}
           </div>
           {/* Phone: the panel on the right is hidden, so the ring rides beside the title. */}
           <div className="flex shrink-0 flex-col items-center gap-1 sm:hidden">

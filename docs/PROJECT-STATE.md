@@ -3687,3 +3687,18 @@ the letter **S**, from before the rename to Jobinko. `npm run lint` had been
 failing on `main` on 21 errors inside two untracked `brag-output-*` folders; they
 are now ignored by ESLint. The rural-vs-metro connection split the brief asked for
 was not found in a citable source.
+
+**Stage CB, second pass (2026-11-10, same branch, still not merged or deployed).**
+~~Nine routes were opened; the other 25 are unverified.~~ All but two routes are
+now checked: 32 of 34 were loaded at 360 px in both themes and every visible text
+node's rendered contrast was measured in the page. Dark: 0 failures. Light: one —
+amber text on its own amber tint in the job detail, 4.42:1 — fixed by
+`--score-mid` 0.53 → 0.50 and `--score-high` 0.40/165 → 0.36/168 (light only);
+now 4.96 on a card and 4.64 on the page, both asserted (the test is 42 pairs per
+theme). ~~A low-score card was not seen~~ — the feed holds scores down to 39%;
+they draw in slate and ochre as designed. The reason line was desktop-only and
+now shows on phones too; 34 of 37 below-top cards carry one. The theme switch was
+clicked through all three states. Seven pop-ups and the filter drawer measured
+clean. Found, pre-existing, not fixed: `/resume` scrolls sideways at 360 px.
+Still unverified: the three AI tools (not opened, to avoid model calls),
+`/start/confirm` and `/start/matching`, the extension panel, a real phone.

@@ -24,14 +24,17 @@ bottom-left).
 3. **Say yes or no.** If yes, the branch has to be merged and deployed before
    anyone sees it. If no, say which of the nine to reverse.
 
-**What was not checked, so you know where to look hardest:** only 9 of the 34
-pages were opened (the feed, a job's detail, the tracker, profile, résumé list,
-landing, public jobs, the ATS checker). Onboarding, the résumé tailor, cover
-letters and every pop-up were **not** looked at. No card with a low score was
-seen on screen — your feed only has 81–86% matches. Nobody tried it on a real
-phone outdoors.
+**What was checked (second pass, same day):** 32 of the 34 pages, in both light
+and dark at phone width, with every piece of text measured against its
+background. One problem turned up (amber labels slightly too faint in a job's
+detail) and was fixed. Pop-ups, the filter drawer and the theme switch were
+tried. Low-score cards were seen and look as intended.
 
-**Small things found:** the app icon still shows the letter "S" from the old
+**What was not checked:** the three tools that write with AI when you open them
+(tailor résumé, cover letter, analyse fit) — opening them spends model calls;
+two onboarding steps; the browser extension; a real phone outdoors.
+
+**Small things found:** the Résumé page scrolls sideways on a phone (it did before this work too). The app icon still shows the letter "S" from the old
 name. The security header (CSP) is in report-only mode today; before it is made
 strict, the tiny theme script needs adding to its allow-list.
 

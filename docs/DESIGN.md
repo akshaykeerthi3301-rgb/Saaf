@@ -44,8 +44,8 @@ score-bands:
   # The ring (src/components/ui/score-ring.tsx) and nothing else colours by
   # score. High starts at HIGH_PRECISION_MIN (75) — the same line as the
   # "High-precision match" label, never a separate threshold.
-  score-high: { light: "oklch(0.4 0.1 165)",   dark: "oklch(0.82 0.14 165)", from: 75 }   # teal-green
-  score-mid:  { light: "oklch(0.53 0.13 65)",  dark: "oklch(0.8 0.13 80)",   from: 60 }   # ochre
+  score-high: { light: "oklch(0.36 0.09 168)",  dark: "oklch(0.82 0.14 165)", from: 75 }   # teal-green
+  score-mid:  { light: "oklch(0.5 0.13 65)",   dark: "oklch(0.8 0.13 80)",   from: 60 }   # ochre
   score-low:  { light: "oklch(0.53 0.03 265)", dark: "oklch(0.7 0.02 255)",  below: 60 }  # slate — NEVER the error red
   cues: "arc length → the number, in ink → the band word → colour. Colour is last."
   separation: "OKLab ΔE ≥ 0.08 with the red–green axis removed (protanopia and deuteranopia, simulated) — tested"
@@ -62,7 +62,7 @@ motion:
   reduced-motion: "prefers-reduced-motion collapses every animation and transition to 0.01ms, globally"
 accessibility:
   standard: "WCAG 2.2 AA, measured"
-  text: "≥ 4.5:1 — 36 pairs per theme asserted in theme-contrast.test.ts"
+  text: "≥ 4.5:1 — 42 pairs per theme asserted in theme-contrast.test.ts, including text on its own tint"
   control-boundary: "≥ 3:1 — --input, --ring, --brand, the ring arcs"
   focus: "one un-layered :focus-visible rule: 2px solid --ring, 2px offset. It outranks `outline-none`."
   touch: "≥ 44×44 CSS px under @media (pointer: coarse) — buttons, tabs, selects, inputs, nav links, links drawn as controls"
@@ -157,7 +157,7 @@ the documented user — searching in bed at 11pm — and follows the device unle
 the candidate chooses otherwise.
 
 **Contrast is tested, not claimed.** Change a token and
-`theme-contrast.test.ts` tells you which of 36 pairs you broke. Do not write a
+`theme-contrast.test.ts` tells you which of 42 pairs you broke. Do not write a
 ratio in a comment.
 
 ## Typography
@@ -285,7 +285,8 @@ hidden and the ring rides beside the title **with its band word under it**
 
 **A score below the high band names the one thing holding it back** — "Some
 skills missing", "Experience differs", "Title differs" — from the same stored
-arithmetic as the ticks, as one muted line. Never a paragraph: the full
+arithmetic as the ticks, as one muted line (in the score panel on desktop, under
+the company line on a phone). Never a paragraph: the full
 reasoning opens in the job's detail. The 2026-10-09 rebuild had removed every
 reason from the card's face, which left a low score as a bare verdict and broke
 this system's oldest rule (*never a score without its reason*). The card's
