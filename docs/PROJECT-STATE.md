@@ -3612,3 +3612,78 @@ navigate to `/api/dev-signin`, signed in, screenshots throughout. Try the pane
 first. A palette can also be swapped live with no file edit:
 `document.documentElement.style.setProperty('--brand', …)` beats every `.dark`
 rule, because an inline style outranks a class selector.
+
+### Stage CB — TASK-107's palette reversed: "first light", light by default, measured (2026-11-10, branch `ui-makeover`, NOT merged, NOT deployed)
+
+⚠️ **Nothing here is live.** It is committed to the branch `ui-makeover`. jobinko.in
+still shows the purple palette until the founder reviews, merges and deploys.
+
+**The reversal.** ~~TASK-107 (2026-09-23, Stage AD): "zinc + indigo→violet as the
+one chromatic family", a brand gradient, a glass utility, a hover glow, and
+`className="dark"` hardcoded on `<html>`.~~ **Reversed 2026-11-10 (TASK-323).**
+Chroma, measured in `src/app/globals.css`:
+
+| Token | TASK-107 (dark, shipped) | TASK-323 light | TASK-323 dark |
+|---|---|---|---|
+| `--accent` | 0.182 (hue 277) | **0.13** (hue 255) | **0.10** (hue 250) |
+| `--brand` | 0.233 (hue 277) | **0.13** (hue 255) | **0.11** (hue 250) |
+| `--brand-2` | **0.288** (hue 302) | **0.10** (hue 225) | **0.09** (hue 215) |
+
+No token outside the error red and the three score bands now exceeds 0.13. The
+gradient, `.glass`, `--glass`, the glow utilities, the two blurred-orb layers and
+the unused bounce easing are deleted, not disabled.
+
+**Why blue and not the three palettes Stage CA drew.** Teal (A) sits on the hue
+the score ring uses for a high match; quiet indigo (C) is still the purple family
+the founder objected to. Green, ochre and red are spoken for by the score and by
+errors, which leaves blue. Thirteen competitors were read live: 3 blue, 5
+green/teal/cyan, 3 purple, 1 yellow, 1 orange — and **13 of 13 are light by
+default**. Jobinko was the only dark one; Jobright itself is light.
+
+**Light is the default again; dark follows the device.** ~~`:root` is dead code~~
+— it is the shipped default. Evidence: 84.2% of India's web traffic is mobile and
+the modal viewport is 360×800 (StatCounter, Oct 2026); light mode reads better at
+small sizes (NN/g, Piepenbrock 2013). Dark is kept for the night-time searcher and
+applied before first paint by a 200-byte inline script in `src/app/layout.tsx`; a
+three-way switch sits in the account menu (`saaf.theme` in localStorage).
+⚠️ That script is inline: when the CSP in `next.config.ts` stops being
+report-only, its hash or a nonce must be added to `script-src`.
+
+**Measured, 2026-11-10, by a test that did not exist before**
+(`src/app/__tests__/theme-contrast.test.ts`, 36 pairs per theme):
+
+| What | TASK-107 dark | Now (light / dark) |
+|---|---|---|
+| Label on the action button | **4.38:1 — failed AA** | 6.31 / 8.96 |
+| `brand-2` text on a card | **3.20:1 — failed** | 6.53 / 9.00 |
+| Field boundary (`--input`) | **1.47:1 — failed the 3:1 floor** | 3.39 / 3.81 |
+| Body text on the page | pass | 15.31 / 16.53 |
+| Score bands under simulated deuteranopia, worst pair (OKLab ΔE) | **0.069** | 0.132 / 0.104 |
+| `--score-low` equal to `--destructive` | **yes, both themes** | no; a test forbids it |
+
+The contrast comments TASK-107 left in the stylesheet ("white label on either end
+clears 4.5:1") were wrong by measurement. The standing rule that came out of
+this: **a contrast ratio is a test assertion, never a comment.**
+
+**Also changed, each argued in `docs/UI-MAKEOVER-DECISIONS.md`:** the score ring is
+one flat colour with the number in ink; a below-top score names one reason on the
+card and a phone shows the band word (the 2026-10-09 card rebuild had left a low
+score as a bare number); one global focus-visible rule; 44 px touch targets on
+touch devices (controls under 44 px on `/today` at 360 px: 9 of 149 → 1 of 149);
+smallest text 9–10 px → 11 px in 147 places; sticky headers opaque.
+`globals.css` 17,313 → 16,114 bytes. No package added.
+
+**Verified how.** `npm run lint` (0 errors, 46 pre-existing warnings),
+`typecheck`, `test` (180 files, 2,268 tests) and `build` all pass. Nine routes
+were opened in the browser signed in; five of them at 360 px; the feed, tracker
+and landing in dark too. **Unverified:** the other 25 routes, every modal and
+drawer, onboarding, the studios, the extension panel, a mid- or low-score card in
+the browser (the test account's feed only held 81–86%), real sunlight, a real
+mid-range Android phone, and a colour-blind person — the colour-blindness figures
+are a simulation. The full list is §5 of the decision log.
+
+**Found and not fixed:** the app icon (`src/lib/og-card.tsx` `appIcon`) still draws
+the letter **S**, from before the rename to Jobinko. `npm run lint` had been
+failing on `main` on 21 errors inside two untracked `brag-output-*` folders; they
+are now ignored by ESLint. The rural-vs-metro connection split the brief asked for
+was not found in a citable source.

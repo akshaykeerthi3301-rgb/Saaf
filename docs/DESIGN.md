@@ -1,243 +1,164 @@
 ---
 version: beta
-name: Saaf
+name: Jobinko
 description: >
-  The shadcn/Tailwind system exported in saaf-ai/, adopted 2026-09-05 and
-  completed 2026-09-07. Paper-blue ground, white cards, one green accent, a
-  single 0.8rem radius scale, and one soft shadow used only on cards. It
-  replaced a monochrome, zero-shadow, square-cornered system derived from
-  zerodha.tech — see "What was retired, and why" for what that cost and what
-  survived it. ⚠️ SINCE 2026-09-23 THE SHIPPED LOOK IS `colors-dark` (zinc +
-  indigo→violet, TASK-107): the light palette and its prose below describe the
-  fallback. Component specs and spacing are unchanged and still law.
+  "First light", 2026-11-10 (ROADMAP TASK-323). One quiet blue hue family, a
+  light ground by default, a dark ink-blue palette that follows the device, no
+  gradient, no glow, no glass. It replaced the zinc + indigo→violet system of
+  2026-09-23 (TASK-107), which ran its brand at oklch chroma 0.288 and broke
+  this file's own ban on a purple-to-blue gradient. Every value is argued in
+  docs/UI-MAKEOVER-DECISIONS.md; every contrast ratio is measured on each test
+  run by src/app/__tests__/theme-contrast.test.ts.
+themes:
+  default: light
+  dark: >
+    `.dark` on <html>, added before first paint by the inline script in
+    src/app/layout.tsx when the device prefers dark or the candidate chose it.
+  switch: "Auto / Light / Dark in the account menu (theme-toggle.tsx); stored as localStorage `saaf.theme`"
+  parity: "every :root token has a .dark value — theme-tokens.test.ts"
 colors:
-  # oklch, exactly as they sit in src/app/globals.css. Hex equivalents are
-  # approximate and are here only to make the values readable at a glance.
-  background:            "oklch(0.975 0.008 240)"   # ~#F1F4F8 — page ground
-  foreground:            "oklch(0.22 0.025 250)"    # ~#2B3140 — body text
-  card:                  "oklch(1 0 0)"             # #FFFFFF — every raised surface
-  card-foreground:       "oklch(0.22 0.025 250)"
-  popover:               "oklch(1 0 0)"
-  popover-foreground:    "oklch(0.22 0.025 250)"
-  primary:               "oklch(0.22 0.04 250)"     # ~#28304A — ink, headings, solid buttons
-  primary-foreground:    "oklch(0.985 0.005 240)"
-  secondary:             "oklch(0.95 0.014 235)"    # ~#E9EDF3 — quiet fills, chips
-  secondary-foreground:  "oklch(0.28 0.035 250)"
-  muted:                 "oklch(0.95 0.014 235)"
-  muted-foreground:      "oklch(0.5 0.025 245)"     # ~#6E7689 — secondary text
-  accent:                "oklch(0.54 0.12 163)"     # ~#12876A — the one chromatic value
-  accent-foreground:     "oklch(0.98 0.01 160)"
-  destructive:           "oklch(0.577 0.245 27.325)" # system errors ONLY
-  border:                "oklch(0.89 0.018 235)"    # ~#D6DCE6 — every hairline
-  input:                 "oklch(0.89 0.018 235)"    # field borders
-  ring:                  "oklch(0.54 0.12 163)"     # focus ring == accent
-colors-dark:
-  # ~~Added 2026-09-08. OPT-IN AND NOT YET THE DEFAULT~~ — SWITCHED ON AND
-  # RETUNED 2026-09-23 (founder direction, the workspace parity pass, ROADMAP
-  # TASK-107, PROJECT-STATE Stage AD). src/app/layout.tsx sets `dark` on <html>,
-  # so these values ARE the shipped system; the light palette above is kept in
-  # full as the fallback a future theme toggle would use.
-  #
-  # ⚠️ EVERY LIGHT TOKEN HAS A VALUE HERE, IN ONE PASS. A partial palette is a
-  # real defect this project has already had. src/app/__tests__/theme-tokens.test.ts
-  # fails if a token is added to one palette and not the other.
-  #
-  # THE ZINC SYSTEM. Ground zinc-950 (#09090b), surfaces zinc-900 (#18181b),
-  # hairlines low-alpha white compositing to ~zinc-800 (#27272a). The 2026-09-08
-  # OLED #000 values are superseded (see git history for them).
-  background:            "oklch(0.141 0.005 285.823)"  # ~#09090B — zinc-950
-  foreground:            "oklch(0.985 0 0)"            # ~#FAFAFA
-  card:                  "oklch(0.21 0.006 285.885)"   # ~#18181B — zinc-900
-  card-foreground:       "oklch(0.985 0 0)"
-  popover:               "oklch(0.21 0.006 285.885)"
-  popover-foreground:    "oklch(0.985 0 0)"
-  primary:               "oklch(0.985 0 0)"            # ink inverts wholesale
-  primary-foreground:    "oklch(0.141 0.005 285.823)"
-  secondary:             "oklch(0.274 0.006 286.033)"  # ~#27272A — zinc-800
-  secondary-foreground:  "oklch(0.92 0.004 286.32)"
-  muted:                 "oklch(0.274 0.006 286.033)"
-  muted-foreground:      "oklch(0.705 0.015 286.067)"  # zinc-400: 7.8:1 on ground
-  accent:                "oklch(0.673 0.182 276.935)"  # indigo-400 — used as TEXT, so the lighter one
-  accent-foreground:     "oklch(0.141 0.005 285.823)"
-  destructive:           "oklch(0.704 0.191 22.216)"   # system errors ONLY
-  border:                "oklch(1 0 0 / 10%)"          # MICRO-BORDER: low-alpha white
-  input:                 "oklch(1 0 0 / 15%)"
-  ring:                  "oklch(0.673 0.182 276.935)"
+  # oklch, exactly as in src/app/globals.css. Hex is approximate.
+  background:           { light: "oklch(0.975 0.006 250)", dark: "oklch(0.17 0.02 255)" }    # ~#F4F7FB / ~#091018
+  foreground:           { light: "oklch(0.24 0.03 255)",   dark: "oklch(0.95 0.008 250)" }
+  card:                 { light: "oklch(1 0 0)",           dark: "oklch(0.215 0.022 255)" }
+  popover:              { light: "oklch(1 0 0)",           dark: "oklch(0.215 0.022 255)" }
+  primary:              { light: "oklch(0.24 0.045 255)",  dark: "oklch(0.95 0.008 250)" }   # the INK — inverts wholesale
+  primary-foreground:   { light: "oklch(0.985 0.004 250)", dark: "oklch(0.17 0.02 255)" }
+  secondary / muted:    { light: "oklch(0.95 0.01 250)",   dark: "oklch(0.275 0.022 255)" }
+  secondary-foreground: { light: "oklch(0.3 0.035 255)",   dark: "oklch(0.92 0.008 250)" }
+  muted-foreground:     { light: "oklch(0.47 0.025 255)",  dark: "oklch(0.74 0.02 255)" }
+  accent / ring:        { light: "oklch(0.48 0.13 255)",   dark: "oklch(0.78 0.1 250)" }     # ~#215DA5 — the one accent
+  accent-foreground:    { light: "oklch(0.985 0.004 250)", dark: "oklch(0.17 0.02 255)" }
+  destructive:          { light: "oklch(0.53 0.2 27)",     dark: "oklch(0.72 0.16 22)" }     # system errors ONLY
+  border:               { light: "oklch(0.89 0.012 250)",  dark: "oklch(1 0 0 / 10%)" }      # hairline, dividers
+  input:                { light: "oklch(0.62 0.02 255)",   dark: "oklch(1 0 0 / 40%)" }      # a field's boundary — 3:1
+  chroma-ceiling: "0.13 for everything except destructive and the score bands"
 brand:
-  # Added 2026-09-23, in BOTH palettes. The one gradient: logo badge, primary
-  # actions, active tab, selected card. `.bg-brand-gradient` sets its own label
-  # colour (brand-foreground), so a gradient button never needs a text class.
-  brand:            { dark: "oklch(0.585 0.233 277.117)", light: "oklch(0.511 0.262 276.966)" }  # indigo-500 / -700
-  brand-2:          { dark: "oklch(0.558 0.288 302.321)", light: "oklch(0.496 0.265 301.924)" }  # purple-600 / -700
-  brand-foreground: { dark: "oklch(0.985 0 0)",           light: "oklch(0.985 0 0)" }
-  utilities: ".bg-brand-gradient · .text-brand-gradient · .glow-hover / .glow-selected (brand halo) · .range-dual (dual-handle slider)"
+  # The action colour: Apply, Send, the active tab, the logo badge. FLAT.
+  brand:            { light: "oklch(0.48 0.13 255)",   dark: "oklch(0.76 0.11 250)" }
+  brand-foreground: { light: "oklch(0.985 0.004 250)", dark: "oklch(0.17 0.02 255)" }  # dark label on the light-blue dark-theme button
+  brand-2:          { light: "oklch(0.47 0.1 225)",    dark: "oklch(0.78 0.09 215)" }  # the résumé tailor's "changed" marker
+  classes: "bg-brand text-brand-foreground · edge-hover / edge-selected (a border change, no shadow) · range-dual"
+  removed: ".bg-brand-gradient · .text-brand-gradient · .glow-hover · .glow-selected · .glass · --glass · --ease-spring"
 score-bands:
-  # The match ring (src/components/ui/score-ring.tsx) and nothing else colours by
-  # score. High starts at HIGH_PRECISION_MIN (75), the same line as the
-  # "High-precision match" label — never a separate threshold, or the ring and
-  # the label disagree on one card (measured: an 81 at an 85 cut drew amber).
-  score-high: { dark: "oklch(0.765 0.177 163.223)", light: "oklch(0.596 0.145 163.225)", from: 75 }  # emerald
-  score-mid:  { dark: "oklch(0.828 0.189 84.429)",  light: "oklch(0.666 0.179 58.318)",  from: 60 }  # amber
-  score-low:  { dark: "oklch(0.704 0.191 22.216)",  light: "oklch(0.577 0.245 27.325)",  below: 60 } # red
-surfaces:
-  # `--glass` is each theme's card colour at partial opacity, so the .glass
-  # utility names no colour of its own and inverts for free.
-  glass:
-    token-light: "oklch(1 0 0 / 72%)"
-    token-dark:  "oklch(0.21 0.006 285.885 / 80%)"   # zinc-900/80 — the brief's bg-zinc-900/80
-    utility: ".glass — backdrop-filter: blur(16px) saturate(180%)"
-    note: >
-      backdrop-filter is progressively enhanced. A browser without it renders
-      the translucent background, which is legible rather than broken. The blur
-      is dropped entirely under prefers-reduced-motion.
+  # The ring (src/components/ui/score-ring.tsx) and nothing else colours by
+  # score. High starts at HIGH_PRECISION_MIN (75) — the same line as the
+  # "High-precision match" label, never a separate threshold.
+  score-high: { light: "oklch(0.4 0.1 165)",   dark: "oklch(0.82 0.14 165)", from: 75 }   # teal-green
+  score-mid:  { light: "oklch(0.53 0.13 65)",  dark: "oklch(0.8 0.13 80)",   from: 60 }   # ochre
+  score-low:  { light: "oklch(0.53 0.03 265)", dark: "oklch(0.7 0.02 255)",  below: 60 }  # slate — NEVER the error red
+  cues: "arc length → the number, in ink → the band word → colour. Colour is last."
+  separation: "OKLab ΔE ≥ 0.08 with the red–green axis removed (protanopia and deuteranopia, simulated) — tested"
+paper:
+  # The résumé preview is a picture of the .docx. Identical in both themes, on purpose.
+  paper: "oklch(1 0 0)"
+  paper-ink: "oklch(0.27 0.01 250)"
+  paper-muted: "oklch(0.52 0.012 250)"
+  paper-rule: "oklch(0.87 0.008 250)"
 motion:
-  # ⚠️ NO ANIMATION LIBRARY, DELIBERATELY. Framer Motion is ~34 KB gzipped and
-  # requires 'use client' on anything it animates. This app defers PostHog
-  # (87 KB) and Sentry (140 KB) to idle in writing, for a candidate on mobile
-  # data at 11pm — and several animated surfaces are deliberately SERVER
-  # components. src/app/(app)/today/page.tsx records measuring 4.27 MB of HTML
-  # with its list fully rendered; converting cards to client components in
-  # order to animate them walks straight back into that.
-  #
-  # Reach for a spring library only when something must be interruptible
-  # mid-flight — a drag, a gesture. Nothing here is.
   library: none (tw-animate-css, already installed, plus native CSS)
-  easing:
-    ease-spring:    "cubic-bezier(0.34, 1.56, 0.64, 1)"  # overshoots past 1 — settles with a small bounce
-    ease-out-quint: "cubic-bezier(0.22, 1, 0.36, 1)"
-  reduced-motion: >
-    prefers-reduced-motion collapses all animation and transition durations to
-    0.01ms and removes the glass blur. A candidate who asked their OS to reduce
-    motion asked this product too.
+  easing: { ease-out-quint: "cubic-bezier(0.22, 1, 0.36, 1)" }   # the only one; nothing overshoots
+  durations: "120ms for a colour or border · 200ms for a position"
+  reduced-motion: "prefers-reduced-motion collapses every animation and transition to 0.01ms, globally"
+accessibility:
+  standard: "WCAG 2.2 AA, measured"
+  text: "≥ 4.5:1 — 36 pairs per theme asserted in theme-contrast.test.ts"
+  control-boundary: "≥ 3:1 — --input, --ring, --brand, the ring arcs"
+  focus: "one un-layered :focus-visible rule: 2px solid --ring, 2px offset. It outranks `outline-none`."
+  touch: "≥ 44×44 CSS px under @media (pointer: coarse) — buttons, tabs, selects, inputs, nav links, links drawn as controls"
+  smallest-text: "11px. There is no 9px or 10px text."
 typography:
-  # Two faces, self-hosted at build time by next/font (src/app/layout.tsx).
-  # Tailwind's font-sans / font-mono resolve through --font-sans / --font-mono
-  # set in :root; nothing else reads a raw font variable.
-  families:
-    sans: Public Sans
-    mono: JetBrains Mono
+  families: { sans: Public Sans, mono: JetBrains Mono }   # self-hosted by next/font
   scale:
-    # Tailwind's own scale. Sizes below are what the shipped screens use.
-    display:   { class: "text-4xl sm:text-6xl lg:text-7xl", weight: 600, tracking: "-0.05em" }
-    page-title:{ class: "text-2xl sm:text-3xl",             weight: 600, tracking: "-0.06em" }
-    card-title:{ class: "text-xl sm:text-2xl",              weight: 600, tracking: "-0.045em" }
-    section:   { class: "text-lg",                          weight: 600, tracking: "-0.03em" }
-    body:      { class: "text-sm leading-6",                weight: 400 }
-    small:     { class: "text-xs leading-5",                weight: 400 }
-    eyebrow:   { class: "text-xs uppercase tracking-[0.18em]", weight: 700, color: accent }
-    label:     { class: "text-[10px] uppercase tracking-[0.14em]", weight: 600, color: muted-foreground }
-    numeric:   { class: "font-mono tabular-nums",           weight: 400 }
-radius:
-  # One scale, generated from --radius: 0.8rem in @theme inline.
-  base: 0.8rem
-  sm:   0.48rem   # calc(base * 0.6)
-  md:   0.64rem   # calc(base * 0.8)
-  lg:   0.8rem    # base
-  xl:   1.12rem   # calc(base * 1.4)  — the card radius (rounded-2xl reads here)
-  full: 9999px    # pills, avatars, status dots
+    display:    { class: "text-4xl sm:text-6xl lg:text-7xl", weight: 600, tracking: "-0.05em" }
+    page-title: { class: "text-2xl sm:text-3xl",             weight: 600, tracking: "-0.06em" }
+    card-title: { class: "text-xl sm:text-2xl",              weight: 600, tracking: "-0.045em" }
+    section:    { class: "text-lg",                          weight: 600, tracking: "-0.03em" }
+    body:       { class: "text-sm leading-6",                weight: 400 }
+    small:      { class: "text-xs leading-5",                weight: 400 }
+    eyebrow:    { class: "text-xs uppercase tracking-[0.18em]", weight: 700, color: accent }
+    label:      { class: "text-[11px] uppercase tracking-[0.14em]", weight: 600, color: muted-foreground }
+    numeric:    { class: "font-mono tabular-nums",           weight: 400 }
+radius: { base: 0.8rem, sm: 0.48rem, md: 0.64rem, lg: 0.8rem, xl: 1.12rem, full: 9999px }
 elevation:
-  none:  "no shadow — the default"
-  card:  "shadow-sm — cards, headers, the brand mark"
-  raised:"shadow-lg shadow-primary/10 — the landing page's primary call to action, and nothing else"
+  none:   "no shadow — the default, and the whole of the dark theme"
+  card:   "shadow-sm — cards, headers"
+  raised: "shadow-lg — popovers and the landing page's primary call to action"
 spacing:
-  # Tailwind's 0.25rem step. Named rhythms the screens actually keep to:
-  field-gap:    "mb-6"      # between form fields
-  section-gap:  "mt-10 / mt-12"
+  field-gap: "mb-6"
+  section-gap: "mt-10 / mt-12"
   card-padding: "p-5 sm:p-6"
   page-padding: "p-5 sm:p-8"
-  measure:      "max-w-2xl prose · max-w-3xl documents · max-w-[1500px] app"
+  measure: "max-w-2xl prose · max-w-3xl documents · max-w-[1500px] app"
 components:
-  button-primary:
-    background: "{colors.primary}"
-    text: "{colors.primary-foreground}"
-    radius: "{radius.lg}"
-    padding: "px-5 py-3.5"
-    typography: "text-sm font-semibold"
-    shadow: "{elevation.card}"
-    hover: "bg-primary/90, translate-y-[-2px]"
-  button-ghost:
-    background: "{colors.card}"
-    text: "{colors.primary}"
-    border: "1px {colors.border}"
-    radius: "{radius.lg}"
-    padding: "px-5 py-3.5"
-    hover: "border-foreground/30, bg-secondary/60"
-  input-field:
-    background: "{colors.card}"
-    border: "1px {colors.input}"
-    radius: "{radius.lg}"
-    padding: "px-4 py-3.5"
-    typography: "text-sm"
-    focus: "border-accent + ring-2 ring-accent/10"
-    error: "border-destructive + ring-destructive/10, message below in destructive"
-  role-card:
-    background: "{colors.card}"
-    border: "1px {colors.border}"
-    radius: "{radius.xl}"
-    padding: "p-5 sm:p-6"
-    shadow: "{elevation.card}"
-  option-card:
-    # The repeated single/multi-select control across onboarding.
-    unselected: "border-input, text-muted-foreground, hover:border-foreground/30"
-    selected:   "border-accent, bg-accent/5, text-primary, Check icon in accent"
-    radius: "{radius.lg}"
-    padding: "px-4 py-3.5"
+  button-primary: { background: "{colors.primary}", text: "{colors.primary-foreground}", radius: "{radius.lg}", padding: "px-5 py-3.5", hover: "bg-primary/90, translate-y-[-2px]" }
+  button-ghost:   { background: "{colors.card}", text: "{colors.primary}", border: "1px {colors.border}", hover: "border-foreground/30, bg-secondary/60" }
+  button-action:  { class: "bg-brand text-brand-foreground", use: "the one thing a screen wants done: Apply, Send, Generate" }
+  input-field:    { background: "{colors.card}", border: "1px {colors.input}", radius: "{radius.lg}", padding: "px-4 py-3.5", error: "border-destructive, message below in destructive" }
+  role-card:      { background: "{colors.card}", radius: "{radius.xl}", padding: "p-5", open: "edge-hover; edge-selected while its detail is open" }
+  option-card:    { unselected: "border-input, text-muted-foreground", selected: "border-accent, bg-accent/5, text-primary, Check icon in accent" }
 ---
 
-# Saaf
+# Jobinko
 
 ## Brand & Style
 
-Saaf is a free job-matching product for Indian professionals. Its distinguishing
-act is not showing roles — it is **showing the working behind every number it
-publishes**, and saying plainly where it is uncertain. The design system exists
-to make that working legible and checkable.
+Jobinko is a job-search copilot for Indian professionals. Its distinguishing act
+is **showing the working behind every number it publishes**, and saying plainly
+where it is uncertain. The design system exists to make that working legible —
+on a 360-pixel-wide phone, on a variable connection, to someone who is tired.
 
-The aesthetic is a **calm product surface**: a paper-blue ground, white cards
-that carry one soft shadow, a single green accent used sparingly to mark what is
-live or confirmed, and generous but not airy spacing. Nothing on screen tries to
-persuade; the credibility comes from the fact that every number opens to show
-where it came from.
+The aesthetic is a **calm product surface**: a light ground, white cards with
+one soft shadow, one quiet blue used for what can be acted on, and colour
+otherwise reserved for the match score. Nothing on screen tries to persuade.
 
-Two anti-patterns still govern everything. **This must not look like a generic
-AI product** — no purple-to-blue gradient, no glassmorphism, no blurred orb, no
-oversized italic serif hero. And **it must not become a dashboard of invented
-figures** — every tile on the signed-in rail shows a number the database
-actually holds. The saaf-ai export shipped a profile-strength meter, a weekly
-application limit and a B2B discoverability toggle; all three were dropped
-because the first two are made up and the third is parked.
+**"Hopeful" here means light, quiet and not judging — not cheerful.** A 42% is
+drawn in slate, printed in ink, and sits beside the one thing holding it back.
+It is a fact about the posting. It is never red, and never a verdict.
 
-The named anti-reference is still **the maximalist résumé-tool look**, but for its argument rather
-than its shadows: its headline is *"Your Job Search, Fully Automated — applies
-for you while you sleep"*, which is the auto-apply behaviour this product ~~exists
-to argue against~~ now offers too, inside hard limits (Reversed 2026-09-25, PROJECT-STATE Stage AI).
-The visual anti-reference stands: no "while you sleep" promises, no volume boasts.
+Two anti-patterns govern everything, and the first was broken once already.
+**This must not look like a generic AI product** — no purple-to-blue gradient,
+no glassmorphism, no blurred orb, no glow. TASK-107 (2026-09-23) shipped a
+gradient, glass and two orbs against this paragraph; TASK-323 (2026-11-10)
+removed all of them, and the utilities no longer exist to reach for. And **it
+must not become a dashboard of invented figures** — every number on screen is
+one the database holds.
 
 ## Colors
 
-The palette is a cool near-neutral with exactly one chromatic accent.
+**One hue family.** Ink, ground and accent all sit at hue 250–255, and nothing
+but the error red and the score bands exceeds chroma 0.13. That ceiling is the
+point: saturated colour raises arousal (Wilms & Oberfeld 2018), and the palette
+this replaced ran at 0.288.
 
-- **background** — the page ground. A very light blue-grey, not white, so a
-  white card reads as raised without needing a heavy shadow.
-- **card (#FFFFFF)** — every raised surface: role cards, the app header, the
-  sidebar, form panels, document pages.
-- **primary** — a deep desaturated navy-black. Headings, body emphasis, solid
-  buttons, and the active navigation item. It is the ink.
-- **muted-foreground** — secondary text: the reason line on every role, helper
-  text under every field, metadata.
-- **border** — the single hairline value. Used for card borders, dividers,
-  table rules and unfocused input borders alike.
-- **accent (a deep green)** — the one chromatic value, and it is rationed. It
-  marks **eyebrows**, **the focus ring**, **a confirmed or selected state**, and
-  **live figures**. It never carries a match outcome.
-- **destructive** — reserved **exclusively for system errors**: a failed upload,
-  a rejected form, a destructive confirmation. It is **never** used for a match
-  outcome. A low score is a correct answer, not a failure.
+**Blue, because the other hues are spoken for.** Green means a high match, ochre
+a middling one, red a system error. An accent in any of them would read as an
+outcome. Blue is what is left, and it is also the calm end of the spectrum.
+Thirteen competitors were checked: three are blue. Joining them is deliberate —
+hue can be copied in an afternoon, and what cannot is what the card says.
 
-There is **no dark palette**. `color-scheme: light` is set and the `dark`
-variant is declared but undefined. Adding one means defining every token under
-`.dark` in a single pass — a partial dark palette previously shipped a real
-invisible-button defect, and the note in `globals.css` records it.
+- **background / card** — a very light blue-grey page with white cards (light);
+  a deep ink-blue page with slightly lifted cards (dark). Not black, and the
+  dark text colour is off-white: full contrast without #fff-on-#000 glare.
+- **primary** — the ink. Headings and the solid button. Inverts wholesale.
+- **accent** — links, eyebrows, the focus ring, a selected state.
+- **brand** — the action colour, flat. In dark it is a *light* blue with a
+  *dark* label, because a saturated fill on a dark ground is the glare this
+  system removes.
+- **border vs input** — `border` is a hairline for dividers and card edges.
+  `input` is the boundary of a field and clears 3:1. Do not swap them.
+- **destructive** — system errors only. Never a match outcome.
+- **score bands** — teal-green, ochre, slate. See the score ring below.
+
+**Both themes are live.** Light is the default because every competitor checked
+is light, because 84% of India's web traffic is a phone often read in daylight,
+and because dark text on light reads better at small sizes. Dark is kept for
+the documented user — searching in bed at 11pm — and follows the device unless
+the candidate chooses otherwise.
+
+**Contrast is tested, not claimed.** Change a token and
+`theme-contrast.test.ts` tells you which of 36 pairs you broke. Do not write a
+ratio in a comment.
 
 ## Typography
 
@@ -246,7 +167,7 @@ Two faces, both free for commercial use and both self-hosted at build time by
 matters for this product specifically: a font CDN request from a job-search page
 is exactly the leak the privacy guarantee rules out.
 
-- **Public Sans** carries everything. It is the typeface of United States civic
+- **Public Sans** carries everything, unchanged by the 2026-11-10 pass. It is the typeface of United States civic
   communication, drawn for public notices and government forms — the right voice
   for a product whose claim is *check our working*. It survived the system
   change unchanged.
@@ -256,7 +177,8 @@ is exactly the leak the privacy guarantee rules out.
 
 Weight 600 does the work at every heading size, with tight negative tracking
 (−0.03em to −0.06em) that increases as the size does. Body is 400 at
-`text-sm`/`leading-6`. The old system's 300-weight display face is gone with it.
+`text-sm`/`leading-6`. **The smallest text anywhere is 11px** — 147 uses of 9–10px
+were raised on 2026-11-10, because small text is where a phone in daylight fails first.
 
 ## Layout & Spacing
 
@@ -273,7 +195,7 @@ Three shells, and every screen uses one of them.
   keeps its auth check and its database read on the server. Used by `/today`,
   `/applications`, `/profile`.
 - **`OnboardingShell`** (`src/components/features/onboarding-shell.tsx`) — the
-  five-step split screen. A sticky gradient panel on the left carrying the mark
+  five-step split screen. A sticky panel on the left carrying the mark
   and the two promises the product actually keeps, and the step on the right
   with "Step N of 5" and a progress bar. `STEPS` in that file is the single
   source of truth for the flow's length and pacing.
@@ -296,8 +218,12 @@ There are exactly three levels, and reaching past them is drift.
 - **Level 1 — page.** The `background` ground. No border, no shadow.
 - **Level 2 — cards.** `bg-card` + `border border-border` + `shadow-sm`. Role
   cards, form panels, rail tiles, headers, the sidebar.
-- **Level 3 — the one call to action.** `shadow-lg shadow-primary/10` on the
-  landing page's primary button. Nowhere else.
+- **Level 3 — floating things.** `shadow-lg` on popovers, menus and the landing
+  page's primary button.
+
+A card that can be opened firms its edge on hover (`edge-hover`) and keeps it
+while selected (`edge-selected`). That is a border colour, not a shadow: there
+is no glow in this system. Sticky headers are opaque — no backdrop blur.
 
 The previous system had **zero** shadows as a matter of conviction. This one has
 one soft recipe, used consistently. That is the trade the change made, and the
@@ -322,8 +248,9 @@ measured property of the anti-reference.
 ### Buttons
 
 `src/components/ui/button.tsx`. **Two variants only** — `primary` (solid ink,
-white text, `shadow-sm`, lifts 2px on hover) and `ghost` (white card surface,
-ink text, hairline border). A third variant invites hierarchy the product does
+`shadow-sm`, lifts 2px on hover) and `ghost` (card surface, ink text, hairline
+border). The **action** treatment, `bg-brand text-brand-foreground`, is applied
+directly where a screen has one thing it wants done (Apply, Send, Generate). A third variant invites hierarchy the product does
 not have. Full width is not the default: pass `className="w-full"`, which
 onboarding does everywhere and the app shell does nowhere.
 
@@ -332,55 +259,41 @@ onboarding does everywhere and the app shell does nowhere.
 `src/components/ui/input.tsx`. Label above in `text-sm font-semibold`, optional
 **provenance** note beside it in `text-xs` muted — the mechanism that turns
 typing into checking on the confirm screen. Field is white on the page ground
-with a hairline border; focus swaps the border to `accent` and adds
-`ring-2 ring-accent/10`. Error swaps border and ring to `destructive` and puts
+with an `input` border that clears 3:1; focus draws the global 2px `ring`
+outline. Error swaps border and ring to `destructive` and puts
 the message below in `destructive` — the only place chromatic red appears.
+
+### Score ring
+
+`src/components/ui/score-ring.tsx`. One flat colour per band — teal-green from
+75, ochre from 60, slate below. It was a gradient that ran each band into its
+neighbour's colour; that is gone. **Colour is the last of four cues**: the arc's
+length is the score, the number is printed in ink at full contrast, the band
+word sits beside it, and only then the colour. The bands are tested to stay
+apart with the red–green axis removed. **Slate, never red, for a low score** —
+a test fails if `--score-low` and `--destructive` ever share a value again.
 
 ### Role card
 
-`src/components/ui/role-card.tsx`. The single shipped role object, and still a
-**server component**: the disclosures are native `<details>`, the only client
-code is the two action buttons, and **the breakdown is never behind a request**
-— a candidate can check the arithmetic without a round trip.
+`src/components/features/role-card.tsx`. Still a **server component**.
 
-**Four rows of text, and that is the budget.** ~~Left column: title, then
-`company · city` on one line, then the reason line, then a single *Insights*
-disclosure sitting beside two icon buttons. Right column is the score ring — the
-number in `text-3xl tabular-nums` and its band, nothing else.~~
-**Re-set 2026-10-08 after the card had grown back to about twenty things** (a band
-tag, New, Easy Apply, "Bar unread", five fact chips, a highlight line, the reason
-line, a "why" box, five buttons, an Insights disclosure) and the founder called the
-feed cluttered. The card is now: **chips** (at most four, quiet: New, age, early
-applicant, connections) → **title** → **one line** `company · city · level · stated
-pay` → **one paragraph** (the reason line in full, then the score's own strength and
-gap) → **three mini bars** (Role · Skills · Experience, each one stored component's
-points over its maximum) → **actions** (save, hide, Quick apply). The ring and its
-band word sit on the right. What moved to the detail panel, one click away: the
-Insights notes, the requirement quotes, "this score looks wrong". The budget is
-enforced by `src/components/features/__tests__/role-card.test.ts`; adding an element
-to the card means changing a number in that file, in review, on purpose.
+Left: logo tile · quiet chips (at most four) · title · `company / one line` ·
+a grid of facts · the actions (hide, save, apply). Right: the score panel —
+ring, band word, up to two ticks for what is strong. On a phone the panel is
+hidden and the ring rides beside the title **with its band word under it**
+(since 2026-11-10; before, a phone showed a bare percentage).
 
-**The band follows the bucket, not the score.** It read the score alone until
-2026-09-07, so a role sitting under *Good match, short on experience* announced
-itself as a STRONG MATCH two lines under the heading saying it was not. A card
-and the heading above it must never disagree; `BAND` in `role-card.tsx` is
-keyed by bucket, and only `matches` falls through to the score bands. A strong match
-(≥75, in the `matches` bucket) inverts to ink-on-primary with an accent ring.
+**A score below the high band names the one thing holding it back** — "Some
+skills missing", "Experience differs", "Title differs" — from the same stored
+arithmetic as the ticks, as one muted line. Never a paragraph: the full
+reasoning opens in the job's detail. The 2026-10-09 rebuild had removed every
+reason from the card's face, which left a low score as a bare verdict and broke
+this system's oldest rule (*never a score without its reason*). The card's
+budget is enforced by `__tests__/role-card.test.ts`; adding an element means
+changing a number there, in review, on purpose.
 
-It carried nine rows until 2026-09-07. What went, and why none of it was a fact
-leaving the page: the band tag above the title said what the ring's band says;
-the *Salary not stated* chip was true of all 229 roles and is stated once in the
-rail instead of 54 times in the list; the two component readouts under the ring
-repeated the top of the working; company and city were two rows in two bordered
-chips; *How this score is built* and *What we read from this posting* were two
-disclosures answering one question and are now one. `New` is a dot and the
-unread-experience warning is an icon, both with labels for assistive tech.
-
-**Two things on this card are not negotiable.** The **reason line** stays at
-full length on the face of the card — a score without its reason is the exact
-failure this product exists to correct. And **the breakdown is not decoration**:
-the score it replaced was `70 + posting verbosity` and never read the candidate
-at all, so a bare number would hide that class of defect again.
+**The band follows the bucket, not the score** (`bandFor` in `fit-ring.tsx`):
+a card and the heading above it must never disagree.
 
 ### Option card
 
@@ -425,16 +338,17 @@ argument.
 **Don't**
 
 - Don't use `destructive` for a match outcome. It is for system failures.
-- Don't add a second shadow recipe. There is `shadow-sm` for cards and one
-  `shadow-lg` on one button.
+- Don't add a gradient, a glow, a blur or a glass surface. The utilities were
+  deleted so that doing it again takes a decision.
+- Don't write a contrast ratio in a comment. Add the pair to the test.
+- Don't put text under 11px on screen, or a control under 44px on a phone.
 - Don't add a radius outside the `--radius` scale.
-- Don't introduce a second chromatic accent, and never reach for a Tailwind
-  default green/red/amber trio. One green is already spoken for.
+- Don't introduce a second accent hue. Green and ochre belong to the score.
 - Don't render a score without its reason, anywhere — that is the exact failure
   the product exists to correct.
 - Don't ship a number the database does not hold. If the export has a tile for
   it and we cannot compute it, the tile does not ship.
-- Don't half-add dark mode. All tokens or none.
+- Don't add a token to one theme. Both, in the same edit — a test enforces it.
 - Don't caption a screen three times. An eyebrow, a headline and a subtitle
   saying the same thing is the default failure mode of the export's copy, and
   the app header has usually already named the page.
@@ -443,6 +357,16 @@ argument.
   disclosure or an icon label, but never remove the fact.
 
 ## What was retired, and why
+
+**2026-11-10 — the zinc + indigo→violet system (TASK-107).** Retired because its
+brand ran at chroma 0.233–0.288 against a documented 0.12, because it shipped
+the gradient, glass and orbs this file forbade, because four of its contrast
+pairs failed AA when finally measured (action-button label 4.38:1, field
+boundary 1.47:1), and because it made a low score the error colour. Its token
+*architecture* was right and is kept: 230 references and not one hardcoded
+colour is why this change was six values and a rename.
+
+**Earlier — the monochrome notice system:**
 
 The original system was monochrome by construction, hairline-ruled, zero-shadow
 and square-cornered, anchored on live computed styles from `zerodha.tech`, and

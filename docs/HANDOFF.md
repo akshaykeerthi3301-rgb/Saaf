@@ -2,7 +2,42 @@
 
 ---
 
-## 🔶 2026-11-10 — the UI makeover brief is ready to hand to Fable 5.2
+## 🔶 2026-11-10 (later) — the UI makeover is built and waiting for your eyes
+
+**Nothing is live.** "Live" means on jobinko.in, and jobinko.in still shows the
+purple. The new look exists only on this computer, on a branch (a separate copy
+of the code) called `ui-makeover`. It was not pushed anywhere and not deployed
+(put on the live website).
+
+**What you will see:** a light, quiet-blue Jobinko by default, and a dark
+version that follows your phone or laptop setting. No purple, no gradient, no
+glow. A switch — Auto / Light / Dark — is in the account menu (your initials,
+bottom-left).
+
+**You need to:**
+1. **Look at it.** Start the local site and open `/today`. Try the switch. Try it
+   on your phone-sized window. Screenshots are in `docs/ui-makeover/`.
+2. **Read "Decided by default"** in `docs/UI-MAKEOVER-DECISIONS.md` §4 — nine
+   choices made without you, each with how to undo it. The two that matter most:
+   light is now the default (you had asked for dark in September), and the colour
+   is blue rather than the teal or indigo you were shown before.
+3. **Say yes or no.** If yes, the branch has to be merged and deployed before
+   anyone sees it. If no, say which of the nine to reverse.
+
+**What was not checked, so you know where to look hardest:** only 9 of the 34
+pages were opened (the feed, a job's detail, the tracker, profile, résumé list,
+landing, public jobs, the ATS checker). Onboarding, the résumé tailor, cover
+letters and every pop-up were **not** looked at. No card with a low score was
+seen on screen — your feed only has 81–86% matches. Nobody tried it on a real
+phone outdoors.
+
+**Small things found:** the app icon still shows the letter "S" from the old
+name. The security header (CSP) is in report-only mode today; before it is made
+strict, the tiny theme script needs adding to its allow-list.
+
+---
+
+## 🔶 2026-11-10 — the UI makeover brief (superseded by the entry above: the makeover is built)
 
 **Nothing is live and nothing in the product changed.** The purple you dislike is
 still exactly as it was on the website.
