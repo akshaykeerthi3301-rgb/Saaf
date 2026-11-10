@@ -2,9 +2,38 @@
 
 ---
 
+## 🔶 2026-11-10 — the UI makeover brief is ready to hand to Fable 5.2
+
+**Nothing is live and nothing in the product changed.** The purple you dislike is
+still exactly as it was on the website.
+
+**What exists:** `docs/UI-MAKEOVER-BRIEF.md`. Everything below the horizontal rule
+in that file is one message to paste into Claude Fable 5.2, pointed at this repo.
+It hands over the whole makeover — colour, type, spacing, motion, the job card —
+with creative freedom but a hard requirement that every choice is backed by
+evidence it writes down.
+
+**You need to:** open the file, read §2 (your own words — correct them if I got the
+intent wrong), then paste from the rule onward into Fable 5.2 and let it run. It is
+told to work on a branch called `ui-makeover`, to never wait on you, and to never
+push or deploy. When it finishes, the review is yours: the branch has to be looked
+at and merged before any of it reaches jobinko.in.
+
+**Worth knowing before you read it.** Three things were measured first: the purple
+really is near the brightest a screen can show (saturation 0.288 against the 0.12
+your own design doc specified); your design doc already banned the purple gradient
+in writing before it shipped; and colour lives in six values in one file, so this is
+cheap to change. One thing was found by accident: the app is hardcoded to dark mode,
+so the entire light colour scheme is dead code nobody can see. The brief asks Fable
+to decide its fate rather than leave it.
+
+---
+
 ## ▶ NEXT SESSION STARTS HERE — government funding (decided 2026-10-16)
 
 **Read first:** `docs/FUNDING-READINESS.md` (the honest read, the real KSUM and Startup India numbers, §7 your answers and the dated steps). **Where things stand:** no company yet; you are in Kerala; no co-founder or advisor; 5–8 real users; no college chosen. **First moves, in order:** (1) a CA about the company form (OPC vs Pvt Ltd vs LLP — you have no co-founder), (2) DPIIT recognition and a KSUM Unique ID, (3) a lawyer's one-page note on the data sources, (4) pick one Kerala college or community and get the first 100 users. **What Claude can draft in the session:** the questions for your CA, the KSUM Idea Grant application, a one-page investor/grant deck, the user-interview write-up.
+
+**2026-10-16 (later) — startup-potential assessment written: `docs/STARTUP-POTENTIAL.md`.** It adds the comparables, four "who pays" models (recommended: colleges as the free channel, employers as the later payer), a funding map and a 14-day plan. **You need to:** log in to `grants.startupmission.in` and read the live Idea Grant form and deadline (I could not see it), meet the CA, choose one college, write up the 5–8 users, and decide who the payer is. Nothing was deployed or changed in the product.
 
 **The product is in a stable state to build that on:** deployed (`dpl_95hSK2RqJPCErXzdDHD9pE7ukk8E`, jobinko.in), 32,133 open jobs after the first weekly clean-up, `CAREER_SITES` set, the weekly job scheduled Sundays 20:00 UTC. Nothing is half-done: no branch is unmerged (`main` is the live code), no database change is pending. **Open, none urgent:** GitLab runner secrets, the terms review (Amazon and the Oracle-hosted employers), checking the signed-in feed, an optional −26-line tidy (TASK-319).
 

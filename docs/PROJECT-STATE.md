@@ -3494,3 +3494,121 @@ portal "TOP APPLICANT" badge against a 62 that breaks into its parts. `PRODUCT.m
 ### Stage BX — ponytail audit: 12 cuts applied (2026-10-16)
 
 On the founder's "fix all" after a repo-wide over-engineering audit: **-6 packages** (`react-hook-form`, `@hookform/resolvers`, `class-variance-authority`, `posthog-node`, and devDeps `prettier`, `@vitest/coverage-v8` — zero imports anywhere), **-5 files** (`scripts/discover-workday.ts`, the dead `.github/workflows/daily-ingest.yml`, and one-off `probe-provider-coverage.ts`, `measure-stage-coverage.ts`, `measure-job-sections.ts`), **-2 files folded away** (`ingest/ingest-only.ts` is now `INGEST_ONLY=1` on `ingest/run.ts`; `ingest/providers/career-switch.ts` is `careerSiteOn` in `providers/types.ts`), `crossBoardKey` now reuses `repostKey` (which gained `.trim()`), `SLOW_PROVIDERS` is one constant, `annualInr` is ₹-only (pay in another currency is now "no evidence" rather than converted at a fixed rate — a behaviour change, unmeasured), the `indiaFacetId` wrapper is gone, `FRESHER_TITLE` is one regex literal. **Kept after checking:** `survivorId` (a test guards that cleanup scripts keep the ingest's row) and `tw-animate-css` (imported from CSS). **Verified:** `tsc --noEmit` clean, 2,259 tests pass, lint 0 errors, `next build` succeeds. **Not deployed** — nothing here changes the live site's behaviour except the one conversion rule, which only affects the next ingest. The three deleted probe scripts are still cited as evidence in `ROADMAP.md`; their numbers stand, the scripts no longer exist.
+
+### Stage BY — startup-potential assessment (2026-10-16)
+
+On the founder's "explore Jobinko as a startup; objective: raise funding" — **`docs/STARTUP-POTENTIAL.md`** (ROADMAP TASK-320). Findings, tagged in the document: (1) the closest comparable, Jobright, raised **$3.2M (June 2025, Translink Capital + Indeed's venture arm)**; Final Round AI **$6.9M seed (Jan 2025)** — candidate-side AI tools raise single-digit millions; (2) Apna (>$190M raised) has not raised since 2021, FY25 loss ₹50 crore with revenue down (CLAIMED, Inc42) — candidate-pays is not how Indian hiring was monetised; Info Edge's recruitment revenue is employer-funded and growing ~13–15%; (3) therefore a venture-scale story needs a payer who is not the candidate — recommended hypothesis **D: colleges as the free channel, consenting-candidate access sold to employers later**, started as a placement-cell pilot (JUDGEMENT, not a decision); (4) the only moat worth building is **outcome data** (did high scorers get interviews) — none exists yet; (5) Google × Accel "Atoms" pre-seed cohort deadline (26 Jan 2026) has passed; solo-founder eligibility unconfirmed for every programme found. **Not verified:** KSUM's live call window and form — `grants.startupmission.in` shows only a login to an anonymous visitor; aggregator pages call Idea/Productisation rolling (CLAIMED). Verdict from `FUNDING-READINESS.md` stands: grants yes after paperwork, equity investors not yet.
+
+**Addendum (2026-10-16): the Seed Fund guidelines were read in full (primary source).** Eight scored criteria (need, feasibility, impact, novelty/IP, team, fund-use plan, additional, presentation; weights set per incubator) and automatic gates: DPIIT-recognised, ≤ 2 years old, ≥ 51% Indian promoters, and **no more than ₹10 lakh from other government schemes — KSUM Idea (₹3L) + Productisation (₹7L) sits exactly on that line**, so the order of applying matters. Incubators may pass only 20% of their pool as grants; the rest is unsecured debt/convertibles at ≤ repo rate. Mapped to Jobinko in `docs/STARTUP-POTENTIAL.md` §8b: strongest = feasibility; weakest = team and need-evidence.
+
+### Stage BZ — an unmerged bug fix found while clearing disk space (2026-10-30)
+
+Not product work; recorded because it surfaced a live defect and a naming
+hazard.
+
+**Measured 2026-10-30.** The Mac was 83% full (165 GB of 228 GB). ~36 GB was
+reclaimed. Along the way five abandoned Claude Code worktrees were removed
+(7.0 GB, almost entirely `node_modules`), two of them in this repo.
+
+**The finding.** Branch `claude/angry-hugle-118105`, commit `e5cbd65`, fixes the
+Saved Searches menu opening off-screen: it was right-anchored, so when the
+controls row wrapped (or on a phone) the 119 px button sat at the left of the
+column and the 288 px menu hung ~170 px off it, under the sidebar. The commit
+left-anchors it and adds a `useLayoutEffect` that slides it back, plus a test.
+
+**It is not in `main`.** Verified by reading `main`'s copy of
+`src/components/features/saved-searches-menu.tsx`: still `absolute right-0`, no
+`useLayoutEffect`, and the test file is absent. Raised as TASK-321.
+
+**Why it was lost: a task-number collision.** The branch commit says TASK-222.
+TASK-222 in `docs/ROADMAP.md` is "Score every matching job, not the first 500",
+a different task, already `- [x]`. The roadmap therefore reads as though this
+work were done. Before reusing a number from a branch message, check it against
+the roadmap.
+
+**A correction worth keeping.** During the work the session twice told the
+founder these worktrees held commits that "exist nowhere else" and that
+deleting them would lose the work. That was wrong. A worktree holds a working
+copy; the branch and its objects live in the parent repository, and both
+branches and both commits were verified intact after removal. Only *uncommitted*
+edits die with a worktree folder — six files here, saved as whole copies in
+`~/Desktop/projects/_worktree-rescue/full-files/` (that folder is outside the
+repo and is not backed up anywhere).
+
+⚠️ Patch files were also written there, but three of four fail `git apply
+--check` because `main` has moved on. The whole-file copies are the usable
+record; the patches only show which lines changed.
+
+### Stage CA — the palette measured, the design doc's own rule found broken, and a makeover brief handed to Fable 5.2 (2026-10-28 / 2026-11-10)
+
+The founder, unprompted: *"i am not satisfied with the UI colours. We need
+something smooth, interactive, clean and professional and hopeful emotionally"*,
+then sharper: *"it feels stressful to the eyes with the neon purple. its kind of
+funky. You propose palettes."*
+
+**Measured 2026-10-28, `src/app/globals.css` on `main`.** Colour is authored in
+oklch, where the second figure is chroma (saturation). The shipped `.dark`
+palette:
+
+| Token | Value | Chroma |
+|---|---|---|
+| `--accent` | `oklch(0.673 0.182 276.935)` | 0.182 |
+| `--brand` | `oklch(0.585 0.233 277.117)` | 0.233 |
+| `--brand-2` | `oklch(0.558 0.288 302.321)` | **0.288 — near the sRGB/P3 gamut ceiling** |
+
+The original light accent, `oklch(0.54 0.12 163)`, is chroma **0.12**, and
+`docs/DESIGN.md` line 28 calls it "the one chromatic value" — rationed on
+purpose. The shipped dark system runs roughly double that.
+
+**The complaint is the design doc reasserting itself, not a change of mind.**
+`docs/DESIGN.md` line 203 forbids, in the original prose, "no purple-to-blue
+gradient, no glassmorphism, no blurred orb". TASK-107 on 2026-09-23 shipped a
+purple-to-blue gradient. Nobody noticed the contradiction at the time; this is
+the correction.
+
+**The change is cheap, and that was worth measuring before proposing anything.**
+`grep` over `src` with `--include="*.tsx"`: **230** references to
+`brand-gradient|from-brand|bg-brand|text-accent|brand-2` across 25+ files, and
+**zero** hardcoded `indigo-|violet-|purple-|fuchsia-` utility classes. Every
+surface reads tokens, so a whole-product palette change is ~6 values in one
+file. The token system built in TASK-107 is doing exactly the job it was built
+for, even though the values it carries were wrong.
+
+**Found while measuring, not yet acted on:** `src/app/layout.tsx:57` hardcodes
+`className="dark"` on `<html>`. There is no theme toggle and no
+`prefers-color-scheme` branch. All 42 `:root` light tokens — including that
+green accent — are dead code that still ships to every browser. Light mode
+either becomes real or gets deleted; leaving it is the one option that costs
+something and buys nothing.
+
+**Three palettes were drawn and previewed live** (canvas artifact, plus the real
+signed-in `/today` feed at `localhost:3000`): A Dawn teal `0.78/0.12/172 →
+0.60/0.12/172 → 0.62/0.11/196` with dark ink on the button; B Clear sky
+`0.78/0.10/236 → 0.58/0.13/246 → 0.60/0.12/218`; C Quiet indigo
+`0.76/0.10/272 → 0.58/0.13/274 → 0.60/0.13/292`. All three land at chroma
+0.10–0.13. Contrast ratios are **unverified** — they were held at the current
+lightness on the assumption the shipped 4.5:1 claim survives, which is an
+assumption, not a measurement. The founder did not pick one.
+
+**2026-11-10 — the founder widened the scope and changed the executor.** Rather
+than apply a palette, they asked for a full UI makeover done by Claude Fable
+5.2 with creative freedom, on the condition that every decision is backed by
+data, research, logic and the current and future market. `docs/UI-MAKEOVER-BRIEF.md`
+is that hand-off (TASK-322): the measurements above as settled ground, six hard
+constraints (tokens only; the theme-parity test; score-ring semantics
+independent of brand and not hue-only; no new runtime dependencies; the
+`CLAUDE.md` invariants; WCAG 2.2 AA measured rather than estimated), a
+four-class evidence standard, the research owed before designing, and a
+non-blocking autonomy protocol — ask with a recommendation, take the default,
+log it, never stall; stop only for irreversible actions.
+
+⚠️ **Nothing in `src/` has changed. The neon purple is still live.** Everything
+in this stage is measurement and a brief.
+
+**Also corrected this stage:** the memory note saying `/api/dev-signin` needs a
+Chrome tab because the Browser pane cannot screenshot. On 2026-10-28 the pane
+did the whole job — `preview_start` on launch config `saaf-dev-node22`, then
+navigate to `/api/dev-signin`, signed in, screenshots throughout. Try the pane
+first. A palette can also be swapped live with no file edit:
+`document.documentElement.style.setProperty('--brand', …)` beats every `.dark`
+rule, because an inline style outranks a class selector.
