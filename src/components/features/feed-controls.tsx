@@ -104,7 +104,7 @@ export function FeedSearch({
         <div className="absolute inset-x-0 top-full z-30 mt-1.5 rounded-2xl border border-border bg-popover p-3 shadow-lg">
           {chips.length > 0 ? (
             <>
-              <p className="px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Try</p>
+              <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Try</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {chips.map((c) => (
                   <button
@@ -123,11 +123,11 @@ export function FeedSearch({
           {history.length > 0 ? (
             <>
               <div className={`${chips.length ? 'mt-3 ' : ''}flex items-center justify-between px-1`}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Recent searches</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Recent searches</p>
                 <button
                   type="button" onMouseDown={(e) => e.preventDefault()}
                   onClick={async () => { await clearSearchHistoryAction().catch(() => null); router.refresh() }}
-                  className="text-[10px] font-semibold text-muted-foreground hover:text-primary"
+                  className="text-[11px] font-semibold text-muted-foreground hover:text-primary"
                 >Clear</button>
               </div>
               <ul className="mt-1">
@@ -209,7 +209,7 @@ export function SavedFilters({ saved, current, stored, alwaysShow = false }: { s
             aria-label="Name this filter" placeholder="Name it, e.g. “Remote PM”"
             className="w-44 rounded-full border border-input bg-background px-3 py-1.5 text-xs text-primary outline-none focus:border-accent"
           />
-          <button type="submit" disabled={pending || !name.trim()} className="bg-brand-gradient rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Save</button>
+          <button type="submit" disabled={pending || !name.trim()} className="bg-brand text-brand-foreground rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Save</button>
           <button type="button" onClick={() => setNaming(false)} className="px-1 text-xs text-muted-foreground">Cancel</button>
         </form>
       ) : null}

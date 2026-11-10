@@ -109,7 +109,7 @@ export function FirstRun() {
     <main className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-2">
       <section className="relative flex flex-col justify-center overflow-hidden bg-[linear-gradient(145deg,color-mix(in_oklch,var(--brand)_22%,var(--card)),var(--background)_75%)] px-6 py-12 sm:px-12 lg:min-h-screen lg:px-16">
         <div className="flex items-center gap-3">
-          <span className="bg-brand-gradient flex size-12 items-center justify-center rounded-full"><Sparkles className="size-5" /></span>
+          <span className="bg-brand text-brand-foreground flex size-12 items-center justify-center rounded-full"><Sparkles className="size-5" /></span>
           <div>
             <p className="flex items-center gap-2 text-lg font-semibold tracking-[-0.03em] text-primary">
               Jobinko <span className="size-2 rounded-full bg-score-high" aria-hidden="true" />
@@ -167,7 +167,7 @@ export function FirstRun() {
             type="button"
             onClick={start}
             disabled={!file}
-            className="bg-brand-gradient mt-10 inline-flex min-w-48 items-center justify-center gap-2 rounded-full px-8 py-3.5 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
+            className="bg-brand text-brand-foreground mt-10 inline-flex min-w-48 items-center justify-center gap-2 rounded-full px-8 py-3.5 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
           >
             Start matching
           </button>
@@ -206,7 +206,7 @@ export function ScanView({ phase, pct, slow }: { phase: Exclude<Phase, 'idle'>; 
           aria-valuenow={Math.round(pct)}
           className="mt-8 h-1.5 w-full overflow-hidden rounded-full bg-secondary"
         >
-          <div className="bg-brand-gradient h-full rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          <div className="bg-brand text-brand-foreground h-full rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-6 text-center text-lg font-medium text-primary" aria-live="polite">
           {phase === 'read' ? 'Scanning your résumé for key skills, work history, and education.' : 'Finding the roles that fit you and scoring each one.'}

@@ -20,8 +20,8 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-background/70 backdrop-blur-md" />
-        <Dialog.Popup className="glass fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border shadow-2xl outline-none">
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-background/70" />
+        <Dialog.Popup className="bg-card fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border shadow-2xl outline-none">
           {children}
         </Dialog.Popup>
       </Dialog.Portal>

@@ -269,7 +269,7 @@ export function TailorStudio({
           type="button"
           onClick={run}
           disabled={running}
-          className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold disabled:opacity-60"
+          className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold disabled:opacity-60"
         >
           {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
           {running ? 'Tailoring to this posting…' : 'Tailor my résumé for this role'}
@@ -373,7 +373,7 @@ export function TailorStudio({
                       maxLength={160}
                       className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none placeholder:text-muted-foreground"
                     />
-                    <button type="submit" disabled={aiBusy || instruction.trim().length < 3} aria-label="Send" className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full disabled:opacity-40">
+                    <button type="submit" disabled={aiBusy || instruction.trim().length < 3} aria-label="Send" className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-full disabled:opacity-40">
                       {aiBusy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
                     </button>
                   </form>
@@ -461,7 +461,7 @@ export function TailorStudio({
             <button type="button" onClick={saveVersion} disabled={busy} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-primary hover:border-accent/60 disabled:opacity-60">
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save
             </button>
-            <button type="button" onClick={() => setExportOpen(true)} className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold">
+            <button type="button" onClick={() => setExportOpen(true)} className="bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold">
               <FileDown className="size-3.5" /> Download résumé
             </button>
             {applyUrl ? (

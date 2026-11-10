@@ -9,10 +9,10 @@ import { Sparkles } from 'lucide-react'
 export function PublicShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
-            <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
+            <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
             Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">

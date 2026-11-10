@@ -72,7 +72,7 @@ export function OutreachStudio({
           type="button"
           onClick={generate}
           disabled={pending}
-          className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+          className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
           {pending ? 'Writing…' : 'Write all three with AI'}
@@ -90,9 +90,9 @@ export function OutreachStudio({
           const subject = fillVariables(m.subject, values)
           const search = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${company} ${SEARCH[c.key]}`.trim())}`
           return (
-            <article key={c.key} className="glow-hover flex flex-col rounded-2xl border border-border bg-card p-5">
+            <article key={c.key} className="edge-hover flex flex-col rounded-2xl border border-border bg-card p-5">
               <div className="flex items-start gap-3">
-                <span className="bg-brand-gradient flex size-10 shrink-0 items-center justify-center rounded-xl">
+                <span className="bg-brand text-brand-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
                   <Icon className="size-5" />
                 </span>
                 <div className="min-w-0">
@@ -172,9 +172,9 @@ function Field({
   return (
     <div className="mt-4">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
         <span className="flex items-center gap-2">
-          {count ? <span className={`font-mono text-[10px] tabular-nums ${over ? 'text-score-low' : 'text-muted-foreground'}`}>{count}</span> : null}
+          {count ? <span className={`font-mono text-[11px] tabular-nums ${over ? 'text-score-low' : 'text-muted-foreground'}`}>{count}</span> : null}
           <button
             type="button"
             onClick={async () => { await navigator.clipboard.writeText(copyText); setCopied(true); setTimeout(() => setCopied(false), 1500) }}

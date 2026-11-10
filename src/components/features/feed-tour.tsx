@@ -54,7 +54,7 @@ export function FeedTour({ onDone, onLater }: { onDone: () => void; onLater: () 
       className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-2xl border border-border bg-card p-4 shadow-lg sm:left-auto sm:right-6"
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Quick tour · {i + 1} of {stops.length}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">Quick tour · {i + 1} of {stops.length}</p>
         <button type="button" onClick={onLater} aria-label="Close the tour for now" className="-mr-1 -mt-1 rounded p-1 text-muted-foreground hover:text-primary">
           <X className="size-4" />
         </button>
@@ -69,7 +69,7 @@ export function FeedTour({ onDone, onLater }: { onDone: () => void; onLater: () 
           type="button"
           autoFocus
           onClick={() => (last ? onDone() : setI(i + 1))}
-          className="bg-brand-gradient rounded-lg px-3 py-1.5 text-xs font-semibold"
+          className="bg-brand text-brand-foreground rounded-lg px-3 py-1.5 text-xs font-semibold"
         >
           {last ? 'Done' : 'Next'}
         </button>

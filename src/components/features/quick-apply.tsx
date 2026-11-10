@@ -53,7 +53,7 @@ export function QuickApply({
           ? 'Opens the one-page application form. Jobinko’s extension can fill it; you review and press submit.'
           : 'Opens the employer’s application site. It may ask you to create an account first.'
       }
-      className={`bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl font-semibold shadow-sm transition hover:opacity-90 ${
+      className={`bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl font-semibold shadow-sm transition hover:opacity-90 ${
         size === 'lg' ? 'px-4 py-2.5 text-sm' : 'px-3 py-2 text-xs'
       }`}
     >

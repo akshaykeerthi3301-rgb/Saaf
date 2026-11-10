@@ -152,7 +152,7 @@ export function ResumeEditor({ id, label: initialLabel, targetRole, initial, pri
 
   return (
     <div>
-      <div className="sticky top-14 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
+      <div className="sticky top-14 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 px-5 py-3 sm:-mx-8 sm:px-8">
         <Link href="/resume" aria-label="Back to your résumés" className="rounded-xl border border-border p-2 text-primary hover:bg-secondary"><X className="size-4" /></Link>
         <label className="flex min-w-0 max-w-md flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
           {primary ? <Star className="size-3.5 shrink-0 text-score-high" aria-label="Primary résumé" /> : null}
@@ -162,7 +162,7 @@ export function ResumeEditor({ id, label: initialLabel, targetRole, initial, pri
           <button type="button" onClick={() => setAnalysisOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-primary hover:border-accent/60"><ScanSearch className="size-3.5" /> Analyze</button>
           <button type="button" onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-primary hover:border-accent/60"><FileDown className="size-3.5" /> Export</button>
           <button type="button" onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /> Delete</button>
-          <button type="button" onClick={save} disabled={!dirty || saving} className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">
+          <button type="button" onClick={save} disabled={!dirty || saving} className="bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">
             {saving ? <Loader2 className="size-3.5 animate-spin" /> : null}
             {dirty ? 'Save changes' : 'Saved'}
           </button>

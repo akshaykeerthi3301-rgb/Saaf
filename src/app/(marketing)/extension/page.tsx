@@ -32,7 +32,7 @@ export default function ExtensionPage() {
       </div>
 
       {process.env.NEXT_PUBLIC_EXTENSION_URL ? (
-        <p className="mt-6"><a href={process.env.NEXT_PUBLIC_EXTENSION_URL} className="bg-brand-gradient inline-flex rounded-xl px-4 py-2 text-sm font-semibold">Add to Chrome</a></p>
+        <p className="mt-6"><a href={process.env.NEXT_PUBLIC_EXTENSION_URL} className="bg-brand text-brand-foreground inline-flex rounded-xl px-4 py-2 text-sm font-semibold">Add to Chrome</a></p>
       ) : (
         <p role="note" className="mt-6 max-w-[65ch] rounded-xl border border-border bg-card px-4 py-3 text-xs leading-5 text-muted-foreground">
           The extension is not in the Chrome Web Store yet. A test build ({EXTENSION_VERSION}) can be installed by hand:{' '}

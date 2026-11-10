@@ -18,7 +18,7 @@ function Card({ icon: Icon, title, body, cta, onCta, onLater, onNever }: {
       <p className="flex items-center gap-2 pr-6 text-sm font-semibold text-primary"><Icon className="size-4 text-accent" aria-hidden="true" />{title}</p>
       <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{body}</p>
       <div className="mt-3 flex items-center gap-3">
-        <button type="button" onClick={onCta} className="bg-brand-gradient rounded-xl px-3.5 py-1.5 text-xs font-semibold">{cta}</button>
+        <button type="button" onClick={onCta} className="bg-brand text-brand-foreground rounded-xl px-3.5 py-1.5 text-xs font-semibold">{cta}</button>
         <button type="button" onClick={onLater} className="text-xs font-semibold text-muted-foreground hover:text-primary">Not now</button>
       </div>
     </div>

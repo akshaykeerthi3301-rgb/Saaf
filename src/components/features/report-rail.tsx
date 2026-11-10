@@ -115,7 +115,7 @@ export function ReportRail({
         than a growth one.
       */}
       <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
           Live jobs you match
         </span>
         {indexMatch ? (
@@ -214,7 +214,7 @@ export function ReportRail({
         rebuilds columns would be the most comfortable possible lie.
       */}
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           What a typical ATS could read
         </span>
         <p className="mt-1 font-mono text-2xl tabular-nums text-primary">{report.coverage.rate}%</p>
@@ -232,7 +232,7 @@ export function ReportRail({
         onClick={onChangeRole}
         className="rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left transition-colors hover:border-accent/60"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">Target</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">Target</span>
         <span className="mt-1 block text-sm font-semibold text-primary">
           {targetRole || 'No role chosen'}
         </span>
@@ -250,7 +250,7 @@ export function ReportRail({
           return (
             <div key={key} className="border-t border-border pt-3">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                   {cat.label}
                 </span>
                 <span className="font-mono text-[11px] tabular-nums text-muted-foreground">

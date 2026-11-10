@@ -47,7 +47,7 @@ export function FindingDetail({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {finding.category.replace('_', ' ')} › {finding.severity === 'high' ? 'blocks parsing' : finding.severity === 'medium' ? 'degrades parsing' : 'worth tidying'}
         </p>
         <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-primary">{finding.title}</h2>
@@ -193,7 +193,7 @@ export function MarketColumn({ coverage }: { coverage: TermCoverage[] }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         What this role&rsquo;s postings actually ask for
       </p>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">

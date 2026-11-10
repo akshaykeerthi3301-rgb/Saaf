@@ -92,7 +92,7 @@ export function TailorPanel({
   if (!result) {
     return (
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Next step
         </p>
         <h3 className="mt-3 text-lg font-semibold tracking-[-0.03em] text-primary">
@@ -138,7 +138,7 @@ export function TailorPanel({
 
   return (
     <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         Tailored for this posting
       </p>
 

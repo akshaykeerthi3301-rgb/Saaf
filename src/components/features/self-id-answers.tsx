@@ -65,7 +65,7 @@ export function SelfIdAnswers({ initial, stored }: { initial: SelfIdAnswers; sto
         Date of birth, age and pregnancy are never filled, whatever you enter anywhere.
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={save} disabled={busy || !stored} className="bg-brand-gradient rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">
+        <button type="button" onClick={save} disabled={busy || !stored} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">
           {busy ? 'Saving…' : 'Save these answers'}
         </button>
         {!stored ? <span className="text-xs text-muted-foreground">Saving these needs a database update (0038) that has not been applied yet.</span> : null}

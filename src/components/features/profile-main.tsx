@@ -106,7 +106,7 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
           <div className="rounded-xl border border-border bg-secondary/40 p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="flex items-center gap-2 text-sm font-semibold text-primary"><Users className="size-4 text-accent" aria-hidden="true" /> Get more referrals!</p>
-              <button type="button" onClick={() => setPanel('network')} className="bg-brand-gradient rounded-full px-4 py-1.5 text-sm font-semibold">Set-Up Network</button>
+              <button type="button" onClick={() => setPanel('network')} className="bg-brand text-brand-foreground rounded-full px-4 py-1.5 text-sm font-semibold">Set-Up Network</button>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">See who you already know at the companies you apply to, from your own LinkedIn or contacts export.</p>
           </div>
@@ -124,13 +124,13 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
               </p>
               <p className="text-sm text-muted-foreground">Last updated: {day(data.resume.updatedAt)}</p>
             </div>
-            <Link href={`/resume/edit/${data.resume.id}`} className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Preview Resume</Link>
+            <Link href={`/resume/edit/${data.resume.id}`} className="bg-brand text-brand-foreground rounded-full px-5 py-2 text-sm font-semibold">Preview Resume</Link>
           </div>
         ) : (
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <span className={tile} aria-hidden="true"><FileText className="size-6" /></span>
             <p className="min-w-0 flex-1 text-sm text-muted-foreground">No résumé saved yet. Add one and your experience and education fill in below.</p>
-            <Link href="/resume" className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Add résumé</Link>
+            <Link href="/resume" className="bg-brand text-brand-foreground rounded-full px-5 py-2 text-sm font-semibold">Add résumé</Link>
           </div>
         )}
       </ProfileCard>
@@ -140,13 +140,13 @@ export function ProfileMain({ data, networkPanel, answersPanel }: { data: Profil
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <span className={`${tile} text-brand-2`} aria-hidden="true"><FileText className="size-6" /></span>
           <p className="min-w-0 flex-1 text-sm text-muted-foreground">Write one for any job, from your résumé and the posting.</p>
-          <Link href="/cover-letter" className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Create Cover Letter</Link>
+          <Link href="/cover-letter" className="bg-brand text-brand-foreground rounded-full px-5 py-2 text-sm font-semibold">Create Cover Letter</Link>
         </div>
         <div className="mt-8 flex items-start justify-between gap-4"><h2 className="text-lg font-semibold tracking-[-0.02em] text-primary">Templates</h2></div>
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <span className={`${tile} text-score-mid`} aria-hidden="true"><Zap className="size-6" /></span>
           <p className="min-w-0 flex-1 text-sm text-muted-foreground">{data.answersCount} saved {data.answersCount === 1 ? 'answer' : 'answers'} for the questions forms keep asking.</p>
-          <button type="button" onClick={() => setPanel('answers')} className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Manage answers</button>
+          <button type="button" onClick={() => setPanel('answers')} className="bg-brand text-brand-foreground rounded-full px-5 py-2 text-sm font-semibold">Manage answers</button>
         </div>
       </section>
 

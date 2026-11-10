@@ -73,7 +73,7 @@ export function QuestionBank({ company, roleTitle, questions, stored, locked = f
               {KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <input type="month" value={askedIn} onChange={(e) => setAskedIn(e.target.value)} aria-label="When you were asked" className={`${input} sm:w-44`} />
-            <button type="submit" disabled={pending} className="bg-brand-gradient rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">Add question</button>
+            <button type="submit" disabled={pending} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">Add question</button>
             <button type="button" onClick={() => setOpen(false)} className="px-2 text-xs text-muted-foreground">Cancel</button>
           </div>
           <p className="text-[11px] text-muted-foreground">Only the question, its kind and the month are shown — never who reported it.</p>

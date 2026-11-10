@@ -86,7 +86,7 @@ function JobDetailView() {
 
   return (
     <div className="mx-auto max-w-[940px] px-5 pb-20 sm:px-8" data-testid="job-detail">
-      <div className="sticky top-14 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
+      <div className="sticky top-14 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 px-5 py-3 sm:-mx-8 sm:px-8">
         <button type="button" onClick={close} aria-label="Back to the list" className="rounded-xl border border-border p-2 text-primary hover:bg-secondary"><X className="size-4" /></button>
         {isEarlyPosting(j.postedAt) ? <span className="rounded-lg bg-score-high/10 px-2.5 py-1 text-xs font-semibold text-score-high">Early applicant</span> : null}
         <div className="ml-auto flex flex-wrap items-center gap-2">

@@ -41,7 +41,7 @@ export default async function AuditPage() {
           </p>
 
           <table className="mt-6 w-full border-collapse">
-            <caption className="pb-3 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <caption className="pb-3 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Requirements read from postings
             </caption>
             <tbody>

@@ -58,7 +58,7 @@ export function ConnectionsImport({ counts, stored }: { counts: Counts; stored: 
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <label className="bg-brand-gradient inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold">
+        <label className="bg-brand text-brand-foreground inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold">
           {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
           {total ? 'Upload another file' : 'Upload a contacts file'}
           <input type="file" accept=".csv,text/csv" className="sr-only" disabled={pending} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />

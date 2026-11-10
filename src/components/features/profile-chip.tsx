@@ -11,7 +11,7 @@ export function ProfileChip() {
   if (!account) return null
   return (
     <Link href="/profile" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-foreground/30">
-      <span className="bg-brand-gradient flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold">{account.initials}</span>
+      <span className="bg-brand text-brand-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold">{account.initials}</span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-primary">{account.name ?? 'Your profile'}</span>
         <span className="block truncate text-xs text-muted-foreground">{STATUS[account.status] ?? ''}</span>

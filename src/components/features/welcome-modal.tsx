@@ -51,10 +51,10 @@ export function WelcomeModal({ found, years, roles: initialRoles }: { found: num
   return (
     <Modal open={open} onOpenChange={(o) => { if (!o) close() }}>
       <div className="overflow-y-auto px-6 pb-6 pt-8 sm:px-10">
-        <span className="bg-brand-gradient mx-auto flex size-14 items-center justify-center rounded-full"><Sparkles className="size-6" /></span>
+        <span className="bg-brand text-brand-foreground mx-auto flex size-14 items-center justify-center rounded-full"><Sparkles className="size-6" /></span>
         <ModalTitle className="mt-5 text-balance text-center text-2xl font-semibold tracking-[-0.04em] text-primary sm:text-3xl">
           {found > 0
-            ? <>Welcome! We found <span className="text-brand-gradient">{found.toLocaleString('en-IN')}</span> roles that fit you.</>
+            ? <>Welcome! We found <span className="text-accent">{found.toLocaleString('en-IN')}</span> roles that fit you.</>
             : 'Welcome! Your feed fills as the nightly index runs.'}
         </ModalTitle>
         <p className="mt-3 text-center text-sm text-muted-foreground">
@@ -121,7 +121,7 @@ export function WelcomeModal({ found, years, roles: initialRoles }: { found: num
             type="button"
             onClick={confirm}
             disabled={busy}
-            className="bg-brand-gradient inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-full px-8 py-3.5 text-base font-semibold disabled:opacity-60"
+            className="bg-brand text-brand-foreground inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-full px-8 py-3.5 text-base font-semibold disabled:opacity-60"
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
             {busy && rolesChanged ? 'Updating your matches…' : <>Confirm &amp; see jobs</>}

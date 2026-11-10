@@ -14,7 +14,7 @@ export default function RoleClosed() {
           It is no longer on the employer&apos;s own hiring page, so we took it down. We never show a role you can no longer apply to.
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Link href="/today" className="bg-brand-gradient rounded-xl px-4 py-2.5 text-sm font-semibold">See roles open today</Link>
+          <Link href="/today" className="bg-brand text-brand-foreground rounded-xl px-4 py-2.5 text-sm font-semibold">See roles open today</Link>
           <Link href="/tools/ats-checker" className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-primary">Check your résumé</Link>
         </div>
       </div>

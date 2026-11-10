@@ -14,7 +14,7 @@ export default function RolesIndexPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-6 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
-          <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
+          <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
           Jobinko
         </Link>
         <Link href="/jobs" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Search jobs</Link>

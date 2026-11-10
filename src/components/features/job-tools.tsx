@@ -49,7 +49,7 @@ export function AiToolsRail({ roleId, title }: { roleId: string; title: string }
             onClick={() => setOpen(key)}
             data-testid={`tool-${key}`}
             className={`group flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${
-              primary ? 'bg-brand-gradient border-transparent' : 'border-border bg-card hover:border-foreground/30'
+              primary ? 'bg-brand text-brand-foreground border-transparent' : 'border-border bg-card hover:border-foreground/30'
             }`}
           >
             <Icon className="mt-0.5 size-5 shrink-0" />
@@ -91,7 +91,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
         return (
           <li key={label} className="flex items-center gap-3">
             <span className={`flex items-center gap-2 font-medium ${on ? 'text-primary' : 'text-muted-foreground'}`} aria-current={on ? 'step' : undefined}>
-              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${on || done ? 'bg-brand-gradient' : 'bg-secondary text-muted-foreground'}`}>
+              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${on || done ? 'bg-brand text-brand-foreground' : 'bg-secondary text-muted-foreground'}`}>
                 {done ? '✓' : n}
               </span>
               <span className="hidden sm:inline">{label}</span>
@@ -186,7 +186,7 @@ export function ResumeIntake({ onSaved }: { onSaved: (resumeId: string) => void 
         type="button"
         onClick={() => input.current?.click()}
         disabled={busy}
-        className="bg-brand-gradient mt-6 inline-flex min-w-48 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold disabled:opacity-60"
+        className="bg-brand text-brand-foreground mt-6 inline-flex min-w-48 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold disabled:opacity-60"
       >
         {busy ? <><Loader2 className="size-4 animate-spin" /> Reading your résumé…</> : 'Upload your résumé'}
       </button>
@@ -259,7 +259,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
               <span className="font-semibold">You already customised a résumé for this job</span>{' '}
               <span className="text-muted-foreground">({ago(ctx.existing.updatedAt)}).</span>
             </p>
-            <button type="button" onClick={() => { setFromSaved(true); setStep(3) }} className="bg-brand-gradient rounded-full px-5 py-2 text-sm font-semibold">Continue where I left off</button>
+            <button type="button" onClick={() => { setFromSaved(true); setStep(3) }} className="bg-brand text-brand-foreground rounded-full px-5 py-2 text-sm font-semibold">Continue where I left off</button>
           </div>
         ) : null}
         <GapTable rows={ctx.rows} resumeLabel={ctx.resume.label} resumes={ctx.resumes} onPick={(id) => load(id)} busy={loading} />
@@ -370,7 +370,7 @@ export function TailorDrawer({ roleId, open, onOpenChange }: { roleId: string; o
             type="button"
             disabled={step === 2 && none}
             onClick={() => setStep(step === 1 ? 2 : 3)}
-            className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold disabled:opacity-50"
+            className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold disabled:opacity-50"
           >
             {step === 1 ? 'Improve my résumé for this job' : 'Generate my new résumé'}
             <ChevronRight className="size-4" />

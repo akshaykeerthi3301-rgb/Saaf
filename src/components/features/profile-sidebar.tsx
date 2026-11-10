@@ -42,7 +42,7 @@ export function ProfileSidebar({ view, name, initials, headline, status, health 
           <Link href="/profile?view=personal" aria-label="Edit your name and contact details" className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:text-primary"><Pencil className="size-3.5" /></Link>
         </div>
         <div className="mt-1 flex flex-col items-center text-center">
-          <span className="bg-brand-gradient inline-flex size-16 items-center justify-center rounded-2xl text-2xl font-bold" aria-hidden="true">{initials}</span>
+          <span className="bg-brand text-brand-foreground inline-flex size-16 items-center justify-center rounded-2xl text-2xl font-bold" aria-hidden="true">{initials}</span>
           <h2 className="mt-4 text-xl font-bold tracking-[-0.02em] text-primary">{name}</h2>
           {headline ? <p className="mt-1 text-sm text-primary">{headline}</p> : null}
           <p className="mt-5 text-xs font-semibold text-muted-foreground">Job Search Status</p>
@@ -59,7 +59,7 @@ export function ProfileSidebar({ view, name, initials, headline, status, health 
             return (
               <Link
                 key={v} href={v === 'profile' ? '/profile' : `/profile?view=${v}`} aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${active ? 'bg-brand-gradient border-transparent' : 'border-border bg-card text-primary hover:bg-secondary/60'}`}
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${active ? 'bg-brand text-brand-foreground border-transparent' : 'border-border bg-card text-primary hover:bg-secondary/60'}`}
               >
                 <Icon className="size-5 shrink-0" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
@@ -82,7 +82,7 @@ export function ProfileSidebar({ view, name, initials, headline, status, health 
         <p className="mt-1 text-sm text-muted-foreground">{tier.note}</p>
         <div className="mt-4 flex items-center gap-3">
           <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuenow={health.score} aria-valuemin={0} aria-valuemax={100} aria-label="Profile strength">
-            <div className="bg-brand-gradient h-full rounded-full" style={{ width: `${health.score}%` }} />
+            <div className="bg-brand text-brand-foreground h-full rounded-full" style={{ width: `${health.score}%` }} />
           </div>
           <span className="text-sm font-bold tabular-nums text-accent">{health.score}%</span>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={open ? 'Hide what counts' : 'Show what counts'} className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-primary">

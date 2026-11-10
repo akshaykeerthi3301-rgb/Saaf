@@ -47,7 +47,7 @@ export function CompanyFactsView({ facts, news }: { facts: CompanyFacts | null; 
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
           {rows.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{k}</dt>
+              <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{k}</dt>
               <dd className="text-xs text-primary">{v}</dd>
             </div>
           ))}
@@ -60,7 +60,7 @@ export function CompanyFactsView({ facts, news }: { facts: CompanyFacts | null; 
       ) : null}
       {news.length ? (
         <div className="mt-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Recent news that mentions {facts.label}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Recent news that mentions {facts.label}</p>
           <ul className="mt-1.5 space-y-1.5">
             {news.map((n) => (
               <li key={n.url} className="text-xs leading-5">
@@ -71,7 +71,7 @@ export function CompanyFactsView({ facts, news }: { facts: CompanyFacts | null; 
           </ul>
         </div>
       ) : null}
-      <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+      <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
         Facts from <a href={facts.wikidataUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Wikidata</a>, the open, community-edited database behind Wikipedia — check the link if something looks out of date.{news.length ? ' News via GDELT.' : ''} Funding rounds, investors and employee ratings are not shown: no free source carries them reliably.
       </p>
     </div>

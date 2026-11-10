@@ -126,7 +126,7 @@ export function ProfileForm({ initial, email, accountExtras, applyExtras }: { in
             onClick={() => setTab(key)}
             onKeyDown={(e) => onTabKey(e, i)}
             className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-              tab === key ? 'bg-brand-gradient' : 'text-muted-foreground hover:text-primary'
+              tab === key ? 'bg-brand text-brand-foreground' : 'text-muted-foreground hover:text-primary'
             }`}
           >
             {label}

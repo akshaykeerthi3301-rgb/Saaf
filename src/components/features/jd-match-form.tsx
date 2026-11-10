@@ -343,7 +343,7 @@ function JdResult({ result }: { result: Result }) {
 
           {warnings.length ? (
             <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 What we could not read
               </p>
               <ul className="mt-3 space-y-2">
@@ -362,7 +362,7 @@ function JdResult({ result }: { result: Result }) {
 
           <div className="mt-5 space-y-4">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 How the number was reached
               </p>
               <ul className="mt-3 space-y-2 rounded-xl border border-border bg-secondary/40 p-4">
@@ -377,13 +377,13 @@ function JdResult({ result }: { result: Result }) {
 
             {shownRequirements.length > 0 && (
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Read from the posting itself
                 </p>
                 <div className="mt-3 space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
                   {shownRequirements.map((r, i) => (
                     <div key={i}>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                         {requirementLabel(r.kind)}
                         {r.confidence < CONFIDENCE_THRESHOLD ? ' · read with low confidence' : ''}
                       </p>

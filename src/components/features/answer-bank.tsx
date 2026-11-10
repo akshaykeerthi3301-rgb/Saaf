@@ -79,7 +79,7 @@ export function AnswerBank({ initial, stored }: { initial: BankEntry[]; stored: 
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={save} disabled={busy || !stored} className="bg-brand-gradient rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">{busy ? 'Saving…' : 'Save these answers'}</button>
+        <button type="button" onClick={save} disabled={busy || !stored} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">{busy ? 'Saving…' : 'Save these answers'}</button>
         {!stored ? <span className="text-xs text-muted-foreground">Saving these needs a database update (0046) that has not been applied yet.</span> : null}
         {note ? <span role="status" className="text-xs text-muted-foreground">{note}</span> : null}
       </div>

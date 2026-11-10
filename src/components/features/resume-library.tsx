@@ -72,7 +72,7 @@ export function ResumeLibrary({ resumes }: { resumes: SavedResume[] }) {
             : `You have ${rows.length} résumé${rows.length === 1 ? '' : 's'} saved out of ${RESUME_SLOTS} available slots.`}
         </p>
         <button type="button" onClick={() => setAdding(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-primary hover:border-accent/60">
-          <span className="bg-brand-gradient flex size-5 items-center justify-center rounded-md"><Plus className="size-3.5" /></span>
+          <span className="bg-brand text-brand-foreground flex size-5 items-center justify-center rounded-md"><Plus className="size-3.5" /></span>
           Add résumé
         </button>
       </div>
@@ -86,7 +86,7 @@ export function ResumeLibrary({ resumes }: { resumes: SavedResume[] }) {
           <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
             We keep the text of the résumé you upload (never the file) so you can tailor it to any job, edit it here and export it in Word or PDF.
           </p>
-          <button type="button" onClick={() => setAdding(true)} className="bg-brand-gradient mt-6 inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold">
+          <button type="button" onClick={() => setAdding(true)} className="bg-brand text-brand-foreground mt-6 inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold">
             <Upload className="size-4" /> Upload your résumé
           </button>
         </div>
@@ -238,7 +238,7 @@ function AddResumeModal({ open, onOpenChange, first, onSaved }: {
           disabled={busy}
           className={`mt-5 flex w-full flex-col items-center rounded-2xl border border-dashed px-6 py-12 text-center transition-colors ${drag ? 'border-accent bg-accent/5' : 'border-border bg-secondary/30 hover:border-accent/60'}`}
         >
-          <span className="bg-brand-gradient flex size-12 items-center justify-center rounded-xl">
+          <span className="bg-brand text-brand-foreground flex size-12 items-center justify-center rounded-xl">
             {busy ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}
           </span>
           <span className="mt-3 text-sm font-semibold text-primary">{busy ? 'Reading your résumé…' : 'Choose a file, or drop it here'}</span>

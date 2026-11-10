@@ -196,7 +196,7 @@ function PrepBody({
           <div key={q.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm font-semibold text-primary">{q.question}</p>
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 {KIND_LABEL[q.kind]}
               </span>
             </div>
@@ -226,7 +226,7 @@ function PrepBody({
           <div key={q.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm font-semibold text-primary">{q.question}</p>
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Behavioural
               </span>
             </div>

@@ -389,9 +389,9 @@ export default async function TodayPage({
   const more = sections.find((sec) => sec.visible.length < sec.rows.length)
   const flat = sections.flatMap((sec) => sec.visible)
   const tabLink = (active: boolean) =>
-    `relative inline-flex items-center gap-1.5 whitespace-nowrap py-1 text-sm font-semibold transition-colors ${active ? 'text-primary after:absolute after:inset-x-0 after:-bottom-[17px] after:h-0.5 after:bg-accent' : 'text-muted-foreground hover:text-primary'}`
+    `relative inline-flex items-center gap-1.5 whitespace-nowrap h-14 text-sm font-semibold transition-colors ${active ? 'text-primary after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-accent' : 'text-muted-foreground hover:text-primary'}`
   const tabs = (
-    <nav aria-label="Feed tabs" className="flex items-center gap-4 sm:gap-6">
+    <nav aria-label="Feed tabs" className="flex items-center gap-1 sm:gap-6">
       {[
         { label: 'Recommended', count: rows.length, href: '/today', active: !onlyNew && !showHidden },
         { label: 'New', count: newCount, href: '/today?tab=new', active: onlyNew },
@@ -401,7 +401,7 @@ export default async function TodayPage({
         // Phone: two tabs and no counts — the bar shares its row with the menu button, the bell and the avatar.
         <Link key={t.label} href={t.href} aria-current={t.active ? 'page' : undefined} className={`${tabLink(t.active)}${t.wide ? ' max-md:hidden' : ''}`}>
           {t.label}
-          <span className="rounded-full bg-secondary px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground max-sm:hidden">{t.count}</span>
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground max-sm:hidden">{t.count}</span>
         </Link>
       ))}
     </nav>

@@ -52,10 +52,10 @@ export default async function PublicJobsPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
-            <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
+            <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
             Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
@@ -77,7 +77,7 @@ export default async function PublicJobsPage({ searchParams }: Props) {
           <input id="q" name="q" defaultValue={q} maxLength={120} placeholder="Job title or company — Product Analyst, Razorpay…" className="rounded-xl border border-input bg-card px-4 py-3 text-sm text-primary outline-none placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/10" />
           <label className="sr-only" htmlFor="city">City</label>
           <input id="city" name="city" defaultValue={city} maxLength={60} placeholder="City" className="rounded-xl border border-input bg-card px-4 py-3 text-sm text-primary outline-none placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/10" />
-          <button type="submit" className="bg-brand-gradient inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"><Search className="size-4" aria-hidden="true" /> Search</button>
+          <button type="submit" className="bg-brand text-brand-foreground inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"><Search className="size-4" aria-hidden="true" /> Search</button>
         </form>
 
         {limited ? (

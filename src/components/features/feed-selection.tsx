@@ -133,8 +133,8 @@ export function SelectableCard({ roleId, children }: { roleId: string; children:
       tabIndex={0}
       aria-current={selected ? 'true' : undefined}
       aria-label="Show this job's match analysis"
-      className={`glow-hover cursor-pointer rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        selected ? 'glow-selected border-transparent' : 'border-border'
+      className={`edge-hover cursor-pointer rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        selected ? 'edge-selected border-transparent' : 'border-border'
       }`}
     >
       {children}

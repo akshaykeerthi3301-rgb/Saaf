@@ -39,7 +39,7 @@ export function Sheet({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger}
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-primary/25 backdrop-blur-sm print:hidden" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-primary/25 print:hidden" />
         <Dialog.Popup data-sheet-print className={`fixed inset-y-0 right-0 z-50 flex h-full w-full ${wide ? 'max-w-[min(1240px,94vw)]' : roomy ? 'max-w-2xl' : 'max-w-lg'} flex-col border-l border-border bg-card shadow-sm outline-none`}>
           {children}
         </Dialog.Popup>

@@ -143,7 +143,7 @@ export function ResumeStyleControls({ style, onChange }: { style: ResumeStyle; o
             >
               <Thumb centered={p.id === 'centered'} compact={p.id === 'compact'} />
               <span className="mt-1.5 block text-xs font-semibold text-primary">{p.name}</span>
-              {p.id === 'standard' ? <span className="block text-[10px] font-semibold text-accent">Recommended</span> : null}
+              {p.id === 'standard' ? <span className="block text-[11px] font-semibold text-accent">Recommended</span> : null}
             </button>
           ))}
         </div>

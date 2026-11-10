@@ -255,7 +255,7 @@ export function ApplicationBoard({
               aria-selected={view === v}
               onClick={() => chooseView(v)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                view === v ? 'bg-brand-gradient' : 'text-muted-foreground hover:text-primary'
+                view === v ? 'bg-brand text-brand-foreground' : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <Icon className="size-3.5" />
@@ -402,7 +402,7 @@ function BoardCard({
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`glow-hover group cursor-grab rounded-2xl border border-border bg-card p-4 active:cursor-grabbing ${dragging ? 'opacity-40' : ''}`}
+      className={`edge-hover group cursor-grab rounded-2xl border border-border bg-card p-4 active:cursor-grabbing ${dragging ? 'opacity-40' : ''}`}
     >
       <div className="flex items-start gap-2">
         <GripVertical className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
@@ -495,7 +495,7 @@ function TableView({
       <button
         type="button"
         onClick={() => setSort((s) => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : 1 }))}
-        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] ${sort.key === key ? 'text-accent' : 'text-muted-foreground hover:text-primary'}`}
+        className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] ${sort.key === key ? 'text-accent' : 'text-muted-foreground hover:text-primary'}`}
         aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : undefined}
       >
         {label}
@@ -540,7 +540,7 @@ function TableView({
             <button
               type="button"
               onClick={async () => { if (await onMoveMany([...picked], bulkTo)) setPicked(new Set()) }}
-              className="bg-brand-gradient rounded-md px-2.5 py-1 text-xs font-semibold"
+              className="bg-brand text-brand-foreground rounded-md px-2.5 py-1 text-xs font-semibold"
             >
               Apply
             </button>
@@ -560,7 +560,7 @@ function TableView({
               {head('score', 'Match')}
               {head('appliedOn', 'Applied')}
               {head('days', 'Days in stage')}
-              <th scope="col" className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Next</th>
+              <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Next</th>
             </tr>
           </thead>
           <tbody>
@@ -618,7 +618,7 @@ function RecordModal({
     <Modal open onOpenChange={(o) => { if (!o) onClose() }}>
       <header className="flex items-start justify-between gap-4 border-b border-border p-5">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Application record</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">Application record</p>
           <ModalTitle className="mt-1 text-lg font-semibold tracking-[-0.03em] text-primary">{row.title}</ModalTitle>
           <p className="text-sm text-muted-foreground">
             {row.company}
@@ -715,7 +715,7 @@ function RecordModal({
             onSave(next)
             onClose()
           }}
-          className="bg-brand-gradient rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+          className="bg-brand text-brand-foreground rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
         >
           Save
         </button>
@@ -804,7 +804,7 @@ function AddByHand({ onAdded }: { onAdded: (row: Application) => void }) {
         <select className={`${inputCls} sm:max-w-40`} aria-label="Which column" value={status} onChange={(e) => setStatus(e.target.value as ApplicationStatus)}>
           {COLUMNS.map((c) => <option key={c.status} value={c.status}>{c.label}</option>)}
         </select>
-        <button type="button" onClick={add} disabled={busy} className="bg-brand-gradient inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">
+        <button type="button" onClick={add} disabled={busy} className="bg-brand text-brand-foreground inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">
           <Plus className="size-3.5" /> {busy ? 'Adding…' : 'Add'}
         </button>
       </div>

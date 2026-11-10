@@ -111,7 +111,7 @@ export function FitRing({
       </div>
 
       <p
-        className={`mt-3 text-[10px] font-bold uppercase tracking-[0.14em] ${
+        className={`mt-3 text-[11px] font-bold uppercase tracking-[0.14em] ${
           strong ? 'text-accent' : 'text-muted-foreground'
         }`}
       >

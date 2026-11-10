@@ -46,7 +46,7 @@ export function OnboardingShell({ children }: { children: React.ReactNode }) {
           className="relative flex w-fit items-center gap-2 text-sm font-semibold tracking-[-0.03em] text-primary"
           aria-label="Jobinko home"
         >
-          <span className="bg-brand-gradient glow-selected flex size-8 items-center justify-center rounded-lg">
+          <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg">
             <Sparkles className="size-4" />
           </span>
           Jobinko

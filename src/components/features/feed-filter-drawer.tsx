@@ -60,7 +60,7 @@ const canonical = <T extends string>(all: readonly T[], picked: Set<string>): st
 const fieldClass =
   'w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-primary outline-none focus:border-accent'
 const hintClass = 'mt-1 block text-[11px] leading-4 text-muted-foreground'
-const headClass = 'mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground'
+const headClass = 'mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground'
 
 export function AllFiltersDrawer({
   view, keep, notes, saved, stored, activeCount, withinReach,
@@ -271,7 +271,7 @@ export function AllFiltersDrawer({
           </div>
 
           <div className="flex items-center gap-3 border-t border-border px-5 py-3.5">
-            <button type="submit" form="all-filters-form" className="bg-brand-gradient rounded-xl px-5 py-2 text-sm font-semibold">Confirm</button>
+            <button type="submit" form="all-filters-form" className="bg-brand text-brand-foreground rounded-xl px-5 py-2 text-sm font-semibold">Confirm</button>
             <button
               type="button"
               className="text-xs font-semibold text-muted-foreground hover:text-primary"

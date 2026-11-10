@@ -64,7 +64,7 @@ export function FastStart({ onText }: { onText: (text: string) => void }) {
           {field('gradYear', 'Year', '2021', 10)}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="button" onClick={build} className="bg-brand-gradient rounded-xl px-4 py-2 text-sm font-semibold">Put it in the box</button>
+          <button type="button" onClick={build} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-sm font-semibold">Put it in the box</button>
           {note ? <span role="status" className="text-xs leading-5 text-primary">{note}</span> : null}
         </div>
       </div>

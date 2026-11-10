@@ -115,8 +115,6 @@ export default function SignInPage() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-5 py-24 text-foreground">
-      {/* A soft glow behind the card, from the accent token — the reference's warm wash, in this system's colours. */}
-      <div aria-hidden="true" className="pointer-events-none absolute -top-48 left-1/2 h-[28rem] w-[56rem] max-w-[140vw] -translate-x-1/2 rounded-full bg-accent/20 blur-3xl" />
 
       <Link
         href="/"

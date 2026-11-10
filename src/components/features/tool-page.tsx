@@ -109,7 +109,7 @@ export function ToolPage({
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start lg:gap-10 [&:has([data-report])>aside]:hidden lg:[&:has([data-report])]:grid-cols-[minmax(0,1fr)]">
           <div className="min-w-0">{children}</div>
           <aside className="lg:sticky lg:top-8">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Before you paste
             </p>
             <ul className="mt-3 space-y-3 border-l-2 border-accent/30 pl-4 text-sm leading-6 text-muted-foreground">

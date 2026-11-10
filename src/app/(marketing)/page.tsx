@@ -21,7 +21,6 @@ const features = [
 export default function Landing() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <div aria-hidden="true" className="pointer-events-none absolute -top-56 left-1/2 h-[30rem] w-[60rem] max-w-[150vw] -translate-x-1/2 rounded-full bg-accent/15 blur-3xl" />
 
       <header className="relative mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-6 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Jobinko home">
@@ -81,7 +80,7 @@ export default function Landing() {
           </div>
           <div className="flex w-32 shrink-0 flex-col items-center justify-center gap-1.5 border-l border-border bg-secondary/40 p-4 sm:w-40">
             <ScoreRing score={86} size={64} stroke={5} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-score-high">Strong match</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-score-high">Strong match</span>
           </div>
         </div>
       </section>

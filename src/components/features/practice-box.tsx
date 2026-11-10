@@ -148,7 +148,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
                 </button>
               ) : null}
               {canSpeak ? (
-                <span className="text-[10px] text-muted-foreground">Your browser turns speech into text — in Chrome that is Google&apos;s speech service, not Jobinko.</span>
+                <span className="text-[11px] text-muted-foreground">Your browser turns speech into text — in Chrome that is Google&apos;s speech service, not Jobinko.</span>
               ) : null}
             </div>
           ) : null}
@@ -158,7 +158,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
               type="button"
               onClick={submit}
               disabled={pending || answer.trim().length === 0}
-              className="bg-brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50"
+              className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50"
             >
               {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
               {pending ? 'Scoring…' : 'Score my answer'}
@@ -179,7 +179,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
               </div>
               {result.feedback.strengths.length ? (
                 <div className="mt-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-score-high">What worked</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-score-high">What worked</p>
                   <ul className="mt-1 space-y-1 text-sm leading-6 text-primary">
                     {result.feedback.strengths.map((s) => <li key={s}>· {s}</li>)}
                   </ul>
@@ -187,7 +187,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
               ) : null}
               {result.feedback.improvements.length ? (
                 <div className="mt-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-score-mid">Make it stronger</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-score-mid">Make it stronger</p>
                   <ul className="mt-1 space-y-1 text-sm leading-6 text-primary">
                     {result.feedback.improvements.map((s) => <li key={s}>· {s}</li>)}
                   </ul>
@@ -199,7 +199,7 @@ export function PracticeBox({ roleId, question }: { roleId: string; question: st
                   <p className="mt-2 whitespace-pre-wrap rounded-lg bg-secondary/60 p-3 text-sm leading-6 text-primary">
                     {result.feedback.modelAnswer}
                   </p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">Built only from your profile. Replace any [Tag] with your own specifics.</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Built only from your profile. Replace any [Tag] with your own specifics.</p>
                 </details>
               ) : null}
             </div>

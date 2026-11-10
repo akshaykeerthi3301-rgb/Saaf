@@ -51,7 +51,7 @@ export function PreferencesPanel({ initial, health }: { initial: Preferences; he
         <div className="flex flex-wrap gap-2">
           {SENIORITY.map(({ key, label }) => (
             <button key={key} type="button" aria-pressed={seniority === key} onClick={() => setSeniority(seniority === key ? null : key)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${seniority === key ? 'bg-brand-gradient border-transparent' : 'border-border bg-background text-muted-foreground hover:text-primary'}`}>
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${seniority === key ? 'bg-brand text-brand-foreground border-transparent' : 'border-border bg-background text-muted-foreground hover:text-primary'}`}>
               {label}
             </button>
           ))}
@@ -83,7 +83,7 @@ export function PreferencesPanel({ initial, health }: { initial: Preferences; he
         </div>
 
         <div className="mt-5 flex items-center gap-3">
-          <button type="button" onClick={save} disabled={pending} className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-60">
+          <button type="button" onClick={save} disabled={pending} className="bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-60">
             {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Save preferences
           </button>
           {note ? <span role="status" className="text-xs text-muted-foreground">{note}</span> : null}

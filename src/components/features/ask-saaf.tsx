@@ -97,7 +97,7 @@ export function AskSaaf() {
             <Mic className="size-4" />
           </button>
         ) : null}
-        <button type="submit" disabled={pending || !text.trim()} aria-label="Send" className="bg-brand-gradient rounded-full p-2.5 disabled:opacity-50"><Send className="size-4" /></button>
+        <button type="submit" disabled={pending || !text.trim()} aria-label="Send" className="bg-brand text-brand-foreground rounded-full p-2.5 disabled:opacity-50"><Send className="size-4" /></button>
       </form>
       {voiceNote ? <p role="status" className="mt-2 text-xs text-muted-foreground">{voiceNote}</p> : null}
     </section>
@@ -109,7 +109,7 @@ function CardView({ card, ask }: { card: Card; ask: (q: string) => void }) {
   if (card.type === 'stat') {
     return (
       <div className="max-w-[90%] rounded-2xl border border-border px-3.5 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.label}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.label}</p>
         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-[-0.03em] text-primary">{card.value}</p>
         {card.note ? <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{card.note}</p> : null}
       </div>
@@ -119,7 +119,7 @@ function CardView({ card, ask }: { card: Card; ask: (q: string) => void }) {
     const pct = card.target > 0 ? Math.min(100, Math.round((card.done / card.target) * 100)) : 0
     return (
       <div className="max-w-[90%] rounded-2xl border border-border px-3.5 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">This week</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">This week</p>
         <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-[-0.03em] text-primary">{card.done}{card.target > 0 ? <span className="text-base text-muted-foreground"> of {card.target}</span> : null}</p>
         {card.target > 0 ? <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuenow={card.done} aria-valuemin={0} aria-valuemax={card.target}><div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(2, pct)}%` }} /></div> : null}
         <p className="mt-2 text-xs leading-5 text-muted-foreground">{card.line}</p>
@@ -142,7 +142,7 @@ function CardView({ card, ask }: { card: Card; ask: (q: string) => void }) {
   }
   return (
     <div className="max-w-[95%] rounded-2xl border border-border px-3.5 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.title}</p>
       <ul className="mt-2 divide-y divide-border">
         {card.items.map((r) => (
           <li key={r.id}>
@@ -181,7 +181,7 @@ export function QueueCard({ card }: { card: Extract<Card, { type: 'queue' }> }) 
   }
   return (
     <div className="max-w-[95%] rounded-2xl border border-border px-3.5 py-3" data-testid="queue-card">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{card.title}</p>
       <ul className="mt-2 divide-y divide-border">
         {card.items.map((r) => (
           <li key={r.roleId} className="flex items-center gap-3 py-2">
@@ -194,7 +194,7 @@ export function QueueCard({ card }: { card: Extract<Card, { type: 'queue' }> }) 
         ))}
       </ul>
       {card.note ? <p className="mt-2 text-xs leading-5 text-muted-foreground">{card.note}</p> : null}
-      <button type="button" onClick={add} disabled={state !== 'idle'} className="bg-brand-gradient mt-3 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-60">
+      <button type="button" onClick={add} disabled={state !== 'idle'} className="bg-brand text-brand-foreground mt-3 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-60">
         {state === 'busy' ? 'Queueing…' : state === 'done' ? 'Queued' : `Add ${card.items.length} to my Apply-for-me queue`}
       </button>
       {note ? <p role="status" className="mt-2 text-xs leading-5 text-muted-foreground">{note}</p> : null}

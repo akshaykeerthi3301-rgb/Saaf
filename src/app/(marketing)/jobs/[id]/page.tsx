@@ -64,10 +64,10 @@ export default async function PublicJobPage({ params }: Props) {
         // Escaped: a posting is untrusted text and "</script>" inside it must not close this tag.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }}
       />
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
-            <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm">
+            <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg shadow-sm">
               <Sparkles className="size-4" />
             </span>
             Jobinko
@@ -164,14 +164,14 @@ export default async function PublicJobPage({ params }: Props) {
         </article>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          <div className="glow-hover rounded-3xl border border-border bg-card p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Free</p>
+          <div className="edge-hover rounded-3xl border border-border bg-card p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">Free</p>
             <h2 className="mt-1 text-base font-semibold text-primary">Your match score for this role</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Upload your résumé once. We score you against this posting and every other role we read today, and show which sentence of the posting each point came from.
             </p>
             {/* Through /today so the sign-in gate remembers where to come back to (src/proxy.ts). */}
-            <Link href={`/today?role=${job.id}`} className="bg-brand-gradient mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold">
+            <Link href={`/today?role=${job.id}`} className="bg-brand text-brand-foreground mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold">
               <Sparkles className="size-4" /> See my match score
             </Link>
           </div>
@@ -196,8 +196,8 @@ export default async function PublicJobPage({ params }: Props) {
 
       {/* Phones: the rail sits below a long posting, so the two actions that
           matter are pinned to the bottom of the screen instead. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-border bg-background/85 p-3 backdrop-blur-md lg:hidden">
-        <Link href={`/today?role=${job.id}`} className="bg-brand-gradient flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-border bg-background p-3 lg:hidden">
+        <Link href={`/today?role=${job.id}`} className="bg-brand text-brand-foreground flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold">
           <Sparkles className="size-4" /> My match score
         </Link>
         <a href={job.applyUrl} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-primary">

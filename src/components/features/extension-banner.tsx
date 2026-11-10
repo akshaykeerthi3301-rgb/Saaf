@@ -58,13 +58,13 @@ export function ExtensionBanner({ storeUrl }: { storeUrl: string }) {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {current ? null : storeUrl ? (
-          <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
+          <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
             <Puzzle className="size-4" aria-hidden="true" /> Add Extension
           </a>
         ) : (
           <>
             <button type="button" onClick={() => setOpen(true)} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-primary hover:bg-secondary">How to install</button>
-            <a href={EXTENSION_ZIP} download={EXTENSION_FILE_NAME} className="bg-brand-gradient inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
+            <a href={EXTENSION_ZIP} download={EXTENSION_FILE_NAME} className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
               <Download className="size-4" aria-hidden="true" /> Download extension
             </a>
           </>
@@ -77,13 +77,13 @@ export function ExtensionBanner({ storeUrl }: { storeUrl: string }) {
             <p className="rounded-xl border border-border bg-secondary/50 p-4 text-sm text-muted-foreground">
               This is a <span className="font-semibold text-primary">test build ({EXTENSION_VERSION})</span> for people trying Jobinko before it is in the Chrome Web Store. It reads only the page you are on, and it is off on LinkedIn and Naukri on purpose.
             </p>
-            <a href={EXTENSION_ZIP} download={EXTENSION_FILE_NAME} className="bg-brand-gradient inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
+            <a href={EXTENSION_ZIP} download={EXTENSION_FILE_NAME} className="bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
               <Download className="size-4" aria-hidden="true" /> Download {EXTENSION_FILE_NAME}
             </a>
             <ol className="space-y-4">
               {STEPS.map((s, i) => (
                 <li key={i} className="flex gap-3">
-                  <span className="bg-brand-gradient flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" aria-hidden="true">{i + 1}</span>
+                  <span className="bg-brand text-brand-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" aria-hidden="true">{i + 1}</span>
                   <div className="min-w-0 pt-0.5 text-sm text-primary">
                     <p>{s.text}</p>
                     {s.copy ? (

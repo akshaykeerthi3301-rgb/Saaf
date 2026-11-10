@@ -60,7 +60,7 @@ export function SavedSearchesMenu({
             <p className="p-2 text-xs leading-5 text-muted-foreground">Saved searches need a database update (0037) that has not been applied yet.</p>
           ) : (
             <>
-              <p className="px-2 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Your searches</p>
+              <p className="px-2 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Your searches</p>
               {searches.length === 0 ? <p className="px-2 pb-2 text-xs leading-5 text-muted-foreground">Save the roles you are searching for now, then keep a second set to switch to.</p> : null}
               <ul>
                 {searches.map((s) => (
@@ -96,7 +96,7 @@ export function SavedSearchesMenu({
                       placeholder="Name it, e.g. “Product roles”"
                       className="min-w-0 flex-1 rounded-full border border-input bg-background px-3 py-1.5 text-xs text-primary outline-none focus:border-accent"
                     />
-                    <button type="submit" disabled={pending || !name.trim()} className="bg-brand-gradient rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Save</button>
+                    <button type="submit" disabled={pending || !name.trim()} className="bg-brand text-brand-foreground rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Save</button>
                   </form>
                 ) : (
                   <button

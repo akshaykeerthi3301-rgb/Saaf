@@ -39,7 +39,7 @@ export default async function CoachingPage() {
                     <p className="mt-0.5 text-sm text-muted-foreground">{whenIst(s.startsAt)} · {s.durationMin} min · with {s.hostName}</p>
                     {s.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{s.description}</p> : null}
                     <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <a href={s.joinUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold"><Video className="size-3.5" aria-hidden="true" /> Join <ArrowUpRight className="size-3.5" aria-hidden="true" /></a>
+                      <a href={s.joinUrl} target="_blank" rel="noopener noreferrer" className="bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold"><Video className="size-3.5" aria-hidden="true" /> Join <ArrowUpRight className="size-3.5" aria-hidden="true" /></a>
                       {ics ? <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`saaf-office-hours-${s.id.slice(0, 8)}.ics`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent"><CalendarPlus className="size-3.5" aria-hidden="true" /> Add to calendar</a> : null}
                     </div>
                   </li>
@@ -57,7 +57,7 @@ export default async function CoachingPage() {
         {coaches.length ? (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
             {coaches.map((c) => (
-              <li key={c.id} className="glow-hover flex flex-col rounded-2xl border border-border bg-card p-5">
+              <li key={c.id} className="edge-hover flex flex-col rounded-2xl border border-border bg-card p-5">
                 <p className="text-base font-semibold text-primary">{c.name}</p>
                 <p className="mt-0.5 text-sm text-muted-foreground">{c.headline}</p>
                 {c.bio ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{c.bio}</p> : null}
@@ -70,7 +70,7 @@ export default async function CoachingPage() {
                   {[c.languages.length ? c.languages.join(', ') : null, c.priceNote].filter(Boolean).join(' · ')}
                 </p>
                 <div className="mt-auto flex gap-3 pt-4">
-                  <a href={c.bookingUrl} target="_blank" rel="noopener noreferrer" className="bg-brand-gradient inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold">
+                  <a href={c.bookingUrl} target="_blank" rel="noopener noreferrer" className="bg-brand text-brand-foreground inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold">
                     Book a session <ArrowUpRight className="size-3.5" />
                   </a>
                   {c.profileUrl ? (

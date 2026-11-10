@@ -7,6 +7,7 @@ import { signOut } from '@/app/actions/sign-out'
 import { setSearchStatus } from '@/app/actions/workspace'
 import { useAccount } from '@/components/features/account-context'
 import { FeedbackButton, InboxBell } from '@/components/features/feedback-and-inbox'
+import { ThemeToggle } from '@/components/features/theme-toggle'
 import type { SearchStatus } from '@/lib/services/workspace'
 import {
   BriefcaseBusiness, ChevronsUpDown, Compass, FileText, Gauge, LogOut, Menu, MessageCircle,
@@ -94,14 +95,14 @@ export function AppShell({
         onClick={() => setOpen(false)}
         aria-current={active ? 'page' : undefined}
         data-tour={href === '/applications' ? 'nav-tracker' : undefined}
-        className={`group relative flex w-full items-center gap-3 rounded-xl px-3 ${small ? 'py-2 text-xs' : 'py-2.5 text-sm'} font-medium transition-colors lg:flex-col lg:gap-1 lg:px-1 lg:py-2.5 lg:text-[10px] lg:leading-none ${
+        className={`group relative flex w-full items-center gap-3 rounded-xl px-3 ${small ? 'py-2 text-xs' : 'py-2.5 text-sm'} font-medium transition-colors lg:flex-col lg:gap-1 lg:px-1 lg:py-2.5 lg:text-[11px] lg:leading-none ${
           active
             ? 'bg-secondary text-primary'
             : 'text-muted-foreground hover:bg-secondary/60 hover:text-primary'
         }`}
       >
         {active ? (
-          <span className="bg-brand-gradient absolute inset-y-2 left-0 w-1 rounded-full" aria-hidden="true" />
+          <span className="bg-brand text-brand-foreground absolute inset-y-2 left-0 w-1 rounded-full" aria-hidden="true" />
         ) : null}
         <Icon className={small ? 'size-4 lg:size-5' : 'size-[18px] lg:size-5'} />
         <span className={small ? 'lg:sr-only' : ''}>{short}</span>
@@ -119,7 +120,7 @@ export function AppShell({
         >
           <div className="flex items-center justify-between px-2 lg:justify-center lg:px-0">
             <Link href="/today" title="Jobinko" className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.05em] text-primary">
-              <span className="bg-brand-gradient glow-selected flex size-9 items-center justify-center rounded-xl">
+              <span className="bg-brand text-brand-foreground flex size-9 items-center justify-center rounded-xl">
                 <Sparkles className="size-4" />
               </span>
               <span className="lg:sr-only">Jobinko</span>
@@ -145,15 +146,15 @@ export function AppShell({
 
         {open && (
           <button
-            className="fixed inset-0 z-30 bg-background/70 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-30 bg-background/70 lg:hidden"
             onClick={() => setOpen(false)}
             aria-label="Close navigation overlay"
           />
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="glass sticky top-0 z-20 flex h-14 print:hidden items-center justify-between border-b border-border px-5 sm:px-8">
-            <div className="flex min-w-0 items-center gap-3">
+          <header className="bg-card sticky top-0 z-20 flex h-14 print:hidden items-center justify-between border-b border-border px-2 sm:px-8">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 className="rounded-xl border border-border p-2 text-primary lg:hidden"
                 onClick={() => setOpen(true)}
@@ -171,11 +172,11 @@ export function AppShell({
                 </div>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               {account ? <><FeedbackButton /><InboxBell /></> : null}
               <Link
                 href="/profile"
-                className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
                 aria-label="Your profile"
               >
                 {account?.initials ?? initials}
@@ -246,13 +247,13 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
         title={`${account?.name ?? 'Your account'} · ${STATUS[status].label}`}
         className="relative mx-auto hidden size-10 items-center justify-center rounded-full lg:flex"
       >
-        <span className="bg-brand-gradient flex size-9 items-center justify-center rounded-full text-xs font-bold">{account?.initials ?? fallbackInitials}</span>
+        <span className="bg-brand text-brand-foreground flex size-9 items-center justify-center rounded-full text-xs font-bold">{account?.initials ?? fallbackInitials}</span>
         <span className={`absolute bottom-0 right-0 size-3 rounded-full border-2 border-sidebar ${STATUS[status].dot}`} aria-hidden="true" />
       </button>
       {pop ? <button type="button" aria-label="Close" onClick={() => setPop(false)} className="fixed inset-0 z-40 hidden cursor-default lg:block" /> : null}
     <div className={`rounded-2xl border border-border bg-card p-3 ${pop ? 'lg:block' : 'lg:hidden'} lg:fixed lg:bottom-4 lg:left-[96px] lg:z-50 lg:w-64 lg:shadow-lg`}>
       <div className="flex items-center gap-3">
-        <span className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+        <span className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold">
           {account?.initials ?? fallbackInitials}
         </span>
         <div className="min-w-0 flex-1">
@@ -312,7 +313,8 @@ function UserCard({ fallbackInitials }: { fallbackInitials: string }) {
           </ul>
         ) : null}
       </div>
-      {note ? <p className="mt-2 text-[10px] leading-4 text-muted-foreground">{note}</p> : null}
+      {note ? <p className="mt-2 text-[11px] leading-4 text-muted-foreground">{note}</p> : null}
+      <ThemeToggle />
 
       {/* Signing out kept the account; until this existed the only way out of a
           session was to delete it. */}

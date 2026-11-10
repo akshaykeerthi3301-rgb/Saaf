@@ -21,7 +21,7 @@ export function ParamSelect({
 
   return (
     <label className="block min-w-0">
-      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</span>
       <select
         value={selected}
         onChange={(e) => {

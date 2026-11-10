@@ -79,7 +79,7 @@ export function JobSheet() {
           className="fixed inset-0 z-50 overflow-y-auto bg-background outline-none"
         >
           <Dialog.Title className="sr-only">Job match analysis</Dialog.Title>
-          <div className="glass sticky top-0 z-10 flex items-center justify-end border-b border-border px-4 py-2">
+          <div className="bg-card sticky top-0 z-10 flex items-center justify-end border-b border-border px-4 py-2">
             <Dialog.Close className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-primary hover:bg-secondary">
               <X className="size-4" />
               Close
@@ -112,7 +112,7 @@ function PanelBody() {
   return (
     <div>
       <PanelHeader j={j} />
-      <div role="tablist" aria-label="Job details" className="sticky top-0 z-10 flex gap-5 border-b border-border bg-background/95 px-5 backdrop-blur xl:top-0">
+      <div role="tablist" aria-label="Job details" className="sticky top-0 z-10 flex gap-5 border-b border-border bg-background/95 px-5 xl:top-0">
         {([
           ['overview', 'Overview'],
           ['company', 'Company'],
@@ -183,7 +183,7 @@ export function ScoreCard({ j }: { j: JobInsight }) {
     <div className="mb-6 flex gap-4 rounded-2xl border border-border bg-secondary/30 p-4">
       <div className="flex shrink-0 flex-col items-center gap-1.5">
         <ScoreRing score={j.score} size={84} stroke={7} />
-        <span className={`max-w-[92px] text-center text-[10px] font-bold uppercase leading-3 tracking-[0.08em] ${BAND_TONE[ringBand(j.score)]}`}>{bandFor(j.score)}</span>
+        <span className={`max-w-[92px] text-center text-[11px] font-bold uppercase leading-3 tracking-[0.08em] ${BAND_TONE[ringBand(j.score)]}`}>{bandFor(j.score)}</span>
       </div>
       <div className="min-w-0 flex-1">
         {bars.length ? (
@@ -226,7 +226,7 @@ function HowItIsBuilt({ j }: { j: JobInsight }) {
       <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">
         <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
         How this score is built
-        <span className="font-mono text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+        <span className="font-mono text-[11px] font-normal normal-case tracking-normal text-muted-foreground">
           {a.strongFactors} of {a.totalFactors} parts strong
         </span>
       </summary>
@@ -261,10 +261,10 @@ function HowItIsBuilt({ j }: { j: JobInsight }) {
 
       {j.evidence.length ? (
         <div className="mt-4 space-y-3 border-t border-border pt-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">What we read from the posting</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">What we read from the posting</p>
           {j.evidence.map((e, i) => (
             <div key={i}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {e.label}
                 {e.lowConfidence ? ' · read with low confidence' : ''}
               </p>
@@ -327,7 +327,7 @@ export function CompanyTab({ j }: { j: JobInsight }) {
         ) : null}
         {/* Stated, not left blank: an empty space where funding and ratings
             "should" be reads as a loading failure. */}
-        <p className="mt-3 text-[10px] leading-4 text-muted-foreground">
+        <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
           Counts are from the boards we index. Culture tags come from this posting&apos;s own words (hover
           to see them).
         </p>
@@ -368,7 +368,7 @@ function FitSections({ sections }: { sections: FitSection[] }) {
               <Icon className={`mt-0.5 size-4 shrink-0 ${tone}`} aria-hidden="true" />
               <span className="min-w-0">
                 <span className="text-sm font-semibold text-primary">{s.title}</span>
-                <span className={`ml-2 text-[10px] font-bold uppercase tracking-[0.12em] ${tone}`}>{FIT_LABEL[s.status]}</span>
+                <span className={`ml-2 text-[11px] font-bold uppercase tracking-[0.12em] ${tone}`}>{FIT_LABEL[s.status]}</span>
                 <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{s.summary}</span>
               </span>
             </span>
@@ -476,7 +476,7 @@ export function OverviewTab({ j }: { j: JobInsight }) {
               >
                 {skill.busy === m.term ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : <span aria-hidden="true">+</span>}
                 {m.term}
-                {m.employers ? <span className="font-mono text-[10px] opacity-80">{m.employers}</span> : null}
+                {m.employers ? <span className="font-mono text-[11px] opacity-80">{m.employers}</span> : null}
               </button>
             ))}
           </div>
@@ -484,7 +484,7 @@ export function OverviewTab({ j }: { j: JobInsight }) {
           <p className="text-xs text-muted-foreground">Every skill this posting names is on your profile.</p>
         )}
         {a.missing.some((m) => m.employers) ? (
-          <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+          <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
             The number on a keyword is how many employers in our index ask for it — lead with the big ones.
           </p>
         ) : null}
@@ -514,7 +514,7 @@ export function OverviewTab({ j }: { j: JobInsight }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border bg-background p-3">
-      <dt className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
       <dd className="mt-1 text-sm font-semibold text-primary">{value}</dd>
     </div>
   )
@@ -535,9 +535,9 @@ function CopilotTab({ j }: { j: JobInsight }) {
           <Link
             key={href}
             href={href}
-            className="glow-hover group flex gap-3 rounded-2xl border border-border bg-card p-4"
+            className="edge-hover group flex gap-3 rounded-2xl border border-border bg-card p-4"
           >
-            <span className="bg-brand-gradient flex size-9 shrink-0 items-center justify-center rounded-xl">
+            <span className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-xl">
               <Icon className="size-4" />
             </span>
             <span className="min-w-0">

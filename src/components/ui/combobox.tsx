@@ -196,7 +196,7 @@ export function Combobox({
                     )}
                   >
                     <span className="truncate">Use &ldquo;{custom}&rdquo;</span>
-                    <span className="shrink-0 text-right text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="shrink-0 text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                       {customNote ?? 'not on our list'}
                     </span>
                   </button>
@@ -205,7 +205,7 @@ export function Combobox({
 
               {filtered.map((g) => (
                 <li key={g.label}>
-                  <p className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {g.label}
                   </p>
                   <ul>

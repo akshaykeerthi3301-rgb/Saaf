@@ -7,7 +7,7 @@ export function ToolEmpty({
 }: { icon: LucideIcon; title: string; body: string; href: string; cta: string }) {
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6">
-      <span className="bg-brand-gradient flex size-10 items-center justify-center rounded-xl">
+      <span className="bg-brand text-brand-foreground flex size-10 items-center justify-center rounded-xl">
         <Icon className="size-5" />
       </span>
       <p className="mt-4 text-base font-semibold text-primary">{title}</p>

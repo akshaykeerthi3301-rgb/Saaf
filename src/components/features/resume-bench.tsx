@@ -264,7 +264,7 @@ function Results({ result }: { result: BenchResult }) {
                     <dd className="text-xs leading-5 text-muted-foreground">{comp.note}</dd>
                   </div>
                 ))}
-                <div className="pt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                <div className="pt-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   experience: {r.breakdown.experience ?? '—'} · location: {r.breakdown.location ?? '—'}
                   {' · '}confidence: {r.breakdown.confidence}
                 </div>

@@ -61,7 +61,7 @@ export function FeedbackButton() {
               />
               <p className="mt-1 text-[11px] leading-4 text-muted-foreground">We keep the page you are on ({path}) with it. Never your résumé or your scores.</p>
               <div className="mt-3 flex items-center gap-3">
-                <button type="button" onClick={send} disabled={pending || message.trim().length < 3} className="bg-brand-gradient rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">{pending ? 'Sending…' : 'Send'}</button>
+                <button type="button" onClick={send} disabled={pending || message.trim().length < 3} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">{pending ? 'Sending…' : 'Send'}</button>
                 {note ? <span role="status" className="text-xs text-muted-foreground">{note}</span> : null}
               </div>
             </>
@@ -98,7 +98,7 @@ export function InboxBell() {
     <div className="relative">
       <button type="button" onClick={toggle} aria-expanded={open} aria-label={unread ? `Inbox, ${unread} unread` : 'Inbox'} title="Messages from Jobinko" className="relative flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-accent/60 hover:text-primary">
         <Bell className="size-4" />
-        {unread > 0 ? <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-primary-foreground">{unread}</span> : null}
+        {unread > 0 ? <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-bold text-primary-foreground">{unread}</span> : null}
       </button>
       {open ? (
         <div role="region" aria-label="Inbox" className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-popover p-2 shadow-lg">

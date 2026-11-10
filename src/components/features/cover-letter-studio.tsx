@@ -106,7 +106,7 @@ export function CoverLetterStudio({
                 aria-checked={tone === t}
                 onClick={() => pickTone(t)}
                 className={`rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition ${
-                  tone === t ? 'bg-brand-gradient border-transparent' : 'border-border bg-background text-primary hover:border-accent/60'
+                  tone === t ? 'bg-brand text-brand-foreground border-transparent' : 'border-border bg-background text-primary hover:border-accent/60'
                 }`}
               >
                 {t}
@@ -139,7 +139,7 @@ export function CoverLetterStudio({
           type="button"
           onClick={generate}
           disabled={pending}
-          className="bg-brand-gradient flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60"
+          className="bg-brand text-brand-foreground flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60"
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
           {pending ? 'Writing…' : `Write with AI · ${tone}`}
@@ -225,7 +225,7 @@ function highlightTags(text: string): ReactNode {
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{title}</p>
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{title}</p>
       {children}
     </div>
   )

@@ -18,7 +18,7 @@ export function RolesEditor({ roles, onChange, helper, note }: { roles: string[]
           {roles.map((r, i) => (
             <li key={r}>
               <Chip active={i === 0}>
-                {i === 0 ? <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">Main</span> : (
+                {i === 0 ? <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide">Main</span> : (
                   <button type="button" onClick={() => onChange(makeMain(roles, r))} aria-label={`Make ${r} your main role`} title="Make this your main role" className="text-muted-foreground hover:text-accent"><Star className="size-3.5" /></button>
                 )}
                 {r}

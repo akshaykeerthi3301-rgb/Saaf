@@ -34,7 +34,7 @@ export function CoachApplication() {
           <input className={input} placeholder="One line — e.g. “Recruiter, 8 years hiring product managers”" aria-label="Headline" value={f.headline} onChange={set('headline')} maxLength={200} />
           <textarea className={input} rows={4} placeholder="Your hiring and coaching experience" aria-label="Experience" value={f.experience} onChange={set('experience')} maxLength={2000} />
           <input className={input} placeholder="Your booking page (Calendly, Cal.com…) — optional" aria-label="Booking link" value={f.bookingUrl} onChange={set('bookingUrl')} maxLength={500} />
-          <button type="submit" disabled={pending} className="bg-brand-gradient rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">Send application</button>
+          <button type="submit" disabled={pending} className="bg-brand text-brand-foreground rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50">Send application</button>
         </form>
       )}
       {note ? <p role="status" className="mt-2 text-xs text-primary">{note}</p> : null}

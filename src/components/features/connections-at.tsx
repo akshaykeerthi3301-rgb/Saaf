@@ -38,7 +38,7 @@ export function ConnectionsAt({ company }: { company: string }) {
                   {p.email}
                 </a>
               ) : null}
-              <span className="text-[10px] text-muted-foreground">{p.source === 'linkedin' ? 'from LinkedIn' : p.source === 'google' ? 'your contacts file' : 'added by you'}</span>
+              <span className="text-[11px] text-muted-foreground">{p.source === 'linkedin' ? 'from LinkedIn' : p.source === 'google' ? 'your contacts file' : 'added by you'}</span>
             </span>
           </li>
         ))}

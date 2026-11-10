@@ -31,10 +31,10 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }} />
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.03em] text-primary" aria-label="Jobinko home">
-            <span className="bg-brand-gradient flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
+            <span className="bg-brand text-brand-foreground flex size-8 items-center justify-center rounded-lg shadow-sm"><Sparkles className="size-4" /></span>
             Jobinko
           </Link>
           <div className="flex items-center gap-5 text-sm">
@@ -109,7 +109,7 @@ export function RoleSeoPage({ role, city, data }: { role: string; city: City | n
         <section className="mt-10 rounded-2xl border border-border bg-card p-5">
           <p className="text-sm font-semibold text-primary">Is your résumé readable for {role} roles?</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">The free ATS checker shows what an applicant tracking system extracts from your résumé and what to change. No sign-up.</p>
-          <Link href="/tools/ats-checker" className="bg-brand-gradient mt-3 inline-flex rounded-xl px-4 py-2 text-sm font-semibold">Check my résumé</Link>
+          <Link href="/tools/ats-checker" className="bg-brand text-brand-foreground mt-3 inline-flex rounded-xl px-4 py-2 text-sm font-semibold">Check my résumé</Link>
         </section>
       </main>
     </div>

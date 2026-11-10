@@ -58,7 +58,7 @@ export function WalletAndInvites({ stored, balance, rows, code, joined, invitesS
               Promo code
               <input id={`${id}-p`} className={`${input} mt-1 uppercase`} value={promo} onChange={(e) => setPromo(e.target.value)} autoComplete="off" maxLength={40} />
             </label>
-            <button type="submit" disabled={busy || !promo.trim()} className="bg-brand-gradient rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy ? 'Checking…' : 'Redeem'}</button>
+            <button type="submit" disabled={busy || !promo.trim()} className="bg-brand text-brand-foreground rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy ? 'Checking…' : 'Redeem'}</button>
           </form>
           {note ? <p role="status" className="mt-2 text-xs text-muted-foreground">{note}</p> : null}
           {history.length ? (

@@ -852,7 +852,7 @@ export function AtsFlow() {
             </div>
           ) : (
             <div className="mb-6 rounded-2xl border border-dashed border-input bg-card p-5 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 This job, beside your résumé
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -983,7 +983,7 @@ export function AtsFlow() {
                 </p>
 
                 <div className="mt-6 border-t border-border pt-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     What we read out of it
                   </p>
                   <dl className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -1025,7 +1025,7 @@ export function AtsFlow() {
             {sections && (
               <section className="mt-6" aria-label="Your résumé, with the selected line marked">
                 <div className="flex items-baseline justify-between gap-3 px-1 pb-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     Your résumé, as we read it
                   </p>
                   {activeFinding?.evidence ? (
@@ -1132,7 +1132,7 @@ export function AtsFlow() {
       {step === 'preview' && optimised && report && (
         <div className="mt-2">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Same check, run again on the rewrite
             </p>
             <div className="mt-4 flex flex-wrap items-end gap-6">
@@ -1175,7 +1175,7 @@ export function AtsFlow() {
             safe to print beside them.
           */}
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Template
             </span>
             {TEMPLATES.map((t) => (
@@ -1337,7 +1337,7 @@ function Changes({ changes, reverted }: { changes: BulletChange[]; reverted: Bul
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center gap-2">
             <ShieldCheck className="size-4 text-accent" aria-hidden="true" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {reverted.length} rewrite{reverted.length === 1 ? '' : 's'} we threw out
             </p>
           </div>
@@ -1358,7 +1358,7 @@ function Changes({ changes, reverted }: { changes: BulletChange[]; reverted: Bul
 
       {kept.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             {kept.length} line{kept.length === 1 ? '' : 's'} rewritten
           </p>
           <div className="mt-4 space-y-5">

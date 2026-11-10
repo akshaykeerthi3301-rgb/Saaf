@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
  * ⚠️ THESE TWO STRINGS ARE THE MOST-REPEATED IN THE CODEBASE. Every raised
  * surface in the product is `rounded-2xl border border-border bg-card p-5
  * shadow-sm` typed out again, and every small caps label is
- * `text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`.
+ * `text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`.
  * Repeating them is how a second shadow recipe or a ninth radius arrives —
  * `DESIGN.md:280` warns that drift toward the anti-reference "will start by
  * adding a second" shadow, and :295 forbids a radius outside the scale.
@@ -46,7 +46,7 @@ export function Eyebrow({
 }) {
   return (
     <span
-      className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${
+      className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
         tone === 'accent' ? 'text-accent' : 'text-muted-foreground'
       } ${className}`}
     >

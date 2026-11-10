@@ -124,7 +124,7 @@ export function SectionPicker({
               <span
                 aria-hidden="true"
                 className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border ${
-                  on ? 'border-accent bg-accent text-white' : 'border-input bg-card'
+                  on ? 'border-accent bg-accent text-accent-foreground' : 'border-input bg-card'
                 }`}
               >
                 {on ? <Check className="size-3" strokeWidth={3} /> : null}
@@ -133,7 +133,7 @@ export function SectionPicker({
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold text-primary">{def.label}</span>
                   {def.free && (
-                    <span className="rounded-lg bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <span className="rounded-lg bg-secondary px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
                       no model
                     </span>
                   )}

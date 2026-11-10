@@ -89,7 +89,7 @@ export function ReviewDrawer({ roleId, title, company, applyUrl }: Props) {
       >
             <header className="flex items-start justify-between gap-4 border-b border-border p-5">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">Review application</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">Review application</p>
                 <SheetTitle className="mt-1 text-lg font-semibold leading-snug tracking-[-0.03em] text-primary">{title}</SheetTitle>
                 <p className="text-sm text-muted-foreground">{company}</p>
               </div>
